@@ -58,8 +58,9 @@ function Get-FunctionParametersViaDotSource {
     }
 }
 
-function Replace-ExpectedParamsInTest {
+function Set-ExpectedParamsInTest {
     [CmdletBinding()]
+    [System.Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseShouldProcessForStateChangingFunctions', '', Justification = 'Internal dev helper in a maintenance script, not a public cmdlet.')]
     param(
         [Parameter(Mandatory)] [string]$TestPath,
         [Parameter(Mandatory)] [string[]]$ExpectedParams
@@ -68,13 +69,28 @@ function Replace-ExpectedParamsInTest {
     # Multi-line formatting: one parameter per line
     $indented = $ExpectedParams | ForEach-Object { '    "{0}"' -f $_ }
     $replacement = "$" + 'expectedParams = @(' + "`n" + ($indented -join "`n") + "`n)"
-    $pattern = '(?m)^\s*\$expectedParams\s*=\s*@\((?<arr>[\s\S]*?)\)'
-    $newContent = [regex]::Replace($content, $pattern, $replacement)
-    if ($newContent -ne $content) {
-        Set-Content -Path $TestPath -Value $newContent -NoNewline
-        return $true
+    # Use [ \t]* (not \s*) for the leading whitespace so the match never swallows the blank
+    # lines that precede the block. If it did, a replace would strip them and re-runs would
+    # keep changing the file; anchoring to horizontal whitespace makes replacement idempotent.
+    $pattern = '(?m)^[ \t]*\$expectedParams\s*=\s*@\((?<arr>[\s\S]*?)\)'
+
+    # IMPORTANT (idempotency): decide the branch by whether the block EXISTS, not by
+    # whether the replacement changed the content. Previously the fallback insert ran
+    # whenever the regex replacement produced no change - which includes the already-correct
+    # case - so a second run inserted a DUPLICATE $expectedParams block into every synced
+    # test file (253 files had both a param() block and the array). Guarding on presence
+    # makes re-runs a safe no-op.
+    if ([regex]::IsMatch($content, $pattern)) {
+        $newContent = [regex]::Replace($content, $pattern, $replacement)
+        if ($newContent -ne $content) {
+            Set-Content -Path $TestPath -Value $newContent -NoNewline
+            return $true
+        }
+        # Block already present and already correct - do NOT fall through to insert.
+        return $false
     }
-    # Fallback: insert after param() block
+
+    # No existing block: insert after the param() block when one exists.
     $paramBlock = [regex]::Match($content, '(?m)^param\s*\((?:[\s\S]*?)\)\s*')
     if ($paramBlock.Success) {
         $idx = $paramBlock.Index + $paramBlock.Length
@@ -85,46 +101,51 @@ function Replace-ExpectedParamsInTest {
     return $false
 }
 
-$testFiles = Get-ChildItem -Path $testsRoot -Filter '*.Tests.ps1' -File -Recurse
-Write-Host "Found $($testFiles.Count) test files in Unit" -ForegroundColor Cyan
+# Guard the main loop so this script can be dot-sourced (e.g. by the regression test in
+# tests/Unit/SyncExpectedParams.Tests.ps1) to exercise the helper functions in isolation
+# without mutating the real test suite. When dot-sourced, $MyInvocation.InvocationName is '.'.
+if ($MyInvocation.InvocationName -ne '.') {
+    $testFiles = Get-ChildItem -Path $testsRoot -Filter '*.Tests.ps1' -File -Recurse
+    Write-Host "Found $($testFiles.Count) test files in Unit" -ForegroundColor Cyan
 
-$updated = 0; $skipped = 0; $missing = 0; $failed = 0
+    $updated = 0; $skipped = 0; $missing = 0; $failed = 0
 
-foreach ($tf in $testFiles) {
-    $base = [System.IO.Path]::GetFileNameWithoutExtension($tf.Name)
-    $functionName = [regex]::Replace($base, '(?i)\.tests$', '')
-    $funcFile = Find-FunctionFile -FunctionName $functionName
-    if (-not $funcFile) {
-        Write-Warning "No function file found for test '$($tf.Name)' (function '$functionName')"
-        $missing++; continue
-    }
-    try {
-        $params = Get-FunctionParametersViaDotSource -FunctionName $functionName -FunctionPath $funcFile.FullName
-        # Separate function-specific from common/default parameters; keep requested ordering: function params first, common at bottom.
-        $commonList = @('Verbose','Debug','ErrorAction','WarningAction','InformationAction','InformationVariable','OutVariable','OutBuffer','PipelineVariable','ErrorVariable','WarningVariable','Confirm','WhatIf')
-        $functionSpecific = @()
-        $commonDetected = @()
-        foreach ($p in $params) {
-            if ($commonList -contains $p) {
-                if (-not ($commonDetected -contains $p)) { $commonDetected += $p }
-            } else {
-                if (-not ($functionSpecific -contains $p)) { $functionSpecific += $p }
+    foreach ($tf in $testFiles) {
+        $base = [System.IO.Path]::GetFileNameWithoutExtension($tf.Name)
+        $functionName = [regex]::Replace($base, '(?i)\.tests$', '')
+        $funcFile = Find-FunctionFile -FunctionName $functionName
+        if (-not $funcFile) {
+            Write-Warning "No function file found for test '$($tf.Name)' (function '$functionName')"
+            $missing++; continue
+        }
+        try {
+            $params = Get-FunctionParametersViaDotSource -FunctionName $functionName -FunctionPath $funcFile.FullName
+            # Separate function-specific from common/default parameters; keep requested ordering: function params first, common at bottom.
+            $commonList = @('Verbose','Debug','ErrorAction','WarningAction','InformationAction','InformationVariable','OutVariable','OutBuffer','PipelineVariable','ErrorVariable','WarningVariable','Confirm','WhatIf')
+            $functionSpecific = @()
+            $commonDetected = @()
+            foreach ($p in $params) {
+                if ($commonList -contains $p) {
+                    if (-not ($commonDetected -contains $p)) { $commonDetected += $p }
+                } else {
+                    if (-not ($functionSpecific -contains $p)) { $functionSpecific += $p }
+                }
             }
+            # Order common parameters according to commonList declaration
+            $orderedCommon = foreach ($c in $commonList) { if ($commonDetected -contains $c) { $c } }
+            $finalParams = @($functionSpecific + $orderedCommon)
+            if (Set-ExpectedParamsInTest -TestPath $tf.FullName -ExpectedParams $finalParams) {
+                Write-Host "Updated expected params in: $($tf.Name)" -ForegroundColor Green
+                $updated++
+            } else {
+                Write-Host "No change needed: $($tf.Name)" -ForegroundColor DarkGray
+                $skipped++
+            }
+        } catch {
+            Write-Warning $_.Exception.Message
+            $failed++
         }
-        # Order common parameters according to commonList declaration
-        $orderedCommon = foreach ($c in $commonList) { if ($commonDetected -contains $c) { $c } }
-        $finalParams = @($functionSpecific + $orderedCommon)
-        if (Replace-ExpectedParamsInTest -TestPath $tf.FullName -ExpectedParams $finalParams) {
-            Write-Host "Updated expected params in: $($tf.Name)" -ForegroundColor Green
-            $updated++
-        } else {
-            Write-Host "No change needed: $($tf.Name)" -ForegroundColor DarkGray
-            $skipped++
-        }
-    } catch {
-        Write-Warning $_.Exception.Message
-        $failed++
     }
-}
 
-Write-Host "Done. Updated: $updated, Skipped: $skipped, Missing function: $missing, Failed: $failed" -ForegroundColor Yellow
+    Write-Host "Done. Updated: $updated, Skipped: $skipped, Missing function: $missing, Failed: $failed" -ForegroundColor Yellow
+}

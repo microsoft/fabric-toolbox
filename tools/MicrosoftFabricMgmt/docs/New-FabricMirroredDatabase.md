@@ -58,7 +58,7 @@ New-FabricMirroredDatabase -WorkspaceId $workspace.id `
 
 ## Prerequisites
 
-- **Global Configuration:** Use `Set-FabricApiHeaders` to set `$FabricConfig` with:
+- **Global Configuration:** Use `Connect-FabricAccount` to set `$FabricConfig` with:
   - `BaseUrl`: Base API endpoint for Microsoft Fabric.
   - `FabricHeaders`: Authentication headers for API requests.
 - **Token Validation:** Requires `Test-TokenExpired` to check token validity.

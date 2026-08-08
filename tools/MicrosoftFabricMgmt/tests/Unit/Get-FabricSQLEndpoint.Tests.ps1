@@ -5,6 +5,7 @@ $expectedParams = @(
     "WorkspaceId"
     "SQLEndpointId"
     "SQLEndpointName"
+    "Raw"
     "ProgressAction"
     "Verbose"
     "Debug"

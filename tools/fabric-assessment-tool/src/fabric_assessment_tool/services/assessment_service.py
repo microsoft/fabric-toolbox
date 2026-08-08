@@ -24,6 +24,7 @@ class AssessmentService:
         mode: str,
         workspaces: List[str],
         output_path: str,
+        cloud: str = "azure",
         output_format: str = "json",
         subscription_id: Optional[str] = None,
         auth_method: Optional[str] = None,
@@ -33,6 +34,9 @@ class AssessmentService:
         sql_client_id: Optional[str] = None,
         sql_client_secret: Optional[str] = None,
         sql_tenant_id: Optional[str] = None,
+        resources: Optional[List[str]] = None,
+        download_notebooks: bool = False,
+        max_parallel_api_calls: int = 8,
     ) -> Dict[str, Any]:
         """
         Perform assessment on specified workspaces.
@@ -42,6 +46,7 @@ class AssessmentService:
             mode: Assessment mode (full, etc.)
             workspaces: List of workspace names to assess
             output_path: Base path for output folder structure
+            cloud: Cloud provider for the source platform ("azure" or "aws")
             output_format: Export format (json, csv, parquet)
             subscription_id: Azure subscription ID (optional, will use Azure CLI default if not provided)
             auth_method: Authentication method ("azure-cli", "fabric", or None for auto-detect)
@@ -61,8 +66,31 @@ class AssessmentService:
         """
         # print(f"Initializing {source} client...")
 
+        if source == "synapse" and cloud != "azure":
+            raise ValueError("Synapse assessments only support --cloud azure")
+
+        if source == "databricks" and cloud == "aws":
+            self._validate_aws_databricks_workspace_selection(workspaces)
+
+        if (
+            source == "databricks"
+            and cloud == "aws"
+            and len(workspaces) > 1
+            and (
+                not os.getenv("DATABRICKS_CLIENT_ID")
+                or not os.getenv("DATABRICKS_CLIENT_SECRET")
+            )
+        ):
+            raise ValueError(
+                "AWS Databricks assessments with multiple workspaces require "
+                "DATABRICKS_CLIENT_ID and DATABRICKS_CLIENT_SECRET environment "
+                "variables. DATABRICKS_TOKEN only supports a single workspace."
+            )
+
         # Get or create client for the source
         client_kwargs = {}
+        if source == "databricks":
+            client_kwargs["cloud"] = cloud
         if subscription_id:
             client_kwargs["subscription_id"] = subscription_id
         if auth_method:
@@ -87,9 +115,10 @@ class AssessmentService:
             "metadata": {
                 "source": source,
                 "mode": mode,
+                "cloud": cloud,
                 "workspaces": workspaces,
                 "timestamp": datetime.now().isoformat(),
-                "version": "0.2.0",
+                "version": "0.3.0",
                 "output_format": output_format,
             },
             "results": [],
@@ -122,14 +151,35 @@ class AssessmentService:
             # print(f"Assessing workspace: {workspace}")
             try:
                 # Get assessment data as dataclass object
-                workspace_assessment = client.assess_workspace(workspace, mode)
+                assess_kwargs = {}
+                if source == "databricks":
+                    assess_kwargs.update(
+                        {
+                            "resources": resources,
+                            "output_path": output_path,
+                            "download_notebooks": download_notebooks,
+                            "max_parallel_api_calls": max_parallel_api_calls,
+                        }
+                    )
+                workspace_assessment = client.assess_workspace(
+                    workspace,
+                    mode,
+                    **assess_kwargs,
+                )
 
                 # Export the assessment data using the structured export service
+                # When jobs are re-extracted, notebooks are re-annotated with
+                # job execution data — ensure they are also rewritten on disk.
+                export_resources = resources
+                if resources and "jobs" in resources and "notebooks" not in resources:
+                    export_resources = list(resources) + ["notebooks"]
+
                 export_result = self.export_service.export_assessment(
                     assessment_data=workspace_assessment,
                     workspace_name=workspace,
                     output_path=output_path,
                     format=output_format,
+                    resources=export_resources,
                 )
 
                 export_results["results"].append(export_result)
@@ -192,6 +242,28 @@ class AssessmentService:
                 raise ValueError(f"Unsupported source: {source}")
 
         return self.clients[client_key]
+
+    def _validate_aws_databricks_workspace_selection(
+        self, workspaces: List[str]
+    ) -> None:
+        """Validate AWS Databricks workspace selection authentication."""
+        if workspaces:
+            return
+
+        required_vars = [
+            "DATABRICKS_ACCOUNT_ID",
+            "DATABRICKS_CLIENT_ID",
+            "DATABRICKS_CLIENT_SECRET",
+        ]
+        missing_vars = [
+            var_name for var_name in required_vars if not os.getenv(var_name)
+        ]
+        if missing_vars:
+            raise ValueError(
+                "AWS Databricks assessments without --workspace/-ws require "
+                "account API authentication to list workspaces. Missing "
+                f"environment variable(s): {', '.join(missing_vars)}."
+            )
 
     def _save_assessment_summary(
         self, results: Dict[str, Any], output_path: str

@@ -12,6 +12,9 @@
 .PARAMETER SnowflakeDatabaseId
     The GUID of the Snowflake Database whose definition to retrieve.
 
+.PARAMETER Raw
+    If specified, returns the untouched API response.
+
 .EXAMPLE
     Get-FabricSnowflakeDatabaseDefinition -WorkspaceId "12345678-1234-1234-1234-123456789012" -SnowflakeDatabaseId "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee"
 
@@ -34,7 +37,10 @@ function Get-FabricSnowflakeDatabaseDefinition {
         [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
         [Alias('id')]
-        [string]$SnowflakeDatabaseId
+        [string]$SnowflakeDatabaseId,
+
+        [Parameter()]
+        [switch]$Raw
     )
 
     process {
@@ -52,6 +58,10 @@ function Get-FabricSnowflakeDatabaseDefinition {
                 Method  = 'Post'
             }
             $response = Invoke-FabricAPIRequest @apiParams
+
+            if ($Raw) {
+                return $response
+            }
 
             if ($response) {
                 Write-FabricLog -Message "Snowflake Database definition retrieved successfully." -Level Debug

@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="page-header">
+    <h1>📓 All Notebooks</h1>
+    <p>{{ items | length }} notebooks across all workspaces</p>
+</div>
+
+<div class="card">
+    <div class="card-header">
+        Notebooks (Page {{ current_page }} of {{ total_pages }})
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Language</th>
+                        <th class="text-right">Size (KB)</th>
+                        <th>Uses dbutils</th>
+                        <th>Last Job Execution</th>
+                        <th>Workspace</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for nb in page_items %}
+                    <tr data-workspace="{{ nb.workspace | default('N/A') }}">
+                        <td>{{ nb.name | default(nb.path | default('Unknown')) }}</td>
+                        <td>
+                            <span class="badge badge-secondary">
+                                {{ nb.language | default(nb.default_language | default('N/A')) }}
+                            </span>
+                        </td>
+                        <td class="text-right">
+                            {% set _sz = nb.size %}
+                            {% if _sz is number and _sz > 0 %}
+                                {{ '%.1f' | format(_sz / 1024) }}
+                            {% else %}
+                                N/A
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if nb.uses_dbutils %}
+                            <span class="badge" style="background-color: #ffc107; color: #000;">Yes</span>
+                            {% else %}
+                            <span class="badge badge-secondary">No</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ nb.last_job_execution | default('—') }}</td>
+                        <td>{{ nb.workspace | default('N/A') }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Pagination -->
+        {% if total_pages > 1 %}
+        <nav class="pagination-nav">
+            {% if current_page > 1 %}
+            <a href="notebooks_page_{{ current_page - 1 }}.html">← Previous</a>
+            {% endif %}
+            <span class="pagination-info">Page {{ current_page }} of {{ total_pages }}</span>
+            {% if current_page < total_pages %}
+            <a href="notebooks_page_{{ current_page + 1 }}.html">Next →</a>
+            {% endif %}
+        </nav>
+        {% endif %}
+    </div>
+</div>
+
+<div class="mt-2">
+    <a href="data_engineering.html">← Back to Data Engineering</a>
+</div>
+{% endblock %}

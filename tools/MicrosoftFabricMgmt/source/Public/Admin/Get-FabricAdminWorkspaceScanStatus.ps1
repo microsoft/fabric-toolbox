@@ -54,7 +54,7 @@ function Get-FabricAdminWorkspaceScanStatus {
                 if ($Raw) {
                     return $response
                 }
-                $response.PSObject.TypeNames.Insert(0, 'MicrosoftFabric.AdminWorkspaceScanStatus')
+                $response | Add-FabricTypeName -TypeName 'MicrosoftFabric.AdminWorkspaceScanStatus'
                 return $response
             }
             return $null

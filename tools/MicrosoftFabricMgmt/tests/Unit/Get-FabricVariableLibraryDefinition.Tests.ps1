@@ -5,6 +5,7 @@ $expectedParams = @(
     "WorkspaceId"
     "VariableLibraryId"
     "VariableLibraryFormat"
+    "Raw"
     "ProgressAction"
     "Verbose"
     "Debug"

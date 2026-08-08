@@ -41,7 +41,7 @@ Update-FabricDataPipeline -WorkspaceId "workspace-12345" -DataPipelineId "pipeli
 This example updates the DataPipeline with ID `pipeline-67890` in workspace `workspace-12345` with a new name and description.
 
 ## Prerequisites
-- Use the command `Set-FabricApiHeaders` to set global configuration variable `$FabricConfig` , containing:
+- Use the command `Connect-FabricAccount` to set global configuration variable `$FabricConfig` , containing:
   - `BaseUrl`: Base API endpoint for Fabric.
   - `FabricHeaders`: Authentication headers for API requests.
 - Token validation requires the `Test-TokenExpired` helper function.

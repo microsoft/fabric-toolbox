@@ -19,6 +19,9 @@ The ID of the Warehouse for which to retrieve the connection string. This parame
 .PARAMETER PrivateLinkType
 (Optional) The type of private link to use for the connection string. Valid values are 'None' or 'Workspace'.
 
+.PARAMETER Raw
+If specified, returns the untouched API response.
+
 .EXAMPLE
 Get-FabricWarehouseConnectionString -WorkspaceId "workspace123" -WarehouseId "warehouse456"
 
@@ -49,49 +52,58 @@ function Get-FabricWarehouseConnectionString {
         [Parameter(Mandatory = $false)]
         [ValidateNotNullOrEmpty()]
         [ValidateSet('None', 'Workspace')]
-        [string]$PrivateLinkType
+        [string]$PrivateLinkType,
+
+        [Parameter()]
+        [switch]$Raw
     )
-    try {
-        Invoke-FabricAuthCheck -ThrowOnFailure
+    process {
+        try {
+            Invoke-FabricAuthCheck -ThrowOnFailure
 
 
-        # Construct the API endpoint URI
-        $apiEndpointURI = "{0}/workspaces/{1}/warehouses/{2}/connectionString" -f $script:FabricAuthContext.BaseUrl, $WorkspaceId, $WarehouseId
-        # Append query parameters if GuestTenantId or PrivateLinkType are provided
-        $queryParams = @()
-        if ($GuestTenantId) {
-            $queryParams += "guestTenantId=$GuestTenantId"
-        }
-        if ($PrivateLinkType) {
-            $queryParams += "privateLinkType=$PrivateLinkType"
-        }
-        if ($queryParams.Count -gt 0) {
-            $apiEndpointURI += "?" + ($queryParams -join "&")
-        }
+            # Construct the API endpoint URI
+            $apiEndpointURI = "{0}/workspaces/{1}/warehouses/{2}/connectionString" -f $script:FabricAuthContext.BaseUrl, $WorkspaceId, $WarehouseId
+            # Append query parameters if GuestTenantId or PrivateLinkType are provided
+            $queryParams = @()
+            if ($GuestTenantId) {
+                $queryParams += "guestTenantId=$GuestTenantId"
+            }
+            if ($PrivateLinkType) {
+                $queryParams += "privateLinkType=$PrivateLinkType"
+            }
+            if ($queryParams.Count -gt 0) {
+                $apiEndpointURI += "?" + ($queryParams -join "&")
+            }
 
-        Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+            Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
 
-        # Make the API request
-        $apiParams = @{
-            BaseURI = $apiEndpointURI
-            Headers = $script:FabricAuthContext.FabricHeaders
-            Method  = 'Get'
-        }
-        $dataItems = Invoke-FabricAPIRequest @apiParams
+            # Make the API request
+            $apiParams = @{
+                BaseURI = $apiEndpointURI
+                Headers = $script:FabricAuthContext.FabricHeaders
+                Method  = 'Get'
+            }
+            $dataItems = Invoke-FabricAPIRequest @apiParams
 
-        # Immediately handle empty response
-        if (-not $dataItems) {
-            Write-FabricLog -Message "No data returned from the API." -Level Warning
-            return $null
+            if ($Raw) {
+                return $dataItems
+            }
+
+            # Immediately handle empty response
+            if (-not $dataItems) {
+                Write-FabricLog -Message "No data returned from the API." -Level Warning
+                return $null
+            }
+            else {
+                Write-FabricLog -Message "Item(s) found matching the specified criteria." -Level Debug
+                return $dataItems
+            }
         }
-        else {
-            Write-FabricLog -Message "Item(s) found matching the specified criteria." -Level Debug
-            return $dataItems
+        catch {
+            # Capture and log error details
+            $errorDetails = $_.Exception.Message
+            Write-FabricLog -Message "Failed to retrieve Warehouse connection string. Error: $errorDetails" -Level Error
         }
-    }
-    catch {
-        # Capture and log error details
-        $errorDetails = $_.Exception.Message
-        Write-FabricLog -Message "Failed to retrieve Warehouse connection string. Error: $errorDetails" -Level Error
     }
 }

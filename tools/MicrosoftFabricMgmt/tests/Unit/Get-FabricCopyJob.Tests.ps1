@@ -5,6 +5,7 @@ $expectedParams = @(
     "WorkspaceId"
     "CopyJobId"
     "CopyJobName"
+    "Raw"
     "ProgressAction"
     "Verbose"
     "Debug"

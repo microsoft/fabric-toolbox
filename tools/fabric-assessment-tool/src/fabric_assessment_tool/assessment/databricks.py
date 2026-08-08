@@ -166,6 +166,9 @@ class DatabricksNotebook:
     created_at: Optional[str] = None
     modified_at: Optional[str] = None
     size: Optional[int] = None
+    last_job_execution: Optional[str] = None
+    executed_by_jobs: Optional[List[int]] = None
+    content: Optional[str] = None
 
 
 @dataclass
@@ -189,6 +192,7 @@ class DatabricksJobTask:
     max_retries: Optional[int] = None
     cluster_type: Optional[str] = None
     cluster_config: Optional[dict] = None
+    notebook_path: Optional[str] = None
 
 
 @dataclass
@@ -631,9 +635,7 @@ class DatabricksAssessment:
             len(self.genie_spaces.genie_spaces) if self.genie_spaces else 0
         )
         summary["counts"]["cluster_policies"] = (
-            len(self.cluster_policies.cluster_policies)
-            if self.cluster_policies
-            else 0
+            len(self.cluster_policies.cluster_policies) if self.cluster_policies else 0
         )
         summary["counts"]["instance_pools"] = (
             len(self.instance_pools.instance_pools) if self.instance_pools else 0

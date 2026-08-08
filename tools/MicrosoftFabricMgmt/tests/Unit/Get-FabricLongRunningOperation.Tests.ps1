@@ -6,6 +6,7 @@ $expectedParams = @(
     "location"
     "retryAfter"
     "timeoutInSeconds"
+    "Raw"
     "ProgressAction"
     "Verbose"
     "Debug"

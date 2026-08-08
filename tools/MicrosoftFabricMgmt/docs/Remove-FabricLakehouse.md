@@ -37,7 +37,7 @@ Deletes the Lakehouse with ID "67890" from workspace "12345".
 
 ## Prerequisites
 
-- Use the `Set-FabricApiHeaders` command to configure the global `$FabricConfig` variable, which must include:
+- Use the `Connect-FabricAccount` command to configure the global `$FabricConfig` variable, which must include:
   - `BaseUrl`: The base API endpoint for Fabric.
   - `FabricHeaders`: Authentication headers for API requests.
 - The `Test-TokenExpired` helper function ensures that the token is valid.

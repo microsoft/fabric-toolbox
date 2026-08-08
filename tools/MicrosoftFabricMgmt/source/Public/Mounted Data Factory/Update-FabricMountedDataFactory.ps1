@@ -50,54 +50,56 @@ function Update-FabricMountedDataFactory {
         [Alias('Description')]
         [string]$MountedDataFactoryDescription
     )
-    try {
-        # Validate that at least one update parameter is provided
-        if (-not $MountedDataFactoryName -and -not $MountedDataFactoryDescription) {
-            Write-FabricLog -Message "At least one of MountedDataFactoryName or MountedDataFactoryDescription must be specified" -Level Error
-            return
-        }
-
-        Invoke-FabricAuthCheck -ThrowOnFailure
-
-        # Construct the API endpoint URI
-        $apiEndpointURI = New-FabricAPIUri -Resource 'workspaces' -WorkspaceId $WorkspaceId -Subresource 'mountedDataFactories' -ItemId $MountedDataFactoryId
-        Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
-
-        # Construct the request body
-        $body = @{}
-
-        if ($MountedDataFactoryName) {
-            $body.displayName = $MountedDataFactoryName
-        }
-
-        if ($MountedDataFactoryDescription) {
-            $body.description = $MountedDataFactoryDescription
-        }
-
-        # Convert the body to JSON
-        $bodyJson = $body | ConvertTo-Json
-        Write-FabricLog -Message "Request Body: $bodyJson" -Level Debug
-
-        # Make the API request when confirmed
-        $target = "Mounted Data Factory '$MountedDataFactoryId' in workspace '$WorkspaceId'"
-        $action = "Update Mounted Data Factory display name/description"
-        if ($PSCmdlet.ShouldProcess($target, $action)) {
-            $apiParams = @{
-                Headers = $script:FabricAuthContext.FabricHeaders
-                BaseURI = $apiEndpointURI
-                Method  = 'Patch'
-                Body    = $bodyJson
+    process {
+        try {
+            # Validate that at least one update parameter is provided
+            if (-not $MountedDataFactoryName -and -not $MountedDataFactoryDescription) {
+                Write-FabricLog -Message "At least one of MountedDataFactoryName or MountedDataFactoryDescription must be specified" -Level Error
+                return
             }
-            $response = Invoke-FabricAPIRequest @apiParams
 
-            # Return the API response
-            Write-FabricLog -Message "Mounted Data Factory '$MountedDataFactoryName' updated successfully!" -Level Host
-            return $response
+            Invoke-FabricAuthCheck -ThrowOnFailure
+
+            # Construct the API endpoint URI
+            $apiEndpointURI = New-FabricAPIUri -Resource 'workspaces' -WorkspaceId $WorkspaceId -Subresource 'mountedDataFactories' -ItemId $MountedDataFactoryId
+            Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+
+            # Construct the request body
+            $body = @{}
+
+            if ($MountedDataFactoryName) {
+                $body.displayName = $MountedDataFactoryName
+            }
+
+            if ($MountedDataFactoryDescription) {
+                $body.description = $MountedDataFactoryDescription
+            }
+
+            # Convert the body to JSON
+            $bodyJson = $body | ConvertTo-Json
+            Write-FabricLog -Message "Request Body: $bodyJson" -Level Debug
+
+            # Make the API request when confirmed
+            $target = "Mounted Data Factory '$MountedDataFactoryId' in workspace '$WorkspaceId'"
+            $action = "Update Mounted Data Factory display name/description"
+            if ($PSCmdlet.ShouldProcess($target, $action)) {
+                $apiParams = @{
+                    Headers = $script:FabricAuthContext.FabricHeaders
+                    BaseURI = $apiEndpointURI
+                    Method  = 'Patch'
+                    Body    = $bodyJson
+                }
+                $response = Invoke-FabricAPIRequest @apiParams
+
+                # Return the API response
+                Write-FabricLog -Message "Mounted Data Factory '$MountedDataFactoryName' updated successfully!" -Level Host
+                return $response
+            }
         }
-    }
-    catch {
-        # Capture and log error details
-        $errorDetails = $_.Exception.Message
-        Write-FabricLog -Message "Failed to update Mounted Data Factory. Error: $errorDetails" -Level Error
+        catch {
+            # Capture and log error details
+            $errorDetails = $_.Exception.Message
+            Write-FabricLog -Message "Failed to update Mounted Data Factory. Error: $errorDetails" -Level Error
+        }
     }
 }

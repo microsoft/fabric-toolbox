@@ -5,6 +5,7 @@ $expectedParams = @(
     "WorkspaceId"
     "MLModelId"
     "MLModelName"
+    "Raw"
     "ProgressAction"
     "Verbose"
     "Debug"

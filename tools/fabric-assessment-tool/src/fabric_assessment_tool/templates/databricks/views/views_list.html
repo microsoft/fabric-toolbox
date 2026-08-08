@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="page-header">
+    <h1>👁️ All Views</h1>
+    <p>{{ items | length }} views across all workspaces</p>
+</div>
+<div class="card">
+    <div class="card-header">Views (Page {{ current_page }} of {{ total_pages }})</div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table">
+                <thead><tr><th>View</th><th>Catalog.Schema</th><th class="text-right">Columns</th><th>Workspace</th></tr></thead>
+                <tbody>
+                    {% for v in page_items %}
+                    <tr data-workspace="{{ v.workspace | default('N/A') }}">
+                        <td>{{ v.name | default('Unknown') }}</td>
+                        <td><code>{{ v.catalog }}.{{ v.schema }}</code></td>
+                        <td class="text-right">{{ v.columns | default('N/A') }}</td>
+                        <td>{{ v.workspace | default('N/A') }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% if total_pages > 1 %}
+        <nav class="pagination-nav">
+            {% if current_page > 1 %}<a href="views_page_{{ current_page - 1 }}.html">← Previous</a>{% endif %}
+            <span class="pagination-info">Page {{ current_page }} of {{ total_pages }}</span>
+            {% if current_page < total_pages %}<a href="views_page_{{ current_page + 1 }}.html">Next →</a>{% endif %}
+        </nav>
+        {% endif %}
+    </div>
+</div>
+<div class="mt-2"><a href="data_warehousing.html">← Back to Data Warehousing</a></div>
+{% endblock %}

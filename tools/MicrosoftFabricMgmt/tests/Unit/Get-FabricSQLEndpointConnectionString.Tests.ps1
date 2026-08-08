@@ -6,6 +6,7 @@ $expectedParams = @(
     "SQLEndpointId"
     "GuestTenantId"
     "PrivateLinkType"
+    "Raw"
     "ProgressAction"
     "Verbose"
     "Debug"

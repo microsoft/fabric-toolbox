@@ -5,6 +5,7 @@ $expectedParams = @(
     "WorkspaceId"
     "ManagedPrivateEndpointId"
     "ManagedPrivateEndpointName"
+    "Raw"
     "ProgressAction"
     "Verbose"
     "Debug"

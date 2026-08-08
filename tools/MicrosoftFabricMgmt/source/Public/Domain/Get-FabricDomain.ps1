@@ -66,7 +66,7 @@ function Get-FabricDomain {
         if ($NonEmptyDomainsOnly) {
             $queryParams['nonEmptyOnly'] = 'true'
         }
-        
+
         # Build URI manually for admin/domains endpoint
         $baseUri = "$($script:FabricAuthContext.BaseUrl)/admin/domains"
         if ($queryParams.Count -gt 0) {

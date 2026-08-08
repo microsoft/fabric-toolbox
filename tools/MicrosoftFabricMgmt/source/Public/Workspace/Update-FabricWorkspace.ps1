@@ -49,51 +49,53 @@ function Update-FabricWorkspace {
         [Alias('Description')]
         [string]$WorkspaceDescription
     )
+    process {
 
-    try {
-        # Validate that at least one update parameter is provided
-        if (-not $WorkspaceName -and -not $WorkspaceDescription) {
-            Write-FabricLog -Message "At least one of WorkspaceName or WorkspaceDescription must be specified" -Level Error
-            return
+        try {
+            # Validate that at least one update parameter is provided
+            if (-not $WorkspaceName -and -not $WorkspaceDescription) {
+                Write-FabricLog -Message "At least one of WorkspaceName or WorkspaceDescription must be specified" -Level Error
+                return
+            }
+
+            # Validate authentication
+            Invoke-FabricAuthCheck -ThrowOnFailure
+
+            # Construct the API endpoint URI
+            $apiEndpointURI = New-FabricAPIUri -Resource 'workspaces' -WorkspaceId $WorkspaceId
+
+            # Construct the request body
+            $body = @{}
+
+            if ($WorkspaceName) {
+                $body.displayName = $WorkspaceName
+            }
+
+            if ($WorkspaceDescription) {
+                $body.description = $WorkspaceDescription
+            }
+
+            # Convert the body to JSON
+            $bodyJson = Convert-FabricRequestBody -InputObject $body
+
+            # Make the API request
+            $apiParams = @{
+                Headers = $script:FabricAuthContext.FabricHeaders
+                BaseURI = $apiEndpointURI
+                Method = 'Patch'
+                Body = $bodyJson
+            }
+
+            if ($PSCmdlet.ShouldProcess("Workspace '$WorkspaceId' to '$WorkspaceName'", 'Update')) {
+                $response = Invoke-FabricAPIRequest @apiParams
+                Write-FabricLog -Message "Workspace '$WorkspaceName' updated successfully!" -Level Host
+                $response
+            }
         }
-
-        # Validate authentication
-        Invoke-FabricAuthCheck -ThrowOnFailure
-
-        # Construct the API endpoint URI
-        $apiEndpointURI = New-FabricAPIUri -Resource 'workspaces' -WorkspaceId $WorkspaceId
-
-        # Construct the request body
-        $body = @{}
-
-        if ($WorkspaceName) {
-            $body.displayName = $WorkspaceName
+        catch {
+            # Capture and log error details
+            $errorDetails = $_.Exception.Message
+            Write-FabricLog -Message "Failed to update workspace. Error: $errorDetails" -Level Error
         }
-
-        if ($WorkspaceDescription) {
-            $body.description = $WorkspaceDescription
-        }
-
-        # Convert the body to JSON
-        $bodyJson = Convert-FabricRequestBody -InputObject $body
-
-        # Make the API request
-        $apiParams = @{
-            Headers = $script:FabricAuthContext.FabricHeaders
-            BaseURI = $apiEndpointURI
-            Method = 'Patch'
-            Body = $bodyJson
-        }
-
-        if ($PSCmdlet.ShouldProcess("Workspace '$WorkspaceId' to '$WorkspaceName'", 'Update')) {
-            $response = Invoke-FabricAPIRequest @apiParams
-            Write-FabricLog -Message "Workspace '$WorkspaceName' updated successfully!" -Level Host
-            $response
-        }
-    }
-    catch {
-        # Capture and log error details
-        $errorDetails = $_.Exception.Message
-        Write-FabricLog -Message "Failed to update workspace. Error: $errorDetails" -Level Error
     }
 }

@@ -1,12 +1,208 @@
-## [1.0.9] - 2026-06-21
+## [1.1.0] - 2026-07-07
 
 ### Added
 
-- **`New-FabricSemanticModel`** and **`New-FabricReport`**: New optional `-FolderId` parameter that places the newly created item directly inside a workspace folder (resolves [#427](https://github.com/microsoft/fabric-toolbox/issues/427)). Maps to the Fabric *Create item* API `folderId` request-body property; when omitted, the item is created in the workspace root.
+- **Workspace networking commands** (8 new) filling the remaining platform networking gap
+  (all preview, under `/workspaces/{workspaceId}/networking/communicationPolicy/...`):
+  `Get/Set-FabricWorkspaceNetworkCommunicationPolicy` (full policy; PUT supports optimistic
+  concurrency via `-IfMatch`), `Get/Set-FabricWorkspaceOutboundConnectionRule`,
+  `Get/Set-FabricWorkspaceOutboundGatewayRule`, and `Get/Set-FabricWorkspaceGitOutboundPolicy`
+  (`-IfMatch`). Getters enrich with `WorkspaceName` + a `MicrosoftFabric.*` type and honor `-Raw`;
+  setters take hashtable pass-through bodies and support `-WhatIf`/`-Confirm`.
+- **`Set-FabricOneLakeImmutabilityPolicy`** (new): `POST /workspaces/{workspaceId}/onelake/settings/modifyImmutabilityPolicy`;
+  `-Scope` (DiagnosticLogs) + `-RetentionDays`; supports `-WhatIf`/`-Confirm` and `-Raw`.
+- **`New-FabricSemanticModel`** and **`New-FabricReport`**: new optional `-FolderId` parameter that
+  places the newly created item directly inside a workspace folder (resolves
+  [#427](https://github.com/microsoft/fabric-toolbox/issues/427)). Maps to the Fabric *Create item*
+  API `folderId` request-body property; when omitted, the item is created in the workspace root.
+
+### Fixed
+
+- **`Get-FabricConnection -ConnectionName` validation**: removed the over-restrictive
+  `ValidatePattern('^[a-zA-Z0-9_ ]*$')` that rejected valid connection names containing hyphens,
+  dots, parentheses, etc. The name is a filter, so it now accepts any string (`ValidateNotNullOrEmpty`),
+  matching `New-FabricConnection`. Also corrected the stale `$FabricConfig`/`Test-TokenExpired` note.
+- **`Get-FabricAdminWorkspace` filtering**: the `-Filter` parameter (and `-Top`/`-Skip`/`-OrderBy`)
+  never worked — the Fabric admin `GET /admin/workspaces` endpoint does not support OData query
+  options, so those values were silently ignored. Removed the four phantom parameters and added the
+  genuinely-supported `-EncryptionStatus` (auto-sets `-Include encryption`) and `-Include`. Also fixed
+  `-WorkspaceName`, which returned nothing because the results were re-filtered client-side on
+  `displayName` while the admin API returns `name`; filtering is now server-side via the `name` query
+  parameter. Use the named filters (`-CapacityId`/`-WorkspaceName`/`-WorkspaceType`/`-State`/
+  `-EncryptionStatus`) or pipe to `Where-Object`/`Select-Object` for client-side work.
+- **`scripts/Update-FabricAPISpecsCache.ps1`**: now auto-discovers and downloads the nested
+  `./definitions/{name}.json` files each swagger `$ref`s (cached as `{spec}.{name}.definitions.json`)
+  — e.g. `platform.workspaceNetworkingPolicy.definitions.json`, connections, deploymentPipelines,
+  gitIntegration, externaldatasharing — so the body/response schemas for those operations are
+  durably resolvable during validation. 15 nested files fetched (platform, admin, eventstream), 0 failures.
+- **`scripts/sync-test-expected-params.ps1` idempotency**: a second run no longer corrupts
+  test files. Previously the `param()`-insert fallback ran whenever the regex replacement
+  produced no change — including the already-synced case — so re-running duplicated the
+  `$expectedParams` block into every synced test file (253 had both a `param()` and the array).
+  The branch is now chosen by whether the block exists, the pattern anchors on horizontal
+  whitespace so replacement is byte-stable, and the helper (`Set-ExpectedParamsInTest`, renamed
+  from the unapproved-verb `Replace-…`) plus the main loop are guarded for dot-source testing.
+  New regression suite `tests/Unit/SyncExpectedParams.Tests.ps1`; idempotency also verified
+  against the real `tests/Unit` tree (second run: 0 files changed).
 
 ### Changed
 
-- **`New-FabricSemanticModel`** and **`New-FabricReport`**: Modernized to the shared helper pattern used by newer cmdlets — endpoint URIs are now built with `New-FabricAPIUri` and request bodies serialized with `Convert-FabricRequestBody` (replacing inline string-formatted URIs and `ConvertTo-Json -Depth 10`). Both functions now emit the API response via natural pipeline output instead of `return`.
+- **`Get-FabricAdminGatewayDatasource` now unflattens `connectionDetails`**: the datasource's
+  `connectionDetails` JSON is parsed and every field is surfaced as a PascalCased top-level
+  property (varies by `datasourceType` — `Server`/`Database` for Sql/AnalysisServices/Oracle,
+  `Url` for OData/Web/SharePoint, `Path` for File/Folder, `ConnectionString` for Odbc, etc.),
+  plus a structured `ConnectionDetailsParsed` object. The raw `connectionDetails` string and the
+  `Connection` summary are unchanged; `-Raw` output is untouched. Added a `GatewayDatasourceView`
+  format view (Gateway / Datasource / Type / Credential / Connection).
+- **Authentication command renamed to `Connect-FabricAccount`**: the auth function formerly named
+  `Set-FabricApiHeaders` is now `Connect-FabricAccount` (matching Azure/Fabric tooling conventions and
+  the name referenced throughout the help). **`Set-FabricApiHeaders` is retained as an exported alias**,
+  so existing scripts keep working unchanged. All help/messages/docs now refer to `Connect-FabricAccount`.
+- **Job-type-in-path modernization**: `Start-FabricLakehouseRefreshMaterializedLakeView`,
+  `Start-FabricLakehouseTableMaintenance`, and `Start-FabricSparkJobDefinitionOnDemand` now call
+  the preferred `.../jobs/{jobType}/instances` path-segment form instead of the legacy
+  `.../jobs/instances?jobType=` query form (both are accepted by the API; the path form is the
+  documented shape). Behavior tests assert the new URL and that the query form is gone. Also
+  removed a dead undefined-variable body reference in the Spark on-demand function.
+- **Display formatting backfill (pass 2)**: `WarehouseSnapshot` (a full item) folded into the
+  shared item table/list views; new dedicated views `ItemJobInstanceView` (Workspace / Job Type /
+  Status / Invoke Type / Start / ID), `ItemScheduleView`, `LakehouseTableView`, and
+  `WarehouseRestorePointView`. Single-object/status/scalar types (networking policies, mirroring
+  statuses, Livy sessions, etc.) intentionally remain on default list rendering per the
+  "add a view only when a resource needs a distinct table" rule.
+- **`Get-FabricAdminRefreshable`**: `-CapacityId` is now optional. When omitted, the org-wide
+  refreshables list is returned (`GET /admin/capacities/refreshables`, `$top` defaulted to 1000);
+  when supplied, behavior is unchanged. Added `-Expand` (e.g. `capacities`) for both variants.
+- **Display formatting backfill** (`MicrosoftFabricMgmt.Format.ps1xml`): the standard item
+  resource types `AnomalyDetector`, `DigitalTwinBuilder`, `DigitalTwinBuilderFlow`,
+  `EventSchemaSet`, `GraphQuerySet`, `Map`, `MirroredAzureDatabricksCatalog`, `Ontology`,
+  `OperationsAgent`, and `UserDataFunction` now render with the shared Capacity/Workspace/Item
+  table + list views. Added dedicated `ConnectionView` (Connection Name / Connectivity Type /
+  Gateway Name / ID) and `DeploymentPipelineView` (Pipeline Name / Description / ID). Formatting
+  is display-only; the enriched object still carries every property.
+- **`New-FabricSemanticModel`** and **`New-FabricReport`**: modernized to the shared helper pattern
+  used by newer cmdlets — endpoint URIs are now built with `New-FabricAPIUri` and request bodies
+  serialized with `Convert-FabricRequestBody`. Both now emit the API response via natural pipeline
+  output instead of `return`.
+
+### Added (earlier this release)
+
+- **Additional resource commands** (19) filling verified coverage gaps:
+  - **DataPipeline definition** (2): `Get/Update-FabricDataPipelineDefinition`.
+  - **Warehouse restore points** (5): `Get/New/Update/Remove-FabricWarehouseRestorePoint`,
+    `Restore-FabricWarehouseToRestorePoint`.
+  - **ML Model endpoint** (8): `Get/Update-FabricMLModelEndpoint`,
+    `Get/Update-FabricMLModelEndpointVersion`, `Enable/Disable-FabricMLModelEndpointVersion`
+    (Disable supports `-All` → deactivateAll), `Invoke-FabricMLModelEndpointScore`,
+    `Invoke-FabricMLModelEndpointVersionScore`.
+  - **External Data Share** (4): `New-FabricExternalDataShare`, `Remove-FabricExternalDataShare`
+    (provider delete, distinct from revoke), `Get-FabricExternalDataShareInvitation`,
+    `Approve-FabricExternalDataShareInvitation` (recipient accept).
+- **Deployment Pipelines command family** (14 new commands): pipeline CRUD
+  (`Get/New/Update/Remove-FabricDeploymentPipeline`), stages
+  (`Get/Update-FabricDeploymentPipelineStage`, `Get-FabricDeploymentPipelineStageItem`),
+  workspace assignment (`Add/Remove-FabricDeploymentPipelineStageWorkspace`),
+  deployment (`Invoke-FabricDeploymentPipelineDeploy`), operations
+  (`Get-FabricDeploymentPipelineOperation`), and role assignments
+  (`Get/Add/Remove-FabricDeploymentPipelineRoleAssignment`), all under `/deploymentPipelines/...`.
+  Deploy `-Items`/`-Options` are hashtable/array pass-throughs; state-changing commands support
+  `-WhatIf`/`-Confirm`; getters honor `-Raw` and add a `MicrosoftFabric.*` type.
+- **Workspace Git integration command family** (8 new commands): `Connect-FabricWorkspaceGit`,
+  `Disconnect-FabricWorkspaceGit`, `Initialize-FabricWorkspaceGitConnection`,
+  `Save-FabricWorkspaceGitCommit` (commit workspace → git), `Update-FabricWorkspaceFromGit`
+  (update workspace ← git), `Get-FabricWorkspaceGitStatus`, `Get-FabricWorkspaceGitCredential`,
+  `Update-FabricWorkspaceGitCredential` (all under `/workspaces/{workspaceId}/git/...`).
+  Complex bodies (provider details, commit mode/items, conflict resolution, credentials source)
+  are hashtable pass-throughs; state-changing commands support `-WhatIf`/`-Confirm`; getters honor `-Raw`.
+- **Job Scheduler command family** (7 new commands) for generic item jobs and schedules:
+  `New-FabricItemSchedule`, `Get-FabricItemSchedule`, `Update-FabricItemSchedule`,
+  `Remove-FabricItemSchedule` (`.../items/{itemId}/jobs/{jobType}/schedules[/{scheduleId}]`),
+  `Start-FabricItemJob` (`POST .../jobs/{jobType}/instances`), `Get-FabricItemJobInstance`
+  (`.../jobs/instances[/{jobInstanceId}]`), and `Stop-FabricItemJobInstance`
+  (`POST .../jobs/instances/{jobInstanceId}/cancel`). Schedule `-Configuration` and job
+  `-ExecutionData` are hashtable pass-throughs; getters enrich WorkspaceName + type and
+  honor `-Raw`; state-changing commands support `-WhatIf`/`-Confirm`.
+- **`New-FabricConnection`** and **`Update-FabricConnection`**: new commands completing the
+  connection CRUD family (Get/Remove/RoleAssignment already existed).
+  - `New-FabricConnection` → `POST /connections`; `Update-FabricConnection` → `PATCH /connections/{connectionId}`.
+  - The polymorphic (per connectivity type) request body is expressed via `-ConnectionDetails`/
+    `-CredentialDetails` hashtables plus typed `-ConnectivityType`/`-GatewayId`/`-PrivacyLevel` parameters.
+  - Return the full created/updated connection object (all API properties) enriched with a resolved
+    `GatewayName` (when gateway-bound) and the `MicrosoftFabric.Connection` type; `-Raw` returns the
+    untouched response. `SupportsShouldProcess` (honors `-WhatIf`/`-Confirm`).
+
+### Fixed
+
+- **`New-FabricAPIUri -Segments` (34 functions were silently broken)**: The helper never had a `-Segments`
+  parameter, yet 34 functions called `New-FabricAPIUri -Segments @(...)` — every `*Definition` getter/updater
+  built via segments plus the Domain functions. The call failed parameter binding, the error was swallowed by
+  the surrounding try/catch, and the function returned nothing without ever calling the API. Added a `-Segments`
+  parameter (its own parameter set) that builds the path from an ordered segment list, restoring these functions.
+- **`Add/Remove/Update-FabricConnectionRoleAssignment`**: Corrected the request URI. These functions built
+  `/connections/roleAssignments/{connectionId}` instead of the correct `/connections/{connectionId}/roleAssignments`
+  (and `.../roleAssignments/{roleAssignmentId}` for Remove/Update), so they targeted the wrong endpoint at runtime.
+  Root cause was `New-FabricAPIUri` placing `-Subresource` before `-ItemId`; the connection id was passed via `-ItemId`.
+- **`Remove-FabricSharingLinks`**: Removed a dead validation loop over an undefined `$Items` variable and repaired
+  corrupted comment-based help. No change to the (already correct) `POST /admin/items/removeAllSharingLinks` call.
+- **`Remove-FabricSharingLinksBulk`**: Repaired corrupted comment-based help and removed an unused format argument.
+  No change to the (already correct) `POST /admin/items/bulkRemoveSharingLinks` call.
+- **`Invoke-FabricAPIRequest` retry backoff**: Fixed an `OverflowException` in the transient-failure (429/503/504)
+  retry path. When the API returned no `Retry-After` header, the backoff delay was computed with
+  `[int](Get-Date).Ticks`, which overflows `Int32` and threw instead of backing off. Extracted the delay
+  calculation into a tested `Get-FabricRetryDelay` helper (honors `Retry-After`, exponential backoff with jitter,
+  clamped 1..120s).
+
+### Changed
+
+- **`-Raw` parameter coverage is now 100% of Get-* functions.** Added `-Raw` (returns the untouched API response)
+  to the ~72 remaining `Get-Fabric*` functions that lacked it — definitions, connection strings, tenant/settings,
+  long-running-operation getters, sub-resources, and admin getters.
+- **Resolved-name enrichment extended** to sub-resource and admin getters whose response (or parameter) carries a
+  resolvable id: Environment libraries/compute, Eventstream sources/destinations, Livy sessions, Lakehouse tables,
+  Mirrored DB status, OneLake shortcuts, Warehouse snapshots, and admin dataflow/dataset/workspace/capacity getters
+  now attach `WorkspaceName`/`CapacityName`/`DatasetName` (as applicable) and a `MicrosoftFabric.*` type on the
+  default path; `-Raw` bypasses enrichment. Enrichment only ADDS NoteProperties — no API property is dropped.
+- **Enrichment / `-Raw` behavior (affects most `Get-Fabric*` functions)**: Default output is now ENRICHED —
+  the full API object plus resolved-name NoteProperties (`WorkspaceName`, `CapacityName`, and where applicable
+  `DatasetName`/`GatewayName`) and a type decoration for the table view. `-Raw` now returns the UNTOUCHED API
+  response (no added properties, no type decoration). Previously the behavior was inverted (default added only
+  type decoration; `-Raw` added the resolved names). If you relied on `-Raw` to obtain resolved names, use the
+  default (non-`-Raw`) output instead; if you need the exact API payload, use `-Raw`.
+- **`Get-FabricWorkspaceRoleAssignment`**: No longer discards the nested `principal` object (previously it
+  rebuilt a trimmed object, dropping `principal.groupDetails`, `servicePrincipalProfileDetails`, etc.). Default
+  output now preserves every API property and adds flattened convenience fields + resolved names; `-Raw` returns
+  the untouched response.
+- **`New-FabricAPIUri`**: Added a `-ResourceId` alias for `-WorkspaceId` to make the primary-resource-id slot
+  self-documenting for non-workspace resources (e.g. connections). Clarified parameter help on segment ordering.
+- **`Update-FabricAPISpecsCache.ps1`**: Also caches the shared `common` definitions (the `Item` base and other
+  shared schemas), enabling response-schema resolution for property-completeness validation.
+- **PowerShell support clarification**: The module targets **PowerShell 7+ (Core) only** (manifest already declares
+  `CompatiblePSEditions = @('Core')`, `PowerShellVersion = '7.0'`). This supersedes the v1.0.0 note about "PowerShell
+  5.1 compatibility" — the module does not load on Windows PowerShell 5.1, and the HTTP layer relies on 7+-only
+  `Invoke-RestMethod` features (`-SkipHttpErrorCheck`, `-StatusCodeVariable`, `-ResponseHeadersVariable`).
+
+### Added
+
+- **API URI regression tests** (`tests/Unit/ApiUriRegression.Tests.ps1`): assert the exact request URI + HTTP method
+  for the connection role-assignment and admin sharing-links functions, and pin the `New-FabricAPIUri` ordering contract.
+- **Property-completeness harness** (`tests/Unit/PropertyCompleteness.Tests.ps1` + `scripts/Get-FabricSchemaProperty.ps1`):
+  schema round-trip tests that resolve each function's response schema (with `allOf`/cross-file `$ref` resolution) and
+  assert every schema property survives on the enriched output; includes a negative control proving trimming is detected.
+- **Enrichment flip tests** (`tests/Unit/EnrichmentFlip.Tests.ps1`): verify default output is enriched and `-Raw` is untouched.
+- **Behavior tests for 80 Get-* functions** that previously had none: each asserts the exact constructed API
+  endpoint + HTTP method, the default resolved-name enrichment + type decoration (or passthrough for
+  definitions/scalars), and that `-Raw` returns the untouched response.
+
+### Changed (QA)
+
+- **Pipeline correctness — 78 functions**: wrapped bodies in `process{}` blocks so `ValueFromPipeline`
+  functions process every piped item, not just the last (`PSUseProcessBlockForPipelineCommand`).
+- **PSScriptAnalyzer clean** across `source/Public` and `source/Private`; added missing `Author:` lines to
+  66 function files.
+- **Power BI REST API spec cache**: `Update-FabricAPISpecsCache.ps1` now also caches the Power BI API
+  (`powerbi.swagger.json` + `powerbi-api-validation.json`) so the admin functions can be validated against a spec.
+- **`Validate-FabricModuleCoverage.ps1`**: rewritten to path-based matching (extracts each function's constructed URI
+  and method) with a new `-Api Fabric|PowerBI|All` switch, fixing large false-negative undercounting of coverage.
 
 ## [1.0.6] - 2026-02-26
 

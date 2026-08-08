@@ -25,6 +25,7 @@
     New-FabricMirroredAzureDatabricksCatalog -WorkspaceId "workspace-12345" -MirroredAzureDatabricksCatalogName "New Mirrored Azure Databricks Catalog" -MirroredAzureDatabricksCatalogDescription "Description of the new Mirrored Azure Databricks Catalog item"
 
 .NOTES
+Author: Tiago Balabuch, Jess Pomfret, Rob Sewell
     - Requires $FabricConfig global configuration, including BaseUrl and FabricHeaders.
     - Calls Invoke-FabricAuthCheck to ensure token validity before making the API request.
 
@@ -54,100 +55,102 @@ function New-FabricMirroredAzureDatabricksCatalog {
         [ValidateNotNullOrEmpty()]
         [string]$MirroredAzureDatabricksCatalogPathPlatformDefinition
     )
+    process {
 
-    try {
-        # Validate authentication token before proceeding
-        Invoke-FabricAuthCheck -ThrowOnFailure
+        try {
+            # Validate authentication token before proceeding
+            Invoke-FabricAuthCheck -ThrowOnFailure
 
-        # Construct the API endpoint URL
-        $apiEndpointURI = New-FabricAPIUri -Resource 'workspaces' -WorkspaceId $WorkspaceId -Subresource 'mirroredAzureDatabricksCatalogs'
-        Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+            # Construct the API endpoint URL
+            $apiEndpointURI = New-FabricAPIUri -Resource 'workspaces' -WorkspaceId $WorkspaceId -Subresource 'mirroredAzureDatabricksCatalogs'
+            Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
 
-        # Construct the request body
-        $body = @{
-            displayName = $MirroredAzureDatabricksCatalogName
-        }
+            # Construct the request body
+            $body = @{
+                displayName = $MirroredAzureDatabricksCatalogName
+            }
 
-        if ($MirroredAzureDatabricksCatalogDescription) {
-            $body.description = $MirroredAzureDatabricksCatalogDescription
-        }
+            if ($MirroredAzureDatabricksCatalogDescription) {
+                $body.description = $MirroredAzureDatabricksCatalogDescription
+            }
 
-        # Add Mirrored Azure Databricks Catalog item definition file content if provided
-        if ($MirroredAzureDatabricksCatalogPathDefinition) {
-            $MirroredAzureDatabricksCatalogEncodedContent = Convert-ToBase64 -filePath $MirroredAzureDatabricksCatalogPathDefinition
+            # Add Mirrored Azure Databricks Catalog item definition file content if provided
+            if ($MirroredAzureDatabricksCatalogPathDefinition) {
+                $MirroredAzureDatabricksCatalogEncodedContent = Convert-ToBase64 -filePath $MirroredAzureDatabricksCatalogPathDefinition
 
-            if (-not [string]::IsNullOrEmpty($MirroredAzureDatabricksCatalogEncodedContent)) {
-                # Initialize definition if it doesn't exist
-                if (-not $body.definition) {
-                    $body.definition = @{
-                        parts = @()
+                if (-not [string]::IsNullOrEmpty($MirroredAzureDatabricksCatalogEncodedContent)) {
+                    # Initialize definition if it doesn't exist
+                    if (-not $body.definition) {
+                        $body.definition = @{
+                            parts = @()
+                        }
+                    }
+
+                    # Add new part to the parts array
+                    $body.definition.parts += @{
+                        path        = "-content.json"
+                        payload     = $MirroredAzureDatabricksCatalogEncodedContent
+                        payloadType = "InlineBase64"
                     }
                 }
-
-                # Add new part to the parts array
-                $body.definition.parts += @{
-                    path        = "-content.json"
-                    payload     = $MirroredAzureDatabricksCatalogEncodedContent
-                    payloadType = "InlineBase64"
+                else {
+                    Write-FabricLog -Message "Invalid or empty content in Mirrored Azure Databricks Catalog definition." -Level Error
+                    return
                 }
             }
-            else {
-                Write-FabricLog -Message "Invalid or empty content in Mirrored Azure Databricks Catalog definition." -Level Error
-                return
-            }
-        }
 
-        # Add platform definition file content if provided
-        if ($MirroredAzureDatabricksCatalogPathPlatformDefinition) {
-            $MirroredAzureDatabricksCatalogEncodedPlatformContent = Convert-ToBase64 -filePath $MirroredAzureDatabricksCatalogPathPlatformDefinition
+            # Add platform definition file content if provided
+            if ($MirroredAzureDatabricksCatalogPathPlatformDefinition) {
+                $MirroredAzureDatabricksCatalogEncodedPlatformContent = Convert-ToBase64 -filePath $MirroredAzureDatabricksCatalogPathPlatformDefinition
 
-            if (-not [string]::IsNullOrEmpty($MirroredAzureDatabricksCatalogEncodedPlatformContent)) {
-                # Initialize definition if it doesn't exist
-                if (-not $body.definition) {
-                    $body.definition = @{
-                        parts = @()
+                if (-not [string]::IsNullOrEmpty($MirroredAzureDatabricksCatalogEncodedPlatformContent)) {
+                    # Initialize definition if it doesn't exist
+                    if (-not $body.definition) {
+                        $body.definition = @{
+                            parts = @()
+                        }
+                    }
+
+                    # Add new part to the parts array
+                    $body.definition.parts += @{
+                        path        = ".platform"
+                        payload     = $MirroredAzureDatabricksCatalogEncodedPlatformContent
+                        payloadType = "InlineBase64"
                     }
                 }
-
-                # Add new part to the parts array
-                $body.definition.parts += @{
-                    path        = ".platform"
-                    payload     = $MirroredAzureDatabricksCatalogEncodedPlatformContent
-                    payloadType = "InlineBase64"
+                else {
+                    Write-FabricLog -Message "Invalid or empty content in platform definition." -Level Error
+                    return
                 }
             }
-            else {
-                Write-FabricLog -Message "Invalid or empty content in platform definition." -Level Error
-                return
+
+            # Convert the body to JSON
+            $bodyJson = $body | ConvertTo-Json -Depth 10
+            Write-FabricLog -Message "Request Body: $bodyJson" -Level Debug
+
+            # Make the API request when confirmed
+            $target = "Workspace '$WorkspaceId'"
+            $action = "Create Mirrored Azure Databricks Catalog '$MirroredAzureDatabricksCatalogName'"
+            if ($PSCmdlet.ShouldProcess($target, $action)) {
+                $apiParams = @{
+                    BaseURI = $apiEndpointURI
+                    Headers = $script:FabricAuthContext.FabricHeaders
+                    Method = 'Post'
+                    Body = $bodyJson
+                    WaitForCompletion = $true
+                }
+                $response = Invoke-FabricAPIRequest @apiParams
+
+                # Return the API response
+                Write-FabricLog -Message "Mirrored Azure Databricks Catalog '$MirroredAzureDatabricksCatalogName' created successfully!" -Level Host
+                return $response
             }
         }
-
-        # Convert the body to JSON
-        $bodyJson = $body | ConvertTo-Json -Depth 10
-        Write-FabricLog -Message "Request Body: $bodyJson" -Level Debug
-
-        # Make the API request when confirmed
-        $target = "Workspace '$WorkspaceId'"
-        $action = "Create Mirrored Azure Databricks Catalog '$MirroredAzureDatabricksCatalogName'"
-        if ($PSCmdlet.ShouldProcess($target, $action)) {
-            $apiParams = @{
-                BaseURI = $apiEndpointURI
-                Headers = $script:FabricAuthContext.FabricHeaders
-                Method = 'Post'
-                Body = $bodyJson
-                WaitForCompletion = $true
-            }
-            $response = Invoke-FabricAPIRequest @apiParams
-
-            # Return the API response
-            Write-FabricLog -Message "Mirrored Azure Databricks Catalog '$MirroredAzureDatabricksCatalogName' created successfully!" -Level Host
-            return $response
+        catch {
+            # Capture and log error details
+            $errorDetails = $_.Exception.Message
+            Write-FabricLog -Message "Failed to create Mirrored Azure Databricks Catalog. Error: $errorDetails" -Level Error
         }
-    }
-    catch {
-        # Capture and log error details
-        $errorDetails = $_.Exception.Message
-        Write-FabricLog -Message "Failed to create Mirrored Azure Databricks Catalog. Error: $errorDetails" -Level Error
     }
 }
 
