@@ -2,6 +2,14 @@
 for Fabric Unified Admin Monitoring solution accelerator.
 
 --------------------------
+## Unreleased
+
+### ✅ Fixes
+
+- **Lakehouse Backup notebook reliability**
+    - Hardened `01_FUAM_Lakehouse_Backup` notebook against transient copy failures and crashed runs
+
+--------------------------
 ## 📦 2026.6.1
 
 Date: 2026-06-02
