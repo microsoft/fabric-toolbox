@@ -19,6 +19,9 @@ Optional. Filter workspaces by state. Valid values: Active, Deleted.
 .PARAMETER CapacityId
 Optional. Filter workspaces by the capacity they are assigned to.
 
+.PARAMETER Raw
+If specified, returns the untouched API response with no added properties or type decoration.
+
 .EXAMPLE
 Get-FabricWorkspaceAsAdmin
 
@@ -70,7 +73,10 @@ function Get-FabricWorkspaceAsAdmin {
 
         [Parameter(Mandatory = $false)]
         [ValidateNotNullOrEmpty()]
-        [string]$CapacityId
+        [string]$CapacityId,
+
+        [Parameter()]
+        [switch]$Raw
     )
 
     try {
@@ -125,6 +131,24 @@ function Get-FabricWorkspaceAsAdmin {
         if (-not $dataItems) {
             Write-FabricLog -Message "No workspaces returned from the admin API." -Level Warning
             return $null
+        }
+
+        if ($Raw) {
+            return $dataItems
+        }
+
+        # Enrich each workspace with its resolved capacity name (cached after first lookup)
+        foreach ($workspace in $dataItems) {
+            if ($workspace.capacityId) {
+                $capacityName = $workspace.capacityId
+                try {
+                    $capacityName = Resolve-FabricCapacityName -CapacityId $workspace.capacityId
+                }
+                catch {
+                    Write-FabricLog -Message "Failed to resolve capacity name for ID '$($workspace.capacityId)': $($_.Exception.Message)" -Level Debug
+                }
+                $workspace | Add-Member -NotePropertyName 'CapacityName' -NotePropertyValue $capacityName -Force
+            }
         }
 
         # Add type decoration for custom formatting

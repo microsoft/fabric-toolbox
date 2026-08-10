@@ -3,12 +3,18 @@
     Gets workspaces from the admin API for tenant-wide visibility.
 
 .DESCRIPTION
-    The Get-FabricAdminWorkspace cmdlet retrieves workspaces using the admin API endpoint.
-    This provides tenant-wide visibility into all workspaces (including those the user doesn't have access to).
-    Requires Fabric Administrator permissions.
+    The Get-FabricAdminWorkspace cmdlet retrieves workspaces using the Fabric admin API endpoint
+    (GET /v1/admin/workspaces). This provides tenant-wide visibility into all workspaces
+    (including those the caller does not have access to). Requires Fabric Administrator permissions
+    or a service principal with the Tenant.Read.All scope.
 
-    When called without parameters, lists all workspaces in the tenant.
-    When piped with capacity objects, retrieves workspaces for each capacity.
+    When called without parameters, lists all workspaces in the tenant (auto-paginating through
+    all pages). Server-side filtering is available via -CapacityId, -WorkspaceName, -WorkspaceType,
+    -State and -EncryptionStatus. When piped with capacity objects, retrieves workspaces per capacity.
+
+    NOTE: this endpoint does NOT support OData query options ($filter / $top / $skip / $orderby).
+    Filtering is done with the named parameters above; for client-side limiting/sorting pipe the
+    result to Select-Object / Sort-Object.
 
 .PARAMETER WorkspaceId
     Optional. Workspace ID to retrieve a specific workspace. Accepts pipeline input.
@@ -19,7 +25,7 @@
     Accepts pipeline input from Get-FabricAdminCapacity via the 'id' property.
 
 .PARAMETER WorkspaceName
-    Optional. Filter workspaces by display name (substring match).
+    Optional. Filter workspaces by name (maps to the API 'name' query parameter).
 
 .PARAMETER WorkspaceType
     Optional. Filter by workspace type. Valid values: personal, workspace, adminworkspace.
@@ -27,25 +33,21 @@
 .PARAMETER State
     Optional. Filter by workspace state. Valid values: active, deleted.
 
-.PARAMETER Filter
-    Optional. OData filter expression for advanced filtering.
-    Example: "contains(displayName,'Sales') and state eq 'Active'"
+.PARAMETER EncryptionStatus
+    Optional. Filter by customer-managed-key (CMK) encryption status. Valid values:
+    Disabled, Active, EnableInProgress, DisableInProgress, Failed.
+    The API only applies this filter when encryption data is included, so specifying
+    -EncryptionStatus automatically sets -Include to 'encryption' unless you set -Include yourself.
 
-.PARAMETER Top
-    Optional. Maximum number of workspaces to return (1-5000). Default returns all.
-
-.PARAMETER Skip
-    Optional. Number of workspaces to skip for pagination.
-
-.PARAMETER OrderBy
-    Optional. OData orderby expression for sorting results.
-    Example: "displayName" or "displayName desc"
+.PARAMETER Include
+    Optional. Additional data to include for each workspace. Valid values: encryption.
 
 .PARAMETER ContinuationToken
-    Optional. Token for retrieving next page of results in paginated responses.
+    Optional. Token for retrieving the next page of results. The cmdlet auto-paginates by default;
+    supply this only to resume from a specific token.
 
 .PARAMETER Raw
-    Optional. When specified, returns the raw API response without type decoration.
+    Optional. When specified, returns the raw API response without added names or type decoration.
 
 .EXAMPLE
     Get-FabricAdminWorkspace
@@ -61,7 +63,6 @@
     Get-FabricAdminCapacity | Get-FabricAdminWorkspace
 
     Gets all workspaces for each capacity returned from Get-FabricAdminCapacity.
-    This is the recommended way to iterate through workspaces by capacity.
 
 .EXAMPLE
     Get-FabricAdminWorkspace -WorkspaceType "workspace" -State "active"
@@ -74,20 +75,26 @@
     Lists all workspaces assigned to a specific capacity.
 
 .EXAMPLE
-    Get-FabricAdminWorkspace -Filter "contains(displayName,'Sales')" -Top 100
+    Get-FabricAdminWorkspace -WorkspaceName "Sales"
 
-    Lists first 100 workspaces with 'Sales' in the name, using OData filter.
+    Lists workspaces whose name matches 'Sales' (server-side 'name' filter).
 
 .EXAMPLE
-    Get-FabricAdminWorkspace -Top 50 -Skip 100
+    Get-FabricAdminWorkspace -EncryptionStatus 'Active'
 
-    Gets workspaces 101-150 (pagination).
+    Lists workspaces with active CMK encryption (automatically includes encryption details).
+
+.EXAMPLE
+    Get-FabricAdminWorkspace | Where-Object { $_.name -like '*Sales*' -and $_.state -eq 'Active' } | Select-Object -First 100
+
+    Client-side filtering/limiting example (the endpoint does not support OData $filter/$top).
 
 .NOTES
     - API Endpoint: GET /v1/admin/workspaces
-    - Requires Fabric Administrator permissions or service principal with Tenant.Read.All scope.
+    - Supported query parameters: capacityId, name, type, state, encryptionStatus, include, continuationToken.
+    - NOT supported: OData $filter, $top, $skip, $orderby. Use the named filters or client-side cmdlets.
+    - Requires Fabric Administrator permissions or a service principal with Tenant.Read.All scope.
     - Rate limited to 200 requests per hour.
-    - Supports OData query syntax for advanced filtering and sorting.
     - Reference: https://learn.microsoft.com/rest/api/fabric/admin/workspaces/list-workspaces
 
     Author: Tiago Balabuch, Jess Pomfret, Rob Sewell
@@ -118,20 +125,12 @@ function Get-FabricAdminWorkspace {
         [string]$State,
 
         [Parameter(Mandatory = $false)]
-        [ValidateNotNullOrEmpty()]
-        [string]$Filter,
+        [ValidateSet('Disabled', 'Active', 'EnableInProgress', 'DisableInProgress', 'Failed')]
+        [string]$EncryptionStatus,
 
         [Parameter(Mandatory = $false)]
-        [ValidateRange(1, 5000)]
-        [int]$Top,
-
-        [Parameter(Mandatory = $false)]
-        [ValidateRange(0, [int]::MaxValue)]
-        [int]$Skip,
-
-        [Parameter(Mandatory = $false)]
-        [ValidateNotNullOrEmpty()]
-        [string]$OrderBy,
+        [ValidateSet('encryption')]
+        [string]$Include,
 
         [Parameter(Mandatory = $false)]
         [ValidateNotNullOrEmpty()]
@@ -166,14 +165,19 @@ function Get-FabricAdminWorkspace {
                 return
             }
 
-            # Build query parameters for list operation
+            # The encryptionStatus filter is only applied when encryption data is included.
+            if ($EncryptionStatus -and -not $Include) {
+                $Include = 'encryption'
+            }
+
+            # Build query parameters for the list operation. Only the parameters the Fabric admin
+            # workspaces endpoint actually supports are sent (no OData $filter/$top/$skip/$orderby).
             $queryParams = [System.Collections.Generic.List[string]]::new()
 
             if ($CapacityId) {
                 $queryParams.Add("capacityId=$CapacityId")
             }
             if ($WorkspaceName) {
-                # Note: API may use 'name' or 'displayName' for filtering
                 $queryParams.Add("name=$([System.Uri]::EscapeDataString($WorkspaceName))")
             }
             if ($WorkspaceType) {
@@ -182,18 +186,11 @@ function Get-FabricAdminWorkspace {
             if ($State) {
                 $queryParams.Add("state=$State")
             }
-            if ($Filter) {
-                # OData filter parameter
-                $queryParams.Add("`$filter=$([System.Uri]::EscapeDataString($Filter))")
+            if ($EncryptionStatus) {
+                $queryParams.Add("encryptionStatus=$EncryptionStatus")
             }
-            if ($Top) {
-                $queryParams.Add("`$top=$Top")
-            }
-            if ($Skip) {
-                $queryParams.Add("`$skip=$Skip")
-            }
-            if ($OrderBy) {
-                $queryParams.Add("`$orderby=$([System.Uri]::EscapeDataString($OrderBy))")
+            if ($Include) {
+                $queryParams.Add("include=$Include")
             }
             if ($ContinuationToken) {
                 $queryParams.Add("continuationToken=$([System.Uri]::EscapeDataString($ContinuationToken))")
@@ -221,8 +218,10 @@ function Get-FabricAdminWorkspace {
                 return $null
             }
 
-            # Use Select-FabricResource for type decoration
-            Select-FabricResource -InputObject $response -DisplayName $WorkspaceName -ResourceType 'AdminWorkspace' -TypeName 'MicrosoftFabric.AdminWorkspace' -Raw:$Raw
+            # Enrich + type-decorate. Do NOT client-side filter by -DisplayName here: the admin
+            # API returns 'name' (not 'displayName'), and the server already applied the 'name'
+            # filter above, so re-filtering on displayName would drop every row.
+            Select-FabricResource -InputObject $response -ResourceType 'AdminWorkspace' -TypeName 'MicrosoftFabric.AdminWorkspace' -Raw:$Raw
         }
         catch {
             $errorDetails = $_.Exception.Message

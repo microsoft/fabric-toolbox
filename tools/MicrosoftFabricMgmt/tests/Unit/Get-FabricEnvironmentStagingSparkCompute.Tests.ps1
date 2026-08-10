@@ -4,6 +4,7 @@ param(
 $expectedParams = @(
     "WorkspaceId"
     "EnvironmentId"
+    "Raw"
     "ProgressAction"
     "Verbose"
     "Debug"

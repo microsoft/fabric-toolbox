@@ -8,6 +8,9 @@ The `Get-FabricDomainWorkspace` function fetches the workspaces for the given do
 .PARAMETER DomainId
 The ID of the domain for which to retrieve workspaces.
 
+.PARAMETER Raw
+If specified, returns the untouched API response with no added properties or type decoration.
+
 .EXAMPLE
 Get-FabricDomainWorkspace -DomainId "12345"
 
@@ -26,7 +29,10 @@ function Get-FabricDomainWorkspace {
     param (
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
-        [string]$DomainId
+        [string]$DomainId,
+
+        [Parameter()]
+        [switch]$Raw
     )
 
     try {
@@ -43,7 +49,49 @@ function Get-FabricDomainWorkspace {
             Headers = $script:FabricAuthContext.FabricHeaders
             Method = 'Get'
         }
-        Invoke-FabricAPIRequest @apiParams
+        $dataItems = Invoke-FabricAPIRequest @apiParams
+
+        if (-not $dataItems) {
+            Write-FabricLog -Message "No data returned from the API." -Level Warning
+            return $null
+        }
+
+        if ($Raw) {
+            return $dataItems
+        }
+
+        # Each returned item is a workspace; resolve names from its own id
+        foreach ($item in $dataItems) {
+            $wsId = $item.id
+            if (-not $wsId) {
+                continue
+            }
+
+            try {
+                $workspaceName = Resolve-FabricWorkspaceName -WorkspaceId $wsId
+            }
+            catch {
+                $workspaceName = $wsId
+                Write-FabricLog -Message "Failed to resolve workspace name for ID '$wsId': $($_.Exception.Message)" -Level Debug
+            }
+            $item | Add-Member -NotePropertyName 'WorkspaceName' -NotePropertyValue $workspaceName -Force
+
+            try {
+                $capacityId = Resolve-FabricCapacityIdFromWorkspace -WorkspaceId $wsId
+                if ($capacityId) {
+                    $capacityName = Resolve-FabricCapacityName -CapacityId $capacityId
+                    if ($null -ne $capacityName) {
+                        $item | Add-Member -NotePropertyName 'CapacityName' -NotePropertyValue $capacityName -Force
+                    }
+                }
+            }
+            catch {
+                Write-FabricLog -Message "Failed to resolve capacity name for workspace ID '$wsId': $($_.Exception.Message)" -Level Debug
+            }
+        }
+
+        $dataItems | Add-FabricTypeName -TypeName 'MicrosoftFabric.DomainWorkspace'
+        return $dataItems
     }
     catch {
         # Capture and log error details

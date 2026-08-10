@@ -86,101 +86,105 @@ function Start-FabricLakehouseTableMaintenance {
         [Parameter(Mandatory = $false)]
         [switch]$WaitForCompletion
     )
-    try {
-        Invoke-FabricAuthCheck -ThrowOnFailure
+    process {
+        try {
+            Invoke-FabricAuthCheck -ThrowOnFailure
 
 
-        # Validate input parameters
-        $lakehouse = Get-FabricLakehouse -WorkspaceId $WorkspaceId -LakehouseId $LakehouseId
-        if ($lakehouse.properties.PSObject.Properties['defaultSchema'] -and -not $SchemaName) {
-            Write-Error "The Lakehouse '$lakehouse.displayName' has schema enabled, but no schema name was provided. Please specify the 'SchemaName' parameter to proceed."
-            return $null
-        }
-
-        # Construct the API endpoint URI
-        $apiEndpointURI = "{0}/workspaces/{1}/lakehouses/{2}/jobs/instances?jobType={3}" -f $script:FabricAuthContext.BaseUrl, $WorkspaceId , $LakehouseId, $JobType
-        Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
-
-        # Construct the request body
-        $body = @{
-            executionData = @{
-                tableName        = $TableName
-                optimizeSettings = @{}
-            }
-        }
-        if ($lakehouse.properties.PSObject.Properties['defaultSchema'] -and $SchemaName) {
-            $body.executionData.schemaName = $SchemaName
-        }
-        if ($IsVOrder) {
-            $body.executionData.optimizeSettings.vOrder = $IsVOrder
-        }
-
-
-        if ($ColumnsZOrderBy) {
-            Write-FabricLog -Message "Original ColumnsZOrderBy input: $ColumnsZOrderBy" -Level Debug
-
-            # If it's a single string like "id,nome", split it into array
-            if ($ColumnsZOrderBy.Count -eq 1 -and $ColumnsZOrderBy[0] -is [string] -and $ColumnsZOrderBy[0] -match ",") {
-                Write-FabricLog -Message "Detected comma-separated string in ColumnsZOrderBy. Splitting it..." -Level Debug
-                $ColumnsZOrderBy = $ColumnsZOrderBy[0] -split "\s*,\s*"
+            # Validate input parameters
+            $lakehouse = Get-FabricLakehouse -WorkspaceId $WorkspaceId -LakehouseId $LakehouseId
+            if ($lakehouse.properties.PSObject.Properties['defaultSchema'] -and -not $SchemaName) {
+                Write-Error "The Lakehouse '$lakehouse.displayName' has schema enabled, but no schema name was provided. Please specify the 'SchemaName' parameter to proceed."
+                return $null
             }
 
-            # Ensure values are trimmed and valid
-            $ColumnsZOrderBy = $ColumnsZOrderBy | ForEach-Object { $_.ToString().Trim() } | Where-Object { $_ }
+            # Construct the API endpoint URI using the preferred job-type-in-path form
+            # (/jobs/{jobType}/instances). The legacy ?jobType= query form still works but the
+            # path-segment form is the documented, preferred shape.
+            $apiEndpointURI = New-FabricAPIUri -Segments @('workspaces', $WorkspaceId, 'lakehouses', $LakehouseId, 'jobs', $JobType, 'instances')
+            Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
 
-            if ($ColumnsZOrderBy.Count -gt 0) {
-                $body.executionData.optimizeSettings.zOrderBy = $ColumnsZOrderBy
-                Write-FabricLog -Message "Final ColumnsZOrderBy: $($ColumnsZOrderBy -join ', ')" -Level Debug
-            }
-            else {
-                Write-FabricLog -Message "ColumnsZOrderBy was provided but resulted in an empty array after processing." -Level Warning
-            }
-        }
-
-
-        if ($retentionPeriod) {
-            if (-not $body.executionData.PSObject.Properties['vacuumSettings']) {
-                $body.executionData.vacuumSettings = @{
-                    retentionPeriod = @()
+            # Construct the request body
+            $body = @{
+                executionData = @{
+                    tableName        = $TableName
+                    optimizeSettings = @{}
                 }
             }
-            $body.executionData.vacuumSettings.retentionPeriod = $retentionPeriod
-
-        }
-
-        # Convert the body to JSON
-        $bodyJson = $body | ConvertTo-Json -Depth 10
-        Write-FabricLog -Message "Request Body: $bodyJson" -Level Debug
-
-        # Make the API request
-        $apiParams = @{
-            BaseURI = $apiEndpointURI
-            Headers = $script:FabricAuthContext.FabricHeaders
-            Method  = 'Post'
-            Body    = $bodyJson
-        }
-
-        if ($WaitForCompletion.IsPresent) {
-            $apiParams.WaitForCompletion = $true
-        }
-        if ($PSCmdlet.ShouldProcess($LakehouseId, "Start lakehouse table maintenance job in workspace '$WorkspaceId'")) {
-            $response = Invoke-FabricAPIRequest @apiParams
-
-            if ($WaitForCompletion) {
-                Write-FabricLog -Message "Table maintenance job for Lakehouse '$LakehouseId' has completed." -Level Host
-                Write-FabricLog -Message "Job details: $($response | ConvertTo-Json -Depth 5)" -Level Debug
+            if ($lakehouse.properties.PSObject.Properties['defaultSchema'] -and $SchemaName) {
+                $body.executionData.schemaName = $SchemaName
             }
-            else {
-                Write-FabricLog -Message "Table maintenance job for Lakehouse '$LakehouseId' has been started and is running asynchronously." -Level Host
-                Write-FabricLog -Message "You can monitor the job status using the job ID from the response." -Level Debug
+            if ($IsVOrder) {
+                $body.executionData.optimizeSettings.vOrder = $IsVOrder
             }
-            # Return the API response
-            return $response
+
+
+            if ($ColumnsZOrderBy) {
+                Write-FabricLog -Message "Original ColumnsZOrderBy input: $ColumnsZOrderBy" -Level Debug
+
+                # If it's a single string like "id,nome", split it into array
+                if ($ColumnsZOrderBy.Count -eq 1 -and $ColumnsZOrderBy[0] -is [string] -and $ColumnsZOrderBy[0] -match ",") {
+                    Write-FabricLog -Message "Detected comma-separated string in ColumnsZOrderBy. Splitting it..." -Level Debug
+                    $ColumnsZOrderBy = $ColumnsZOrderBy[0] -split "\s*,\s*"
+                }
+
+                # Ensure values are trimmed and valid
+                $ColumnsZOrderBy = $ColumnsZOrderBy | ForEach-Object { $_.ToString().Trim() } | Where-Object { $_ }
+
+                if ($ColumnsZOrderBy.Count -gt 0) {
+                    $body.executionData.optimizeSettings.zOrderBy = $ColumnsZOrderBy
+                    Write-FabricLog -Message "Final ColumnsZOrderBy: $($ColumnsZOrderBy -join ', ')" -Level Debug
+                }
+                else {
+                    Write-FabricLog -Message "ColumnsZOrderBy was provided but resulted in an empty array after processing." -Level Warning
+                }
+            }
+
+
+            if ($retentionPeriod) {
+                if (-not $body.executionData.PSObject.Properties['vacuumSettings']) {
+                    $body.executionData.vacuumSettings = @{
+                        retentionPeriod = @()
+                    }
+                }
+                $body.executionData.vacuumSettings.retentionPeriod = $retentionPeriod
+
+            }
+
+            # Convert the body to JSON
+            $bodyJson = $body | ConvertTo-Json -Depth 10
+            Write-FabricLog -Message "Request Body: $bodyJson" -Level Debug
+
+            # Make the API request
+            $apiParams = @{
+                BaseURI = $apiEndpointURI
+                Headers = $script:FabricAuthContext.FabricHeaders
+                Method  = 'Post'
+                Body    = $bodyJson
+            }
+
+            if ($WaitForCompletion.IsPresent) {
+                $apiParams.WaitForCompletion = $true
+            }
+            if ($PSCmdlet.ShouldProcess($LakehouseId, "Start lakehouse table maintenance job in workspace '$WorkspaceId'")) {
+                $response = Invoke-FabricAPIRequest @apiParams
+
+                if ($WaitForCompletion) {
+                    Write-FabricLog -Message "Table maintenance job for Lakehouse '$LakehouseId' has completed." -Level Host
+                    Write-FabricLog -Message "Job details: $($response | ConvertTo-Json -Depth 5)" -Level Debug
+                }
+                else {
+                    Write-FabricLog -Message "Table maintenance job for Lakehouse '$LakehouseId' has been started and is running asynchronously." -Level Host
+                    Write-FabricLog -Message "You can monitor the job status using the job ID from the response." -Level Debug
+                }
+                # Return the API response
+                return $response
+            }
         }
-    }
-    catch {
-        # Capture and log error details
-        $errorDetails = $_.Exception.Message
-        Write-FabricLog -Message "Failed to start table maintenance job. Error: $errorDetails" -Level Error
+        catch {
+            # Capture and log error details
+            $errorDetails = $_.Exception.Message
+            Write-FabricLog -Message "Failed to start table maintenance job. Error: $errorDetails" -Level Error
+        }
     }
 }

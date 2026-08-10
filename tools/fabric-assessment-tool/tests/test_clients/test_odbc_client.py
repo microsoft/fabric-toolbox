@@ -143,7 +143,9 @@ class TestOdbcClientValidation:
 
     def test_entra_spn_requires_client_id(self):
         """Test that SPN auth mode requires client_id."""
-        with pytest.raises(ValueError, match="Service Principal authentication requires"):
+        with pytest.raises(
+            ValueError, match="Service Principal authentication requires"
+        ):
             OdbcClient(
                 workspace_name="myworkspace",
                 database="mydb",
@@ -153,7 +155,9 @@ class TestOdbcClientValidation:
 
     def test_entra_spn_requires_client_secret(self):
         """Test that SPN auth mode requires client_secret."""
-        with pytest.raises(ValueError, match="Service Principal authentication requires"):
+        with pytest.raises(
+            ValueError, match="Service Principal authentication requires"
+        ):
             OdbcClient(
                 workspace_name="myworkspace",
                 database="mydb",

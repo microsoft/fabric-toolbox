@@ -5,6 +5,7 @@ $expectedParams = @(
     "WorkspaceId"
     "SparkJobDefinitionId"
     "SparkJobDefinitionFormat"
+    "Raw"
     "ProgressAction"
     "Verbose"
     "Debug"

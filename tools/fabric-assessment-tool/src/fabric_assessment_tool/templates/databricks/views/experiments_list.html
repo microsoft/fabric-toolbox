@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="page-header">
+    <h1>🧪 All MLflow Experiments</h1>
+    <p>{{ items | length }} experiments across all workspaces</p>
+</div>
+<div class="card">
+    <div class="card-header">MLflow Experiments (Page {{ current_page }} of {{ total_pages }})</div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table">
+                <thead><tr><th>Name</th><th>Lifecycle Stage</th><th>Last Updated</th><th>Workspace</th></tr></thead>
+                <tbody>
+                    {% for exp in page_items %}
+                    <tr data-workspace="{{ exp.workspace | default('N/A') }}">
+                        <td>{{ exp.name | default('Unknown') }}</td>
+                        <td><span class="badge {% if exp.lifecycle_stage == 'active' %}badge-success{% else %}badge-secondary{% endif %}">{{ exp.lifecycle_stage | default('N/A') }}</span></td>
+                        <td>{{ exp.last_update_time | default('N/A') }}</td>
+                        <td>{{ exp.workspace | default('N/A') }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% if total_pages > 1 %}
+        <nav class="pagination-nav">
+            {% if current_page > 1 %}<a href="experiments_page_{{ current_page - 1 }}.html">← Previous</a>{% endif %}
+            <span class="pagination-info">Page {{ current_page }} of {{ total_pages }}</span>
+            {% if current_page < total_pages %}<a href="experiments_page_{{ current_page + 1 }}.html">Next →</a>{% endif %}
+        </nav>
+        {% endif %}
+    </div>
+</div>
+<div class="mt-2"><a href="data_engineering.html">← Back to Data Engineering</a></div>
+{% endblock %}

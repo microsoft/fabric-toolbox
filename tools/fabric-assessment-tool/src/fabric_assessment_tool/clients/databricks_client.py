@@ -1,11 +1,19 @@
 import base64
+import json
+import logging
 import os
 import re
+import time
 from argparse import Namespace
+from concurrent.futures import ThreadPoolExecutor, as_completed
+from contextlib import contextmanager
 from datetime import datetime, timezone
-from typing import Any, Dict, Optional
+from pathlib import Path
+from threading import Lock
+from typing import Any, Dict, Iterator, List, Optional
+from urllib.parse import urlparse
 
-from databricks.sdk import WorkspaceClient
+from databricks.sdk import AccountClient, WorkspaceClient
 
 from ..assessment.common import AssessmentStatus
 from ..errors.api import FATError
@@ -58,8 +66,32 @@ from ..assessment.databricks import (
     DatabricksNetworkSettings,
 )
 from ..utils import ui as utils_ui
-from .api_client import ApiClient, ApiResponse
+from .api_client import ApiClient
 from .token_provider import TokenProvider, create_token_provider
+
+logger = logging.getLogger(__name__)
+
+
+class _CountOnlyCollection:
+    """Lightweight stub for resource collections loaded from disk.
+
+    Supports len() on the collection field for summary count purposes.
+    """
+
+    def __init__(self, field_name: str, count: int):
+        # Create an attribute with the given field name containing a list of `count` items
+        setattr(self, field_name, [None] * count)
+
+
+def _normalize_notebook_path(path: str) -> str:
+    """Normalize a notebook path by removing the /Workspace prefix.
+
+    The Databricks Jobs API stores paths with /Workspace/ prefix but the
+    Workspace listing API returns paths without it.
+    """
+    if path and path.startswith("/Workspace/"):
+        return path[len("/Workspace") :]
+    return path or ""
 
 
 class DatabricksClient:
@@ -70,6 +102,7 @@ class DatabricksClient:
         subscription_id: Optional[str] = None,
         token_provider: Optional[TokenProvider] = None,
         auth_method: Optional[str] = None,
+        cloud: str = "azure",
         **kwargs,
     ):
         """
@@ -79,14 +112,43 @@ class DatabricksClient:
             subscription_id: Azure subscription ID (optional, will use Azure CLI default if not provided)
             token_provider: Optional TokenProvider instance for authentication
             auth_method: Authentication method ("azure-cli", "fabric", or None for auto-detect)
+            cloud: Cloud provider for the Databricks workspace ("azure" or "aws")
         """
-        self.token_provider = token_provider or create_token_provider(auth_method)
+        self.cloud = (cloud or "azure").lower()
+        if self.cloud not in {"azure", "aws"}:
+            raise ValueError(f"Unsupported Databricks cloud: {cloud}")
+
+        self.token_provider = (
+            token_provider or create_token_provider(auth_method)
+            if self.cloud == "azure"
+            else token_provider
+        )
         self.custom_subscription_id = subscription_id
+        self.account_client: Optional[AccountClient] = None
         self.authenticate()
         self._workspace_cache: dict[str, DatabricksWorkspaceInfo] = {}
+        self.extraction_warnings: list[str] = []
+        self._max_parallel_api_calls = 8
+        self._schema_resource_cache: dict[tuple[str, str, str], Any] = {}
+        self._reset_api_call_savings_metrics()
 
     def authenticate(self) -> None:
-        """Authenticate with Azure using the configured token provider."""
+        """Authenticate with the configured Databricks cloud."""
+        if self.cloud == "aws":
+            self._validate_aws_environment()
+            self.subscription_id = None
+            if os.getenv("DATABRICKS_ACCOUNT_ID") and self._has_aws_oauth_credentials():
+                self.account_client = AccountClient(
+                    host=os.getenv(
+                        "DATABRICKS_ACCOUNT_HOST",
+                        "https://accounts.cloud.databricks.com",
+                    ),
+                    account_id=os.environ["DATABRICKS_ACCOUNT_ID"],
+                    client_id=os.environ["DATABRICKS_CLIENT_ID"],
+                    client_secret=os.environ["DATABRICKS_CLIENT_SECRET"],
+                )
+            return
+
         try:
             azure_token = self.token_provider.get_token(
                 "https://management.azure.com/.default"
@@ -103,13 +165,54 @@ class DatabricksClient:
                 )
 
         except Exception as e:
+            logger.error("Failed to authenticate with Azure: %s", e)
             raise Exception(f"Failed to authenticate with Azure: {e}")
+
+    def _validate_aws_environment(self) -> None:
+        """Validate Databricks AWS environment-variable authentication."""
+        has_pat = bool(os.getenv("DATABRICKS_TOKEN"))
+        has_oauth = self._has_aws_oauth_credentials()
+        has_host = bool(os.getenv("DATABRICKS_HOST"))
+
+        if not has_pat and not has_oauth:
+            raise ValueError(
+                "AWS Databricks assessments require DATABRICKS_TOKEN or "
+                "DATABRICKS_CLIENT_ID and DATABRICKS_CLIENT_SECRET to be set"
+            )
+
+        if has_pat and not has_oauth and not has_host:
+            raise ValueError(
+                "AWS Databricks assessments using DATABRICKS_TOKEN also require "
+                "DATABRICKS_HOST to be set"
+            )
+
+    @staticmethod
+    def _has_aws_oauth_credentials() -> bool:
+        return bool(os.getenv("DATABRICKS_CLIENT_ID")) and bool(
+            os.getenv("DATABRICKS_CLIENT_SECRET")
+        )
 
     def get_workspaces(self) -> list[DatabricksWorkspaceInfo]:
         """Get all Databricks workspaces in the subscription.
 
         Used for interactive workspace selection when no workspace names are provided.
         """
+        if self.cloud == "aws":
+            if self.account_client:
+                workspaces = [
+                    self._build_aws_account_workspace_info(workspace)
+                    for workspace in self.account_client.workspaces.list()
+                ]
+                for workspace in workspaces:
+                    self._workspace_cache[workspace.name.lower()] = workspace
+                return workspaces
+
+            raise ValueError(
+                "AWS Databricks workspace selection requires DATABRICKS_ACCOUNT_ID, "
+                "DATABRICKS_CLIENT_ID, and DATABRICKS_CLIENT_SECRET so workspaces "
+                "can be listed through the Databricks account API."
+            )
+
         args = Namespace()
         # https://learn.microsoft.com/en-us/rest/api/databricks/workspaces/list-by-subscription?view=rest-databricks-2024-05-01&tabs=HTTP
         args.uri = f"/subscriptions/{self.subscription_id}/providers/Microsoft.Databricks/workspaces"
@@ -128,6 +231,82 @@ class DatabricksClient:
 
         return workspaces
 
+    def _build_aws_host_workspace_info(
+        self, workspace_name: str, workspace_host: Optional[str] = None
+    ) -> DatabricksWorkspaceInfo:
+        """Build workspace info for an AWS Databricks workspace from environment variables."""
+        workspace_host = self._normalize_workspace_host(
+            workspace_host or os.environ["DATABRICKS_HOST"]
+        )
+        workspace_url = self._format_workspace_url(workspace_host)
+        region = os.getenv("DATABRICKS_WORKSPACE_REGION")
+
+        return DatabricksWorkspaceInfo(
+            id=workspace_host,
+            name=workspace_name,
+            resource_group="",
+            url=workspace_url,
+            status="unknown",
+            tier=os.getenv("DATABRICKS_WORKSPACE_TIER", "unknown"),
+            location=region,
+            workspace_type="aws",
+            json_response={
+                "cloud": "aws",
+                "workspace_name": workspace_name,
+                "workspace_url": workspace_url,
+                "region": region,
+                "source": "environment",
+            },
+        )
+
+    def _build_aws_account_workspace_info(
+        self, workspace: Any
+    ) -> DatabricksWorkspaceInfo:
+        """Build workspace info for an AWS Databricks account workspace."""
+        workspace_name = getattr(workspace, "workspace_name", None)
+        deployment_name = getattr(workspace, "deployment_name", None)
+        workspace_id = getattr(workspace, "workspace_id", None)
+        if not workspace_name:
+            raise ValueError("Databricks account workspace is missing workspace_name")
+        if not deployment_name:
+            raise ValueError(
+                f"Databricks account workspace is missing deployment_name: {workspace_name}"
+            )
+
+        workspace_host = self._aws_deployment_to_host(deployment_name)
+        workspace_status = getattr(workspace, "workspace_status", None)
+        pricing_tier = getattr(workspace, "pricing_tier", None)
+        workspace_json = (
+            workspace.as_dict()
+            if hasattr(workspace, "as_dict")
+            else dict(vars(workspace))
+        )
+
+        return DatabricksWorkspaceInfo(
+            id=str(workspace_id or workspace_host),
+            name=workspace_name,
+            resource_group="",
+            url=self._format_workspace_url(workspace_host),
+            status=str(workspace_status) if workspace_status else "unknown",
+            tier=str(pricing_tier) if pricing_tier else "unknown",
+            location=getattr(workspace, "aws_region", None)
+            or getattr(workspace, "location", None),
+            workspace_type="aws",
+            json_response=workspace_json,
+        )
+
+    @staticmethod
+    def _aws_deployment_to_host(deployment_name: str) -> str:
+        deployment_host = DatabricksClient._normalize_workspace_host(deployment_name)
+        if "." in deployment_host:
+            return deployment_host
+        return f"{deployment_host}.cloud.databricks.com"
+
+    def _derive_aws_workspace_name(self) -> str:
+        """Derive a stable workspace name from DATABRICKS_HOST."""
+        workspace_host = self._normalize_workspace_host(os.environ["DATABRICKS_HOST"])
+        return workspace_host.split(".")[0]
+
     @staticmethod
     def _build_workspace_info(workspace: dict) -> DatabricksWorkspaceInfo:
         """Build a DatabricksWorkspaceInfo from a management-plane response.
@@ -142,9 +321,7 @@ class DatabricksClient:
         private_endpoint_conns = properties.get("privateEndpointConnections") or []
         raw_pna = properties.get("publicNetworkAccess")
         managed_rg_id = properties.get("managedResourceGroupId") or ""
-        managed_rg_name = (
-            managed_rg_id.split("/")[-1] if managed_rg_id else None
-        )
+        managed_rg_name = managed_rg_id.split("/")[-1] if managed_rg_id else None
 
         vnet_injected = bool(custom_vnet)
         uses_private_endpoints = (
@@ -199,129 +376,369 @@ class DatabricksClient:
         )
 
     def _auth_databricks(self, workspace_url) -> None:
+        api_host = self._normalize_workspace_host(workspace_url)
 
-        databricks_token = self.token_provider.get_token(
-            "2ff814a6-3304-4ab8-85cb-cd0e6f879c1d/.default"
-        )
-        self.workspace_client = WorkspaceClient(
-            host=workspace_url, token=databricks_token
-        )
-        self.api_client = ApiClient(base_url=workspace_url, scope="", api_version="")
+        if self.cloud == "aws":
+            token = os.getenv("DATABRICKS_TOKEN")
+            host = self._format_workspace_url(api_host)
+            if token and not self.account_client:
+                self.workspace_client = WorkspaceClient(host=host, token=token)
+            else:
+                self.workspace_client = WorkspaceClient(
+                    host=host,
+                    client_id=os.environ["DATABRICKS_CLIENT_ID"],
+                    client_secret=os.environ["DATABRICKS_CLIENT_SECRET"],
+                )
+        else:
+            databricks_token = self.token_provider.get_token(
+                "2ff814a6-3304-4ab8-85cb-cd0e6f879c1d/.default"
+            )
+            self.workspace_client = WorkspaceClient(
+                host=workspace_url, token=databricks_token
+            )
+
+        self.api_client = ApiClient(base_url=api_host, scope="", api_version="")
         # Reuse the authentication of the session of the Databricks API client
         self.api_client.session.auth = (
             self.workspace_client.api_client._api_client._session.auth
         )
 
-    def assess_workspace(self, workspace_name: str, mode: str) -> DatabricksAssessment:
+    @contextmanager
+    def _log_extraction_timing(self, item_name: str) -> Iterator[None]:
+        start = time.perf_counter()
+        try:
+            yield
+        finally:
+            elapsed_ms = (time.perf_counter() - start) * 1000
+            logger.info("Extraction %s took %.2f ms", item_name, elapsed_ms)
+
+    def _reset_schema_resource_cache(self) -> None:
+        self._schema_resource_cache = {}
+
+    def _get_schema_resource_cache(self) -> dict[tuple[str, str, str], Any]:
+        if not hasattr(self, "_schema_resource_cache"):
+            self._schema_resource_cache = {}
+        return self._schema_resource_cache
+
+    def _reset_api_call_savings_metrics(self) -> None:
+        self._api_call_savings = {
+            "schema_cache_total": 0,
+            "schema_cache_tables": 0,
+            "schema_cache_volumes": 0,
+            "schema_cache_functions": 0,
+            "notebook_status_skipped": 0,
+            "notebook_export_skipped": 0,
+        }
+        self._api_call_savings_lock = Lock()
+
+    def _get_api_call_savings_metrics(self) -> dict[str, int]:
+        if not hasattr(self, "_api_call_savings"):
+            self._reset_api_call_savings_metrics()
+        return self._api_call_savings
+
+    def _increment_api_call_savings(self, key: str, value: int = 1) -> None:
+        if value <= 0:
+            return
+        counters = self._get_api_call_savings_metrics()
+        lock = getattr(self, "_api_call_savings_lock", None)
+        if lock is None:
+            lock = Lock()
+            self._api_call_savings_lock = lock
+        with lock:
+            counters[key] = counters.get(key, 0) + value
+
+    def _log_api_call_savings_summary(self) -> None:
+        counters = self._get_api_call_savings_metrics()
+        schema_cache = counters.get("schema_cache_total", 0)
+        status_skips = counters.get("notebook_status_skipped", 0)
+        export_skips = counters.get("notebook_export_skipped", 0)
+        total_saved = schema_cache + status_skips + export_skips
+        logger.info(
+            "Estimated Databricks API calls saved: total=%d (schema_cache=%d [tables=%d, volumes=%d, functions=%d], notebook_get_status=%d, notebook_export=%d)",
+            total_saved,
+            schema_cache,
+            counters.get("schema_cache_tables", 0),
+            counters.get("schema_cache_volumes", 0),
+            counters.get("schema_cache_functions", 0),
+            status_skips,
+            export_skips,
+        )
+
+    def _extract_notebook_paths(self, list_endpoint: str) -> list[dict]:
+        with self._log_extraction_timing("_extract_notebook_paths"):
+            notebook_objs: list[dict] = []
+
+            def traverse(current_path):
+                args = Namespace()
+                args.uri = list_endpoint
+                args.request_params = {"path": current_path}
+                try:
+                    data = self.api_client.do_request(args).json()
+                except Exception as e:
+                    logger.error("Failed to list notebook path %s: %s", current_path, e)
+                    return
+
+                for obj in data.get("objects", []):
+                    if obj["object_type"] == "NOTEBOOK":
+                        notebook_objs.append(obj)
+                    elif obj["object_type"] == "DIRECTORY":
+                        traverse(obj["path"])
+
+            traverse("/")
+            return notebook_objs
+
+    def assess_workspace(
+        self,
+        workspace_name: str,
+        mode: str,
+        resources: Optional[List[str]] = None,
+        output_path: Optional[str] = None,
+        download_notebooks: bool = False,
+        max_parallel_api_calls: int = 8,
+    ) -> DatabricksAssessment:
         """
         Assess a Databricks workspace.
 
         Args:
             workspace_name: Name of the Databricks workspace
             mode: Assessment mode (full, etc.)
+            resources: Optional list of resource types to extract. When None, all
+                resources are extracted. When specified, only listed types are
+                fetched from the API; others are loaded from previously exported
+                data on disk.
+            output_path: Output directory where previous exports live (required
+                when resources is specified)
 
         Returns:
             DatabricksAssessment object with all assessment data
         """
-        utils_ui.print(
-            f"Assessing Databricks workspace: {workspace_name} (mode: {mode})"
-        )
+        if resources:
+            utils_ui.print(
+                f"Assessing Databricks workspace: {workspace_name} "
+                f"(partial: {', '.join(resources)})"
+            )
+        else:
+            utils_ui.print(
+                f"Assessing Databricks workspace: {workspace_name} (mode: {mode})"
+            )
 
         try:
+            # Reset extraction warnings for this workspace
+            self.extraction_warnings = []
+            self._reset_schema_resource_cache()
+            self._reset_api_call_savings_metrics()
+
             # Get workspace details
             workspace_info = self._get_workspace_info(workspace_name)
 
             # Use the workspace_info to authenticate the databricks client
             self._auth_databricks(workspace_info.url)
+            self._max_parallel_api_calls = max(1, int(max_parallel_api_calls))
+
+            # Determine which resources to extract
+            _should_extract = (
+                (lambda r: r in resources) if resources else (lambda r: True)
+            )
+
+            # Load existing data from disk for resources not being re-extracted
+            disk_data = {}
+            if resources and output_path:
+                disk_data = self._load_resources_from_disk(
+                    workspace_name, output_path, resources
+                )
 
             # Get clusters
-            utils_ui.print_extracting("Clusters")
-            clusters = self._get_clusters()
-            utils_ui.print_extraction_done("Clusters")
+            if _should_extract("clusters"):
+                utils_ui.print_extracting("Clusters")
+                with self._log_extraction_timing("_get_clusters"):
+                    clusters = self._get_clusters()
+                utils_ui.print_extraction_done("Clusters")
+            else:
+                clusters = disk_data.get("clusters", DatabricksClusters(clusters=[]))
 
             # Get SQL Warehouses
-            utils_ui.print_extracting("SQL Warehouses")
-            sql_warehouses = self._get_sql_warehouses()
-            utils_ui.print_extraction_done("SQL Warehouses")
+            if _should_extract("sql_warehouses"):
+                utils_ui.print_extracting("SQL Warehouses")
+                with self._log_extraction_timing("_get_sql_warehouses"):
+                    sql_warehouses = self._get_sql_warehouses()
+                utils_ui.print_extraction_done("SQL Warehouses")
+            else:
+                sql_warehouses = disk_data.get(
+                    "sql_warehouses", DatabricksSqlWarehouses(sql_warehouses=[])
+                )
 
             # Get notebooks
-            utils_ui.print_extracting("Notebooks")
-            notebooks = self._get_notebooks()
-            utils_ui.print_extraction_done("Notebooks")
+            if _should_extract("notebooks"):
+                utils_ui.print_extracting("Notebooks")
+                with self._log_extraction_timing("_get_notebooks"):
+                    notebooks = self._get_notebooks(download_content=download_notebooks)
+                utils_ui.print_extraction_done("Notebooks")
+            else:
+                notebooks = disk_data.get(
+                    "notebooks", DatabricksNotebooks(notebooks=[])
+                )
 
             # Get jobs
-            utils_ui.print_extracting("Jobs")
-            jobs = self._get_jobs()
-            utils_ui.print_extraction_done("Jobs")
+            if _should_extract("jobs"):
+                utils_ui.print_extracting("Jobs")
+                with self._log_extraction_timing("_get_jobs"):
+                    jobs = self._get_jobs()
+                utils_ui.print_extraction_done("Jobs")
+            else:
+                jobs = disk_data.get("jobs", DatabricksJobs(jobs=[]))
+
+            # Cross-reference notebooks with job execution data
+            if _should_extract("notebooks") or _should_extract("jobs"):
+                notebooks = self._annotate_notebooks_with_job_execution(notebooks, jobs)
 
             # Get catalogs
-            utils_ui.print_extracting("Catalogs")
-            catalogs = self._get_catalogs()
-            utils_ui.print_extraction_done("Catalogs")
+            if _should_extract("catalogs"):
+                utils_ui.print_extracting("Catalogs")
+                with self._log_extraction_timing("_get_catalogs"):
+                    catalogs = self._get_catalogs()
+                utils_ui.print_extraction_done("Catalogs")
+            else:
+                catalogs = disk_data.get("catalogs", DatabricksCatalogs(catalogs=[]))
 
             # Get external locations
-            utils_ui.print_extracting("External Locations")
-            external_locations = self._get_external_locations()
-            utils_ui.print_extraction_done("External Locations")
+            if _should_extract("external_locations"):
+                utils_ui.print_extracting("External Locations")
+                with self._log_extraction_timing("_get_external_locations"):
+                    external_locations = self._get_external_locations()
+                utils_ui.print_extraction_done("External Locations")
+            else:
+                external_locations = disk_data.get(
+                    "external_locations",
+                    DatabricksExternalLocations(external_locations=[]),
+                )
 
             # Get connections
-            utils_ui.print_extracting("Connections")
-            connections = self._get_connections()
-            utils_ui.print_extraction_done("Connections")
+            if _should_extract("connections"):
+                utils_ui.print_extracting("Connections")
+                with self._log_extraction_timing("_get_connections"):
+                    connections = self._get_connections()
+                utils_ui.print_extraction_done("Connections")
+            else:
+                connections = disk_data.get(
+                    "connections", DatabricksConnections(connections=[])
+                )
 
             # Get secret scopes
-            utils_ui.print_extracting("Secret Scopes")
-            secret_scopes = self._get_secret_scopes()
-            utils_ui.print_extraction_done("Secret Scopes")
+            if _should_extract("secret_scopes"):
+                utils_ui.print_extracting("Secret Scopes")
+                with self._log_extraction_timing("_get_secret_scopes"):
+                    secret_scopes = self._get_secret_scopes()
+                utils_ui.print_extraction_done("Secret Scopes")
+            else:
+                secret_scopes = disk_data.get(
+                    "secret_scopes", DatabricksSecretScopes(secret_scopes=[])
+                )
 
             # Get DLT pipelines
-            utils_ui.print_extracting("Pipelines")
-            pipelines = self._get_pipelines()
-            utils_ui.print_extraction_done("Pipelines")
+            if _should_extract("pipelines"):
+                utils_ui.print_extracting("Pipelines")
+                with self._log_extraction_timing("_get_pipelines"):
+                    pipelines = self._get_pipelines()
+                utils_ui.print_extraction_done("Pipelines")
+            else:
+                pipelines = disk_data.get(
+                    "pipelines", DatabricksPipelines(pipelines=[])
+                )
 
             # Get Git repos
-            utils_ui.print_extracting("Repos")
-            repos = self._get_repos()
-            utils_ui.print_extraction_done("Repos")
+            if _should_extract("repos"):
+                utils_ui.print_extracting("Repos")
+                with self._log_extraction_timing("_get_repos"):
+                    repos = self._get_repos()
+                utils_ui.print_extraction_done("Repos")
+            else:
+                repos = disk_data.get("repos", DatabricksRepos(repos=[]))
 
             # Get MLflow experiments
-            utils_ui.print_extracting("Experiments")
-            experiments = self._get_experiments()
-            utils_ui.print_extraction_done("Experiments")
+            if _should_extract("experiments"):
+                utils_ui.print_extracting("Experiments")
+                with self._log_extraction_timing("_get_experiments"):
+                    experiments = self._get_experiments()
+                utils_ui.print_extraction_done("Experiments")
+            else:
+                experiments = disk_data.get(
+                    "experiments", DatabricksExperiments(experiments=[])
+                )
 
             # Get model serving endpoints
-            utils_ui.print_extracting("Serving Endpoints")
-            serving_endpoints = self._get_serving_endpoints()
-            utils_ui.print_extraction_done("Serving Endpoints")
+            if _should_extract("serving_endpoints"):
+                utils_ui.print_extracting("Serving Endpoints")
+                with self._log_extraction_timing("_get_serving_endpoints"):
+                    serving_endpoints = self._get_serving_endpoints()
+                utils_ui.print_extraction_done("Serving Endpoints")
+            else:
+                serving_endpoints = disk_data.get(
+                    "serving_endpoints",
+                    DatabricksServingEndpoints(serving_endpoints=[]),
+                )
 
             # Get SQL alerts
-            utils_ui.print_extracting("Alerts")
-            alerts = self._get_alerts()
-            utils_ui.print_extraction_done("Alerts")
+            if _should_extract("alerts"):
+                utils_ui.print_extracting("Alerts")
+                with self._log_extraction_timing("_get_alerts"):
+                    alerts = self._get_alerts()
+                utils_ui.print_extraction_done("Alerts")
+            else:
+                alerts = disk_data.get("alerts", DatabricksAlerts(alerts=[]))
 
             # Get Genie spaces
-            utils_ui.print_extracting("Genie Spaces")
-            genie_spaces = self._get_genie_spaces()
-            utils_ui.print_extraction_done("Genie Spaces")
+            if _should_extract("genie_spaces"):
+                utils_ui.print_extracting("Genie Spaces")
+                with self._log_extraction_timing("_get_genie_spaces"):
+                    genie_spaces = self._get_genie_spaces()
+                utils_ui.print_extraction_done("Genie Spaces")
+            else:
+                genie_spaces = disk_data.get(
+                    "genie_spaces", DatabricksGenieSpaces(genie_spaces=[])
+                )
 
             # Get cluster policies (workspace-summary)
-            utils_ui.print_extracting("Cluster Policies")
-            cluster_policies = self._get_cluster_policies()
-            utils_ui.print_extraction_done("Cluster Policies")
+            if _should_extract("cluster_policies"):
+                utils_ui.print_extracting("Cluster Policies")
+                with self._log_extraction_timing("_get_cluster_policies"):
+                    cluster_policies = self._get_cluster_policies()
+                utils_ui.print_extraction_done("Cluster Policies")
+            else:
+                cluster_policies = disk_data.get(
+                    "cluster_policies", DatabricksClusterPolicies(cluster_policies=[])
+                )
 
             # Get instance pools (workspace-summary)
-            utils_ui.print_extracting("Instance Pools")
-            instance_pools = self._get_instance_pools()
-            utils_ui.print_extraction_done("Instance Pools")
+            if _should_extract("instance_pools"):
+                utils_ui.print_extracting("Instance Pools")
+                with self._log_extraction_timing("_get_instance_pools"):
+                    instance_pools = self._get_instance_pools()
+                utils_ui.print_extraction_done("Instance Pools")
+            else:
+                instance_pools = disk_data.get(
+                    "instance_pools", DatabricksInstancePools(instance_pools=[])
+                )
 
             # Create assessment metadata
             assessment_metadata = DatabricksAssessmentMetadata(
                 mode=mode, timestamp=self._get_timestamp()
             )
 
-            # Return complete assessment object
-            return DatabricksAssessment(
-                status=AssessmentStatus(status="completed"),
+            # Determine final status based on extraction warnings
+            if self.extraction_warnings:
+                status = AssessmentStatus(
+                    status="incomplete",
+                    description=(
+                        "Assessment completed with partial data. "
+                        f"Failed to fully extract: {', '.join(self.extraction_warnings)}"
+                    ),
+                )
+            else:
+                status = AssessmentStatus(status="completed")
+
+            # Return assessment object
+            assessment = DatabricksAssessment(
+                status=status,
                 workspace_info=workspace_info,
                 clusters=clusters,
                 sql_warehouses=sql_warehouses,
@@ -342,9 +759,228 @@ class DatabricksClient:
                 instance_pools=instance_pools,
                 workspace_url=workspace_info.url,
             )
+            self._log_api_call_savings_summary()
+            return assessment
 
         except Exception as e:
+            logger.error("Failed to assess workspace %s: %s", workspace_name, e)
             raise Exception(f"Failed to assess workspace {workspace_name}: {e}")
+
+    def _load_resources_from_disk(
+        self,
+        workspace_name: str,
+        output_path: str,
+        resources_to_extract: List[str],
+    ) -> Dict[str, Any]:
+        """Load previously exported resources from disk.
+
+        Reads JSON files from the output directory for resource types that are
+        NOT being re-extracted, reconstructing lightweight collection objects
+        with enough data for summary computation.
+
+        Args:
+            workspace_name: Name of the workspace folder
+            output_path: Base output directory
+            resources_to_extract: Resources being freshly extracted (excluded from loading)
+
+        Returns:
+            Dict mapping resource type name to its collection dataclass
+        """
+        workspace_dir = Path(output_path) / workspace_name / "resources"
+        loaded: Dict[str, Any] = {}
+
+        # Mapping from resource name to (folder name, item class, collection class, collection field)
+        resource_map = {
+            "clusters": ("clusters", DatabricksCluster, DatabricksClusters, "clusters"),
+            "sql_warehouses": (
+                "sql_warehouses",
+                DatabricksSqlWarehouse,
+                DatabricksSqlWarehouses,
+                "sql_warehouses",
+            ),
+            "notebooks": (
+                "notebooks",
+                DatabricksNotebook,
+                DatabricksNotebooks,
+                "notebooks",
+            ),
+            "jobs": ("jobs", DatabricksJob, DatabricksJobs, "jobs"),
+            "pipelines": (
+                "pipelines",
+                DatabricksPipeline,
+                DatabricksPipelines,
+                "pipelines",
+            ),
+            "repos": ("repos", DatabricksRepo, DatabricksRepos, "repos"),
+            "experiments": (
+                "experiments",
+                DatabricksExperiment,
+                DatabricksExperiments,
+                "experiments",
+            ),
+            "serving_endpoints": (
+                "serving_endpoints",
+                DatabricksServingEndpoint,
+                DatabricksServingEndpoints,
+                "serving_endpoints",
+            ),
+            "alerts": ("alerts", DatabricksAlert, DatabricksAlerts, "alerts"),
+            "genie_spaces": (
+                "genie_spaces",
+                DatabricksGenieSpace,
+                DatabricksGenieSpaces,
+                "genie_spaces",
+            ),
+            "cluster_policies": (
+                "cluster_policies",
+                DatabricksClusterPolicy,
+                DatabricksClusterPolicies,
+                "cluster_policies",
+            ),
+            "instance_pools": (
+                "instance_pools",
+                DatabricksInstancePool,
+                DatabricksInstancePools,
+                "instance_pools",
+            ),
+            "external_locations": (
+                "external_locations",
+                DatabricksExternalLocation,
+                DatabricksExternalLocations,
+                "external_locations",
+            ),
+            "connections": (
+                "connections",
+                DatabricksConnection,
+                DatabricksConnections,
+                "connections",
+            ),
+            "secret_scopes": (
+                "secret_scopes",
+                DatabricksSecretScope,
+                DatabricksSecretScopes,
+                "secret_scopes",
+            ),
+        }
+
+        for res_name, (folder, item_cls, coll_cls, field_name) in resource_map.items():
+            if res_name in resources_to_extract:
+                continue  # Will be freshly extracted
+
+            folder_path = workspace_dir / folder
+            if not folder_path.exists():
+                continue
+
+            items = []
+            for json_file in sorted(folder_path.glob("*.json")):
+                try:
+                    with open(json_file, "r", encoding="utf-8") as f:
+                        data = json.load(f)
+                    # Extract the inner data (wrapped format)
+                    inner = (
+                        data.get(f"{res_name.rstrip('s')}_data")
+                        or data.get(f"{folder.rstrip('s')}_data")
+                        or data.get("data")
+                        or data
+                    )
+                    # For counting purposes, store the raw dict
+                    items.append(inner)
+                except (json.JSONDecodeError, IOError):
+                    continue
+
+            # Build collection with count - use a lightweight approach
+            # Store raw dicts; get_summary() only needs len()
+            loaded[res_name] = self._build_collection_from_dicts(
+                res_name, items, coll_cls, field_name
+            )
+
+        return loaded
+
+    def _build_collection_from_dicts(
+        self, res_name: str, items: List[dict], coll_cls: Any, field_name: str
+    ) -> Any:
+        """Build a collection dataclass from raw dict items loaded from disk.
+
+        For summary purposes, we only need the collection to report accurate
+        counts via len(). We store minimal dataclass instances.
+        """
+        if res_name == "notebooks":
+            objs = [
+                DatabricksNotebook(
+                    path=item.get("path", ""),
+                    default_language=item.get("default_language", ""),
+                    embedded_languages=item.get("embedded_languages", []),
+                    other_magics=item.get("other_magics", []),
+                    json_response=item.get("json_response", {}),
+                    uses_dbutils=item.get("uses_dbutils", False),
+                    last_job_execution=item.get("last_job_execution"),
+                    executed_by_jobs=item.get("executed_by_jobs"),
+                )
+                for item in items
+            ]
+            return DatabricksNotebooks(notebooks=objs)
+        elif res_name == "jobs":
+            objs = [
+                DatabricksJob(
+                    job_id=item.get("job_id", 0),
+                    tasks=DatabricksJobTasks(
+                        tasks=[
+                            DatabricksJobTask(
+                                name=t.get("name", ""),
+                                type=t.get("type", ""),
+                                libraries=t.get("libraries", {}),
+                                json_response=t,
+                                notebook_path=t.get("notebook_path"),
+                            )
+                            for t in (
+                                item.get("tasks", {}).get("tasks", [])
+                                if isinstance(item.get("tasks"), dict)
+                                else item.get("tasks", [])
+                            )
+                        ]
+                    ),
+                    settings=DatabricksJobSettings(
+                        name=(item.get("settings") or {}).get("name", ""),
+                        json_response=item.get("settings", {}),
+                    ),
+                    latest_runs=DatabricksJobRuns(
+                        runs=[
+                            DatabricksJobRun(
+                                id=r.get("id", ""),
+                                state=r.get("state", ""),
+                                result_state=r.get("result_state", ""),
+                                start_time=r.get("start_time", ""),
+                                end_time=r.get("end_time"),
+                                execution_duration=r.get("execution_duration", "0"),
+                                json_response=r,
+                            )
+                            for r in (
+                                item.get("latest_runs", {}).get("runs", [])
+                                if isinstance(item.get("latest_runs"), dict)
+                                else []
+                            )
+                        ]
+                    ),
+                    avg_duration_ms_last_3_runs=item.get("avg_duration_ms_last_3_runs"),
+                )
+                for item in items
+            ]
+            return DatabricksJobs(jobs=objs)
+        elif res_name == "clusters":
+            objs = [
+                DatabricksCluster(
+                    cluster_id=item.get("cluster_id", ""),
+                    cluster_name=item.get("cluster_name", ""),
+                    state=item.get("state", ""),
+                    json_response=item,
+                )
+                for item in items
+            ]
+            return DatabricksClusters(clusters=objs)
+        else:
+            # Generic: count-only stub using the collection length
+            # Create a simple object that reports correct len()
+            return _CountOnlyCollection(field_name, len(items))
 
     def _get_workspace_info(self, workspace_name: str) -> DatabricksWorkspaceInfo:
         """Get Databricks workspace information.
@@ -352,6 +988,11 @@ class DatabricksClient:
         Returns cached info if available, otherwise fetches all workspaces
         from the management API and looks up the requested one.
         """
+        if self.cloud == "aws":
+            workspace_info = self._get_aws_workspace_info(workspace_name)
+            self._workspace_cache[workspace_info.name.lower()] = workspace_info
+            return workspace_info
+
         cache_key = workspace_name.lower()
         if cache_key in self._workspace_cache:
             return self._workspace_cache[cache_key]
@@ -363,6 +1004,78 @@ class DatabricksClient:
             return self._workspace_cache[cache_key]
 
         raise ValueError(f"Workspace not found: {workspace_name}")
+
+    def _get_aws_workspace_info(self, workspace_name: str) -> DatabricksWorkspaceInfo:
+        """Resolve AWS workspace info from account API or single-workspace host env vars."""
+        if workspace_name:
+            cache_key = workspace_name.lower()
+            if cache_key in self._workspace_cache:
+                return self._workspace_cache[cache_key]
+
+        if self.account_client:
+            requested_name = workspace_name.lower()
+            for account_workspace in self.account_client.workspaces.list():
+                candidate = self._build_aws_account_workspace_info(account_workspace)
+                self._workspace_cache[candidate.name.lower()] = candidate
+                if (
+                    candidate.name.lower() == requested_name
+                    or self._normalize_workspace_host(candidate.url).lower()
+                    == requested_name
+                ):
+                    return candidate
+
+            raise ValueError(
+                f"Workspace not found in Databricks account: {workspace_name}"
+            )
+
+        if workspace_name and self._is_workspace_host(workspace_name):
+            workspace_host = self._normalize_workspace_host(workspace_name)
+            return self._build_aws_host_workspace_info(
+                workspace_host.split(".")[0],
+                workspace_host=workspace_host,
+            )
+
+        if os.getenv("DATABRICKS_HOST"):
+            env_workspace_name = (
+                os.getenv("DATABRICKS_WORKSPACE_NAME")
+                or self._derive_aws_workspace_name()
+            )
+            if workspace_name and workspace_name.lower() != env_workspace_name.lower():
+                raise ValueError(
+                    "AWS Databricks workspace-name resolution for multiple "
+                    "workspaces requires DATABRICKS_ACCOUNT_ID with "
+                    "DATABRICKS_CLIENT_ID and DATABRICKS_CLIENT_SECRET. "
+                    "Alternatively, pass each AWS workspace as its workspace URL "
+                    "or hostname."
+                )
+            return self._build_aws_host_workspace_info(
+                workspace_name or env_workspace_name
+            )
+
+        raise ValueError(
+            "AWS Databricks workspace-name resolution requires "
+            "DATABRICKS_ACCOUNT_ID with DATABRICKS_CLIENT_ID and "
+            "DATABRICKS_CLIENT_SECRET, or DATABRICKS_HOST for a single workspace."
+        )
+
+    @staticmethod
+    def _normalize_workspace_host(workspace_url: str) -> str:
+        """Return the Databricks workspace host without scheme or trailing slash."""
+        parsed = urlparse(workspace_url)
+        host = parsed.netloc if parsed.netloc else parsed.path
+        return host.strip().strip("/")
+
+    @staticmethod
+    def _is_workspace_host(workspace_name: str) -> bool:
+        """Return whether a workspace argument looks like a Databricks host or URL."""
+        return "." in DatabricksClient._normalize_workspace_host(workspace_name)
+
+    @staticmethod
+    def _format_workspace_url(workspace_url: str) -> str:
+        """Return a Databricks workspace URL with an https scheme."""
+        if workspace_url.startswith("http://") or workspace_url.startswith("https://"):
+            return workspace_url.rstrip("/")
+        return f"https://{workspace_url.rstrip('/')}"
 
     def _get_clusters(self) -> DatabricksClusters:
         try:
@@ -426,10 +1139,17 @@ class DatabricksClient:
                 for cluster in clusters_data
             ]
 
+            if not clusters:
+                utils_ui.print_warning(
+                    "No clusters returned. This may indicate insufficient "
+                    "permissions (the service principal needs CAN_ATTACH_TO "
+                    "or workspace admin access to list clusters)."
+                )
+
             return DatabricksClusters(clusters=clusters)
 
         except Exception as e:
-            print(f"Failed to get clusters: {e}")
+            logger.error("Failed to get clusters: %s", e)
             return DatabricksClusters(clusters=[])
 
     def _get_sql_warehouses(self) -> DatabricksSqlWarehouses:
@@ -476,7 +1196,7 @@ class DatabricksClient:
             return DatabricksSqlWarehouses(sql_warehouses=sql_warehouses)
 
         except Exception as e:
-            print(f"Failed to get SQL warehouses: {e}")
+            logger.error("Failed to get SQL warehouses: %s", e)
             return DatabricksSqlWarehouses(sql_warehouses=[])
 
     def _detect_embedded_magics(self, base64_content) -> tuple[list[str], list[str]]:
@@ -494,110 +1214,162 @@ class DatabricksClient:
                     elif match in other_magics:
                         others.add(match)
             return list(langs), list(others)
-        except Exception:
+        except Exception as e:
+            logger.debug("Failed to parse notebook magics: %s", e)
             return [], []
 
-    def _get_notebooks(self) -> DatabricksNotebooks:
-        """Get notebooks in the workspace."""
+    def _build_notebook_from_obj(
+        self,
+        obj: dict,
+        status_endpoint: str,
+        export_endpoint: str,
+        download_content: bool,
+    ) -> DatabricksNotebook:
+        obj_path = obj["path"]
+        lang = obj.get("language") or "unknown"
+        content = ""
+        embedded_langs, magics = [], []
+        created_by = obj.get("created_by")
+        created_at = (
+            datetime.fromtimestamp(
+                obj["created_at"] / 1000, tz=timezone.utc
+            ).isoformat()
+            if obj.get("created_at")
+            else None
+        )
+        modified_at = (
+            datetime.fromtimestamp(
+                obj["modified_at"] / 1000, tz=timezone.utc
+            ).isoformat()
+            if obj.get("modified_at")
+            else None
+        )
+        size = obj.get("size")
+
+        if not obj.get("language") or size is None:
+            try:
+                args = Namespace()
+                args.uri = status_endpoint
+                args.request_params = {"path": obj_path}
+                status_json = self.api_client.do_request(args).json()
+                lang = status_json.get("language", lang)
+                if size is None:
+                    size = status_json.get("size")
+            except Exception as e:
+                logger.error("Failed to get notebook status for %s: %s", obj_path, e)
+
+        if download_content:
+            try:
+                args = Namespace()
+                args.uri = export_endpoint
+                args.request_params = {"path": obj_path, "format": "SOURCE"}
+                content = self.api_client.do_request(args).json().get("content", "")
+                embedded_langs, magics = self._detect_embedded_magics(content)
+                if size is None and content:
+                    try:
+                        size = len(base64.b64decode(content))
+                    except Exception as e:
+                        logger.debug(
+                            "Failed to decode notebook content for %s: %s", obj_path, e
+                        )
+            except Exception as e:
+                logger.error(
+                    "Failed to export notebook content for %s: %s", obj_path, e
+                )
+                embedded_langs, magics = [], []
+
+        uses_dbutils = self._check_notebook_for_dbutils(content)
+        return DatabricksNotebook(
+            path=obj_path,
+            default_language=lang,
+            embedded_languages=embedded_langs,
+            other_magics=magics,
+            json_response=obj,
+            uses_dbutils=uses_dbutils,
+            created_by=created_by,
+            created_at=created_at,
+            modified_at=modified_at,
+            size=size,
+            content=content if download_content else None,
+        )
+
+    def _parallel_map_ordered(
+        self,
+        items: list,
+        worker,
+        max_workers: int,
+    ) -> list:
+        if not items:
+            return []
+        workers = max(1, min(max_workers, len(items)))
+        if workers == 1:
+            return [worker(item) for item in items]
+
+        indexed_results: dict[int, Any] = {}
+        with ThreadPoolExecutor(max_workers=workers) as executor:
+            future_to_index = {
+                executor.submit(worker, item): idx for idx, item in enumerate(items)
+            }
+            for future in as_completed(future_to_index):
+                idx = future_to_index[future]
+                indexed_results[idx] = future.result()
+        return [indexed_results[i] for i in sorted(indexed_results)]
+
+    def _catalog_parallel_api_calls(self) -> int:
+        """Throttle catalog fan-out to reduce nested concurrency pressure."""
+        configured = max(1, getattr(self, "_max_parallel_api_calls", 8))
+        return min(configured, 3)
+
+    def _get_notebooks(self, download_content: bool = False) -> DatabricksNotebooks:
+        """Get notebooks in the workspace.
+
+        Args:
+            download_content: When True, store base64-encoded notebook source
+                content on each DatabricksNotebook instance for later export.
+        """
         try:
             notebooks: list[DatabricksNotebook] = []
             list_endpoint = f"api/2.0/workspace/list"
             export_endpoint = f"api/2.0/workspace/export"
             status_endpoint = f"api/2.0/workspace/get-status"
 
-            def traverse(current_path):
-                args = Namespace()
-                args.uri = list_endpoint
-                args.request_params = {"path": current_path}
-                try:
-                    data = self.api_client.do_request(args).json()
-                except:
-                    return
-
-                for obj in data.get("objects", []):
-                    obj_path = obj["path"]
-                    if obj["object_type"] == "NOTEBOOK":
-                        lang = "unknown"
-                        content = ""
-                        created_by = obj.get("created_by")
-                        created_at = (
-                            datetime.fromtimestamp(
-                                obj["created_at"] / 1000, tz=timezone.utc
-                            ).isoformat()
-                            if obj.get("created_at")
-                            else None
-                        )
-                        modified_at = (
-                            datetime.fromtimestamp(
-                                obj["modified_at"] / 1000, tz=timezone.utc
-                            ).isoformat()
-                            if obj.get("modified_at")
-                            else None
-                        )
-                        size = obj.get("size")
-                        try:
-                            args.uri = status_endpoint
-                            args.request_params = {"path": obj_path}
-
-                            status_json = self.api_client.do_request(args).json()
-                            lang = status_json.get("language", "unknown")
-                            # /api/2.0/workspace/list omits size for notebooks;
-                            # get-status returns it reliably as bytes.
-                            if size is None:
-                                size = status_json.get("size")
-                        except Exception:
-                            pass
-                        try:
-                            args.uri = export_endpoint
-                            args.request_params = {
-                                "path": obj_path,
-                                "format": "SOURCE",
-                            }
-                            content = (
-                                self.api_client.do_request(args)
-                                .json()
-                                .get("content", "")
-                            )
-                            embedded_langs, magics = self._detect_embedded_magics(
-                                content
-                            )
-                            # Databricks doesn't expose notebook size on list or
-                            # get-status (those only return size for FILE). Fall
-                            # back to the decoded SOURCE byte length.
-                            if size is None and content:
-                                try:
-                                    size = len(base64.b64decode(content))
-                                except Exception:
-                                    pass
-                        except Exception:
-                            embedded_langs, magics = [], []
-
-                        # Check for dbutils in notebook content
-                        uses_dbutils = self._check_notebook_for_dbutils(content)
-
-                        notebooks.append(
-                            DatabricksNotebook(
-                                path=obj_path,
-                                default_language=lang,
-                                embedded_languages=embedded_langs,
-                                other_magics=magics,
-                                json_response=obj,  # TODO: Add the export response instead of list respose?
-                                uses_dbutils=uses_dbutils,
-                                created_by=created_by,
-                                created_at=created_at,
-                                modified_at=modified_at,
-                                size=size,
-                            )
-                        )
-                    elif obj["object_type"] == "DIRECTORY":
-                        traverse(obj_path)
-
-            traverse("/")
+            notebook_objs = self._extract_notebook_paths(list_endpoint=list_endpoint)
+            status_fallback_count = sum(
+                1
+                for obj in notebook_objs
+                if not obj.get("language") or obj.get("size") is None
+            )
+            status_skipped_count = len(notebook_objs) - status_fallback_count
+            export_skipped_count = len(notebook_objs) if not download_content else 0
+            self._increment_api_call_savings(
+                "notebook_status_skipped", status_skipped_count
+            )
+            self._increment_api_call_savings(
+                "notebook_export_skipped", export_skipped_count
+            )
+            notebooks = self._parallel_map_ordered(
+                notebook_objs,
+                lambda obj: self._build_notebook_from_obj(
+                    obj=obj,
+                    status_endpoint=status_endpoint,
+                    export_endpoint=export_endpoint,
+                    download_content=download_content,
+                ),
+                getattr(self, "_max_parallel_api_calls", 8),
+            )
+            logger.info(
+                "Notebook extraction skipped %d workspace/get-status calls via list metadata",
+                status_skipped_count,
+            )
+            logger.info(
+                "Notebook extraction skipped %d workspace/export calls",
+                export_skipped_count,
+            )
 
             return DatabricksNotebooks(notebooks=notebooks)
 
         except Exception as e:
-            print(f"Failed to get notebooks: {e}")
+            logger.error("Failed to get notebooks: %s", e)
             return DatabricksNotebooks(notebooks=[])
 
     def _check_notebook_for_dbutils(self, content: str) -> bool:
@@ -615,7 +1387,8 @@ class DatabricksClient:
             # Decode base64 content
             decoded_content = base64.b64decode(content).decode("utf-8")
             return "dbutils" in decoded_content
-        except Exception:
+        except Exception as e:
+            logger.debug("Failed to inspect notebook dbutils usage: %s", e)
             return False
 
     def _extract_task_type(self, task: Any) -> str:
@@ -628,6 +1401,17 @@ class DatabricksClient:
         else:
             return "unknown"
 
+    @staticmethod
+    def _settings_has_notebook_tasks(settings: dict) -> bool:
+        if settings.get("notebook_task"):
+            return True
+        for task in settings.get("tasks", []):
+            if task.get("notebook_task"):
+                return True
+            if task.get("for_each_task", {}).get("task", {}).get("notebook_task"):
+                return True
+        return False
+
     def _get_job_details(self, job: Any) -> DatabricksJob:
         job_id = job["job_id"]
         base_endpoint = "api/2.2/jobs"
@@ -635,14 +1419,21 @@ class DatabricksClient:
 
         if job.get("has_more", False):
             args.uri = f"{base_endpoint}/get?job_id={job_id}"
+            args.auto_paginate = False
             req = self.api_client.do_request(args)
             settings = req.json().get("settings", {})
         else:
             settings = job.get("settings", {})
 
-        args.uri = f"{base_endpoint}/runs/list?job_id={job_id}&limit=3"
-        req = self.api_client.do_request(args)
-        runs = req.json()
+        has_notebook_tasks = self._settings_has_notebook_tasks(settings)
+        if has_notebook_tasks:
+            args = Namespace()
+            args.uri = f"{base_endpoint}/runs/list?job_id={job_id}&limit=3"
+            args.auto_paginate = False
+            req = self.api_client.do_request(args)
+            runs = req.json()
+        else:
+            runs = {"runs": []}
 
         # Extract schedule info
         schedule_raw = settings.get("schedule")
@@ -701,6 +1492,13 @@ class DatabricksClient:
                         timeout_seconds=task.get("timeout_seconds"),
                         max_retries=task.get("max_retries"),
                         cluster_type=cluster_type,
+                        notebook_path=(
+                            task.get("notebook_task", {}).get("notebook_path")
+                            or task.get("for_each_task", {})
+                            .get("task", {})
+                            .get("notebook_task", {})
+                            .get("notebook_path")
+                        ),
                         cluster_config=cluster_config,
                     )
                 )
@@ -784,23 +1582,80 @@ class DatabricksClient:
     def _get_jobs(self) -> DatabricksJobs:
         """Get jobs in the workspace."""
         try:
-            args = Namespace()
-            args.uri = f"api/2.2/jobs/list"
-            args.request_params = {"expand_tasks": "true"}
-            resp = self.api_client.do_request(args)
-            json_resp = resp.json()
-
-            jobs = [
-                self._get_job_details(job)
-                for job in json_resp.get("jobs", [])
-                if job.get("job_id") is not None
-            ]
+            jobs = []
+            next_page_token: Optional[str] = None
+            while True:
+                args = Namespace()
+                args.uri = "api/2.2/jobs/list"
+                args.request_params = {"expand_tasks": "true", "limit": "100"}
+                if next_page_token:
+                    args.request_params["page_token"] = next_page_token
+                args.auto_paginate = False
+                resp = self.api_client.do_request(args)
+                json_resp = resp.json()
+                page_jobs = [
+                    job
+                    for job in json_resp.get("jobs", [])
+                    if job.get("job_id") is not None
+                ]
+                jobs.extend(
+                    self._parallel_map_ordered(
+                        page_jobs,
+                        self._get_job_details,
+                        getattr(self, "_max_parallel_api_calls", 8),
+                    )
+                )
+                next_page_token = json_resp.get("next_page_token")
+                if not next_page_token:
+                    break
 
             return DatabricksJobs(jobs=jobs)
 
         except Exception as e:
-            print(f"Failed to get jobs: {e}")
+            utils_ui.print_warning(f"Jobs extraction failed: {e}")
+            logger.error("Jobs extraction failed: %s", e)
+            self.extraction_warnings.append("jobs")
             return DatabricksJobs(jobs=[])
+
+    def _annotate_notebooks_with_job_execution(
+        self, notebooks: DatabricksNotebooks, jobs: DatabricksJobs
+    ) -> DatabricksNotebooks:
+        """Cross-reference notebooks with job execution data.
+
+        For each notebook that is referenced by a job task, annotate it with
+        the job IDs and the most recent execution timestamp.
+        """
+        # Build map: normalized_notebook_path -> [(job_id, latest_run_start_time)]
+        path_to_jobs: dict = {}
+        for job in jobs.jobs:
+            for task in job.tasks.tasks:
+                if task.notebook_path:
+                    norm_path = _normalize_notebook_path(task.notebook_path)
+                    if norm_path not in path_to_jobs:
+                        path_to_jobs[norm_path] = []
+                    # Get the most recent run start_time for this job
+                    latest_run_time = None
+                    if job.latest_runs and job.latest_runs.runs:
+                        latest_run_time = max(
+                            (r.start_time for r in job.latest_runs.runs),
+                            default=None,
+                        )
+                    path_to_jobs[norm_path].append((job.job_id, latest_run_time))
+
+        # Annotate notebooks
+        for notebook in notebooks.notebooks:
+            # Reset derived fields to avoid carrying stale values (e.g., when loading from disk)
+            notebook.executed_by_jobs = None
+            notebook.last_job_execution = None
+
+            norm_nb_path = _normalize_notebook_path(notebook.path)
+            if norm_nb_path in path_to_jobs:
+                entries = path_to_jobs[norm_nb_path]
+                notebook.executed_by_jobs = sorted({job_id for job_id, _ in entries})
+                run_times = [t for _, t in entries if t is not None]
+                if run_times:
+                    notebook.last_job_execution = max(run_times)
+        return notebooks
 
     def _get_optional_long(self, data: Optional[str]) -> Optional[int]:
         if data is not None:
@@ -831,6 +1686,12 @@ class DatabricksClient:
 
     def _get_tables(self, catalog_name: str, schema_name: str) -> list[DatabricksTable]:
         """Get databases and tables in the workspace."""
+        cache = self._get_schema_resource_cache()
+        cache_key = ("tables", catalog_name, schema_name)
+        if cache_key in cache:
+            self._increment_api_call_savings("schema_cache_total")
+            self._increment_api_call_savings("schema_cache_tables")
+            return cache[cache_key]
         try:
             args = Namespace()
             args.uri = f"/api/2.1/unity-catalog/tables?catalog_name={catalog_name}&schema_name={schema_name}"
@@ -890,15 +1751,23 @@ class DatabricksClient:
                 )
                 for table in json_req.get("tables", [])
             ]
+            cache[cache_key] = tables
             return tables
         except Exception as e:
-            print(f"Failed to get catalogs: {e}")
+            logger.error("Failed to get catalogs tables: %s", e)
+            cache[cache_key] = []
             return []
 
     def _get_volumes(
         self, catalog_name: str, schema_name: str
     ) -> list[DatabricksVolume]:
         """Get volumes in the workspace."""
+        cache = self._get_schema_resource_cache()
+        cache_key = ("volumes", catalog_name, schema_name)
+        if cache_key in cache:
+            self._increment_api_call_savings("schema_cache_total")
+            self._increment_api_call_savings("schema_cache_volumes")
+            return cache[cache_key]
         try:
             args = Namespace()
             args.uri = f"/api/2.1/unity-catalog/volumes?catalog_name={catalog_name}&schema_name={schema_name}"
@@ -915,15 +1784,23 @@ class DatabricksClient:
                 )
                 for volume in json_req.get("volumes", [])
             ]
+            cache[cache_key] = volumes
             return volumes
         except Exception as e:
-            print(f"Failed to get volumes: {e}")
+            logger.error("Failed to get volumes: %s", e)
+            cache[cache_key] = []
             return []
 
     def _get_functions(
         self, catalog_name: str, schema_name: str
     ) -> list[DatabricksFunction]:
         """Get functions in the workspace."""
+        cache = self._get_schema_resource_cache()
+        cache_key = ("functions", catalog_name, schema_name)
+        if cache_key in cache:
+            self._increment_api_call_savings("schema_cache_total")
+            self._increment_api_call_savings("schema_cache_functions")
+            return cache[cache_key]
         try:
             args = Namespace()
             args.uri = f"/api/2.1/unity-catalog/functions?catalog_name={catalog_name}&schema_name={schema_name}"
@@ -940,10 +1817,38 @@ class DatabricksClient:
                 )
                 for function in json_req.get("functions", [])
             ]
+            cache[cache_key] = functions
             return functions
         except Exception as e:
-            print(f"Failed to get functions: {e}")
+            logger.error("Failed to get functions: %s", e)
+            cache[cache_key] = []
             return []
+
+    def _build_schema_from_catalog(
+        self, catalog_name: str, schema: dict
+    ) -> DatabricksSchema:
+        schema_name = schema.get("name") or ""
+        return DatabricksSchema(
+            name=schema_name,
+            catalog=catalog_name,
+            comment=schema.get("comment"),
+            storage_root=schema.get("storage_root"),
+            tables=self._get_tables(catalog_name, schema_name),
+            volumes=self._get_volumes(catalog_name, schema_name),
+            functions=self._get_functions(catalog_name, schema_name),
+            json_response=schema,
+        )
+
+    def _build_catalog(self, catalog: dict) -> DatabricksCatalog:
+        catalog_name = catalog.get("name") or ""
+        return DatabricksCatalog(
+            name=catalog_name,
+            comment=catalog.get("comment"),
+            owner=catalog.get("owner"),
+            storage_root=catalog.get("storage_root"),
+            schemas=self._get_schemas(catalog_name),
+            json_response=catalog,
+        )
 
     def _get_schemas(self, catalog_name: str) -> DatabricksSchemas:
         """Get databases and tables in the workspace."""
@@ -952,22 +1857,23 @@ class DatabricksClient:
             args.uri = f"/api/2.1/unity-catalog/schemas?catalog_name={catalog_name}"
             req = self.api_client.do_request(args)
             json_req = req.json()
-            schemas = [
-                DatabricksSchema(
-                    name=schema.get("name"),
-                    catalog=catalog_name,
-                    comment=schema.get("comment"),
-                    storage_root=schema.get("storage_root"),
-                    tables=self._get_tables(catalog_name, schema.get("name")),
-                    volumes=self._get_volumes(catalog_name, schema.get("name")),
-                    functions=self._get_functions(catalog_name, schema.get("name")),
-                    json_response=schema,
-                )
-                for schema in json_req.get("schemas", [])
-            ]
+            schema_items = json_req.get("schemas", [])
+            seen_schema_names: set[str] = set()
+            unique_schema_items = []
+            for schema in schema_items:
+                schema_name = schema.get("name") or ""
+                if schema_name in seen_schema_names:
+                    continue
+                seen_schema_names.add(schema_name)
+                unique_schema_items.append(schema)
+            schemas = self._parallel_map_ordered(
+                unique_schema_items,
+                lambda schema: self._build_schema_from_catalog(catalog_name, schema),
+                self._catalog_parallel_api_calls(),
+            )
             return DatabricksSchemas(schemas=schemas)
         except Exception as e:
-            print(f"Failed to get catalogs: {e}")
+            logger.error("Failed to get schemas for catalog %s: %s", catalog_name, e)
             return DatabricksSchemas(schemas=[])
 
     def _get_catalogs(self) -> DatabricksCatalogs:
@@ -978,19 +1884,11 @@ class DatabricksClient:
             req = self.api_client.do_request(args)
             json_req = req.json()
             catalogs = [
-                DatabricksCatalog(
-                    name=catalog.get("name"),
-                    comment=catalog.get("comment"),
-                    owner=catalog.get("owner"),
-                    storage_root=catalog.get("storage_root"),
-                    schemas=self._get_schemas(catalog.get("name")),
-                    json_response=catalog,
-                )
-                for catalog in json_req.get("catalogs", [])
+                self._build_catalog(catalog) for catalog in json_req.get("catalogs", [])
             ]
             return DatabricksCatalogs(catalogs=catalogs)
         except Exception as e:
-            print(f"Failed to get catalogs: {e}")
+            logger.error("Failed to get catalogs: %s", e)
             return DatabricksCatalogs(catalogs=[])
 
     def _get_external_locations(self) -> DatabricksExternalLocations:
@@ -1011,7 +1909,7 @@ class DatabricksClient:
             ]
             return DatabricksExternalLocations(external_locations=external_locations)
         except Exception as e:
-            print(f"Failed to get external locations: {e}")
+            logger.error("Failed to get external locations: %s", e)
             return DatabricksExternalLocations(external_locations=[])
 
     def _get_connections(self) -> DatabricksConnections:
@@ -1033,7 +1931,7 @@ class DatabricksClient:
             ]
             return DatabricksConnections(connections=connections)
         except Exception as e:
-            print(f"Failed to get connections: {e}")
+            logger.error("Failed to get connections: %s", e)
             return DatabricksConnections(connections=[])
 
     def _get_secret_scopes(self) -> DatabricksSecretScopes:
@@ -1053,7 +1951,7 @@ class DatabricksClient:
             ]
             return DatabricksSecretScopes(secret_scopes=secret_scopes)
         except Exception as e:
-            print(f"Failed to get secret scopes: {e}")
+            logger.error("Failed to get secret scopes: %s", e)
             return DatabricksSecretScopes(secret_scopes=[])
 
     def _get_pipelines(self) -> DatabricksPipelines:
@@ -1075,7 +1973,7 @@ class DatabricksClient:
             ]
             return DatabricksPipelines(pipelines=pipelines)
         except Exception as e:
-            print(f"Failed to get pipelines: {e}")
+            logger.error("Failed to get pipelines: %s", e)
             return DatabricksPipelines(pipelines=[])
 
     def _get_repos(self) -> DatabricksRepos:
@@ -1110,7 +2008,7 @@ class DatabricksClient:
                     break
             return DatabricksRepos(repos=repos)
         except Exception as e:
-            print(f"Failed to get repos: {e}")
+            logger.error("Failed to get repos: %s", e)
             return DatabricksRepos(repos=[])
 
     def _get_experiments(self) -> DatabricksExperiments:
@@ -1146,7 +2044,7 @@ class DatabricksClient:
             ]
             return DatabricksExperiments(experiments=experiments)
         except Exception as e:
-            print(f"Failed to get experiments: {e}")
+            logger.error("Failed to get experiments: %s", e)
             return DatabricksExperiments(experiments=[])
 
     def _get_serving_endpoints(self) -> DatabricksServingEndpoints:
@@ -1188,10 +2086,10 @@ class DatabricksClient:
             if e.status_code == "NotFound":
                 # Model Serving is not enabled in this workspace; treat as empty.
                 return DatabricksServingEndpoints(serving_endpoints=[])
-            print(f"Failed to get serving endpoints: {e}")
+            logger.error("Failed to get serving endpoints: %s", e)
             return DatabricksServingEndpoints(serving_endpoints=[])
         except Exception as e:
-            print(f"Failed to get serving endpoints: {e}")
+            logger.error("Failed to get serving endpoints: %s", e)
             return DatabricksServingEndpoints(serving_endpoints=[])
 
     def _get_alerts(self) -> DatabricksAlerts:
@@ -1218,7 +2116,7 @@ class DatabricksClient:
             ]
             return DatabricksAlerts(alerts=alerts)
         except Exception as e:
-            print(f"Failed to get alerts: {e}")
+            logger.error("Failed to get alerts: %s", e)
             return DatabricksAlerts(alerts=[])
 
     def _get_genie_spaces(self) -> DatabricksGenieSpaces:
@@ -1240,7 +2138,7 @@ class DatabricksClient:
             ]
             return DatabricksGenieSpaces(genie_spaces=spaces)
         except Exception as e:
-            print(f"Failed to get Genie spaces: {e}")
+            logger.error("Failed to get Genie spaces: %s", e)
             return DatabricksGenieSpaces(genie_spaces=[])
 
     def _get_cluster_policies(self) -> DatabricksClusterPolicies:
@@ -1263,7 +2161,7 @@ class DatabricksClient:
             ]
             return DatabricksClusterPolicies(cluster_policies=policies)
         except Exception as e:
-            print(f"Failed to get cluster policies: {e}")
+            logger.error("Failed to get cluster policies: %s", e)
             return DatabricksClusterPolicies(cluster_policies=[])
 
     def _get_instance_pools(self) -> DatabricksInstancePools:
@@ -1287,7 +2185,7 @@ class DatabricksClient:
             ]
             return DatabricksInstancePools(instance_pools=pools)
         except Exception as e:
-            print(f"Failed to get instance pools: {e}")
+            logger.error("Failed to get instance pools: %s", e)
             return DatabricksInstancePools(instance_pools=[])
 
     def _get_timestamp(self) -> str:

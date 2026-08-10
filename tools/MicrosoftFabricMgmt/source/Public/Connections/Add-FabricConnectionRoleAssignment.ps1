@@ -55,7 +55,7 @@ function Add-FabricConnectionRoleAssignment {
         Invoke-FabricAuthCheck -ThrowOnFailure
 
         # Construct the API endpoint URI
-        $apiEndpointURI = New-FabricAPIUri -Resource 'connections' -ItemId $ConnectionId -Subresource 'roleAssignments'
+        $apiEndpointURI = New-FabricAPIUri -Resource 'connections' -ResourceId $ConnectionId -Subresource 'roleAssignments'
 
         # Construct the request body
         $body = @{

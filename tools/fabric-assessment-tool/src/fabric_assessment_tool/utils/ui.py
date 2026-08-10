@@ -62,8 +62,10 @@ def print_fabric_assessment_tool(text: str) -> None:
 def print_grey(text: str, to_stderr: bool = True) -> None:
     _safe_print(text, style="fg:grey", to_stderr=to_stderr)
 
+
 def print_warning(text: str) -> None:
     _safe_print(f"⚠ {text}", style="fg:yellow", to_stderr=True)
+
 
 def print_error(text: str) -> None:
     _safe_print(f"✗ {text}", style="fg:red", to_stderr=True)

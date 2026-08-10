@@ -18,6 +18,9 @@ Handles both synchronous and asynchronous operations, with detailed logging and 
 Specifies the format of the notebook definition. Currently, only 'ipynb' is supported.
 Default: 'ipynb'.
 
+.PARAMETER Raw
+If specified, returns the untouched API response.
+
 .EXAMPLE
 Get-FabricNotebookDefinition -WorkspaceId "12345" -NotebookId "67890"
 
@@ -49,34 +52,43 @@ function Get-FabricNotebookDefinition {
         [Parameter(Mandatory = $false)]
         [ValidateNotNullOrEmpty()]
         [ValidateSet('ipynb', 'fabricGitSource')]
-        [string]$NotebookFormat = 'ipynb'
+        [string]$NotebookFormat = 'ipynb',
+
+        [Parameter()]
+        [switch]$Raw
     )
-    try {
-        Invoke-FabricAuthCheck -ThrowOnFailure
+    process {
+        try {
+            Invoke-FabricAuthCheck -ThrowOnFailure
 
 
-        # Construct the API endpoint URI with filtering logic
-        $apiEndpointURI = "{0}/workspaces/{1}/notebooks/{2}/getDefinition" -f $script:FabricAuthContext.BaseUrl, $WorkspaceId, $NotebookId
-        if ($NotebookFormat) {
-            $apiEndpointURI = "{0}?format={1}" -f $apiEndpointURI, $NotebookFormat
+            # Construct the API endpoint URI with filtering logic
+            $apiEndpointURI = "{0}/workspaces/{1}/notebooks/{2}/getDefinition" -f $script:FabricAuthContext.BaseUrl, $WorkspaceId, $NotebookId
+            if ($NotebookFormat) {
+                $apiEndpointURI = "{0}?format={1}" -f $apiEndpointURI, $NotebookFormat
+            }
+            Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+
+            # Make the API request
+            $apiParams = @{
+                BaseURI = $apiEndpointURI
+                Headers = $script:FabricAuthContext.FabricHeaders
+                Method = 'Post'
+            }
+            $response = Invoke-FabricAPIRequest @apiParams
+
+            if ($Raw) {
+                return $response
+            }
+
+            # Return the API response
+            Write-FabricLog -Message "Notebook '$NotebookId' definition retrieved successfully!" -Level Debug
+            return $response
         }
-        Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
-
-        # Make the API request
-        $apiParams = @{
-            BaseURI = $apiEndpointURI
-            Headers = $script:FabricAuthContext.FabricHeaders
-            Method = 'Post'
+        catch {
+            # Capture and log error details
+            $errorDetails = $_.Exception.Message
+            Write-FabricLog -Message "Failed to retrieve Notebook. Error: $errorDetails" -Level Error
         }
-        $response = Invoke-FabricAPIRequest @apiParams
-
-        # Return the API response
-        Write-FabricLog -Message "Notebook '$NotebookId' definition retrieved successfully!" -Level Debug
-        return $response
-    }
-    catch {
-        # Capture and log error details
-        $errorDetails = $_.Exception.Message
-        Write-FabricLog -Message "Failed to retrieve Notebook. Error: $errorDetails" -Level Error
     }
 }

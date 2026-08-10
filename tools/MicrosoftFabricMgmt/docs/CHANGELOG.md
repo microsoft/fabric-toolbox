@@ -105,8 +105,8 @@ Powershell 5.1 support.
 ### Added
 
 - **Managed Identity Authentication**: Full support for Azure Managed Identity (both system-assigned and user-assigned)
-  - `Set-FabricApiHeaders -UseManagedIdentity` for system-assigned identity
-  - `Set-FabricApiHeaders -UseManagedIdentity -ClientId "..."` for user-assigned identity
+  - `Connect-FabricAccount -UseManagedIdentity` for system-assigned identity
+  - `Connect-FabricAccount -UseManagedIdentity -ClientId "..."` for user-assigned identity
 - **Automatic Token Refresh**: New `Test-TokenExpired -AutoRefresh` capability for Managed Identity authentication
 - **PSFramework Integration**: Complete migration to PSFramework for configuration and logging
   - Configuration: `Get-PSFConfig -Module MicrosoftFabricMgmt` to view all settings
@@ -134,7 +134,7 @@ Powershell 5.1 support.
   - Creates module-scoped `$script:FabricAuthContext` instead of global `$FabricConfig`
   - Registers module cleanup handler for security
   - Displays breaking change notice on module load
-- **Authentication** (`Set-FabricApiHeaders`): Complete rewrite with modern PowerShell patterns
+- **Authentication** (`Connect-FabricAccount`): Complete rewrite with modern PowerShell patterns
   - Three parameter sets: `UserPrincipal`, `ServicePrincipal`, `ManagedIdentity`
   - All code is PowerShell 5.1 compatible (uses `New-Object` instead of `::new()`)
   - Uses PSFramework logging (`Write-PSFMessage`) throughout
@@ -170,7 +170,7 @@ Powershell 5.1 support.
 **If upgrading from 0.x to 1.0.0:**
 
 1. Remove all `$FabricConfig` references from your scripts
-2. Authentication still works the same way via `Set-FabricApiHeaders`
+2. Authentication still works the same way via `Connect-FabricAccount`
 3. Use `Get-PSFConfigValue` if you need configuration values
 4. Update any `Test-TokenExpired` calls to handle boolean return values
 5. Consider migrating Azure-hosted workloads to Managed Identity authentication

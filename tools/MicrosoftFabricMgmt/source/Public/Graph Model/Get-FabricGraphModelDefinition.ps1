@@ -15,6 +15,9 @@
 .PARAMETER Format
     Optional. The format of the Graph Model public definition.
 
+.PARAMETER Raw
+    If specified, returns the untouched API response.
+
 .EXAMPLE
     Get-FabricGraphModelDefinition -WorkspaceId "12345678-1234-1234-1234-123456789012" -GraphModelId "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee"
 
@@ -42,7 +45,10 @@ function Get-FabricGraphModelDefinition {
 
         [Parameter(Mandatory = $false)]
         [ValidateNotNullOrEmpty()]
-        [string]$Format
+        [string]$Format,
+
+        [Parameter()]
+        [switch]$Raw
     )
 
     process {
@@ -75,6 +81,10 @@ function Get-FabricGraphModelDefinition {
                 Method  = 'Post'
             }
             $response = Invoke-FabricAPIRequest @apiParams
+
+            if ($Raw) {
+                return $response
+            }
 
             if ($response) {
                 Write-FabricLog -Message "Graph Model definition retrieved successfully." -Level Debug

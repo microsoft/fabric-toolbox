@@ -27,10 +27,12 @@ function Resolve-FabricWorkspaceName {
         Forces a fresh API call, bypassing the cache.
 
     .NOTES
+    Author: Tiago Balabuch, Jess Pomfret, Rob Sewell
         This function uses PSFramework's configuration system for caching.
         Cache key format: "WorkspaceName_{WorkspaceId}"
     #>
     [CmdletBinding()]
+    [OutputType([string])]
     param(
         [Parameter(Mandatory, ValueFromPipeline, ValueFromPipelineByPropertyName)]
         [ValidateNotNullOrEmpty()]

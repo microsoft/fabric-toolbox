@@ -12,12 +12,16 @@
 .PARAMETER DigitalTwinBuilderId
     (Mandatory) The unique identifier of the Digital Twin Builder item whose definition needs to be retrieved.
 
+.PARAMETER Raw
+    If specified, returns the untouched API response.
+
 .EXAMPLE
     Get-FabricDigitalTwinBuilderDefinition -WorkspaceId "12345" -DigitalTwinBuilderId "67890"
 
     Retrieves the definition of the Digital Twin Builder item with ID 67890 from the workspace with ID 12345.
 
 .NOTES
+Author: Tiago Balabuch, Jess Pomfret, Rob Sewell
     - Requires $FabricConfig global configuration, including BaseUrl and FabricHeaders.
     - Calls Invoke-FabricAuthCheck to ensure token validity before making the API request.
     - Handles long-running operations asynchronously.
@@ -34,29 +38,40 @@ function Get-FabricDigitalTwinBuilderDefinition {
 
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
-        [string]$DigitalTwinBuilderId
+        [string]$DigitalTwinBuilderId,
+
+        [Parameter()]
+        [switch]$Raw
     )
+    process {
 
-    try {
-        # Validate authentication token before proceeding
-        Invoke-FabricAuthCheck -ThrowOnFailure
+        try {
+            # Validate authentication token before proceeding
+            Invoke-FabricAuthCheck -ThrowOnFailure
 
-        # Construct the API endpoint URL
-        $segments = @('workspaces', $WorkspaceId, 'digitaltwinbuilders', $DigitalTwinBuilderId, 'getDefinition')
-        $apiEndpointURI = New-FabricAPIUri -Segments $segments
-        Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+            # Construct the API endpoint URL
+            $segments = @('workspaces', $WorkspaceId, 'digitaltwinbuilders', $DigitalTwinBuilderId, 'getDefinition')
+            $apiEndpointURI = New-FabricAPIUri -Segments $segments
+            Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
 
-        # Make the API request
-        $apiParams = @{
-            BaseURI = $apiEndpointURI
-            Headers = $script:FabricAuthContext.FabricHeaders
-            Method = 'Post'
+            # Make the API request
+            $apiParams = @{
+                BaseURI = $apiEndpointURI
+                Headers = $script:FabricAuthContext.FabricHeaders
+                Method = 'Post'
+            }
+            $response = Invoke-FabricAPIRequest @apiParams
+
+            if ($Raw) {
+                return $response
+            }
+
+            $response
         }
-        Invoke-FabricAPIRequest @apiParams
-    }
-    catch {
-        # Capture and log error details
-        $errorDetails = $_.Exception.Message
-        Write-FabricLog -Message "Failed to retrieve Digital Twin Builder definition. Error: $errorDetails" -Level Error
+        catch {
+            # Capture and log error details
+            $errorDetails = $_.Exception.Message
+            Write-FabricLog -Message "Failed to retrieve Digital Twin Builder definition. Error: $errorDetails" -Level Error
+        }
     }
 }

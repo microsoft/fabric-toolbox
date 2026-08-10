@@ -5,6 +5,7 @@ $expectedParams = @(
     "WorkspaceId"
     "DataPipelineId"
     "DataPipelineName"
+    "Raw"
     "ProgressAction"
     "Verbose"
     "Debug"

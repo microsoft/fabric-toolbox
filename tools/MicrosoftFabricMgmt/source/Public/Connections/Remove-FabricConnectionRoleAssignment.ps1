@@ -42,8 +42,7 @@ function Remove-FabricConnectionRoleAssignment {
             Invoke-FabricAuthCheck -ThrowOnFailure
 
             # Construct the API endpoint URI
-            $apiEndpointURI = New-FabricAPIUri -Resource 'connections' -ItemId $ConnectionId -Subresource 'roleAssignments'
-            $apiEndpointURI = "$apiEndpointURI/$ConnectionRoleAssignmentId"
+            $apiEndpointURI = New-FabricAPIUri -Resource 'connections' -ResourceId $ConnectionId -Subresource 'roleAssignments' -ItemId $ConnectionRoleAssignmentId
 
             if ($PSCmdlet.ShouldProcess("Role assignment '$ConnectionRoleAssignmentId' on Connection '$ConnectionId'", "Delete")) {
                 # Make the API request

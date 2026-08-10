@@ -5,6 +5,7 @@ $expectedParams = @(
     "WorkspaceId"
     "SemanticModelId"
     "SemanticModelFormat"
+    "Raw"
     "ProgressAction"
     "Verbose"
     "Debug"

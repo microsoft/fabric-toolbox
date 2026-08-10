@@ -54,56 +54,58 @@ function Update-FabricDomain {
         [ValidateSet('AdminsOnly', 'AllTenant', 'SpecificUsersAndGroups')]
         [string]$DomainContributorsScope
     )
+    process {
 
-    try {
-        # Validate that at least one update parameter is provided
-        if (-not $DomainName -and -not $DomainDescription -and -not $DomainContributorsScope) {
-            Write-FabricLog -Message "At least one of DomainName, DomainDescription, or DomainContributorsScope must be specified" -Level Error
-            return
-        }
-
-        # Validate authentication token before proceeding
-        Invoke-FabricAuthCheck -ThrowOnFailure
-
-        # Construct the API endpoint URI
-        $apiEndpointURI = New-FabricAPIUri -Segments @('admin', 'domains', $DomainId)
-        Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
-
-        # Construct the request body
-        $body = @{}
-
-        if ($DomainName) {
-            $body.displayName = $DomainName
-        }
-
-        if ($DomainDescription) {
-            $body.description = $DomainDescription
-        }
-
-        if ($DomainContributorsScope) {
-            $body.contributorsScope = $DomainContributorsScope
-        }
-
-        $bodyJson = Convert-FabricRequestBody -InputObject $body
-        Write-FabricLog -Message "Request Body: $bodyJson" -Level Debug
-
-        # Make the API request (guarded by ShouldProcess)
-        if ($PSCmdlet.ShouldProcess($DomainId, "Update Fabric domain '$DomainName'")) {
-            $apiParams = @{
-                Headers = $script:FabricAuthContext.FabricHeaders
-                BaseURI = $apiEndpointURI
-                Method  = 'Patch'
-                Body    = $bodyJson
+        try {
+            # Validate that at least one update parameter is provided
+            if (-not $DomainName -and -not $DomainDescription -and -not $DomainContributorsScope) {
+                Write-FabricLog -Message "At least one of DomainName, DomainDescription, or DomainContributorsScope must be specified" -Level Error
+                return
             }
-            $response = Invoke-FabricAPIRequest @apiParams
 
-            Write-FabricLog -Message "Domain '$DomainName' updated successfully!" -Level Host
-            $response
+            # Validate authentication token before proceeding
+            Invoke-FabricAuthCheck -ThrowOnFailure
+
+            # Construct the API endpoint URI
+            $apiEndpointURI = New-FabricAPIUri -Segments @('admin', 'domains', $DomainId)
+            Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+
+            # Construct the request body
+            $body = @{}
+
+            if ($DomainName) {
+                $body.displayName = $DomainName
+            }
+
+            if ($DomainDescription) {
+                $body.description = $DomainDescription
+            }
+
+            if ($DomainContributorsScope) {
+                $body.contributorsScope = $DomainContributorsScope
+            }
+
+            $bodyJson = Convert-FabricRequestBody -InputObject $body
+            Write-FabricLog -Message "Request Body: $bodyJson" -Level Debug
+
+            # Make the API request (guarded by ShouldProcess)
+            if ($PSCmdlet.ShouldProcess($DomainId, "Update Fabric domain '$DomainName'")) {
+                $apiParams = @{
+                    Headers = $script:FabricAuthContext.FabricHeaders
+                    BaseURI = $apiEndpointURI
+                    Method  = 'Patch'
+                    Body    = $bodyJson
+                }
+                $response = Invoke-FabricAPIRequest @apiParams
+
+                Write-FabricLog -Message "Domain '$DomainName' updated successfully!" -Level Host
+                $response
+            }
         }
-    }
-    catch {
-        # Capture and log error details
-        $errorDetails = $_.Exception.Message
-        Write-FabricLog -Message "Failed to update domain '$DomainId'. Error: $errorDetails" -Level Error
+        catch {
+            # Capture and log error details
+            $errorDetails = $_.Exception.Message
+            Write-FabricLog -Message "Failed to update domain '$DomainId'. Error: $errorDetails" -Level Error
+        }
     }
 }
