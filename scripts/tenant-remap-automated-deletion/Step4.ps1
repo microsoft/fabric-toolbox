@@ -56,7 +56,13 @@ function Add-AdminOnPersonalWorkspaces {
                     Write-Host "Admin granted to $wsId via API (lasts for 24 hours)"
                     break
                 } catch {
-                    $error_returned = $_.Exception.Response.StatusCode
+                    $response = $_.Exception.Response
+                    
+                    if (-not $response) {
+                        throw
+                    }
+
+                    $error_returned = $response.StatusCode
 
                     if ($error_returned -ne 429) {
                         Write-Warning "API grant failed for $wsId ($error_returned). This may happen if already Admin. Use UI link if NOT already Admin: https://app.powerbi.com/groups/$wsId"
@@ -65,7 +71,7 @@ function Add-AdminOnPersonalWorkspaces {
 
                     # 429 error case
                     # docs: https://learn.microsoft.com/en-us/rest/api/fabric/articles/throttling
-                    $retryAfter = $_.Exception.Response.Headers.RetryAfter
+                    $retryAfter = $response.Headers.RetryAfter
 
                     # RetryAfter is a RetryConditionHeaderValue, so the seconds come from Delta rather than the object itself
                     if ($null -ne $retryAfter -and $null -ne $retryAfter.Delta) {

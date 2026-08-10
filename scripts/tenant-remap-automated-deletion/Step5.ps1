@@ -47,7 +47,6 @@ function Remove-AllActiveArtifacts {
             
             $workspaceItems = [System.Collections.ArrayList]::new()
 
-            # this can also have a 429 error, but unlikely
             $uri = "https://api.fabric.microsoft.com/v1/workspaces/$wsId/items?include=DefaultIdentity"
             do {
                 $response = Invoke-RestMethod -Method GET -Uri $uri -Headers $h
@@ -62,7 +61,12 @@ function Remove-AllActiveArtifacts {
             $formattedWorkspaceItems = $workspaceItems | ConvertTo-Json -Depth 5
             $formattedWorkspaceItems | Out-File -FilePath "workspace_$($wsId)_active_artifacts.json"
 
-            foreach ($artifact in $workspaceItems) {
+            # filter down to Fabric only
+            $fabricItems = $workspaceItems | Where-Object { $_.type -NotIn @('SemanticModel', 'Dashboard', 'Report', 'PaginatedReport')}
+            $formattedFabricItems = $fabricItems | ConvertTo-Json -Depth 5
+            $formattedFabricItems | Out-File -FilePath "workspace_$($wsId)_active_fabric_artifacts.json"
+
+            foreach ($artifact in $fabricItems) {
                 $attemptCounter = 0
                 while ($true) {
                     $attemptCounter++
@@ -79,14 +83,20 @@ function Remove-AllActiveArtifacts {
                         break
                     }
                     catch {
-                        $error_returned = $_.Exception.Response.StatusCode
+                        $response = $_.Exception.Response
+                    
+                        if (-not $response) {
+                            throw
+                        }
+
+                        $error_returned = $response.StatusCode
 
                         if ($error_returned -ne 429) {
-                            Write-Warning "Deletion API failed for $($artifact.id) ($error_returned)"
+                            Write-Warning "API grant failed for $wsId ($error_returned). This may happen if already Admin. Use UI link if NOT already Admin: https://app.powerbi.com/groups/$wsId"
                             break
                         }
 
-                        $retryAfter = $_.Exception.Response.Headers.RetryAfter
+                        $retryAfter = $response.Headers.RetryAfter
 
                         # RetryAfter is a RetryConditionHeaderValue, so the seconds come from Delta rather than the object itself
                         if ($null -ne $retryAfter -and $null -ne $retryAfter.Delta) {

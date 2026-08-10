@@ -61,7 +61,12 @@ function Remove-AllSoftDeletedArtifacts {
             $formattedWorkspaceItems = $workspaceItems | ConvertTo-Json -Depth 5
             $formattedWorkspaceItems | Out-File -FilePath "workspace_$($wsId)_softdeleted_artifacts.json"
 
-            foreach ($artifact in $workspaceItems) {
+            # filter down to Fabric only
+            $fabricItems = $workspaceItems | Where-Object { $_.type -NotIn @('SemanticModel', 'Dashboard', 'Report', 'PaginatedReport')}
+            $formattedFabricItems = $fabricItems | ConvertTo-Json -Depth 5
+            $formattedFabricItems | Out-File -FilePath "workspace_$($wsId)_softdeleted_fabric_artifacts.json"
+
+            foreach ($artifact in $fabricItems) {
                 $attemptCounter = 0
                 while ($true) {
                     $attemptCounter++
@@ -78,14 +83,20 @@ function Remove-AllSoftDeletedArtifacts {
                         break
                     }
                     catch {
-                        $error_returned = $_.Exception.Response.StatusCode
+                        $response = $_.Exception.Response
+                    
+                        if (-not $response) {
+                            throw
+                        }
+
+                        $error_returned = $response.StatusCode
 
                         if ($error_returned -ne 429) {
-                            Write-Warning "Deletion API failed for $($artifact.id) ($error_returned)"
+                            Write-Warning "API grant failed for $wsId ($error_returned). This may happen if already Admin. Use UI link if NOT already Admin: https://app.powerbi.com/groups/$wsId"
                             break
                         }
 
-                        $retryAfter = $_.Exception.Response.Headers.RetryAfter
+                        $retryAfter = $response.Headers.RetryAfter
 
                         # RetryAfter is a RetryConditionHeaderValue, so the seconds come from Delta rather than the object itself
                         if ($null -ne $retryAfter -and $null -ne $retryAfter.Delta) {
