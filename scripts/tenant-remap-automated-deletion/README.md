@@ -1,6 +1,8 @@
 ## Automated Item Deletion Scripts
 
-If you need to clean up a large number of Fabric items before tenant remap, download `Step0.ps1` through `Step6.ps1` and follow these steps:
+These scripts enable you to delete all Fabric items across all workspaces in your tenant. This is needed for tenant remap, which moves your Fabric and Power BI home region. To pass readiness for executing remap, you must delete all Fabric items in your tenant.
+
+To clean up the Fabric items in your tenant, download `Step0.ps1` through `Step6.ps1` and follow these steps:
 
 The final two steps permanently delete your items, and you can't restore them. Confirm that you backed up all item definitions and data before you continue.
 
