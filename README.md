@@ -36,6 +36,7 @@ These assets should be treated as examples that you can use to create the soluti
 - [Notebook: List Dedicated Pool Connections](./samples/notebook-list-dedicated-pool-connections)
 - [Notebook: Create, List, Delete a Data Warehouse](./samples/notebook-create-list-delete-warehouse)
 - [Notebook: Workspace Size](./samples/notebook-workspace-size)
+- [Notebook: Fabric Connection Management](./samples/fabric-connection-management)
 
 ## Scripts
 - $${\color{green}NEW!}$$ [Mirror CCI Tables for Fabric SQL DB](./scripts/sql-Mirror-CCI-tables)
