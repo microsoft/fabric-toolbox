@@ -1,0 +1,95 @@
+[project]
+name = "dbt-fabric"
+dynamic = ["version"]
+description = "The dbt adapter for Microsoft Fabric Lakehouses and Data Warehouses"
+readme = "README.md"
+license = "MIT"
+requires-python = ">=3.11,<3.14"
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Operating System :: Microsoft :: Windows",
+    "Operating System :: MacOS :: MacOS X",
+    "Operating System :: POSIX :: Linux",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13"
+]
+
+dependencies = [
+    "mssql-python>=1.4.0",
+    "azure-identity>=1.12.0",
+    "dbt-common>=1.37.3,<2.0",
+    "dbt-adapters>=1.22.6,<2.0",
+    "requests>=2.33.0",
+]
+
+[project.optional-dependencies]
+spark = [
+    "dbt-spark>=1.10.1",
+]
+
+[dependency-groups]
+dev = [
+    # Testing
+    "pytest>=9.0.3",
+    "pytest-dotenv>=0.5.2",
+    "dbt-core>=1.9.6,<1.13.0",
+    "dbt-tests-adapter>=1.19.7,<2.0",
+    # Linting & formatting
+    "ruff>=0.15.1"
+]
+docs = [
+    "zensical>=0.0.42",
+]
+
+[project.urls]
+"Documentation" = "https://microsoft.github.io/fabric-toolbox/dbt-fabric/"
+"Changelog" = "https://github.com/microsoft/fabric-toolbox/blob/main/CHANGELOG.md"
+"Issue Tracker" = "https://github.com/microsoft/fabric-toolbox/issues"
+Homepage = "https://github.com/microsoft/fabric-toolbox/tree/main/tools/dbt-fabric"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.version]
+path = "src/dbt/adapters/fabric/__version__.py"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/dbt/adapters", "src/dbt/include"]
+sources = ["src"]
+
+[tool.pytest.ini_options]
+filterwarnings = [
+    "ignore:.*datetime.datetime.utcnow.*:DeprecationWarning", # https://github.com/dbt-labs/dbt-core/issues/9791
+]
+env_files = ["test.env"]
+testpaths = ["tests/unit", "tests/fabric", "tests/fabricspark"]
+
+[tool.ruff]
+target-version = "py313"
+line-length = 99
+
+[tool.ruff.lint]
+select = [
+    "F",   # pyflakes
+    "E",   # pycodestyle errors
+    "W",   # pycodestyle warnings
+    "I",   # isort
+    "UP",  # pyupgrade
+    "B",   # bugbear
+    "SIM", # simplify
+    "C4",  # flake8-comprehensions
+    "ERA", # no commented code
+]
+
+[tool.ruff.lint.isort]
+known-first-party = ["dbt", "tests"]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**/*" = ["ARG", "PLR0913", "E501"]
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+line-ending = "auto"

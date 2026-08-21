@@ -1,0 +1,87 @@
+{% macro fabric__test_expect_column_most_common_value_to_be_in_set(model, column_name,
+                                                            value_set,
+                                                            top_n,
+                                                            quote_values=False,
+                                                            data_type="decimal",
+                                                            row_condition=None
+                                                            ) -%}
+
+with value_counts as (
+
+    select
+        {% if quote_values -%}
+        {{ column_name }}
+        {%- else -%}
+        cast({{ column_name }} as {{ data_type }})
+        {%- endif %} as value_field,
+        count(*) as value_count
+
+    from {{ model }}
+    {% if row_condition %}
+    where {{ row_condition }}
+    {% endif %}
+
+    group by {% if quote_values -%}
+                {{ column_name }}
+            {%- else -%}
+                cast({{ column_name }} as {{ data_type }})
+            {%- endif %}
+
+),
+value_counts_ranked as (
+
+    select
+        *,
+        row_number() over(order by value_count desc) as value_count_rank
+    from
+        value_counts
+
+),
+value_count_top_n as (
+
+    select
+        value_field
+    from
+        value_counts_ranked
+    where
+        value_count_rank = {{ top_n }}
+
+),
+set_values as (
+
+    {% for value in value_set -%}
+    select
+        {% if quote_values -%}
+        '{{ value }}'
+        {%- else -%}
+        cast({{ value }} as {{ data_type }})
+        {%- endif %} as value_field
+    {% if not loop.last %}union all{% endif %}
+    {% endfor %}
+
+),
+unique_set_values as (
+
+    select distinct value_field
+    from
+        set_values
+
+),
+validation_errors as (
+    {#- Upstream uses NOT IN (SELECT ... FROM cte). T-SQL cannot reference a CTE
+        inside a subquery when the outer query is itself wrapped in a CTE by dbt's
+        test harness (nested CTE scoping limitation). Use LEFT JOIN anti-pattern. #}
+    select
+        t.value_field
+    from
+        value_count_top_n t
+        left join unique_set_values s on t.value_field = s.value_field
+    where
+        s.value_field is null
+
+)
+
+select *
+from validation_errors
+
+{% endmacro %}
