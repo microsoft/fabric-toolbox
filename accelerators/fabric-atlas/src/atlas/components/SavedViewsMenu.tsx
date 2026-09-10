@@ -54,7 +54,7 @@ export function SavedViewsMenu({
   }, [open]);
 
   const save = async () => {
-    if (!name.trim()) return;
+    if (loading || !name.trim()) return;
     setSaving(true);
     setOperationError(undefined);
     try {
@@ -146,7 +146,7 @@ export function SavedViewsMenu({
                 <button
                   type="button"
                   onClick={() => void save()}
-                  disabled={!name.trim() || saving}
+                  disabled={loading || !name.trim() || saving}
                   className="rounded-lg bg-primary px-m py-s text-200 font-semibold text-primary-foreground disabled:opacity-50"
                 >
                   {saving ? (
@@ -161,7 +161,8 @@ export function SavedViewsMenu({
             <button
               type="button"
               onClick={() => setCreating(true)}
-              className="flex w-full items-center gap-s border-b border-border px-m py-s text-left text-200 font-semibold text-brand-foreground hover:bg-primary/10"
+              disabled={loading}
+              className="flex w-full items-center gap-s border-b border-border px-m py-s text-left text-200 font-semibold text-brand-foreground hover:bg-primary/10 disabled:cursor-not-allowed disabled:opacity-50"
             >
               <Plus className="icon-size-100" aria-hidden="true" />
               Save current filters

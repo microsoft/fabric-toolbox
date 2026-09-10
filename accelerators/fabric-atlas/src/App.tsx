@@ -224,6 +224,7 @@ function App() {
     syncStage,
     syncStartedAt,
     syncError,
+    configured,
     canSync,
     lastSyncedAt,
     currentUser,
@@ -439,13 +440,18 @@ function App() {
                 if (syncing) cancelSync();
                 else void sync();
               }}
-              disabled={!syncing && !canSync}
+              disabled={
+                !syncing &&
+                (!canSync || (!isPreview && !configured))
+              }
               title={
                 syncing
                   ? "Cancel synchronization"
-                  : canSync
-                  ? undefined
-                  : "Only the configured Atlas sync administrator can synchronize"
+                  : !canSync
+                    ? "Only the configured Atlas sync administrator can synchronize"
+                    : !isPreview && !configured
+                      ? "Atlas synchronization is not configured"
+                      : undefined
               }
               className="flex h-[32px] items-center gap-[7px] rounded-md bg-primary px-[12px] text-[13px] font-semibold text-primary-foreground shadow-fabric-2 hover:bg-primary-hover disabled:opacity-70"
             >

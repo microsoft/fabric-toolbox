@@ -8,7 +8,7 @@ metadata:
     Microsoft Fabric workspace governance explorer — items, lineage, catalog,
     access, jobs, config, sensitivity labels and a shared comment layer, built
     as a Rayfin Data App.
-  version: 1.12.0
+  version: 1.12.1
   tags:
     - fabric
     - governance

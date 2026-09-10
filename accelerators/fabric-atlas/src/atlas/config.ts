@@ -123,21 +123,36 @@ export function validateUdfUrl(value: string, workspaceId: string): string {
   return url.toString();
 }
 
-/** True once the UDF `sync_all` invoke URL is known. */
-export function isSyncConfigured(): boolean {
-  const udfUrl = getUdfUrl();
+export function hasValidSyncConfiguration(
+  config: Pick<
+    typeof ATLAS_CONFIG,
+    | "clientId"
+    | "tenantId"
+    | "workspaceId"
+    | "syncAdminEmail"
+    | "syncAdminSubject"
+  >,
+  udfUrl: string | null,
+): boolean {
   if (
     !udfUrl ||
-    !ATLAS_CONFIG.clientId ||
-    !ATLAS_CONFIG.syncAdminEmail ||
-    !ATLAS_CONFIG.syncAdminSubject
+    !config.clientId ||
+    !config.tenantId ||
+    !config.workspaceId ||
+    !config.syncAdminEmail ||
+    !config.syncAdminSubject
   ) {
     return false;
   }
   try {
-    validateUdfUrl(udfUrl, ATLAS_CONFIG.workspaceId);
+    validateUdfUrl(udfUrl, config.workspaceId);
     return true;
   } catch {
     return false;
   }
+}
+
+/** True once every required live synchronization value is present and valid. */
+export function isSyncConfigured(): boolean {
+  return hasValidSyncConfiguration(ATLAS_CONFIG, getUdfUrl());
 }

@@ -11,7 +11,7 @@
 //    shown without re-calling Fabric.
 //  - `persistComment` writes a new comment to the Comment entity.
 //
-// Every backend call is wired defensively so a missing/ës misconfigured backend
+// Every backend call is wired defensively so a missing/misconfigured backend
 // never breaks the UI — see docs/architecture.md for the full flow.
 
 import { ATLAS_CONFIG } from "./config";
@@ -56,6 +56,148 @@ export type SyncProgressReporter = (progress: number, stage: string) => void;
 type Row = Record<string, unknown>;
 const SNAPSHOT_WRITE_BATCH_SIZE = 8;
 const SYNC_RUN_UPDATE_RETRY_DELAYS_MS = [0, 100, 400];
+const PERSISTED_TEXT_LIMITS = {
+  reference: {
+    fabricId: 100,
+  },
+  workspace: {
+    displayName: 200,
+    capacity: 120,
+    region: 120,
+  },
+  item: {
+    displayName: 200,
+    itemType: 60,
+    size: 200,
+    description: 600,
+    ownerName: 120,
+    ownerEmail: 150,
+    configuredBy: 160,
+    modifiedBy: 160,
+    endorsementRaw: 60,
+    endorsementBy: 160,
+    sensitivity: 60,
+    sensitivityLabelId: 100,
+    tags: 300,
+    tagIds: 2000,
+  },
+  edge: {
+    relation: 60,
+  },
+  principal: {
+    id: 150,
+    displayName: 200,
+    email: 150,
+  },
+  grant: {
+    roleName: 60,
+    flag: 80,
+  },
+  job: {
+    itemName: 200,
+    jobType: 60,
+    message: 400,
+  },
+  config: {
+    section: 80,
+    label: 160,
+    value: 2000,
+  },
+  syncRun: {
+    triggeredBy: 160,
+    summary: 500,
+  },
+} as const;
+const PERSISTED_TRUNCATION_MARKER = " [truncated]";
+
+function persistedText(
+  value: unknown,
+  maxLength: number,
+): string | undefined {
+  const text = realText(value);
+  if (!text) return undefined;
+  if (text.length <= maxLength) return text;
+  const marker =
+    PERSISTED_TRUNCATION_MARKER.length < maxLength
+      ? PERSISTED_TRUNCATION_MARKER
+      : "";
+  return `${text.slice(0, maxLength - marker.length)}${marker}`;
+}
+
+function requiredPersistedText(
+  value: unknown,
+  maxLength: number,
+  label: string,
+): string {
+  const text = persistedText(value, maxLength);
+  if (!text) throw new Error(`${label} is required for snapshot persistence`);
+  return text;
+}
+
+function requiredExactPersistedText(
+  value: unknown,
+  maxLength: number,
+  label: string,
+): string {
+  const text = realText(value);
+  if (!text) throw new Error(`${label} is required for snapshot persistence`);
+  if (text.length > maxLength) {
+    throw new Error(`${label} exceeded the snapshot persistence limit`);
+  }
+  return text;
+}
+
+function normalizedPersistenceKey(value: unknown): string {
+  return realText(value)?.toLocaleLowerCase() ?? "";
+}
+
+async function stablePersistedKey(
+  value: unknown,
+  maxLength: number,
+  label: string,
+): Promise<string> {
+  const text = realText(value);
+  if (!text) throw new Error(`${label} is required for snapshot persistence`);
+  if (text.length <= maxLength) return text;
+  const digest = await crypto.subtle.digest(
+    "SHA-256",
+    new TextEncoder().encode(text),
+  );
+  const suffix = ` [sha256:${[...new Uint8Array(digest)]
+    .slice(0, 12)
+    .map((byte) => byte.toString(16).padStart(2, "0"))
+    .join("")}]`;
+  return `${text.slice(0, maxLength - suffix.length)}${suffix}`;
+}
+
+function persistedList(
+  values: string[] | undefined,
+  maxLength: number,
+  separator: string,
+): string | undefined {
+  const normalized = (values ?? [])
+    .map((value) => realText(value))
+    .filter((value): value is string => !!value);
+  if (normalized.length === 0) return undefined;
+  const joined = normalized.join(separator);
+  if (joined.length <= maxLength) return joined;
+
+  const marker = "[additional values omitted]";
+  const kept: string[] = [];
+  for (const value of normalized) {
+    const candidate = [...kept, value, marker].join(separator);
+    if (candidate.length > maxLength) break;
+    kept.push(value);
+  }
+  if (kept.length > 0) return [...kept, marker].join(separator);
+  const firstLimit = Math.max(1, maxLength - marker.length - separator.length);
+  return [
+    persistedText(normalized[0], firstLimit),
+    marker,
+  ]
+    .filter((value): value is string => !!value)
+    .join(separator);
+}
 
 function assertSyncActive(signal?: AbortSignal): void {
   if (signal?.aborted) {
@@ -273,14 +415,24 @@ function requireSyncWriter(user: SyncIdentity): string {
       "Only the configured Atlas sync administrator can publish workspace snapshots.",
     );
   }
-  return ATLAS_CONFIG.syncAdminEmail.trim().toLowerCase();
+  const writerEmail = ATLAS_CONFIG.syncAdminEmail.trim().toLowerCase();
+  if (!writerEmail || writerEmail.length > 160) {
+    throw new Error(
+      "The configured Atlas sync administrator email is invalid.",
+    );
+  }
+  return writerEmail;
 }
 
 async function startSyncAttempt(user: SyncIdentity): Promise<SyncAttempt> {
   const attempt: SyncAttempt = {
     id: crypto.randomUUID(),
     snapshotId: crypto.randomUUID(),
-    workspaceId: workspaceId(),
+    workspaceId: requiredExactPersistedText(
+      workspaceId(),
+      PERSISTED_TEXT_LIMITS.reference.fabricId,
+      "Workspace ID",
+    ),
     writerEmail: requireSyncWriter(user),
     startedAt: new Date(),
     data: await dataApi(),
@@ -294,7 +446,10 @@ async function startSyncAttempt(user: SyncIdentity): Promise<SyncAttempt> {
     writerEmail: attempt.writerEmail,
     startedAt: attempt.startedAt,
     status: "running",
-    triggeredBy: user.name,
+    triggeredBy: persistedText(
+      user.name,
+      PERSISTED_TEXT_LIMITS.syncRun.triggeredBy,
+    ),
     summary: "Synchronization in progress.",
   });
   return attempt;
@@ -330,7 +485,10 @@ async function updateSyncAttempt(
             status === "failed"
               ? "Synchronization failed before snapshot publication."
               : undefined,
-          summary,
+          summary: persistedText(
+            summary,
+            PERSISTED_TEXT_LIMITS.syncRun.summary,
+          ),
         },
       );
       return;
@@ -476,88 +634,231 @@ async function persistSync(
   reportProgress?.(70, "Preparing the Atlas database");
   reportProgress?.(76, "Writing workspace items");
 
+  const itemRows = atlas.items.map((item) => ({
+    fabricId: requiredExactPersistedText(
+      item.fabricId,
+      PERSISTED_TEXT_LIMITS.reference.fabricId,
+      "Fabric item ID",
+    ),
+    displayName: requiredPersistedText(
+      item.displayName || item.fabricId,
+      PERSISTED_TEXT_LIMITS.item.displayName,
+      "Fabric item display name",
+    ),
+    itemType: requiredPersistedText(
+      item.itemType,
+      PERSISTED_TEXT_LIMITS.item.itemType,
+      "Fabric item type",
+    ),
+    size: persistedText(item.size, PERSISTED_TEXT_LIMITS.item.size),
+    description: persistedText(
+      item.description,
+      PERSISTED_TEXT_LIMITS.item.description,
+    ),
+    ownerName: persistedText(
+      item.ownerName,
+      PERSISTED_TEXT_LIMITS.item.ownerName,
+    ),
+    ownerEmail: persistedText(
+      item.ownerEmail,
+      PERSISTED_TEXT_LIMITS.item.ownerEmail,
+    ),
+    configuredBy: persistedText(
+      item.configuredBy,
+      PERSISTED_TEXT_LIMITS.item.configuredBy,
+    ),
+    modifiedBy: persistedText(
+      item.modifiedBy,
+      PERSISTED_TEXT_LIMITS.item.modifiedBy,
+    ),
+    health: item.health,
+    endorsement: item.endorsement,
+    endorsementRaw: persistedText(
+      item.endorsementRaw,
+      PERSISTED_TEXT_LIMITS.item.endorsementRaw,
+    ),
+    endorsementBy: persistedText(
+      item.endorsementBy,
+      PERSISTED_TEXT_LIMITS.item.endorsementBy,
+    ),
+    sensitivity: persistedText(
+      item.sensitivity,
+      PERSISTED_TEXT_LIMITS.item.sensitivity,
+    ),
+    sensitivityLabelId: persistedText(
+      item.sensitivityLabelId,
+      PERSISTED_TEXT_LIMITS.item.sensitivityLabelId,
+    ),
+    tags: persistedList(
+      item.tags,
+      PERSISTED_TEXT_LIMITS.item.tags,
+      ", ",
+    ),
+    tagIds: persistedList(
+      item.tagIds,
+      PERSISTED_TEXT_LIMITS.item.tagIds,
+      ",",
+    ),
+    ownerMetadataAvailable: item.ownerMetadataAvailable,
+    sensitivityMetadataAvailable: item.sensitivityMetadataAvailable,
+    endorsementMetadataAvailable: item.endorsementMetadataAvailable,
+    tagMetadataAvailable: item.tagMetadataAvailable,
+    lastRefresh: item.lastRefresh ? new Date(item.lastRefresh) : undefined,
+    itemCreatedAt: item.createdAt ? new Date(item.createdAt) : undefined,
+    itemUpdatedAt: item.updatedAt ? new Date(item.updatedAt) : undefined,
+  }));
   await insertAll(
     "FabricItem",
-    atlas.items.map((i) => ({
-      fabricId: i.fabricId,
-      displayName: i.displayName,
-      itemType: i.itemType,
-      size: i.size,
-      description: i.description,
-      ownerName: i.ownerName,
-      ownerEmail: i.ownerEmail,
-      configuredBy: i.configuredBy,
-      modifiedBy: i.modifiedBy,
-      health: i.health,
-      endorsement: i.endorsement,
-      endorsementRaw: i.endorsementRaw,
-      endorsementBy: i.endorsementBy,
-      sensitivity: i.sensitivity,
-      sensitivityLabelId: i.sensitivityLabelId,
-      tags: i.tags?.length ? i.tags.join(", ") : undefined,
-      tagIds: i.tagIds?.length ? i.tagIds.join(",") : undefined,
-      ownerMetadataAvailable: i.ownerMetadataAvailable,
-      sensitivityMetadataAvailable: i.sensitivityMetadataAvailable,
-      endorsementMetadataAvailable: i.endorsementMetadataAvailable,
-      tagMetadataAvailable: i.tagMetadataAvailable,
-      lastRefresh: i.lastRefresh ? new Date(i.lastRefresh) : undefined,
-      itemCreatedAt: i.createdAt ? new Date(i.createdAt) : undefined,
-      itemUpdatedAt: i.updatedAt ? new Date(i.updatedAt) : undefined,
-    })),
+    itemRows,
   );
+
   reportProgress?.(82, "Writing principals and access");
-  await insertAll(
-    "Principal",
-    atlas.principals.map((p) => ({
-      principalId: p.principalId,
-      displayName: p.displayName,
-      kind: p.kind,
-      email: p.email,
-      external: p.external,
-      workspaceRole: p.workspaceRole,
+  const principalAliases = new Map<string, Set<string>>();
+  const addPrincipalAlias = (value: unknown, persistedId: string) => {
+    const key = normalizedPersistenceKey(value);
+    if (!key) return;
+    const ids = principalAliases.get(key) ?? new Set<string>();
+    ids.add(persistedId);
+    principalAliases.set(key, ids);
+  };
+  const principalRows = await Promise.all(
+    atlas.principals.map(async (principal) => {
+      const principalId = await stablePersistedKey(
+        principal.principalId,
+        PERSISTED_TEXT_LIMITS.principal.id,
+        "Principal ID",
+      );
+      addPrincipalAlias(principal.principalId, principalId);
+      addPrincipalAlias(principal.email, principalId);
+      addPrincipalAlias(principal.displayName, principalId);
+      return {
+        principalId,
+        displayName: requiredPersistedText(
+          principal.displayName || principal.principalId,
+          PERSISTED_TEXT_LIMITS.principal.displayName,
+          "Principal display name",
+        ),
+        kind: principal.kind,
+        email: persistedText(
+          principal.email,
+          PERSISTED_TEXT_LIMITS.principal.email,
+        ),
+        external: principal.external,
+        workspaceRole: principal.workspaceRole,
+      };
+    }),
+  );
+  await insertAll("Principal", principalRows);
+
+  const principalReference = async (value: string): Promise<string> => {
+    const aliases = principalAliases.get(normalizedPersistenceKey(value));
+    if (aliases?.size === 1) return [...aliases][0];
+    return stablePersistedKey(
+      value,
+      PERSISTED_TEXT_LIMITS.principal.id,
+      "Principal reference",
+    );
+  };
+  const grantRows = await Promise.all(
+    atlas.grants.map(async (grant) => ({
+      itemFabricId: grant.itemFabricId
+        ? requiredExactPersistedText(
+            grant.itemFabricId,
+            PERSISTED_TEXT_LIMITS.reference.fabricId,
+            "Grant item ID",
+          )
+        : undefined,
+      principalRef: await principalReference(grant.principalRef),
+      accessLevel: grant.accessLevel,
+      source: grant.source,
+      roleName: persistedText(
+        grant.roleName,
+        PERSISTED_TEXT_LIMITS.grant.roleName,
+      ),
+      flag: persistedText(grant.flag, PERSISTED_TEXT_LIMITS.grant.flag),
     })),
   );
   await insertAll(
     "AccessGrant",
-    atlas.grants.map((g) => ({
-      itemFabricId: g.itemFabricId,
-      principalRef: g.principalRef,
-      accessLevel: g.accessLevel,
-      source: g.source,
-      roleName: g.roleName,
-      flag: g.flag,
-    })),
+    grantRows,
   );
+
   reportProgress?.(88, "Writing jobs and lineage");
   await insertAll(
     "JobRun",
-    atlas.jobs.map((j) => ({
-      itemFabricId: j.itemFabricId,
-      itemName: j.itemName,
-      jobType: j.jobType,
-      status: j.status,
-      startedAt: j.startedAt ? new Date(j.startedAt) : undefined,
-      durationSec: j.durationSec,
-      message: j.message,
+    atlas.jobs.map((job) => ({
+      itemFabricId: requiredExactPersistedText(
+        job.itemFabricId,
+        PERSISTED_TEXT_LIMITS.reference.fabricId,
+        "Job item ID",
+      ),
+      itemName: requiredPersistedText(
+        job.itemName || job.itemFabricId,
+        PERSISTED_TEXT_LIMITS.job.itemName,
+        "Job item name",
+      ),
+      jobType: requiredPersistedText(
+        job.jobType,
+        PERSISTED_TEXT_LIMITS.job.jobType,
+        "Job type",
+      ),
+      status: job.status,
+      startedAt: job.startedAt ? new Date(job.startedAt) : undefined,
+      durationSec: job.durationSec,
+      message: persistedText(
+        job.message,
+        PERSISTED_TEXT_LIMITS.job.message,
+      ),
     })),
   );
   await insertAll(
     "LineageEdge",
-    atlas.edges.map((e) => ({
-      sourceFabricId: e.source,
-      targetFabricId: e.target,
-      relation: e.relation,
-      broken: !!e.broken,
+    atlas.edges.map((edge) => ({
+      sourceFabricId: requiredExactPersistedText(
+        edge.source,
+        PERSISTED_TEXT_LIMITS.reference.fabricId,
+        "Lineage source ID",
+      ),
+      targetFabricId: requiredExactPersistedText(
+        edge.target,
+        PERSISTED_TEXT_LIMITS.reference.fabricId,
+        "Lineage target ID",
+      ),
+      relation: requiredPersistedText(
+        edge.relation,
+        PERSISTED_TEXT_LIMITS.edge.relation,
+        "Lineage relationship",
+      ),
+      broken: !!edge.broken,
+    })),
+  );
+
+  const configRows = await Promise.all(
+    atlas.config.map(async (entry) => ({
+      itemFabricId: requiredExactPersistedText(
+        entry.itemFabricId,
+        PERSISTED_TEXT_LIMITS.reference.fabricId,
+        "Configuration item ID",
+      ),
+      section: await stablePersistedKey(
+        entry.section,
+        PERSISTED_TEXT_LIMITS.config.section,
+        "Configuration section",
+      ),
+      label: await stablePersistedKey(
+        entry.label,
+        PERSISTED_TEXT_LIMITS.config.label,
+        "Configuration label",
+      ),
+      value: persistedText(
+        entry.value,
+        PERSISTED_TEXT_LIMITS.config.value,
+      ),
     })),
   );
   await insertAll(
     "ConfigEntry",
-    atlas.config.map((c) => ({
-      itemFabricId: c.itemFabricId,
-      section: c.section,
-      label: c.label,
-      value: c.value,
-    })),
+    configRows,
   );
   reportProgress?.(94, "Writing object metadata");
   // Persist the sub-object schema as hidden ConfigEntry
@@ -567,7 +868,13 @@ async function persistSync(
   const schemaRows: Row[] = [];
   for (const [itemId, tables] of Object.entries(atlas.schema ?? {})) {
     for (const t of tables) {
+      const storedLabel = await stablePersistedKey(
+        t.name,
+        PERSISTED_TEXT_LIMITS.config.label,
+        "Schema object name",
+      );
       const serialized = JSON.stringify({
+        name: t.name,
         rows:
           typeof t.rows === "number" &&
           Number.isFinite(t.rows) &&
@@ -584,9 +891,13 @@ async function persistSync(
       const chunks = serialized.match(/[\s\S]{1,1960}/g) ?? [""];
       for (let part = 0; part < chunks.length; part += 1) {
         schemaRows.push({
-          itemFabricId: itemId,
+          itemFabricId: requiredExactPersistedText(
+            itemId,
+            PERSISTED_TEXT_LIMITS.reference.fabricId,
+            "Schema item ID",
+          ),
           section: "__schema__",
-          label: t.name,
+          label: storedLabel,
           value: `v1:${String(part + 1).padStart(4, "0")}:${String(chunks.length).padStart(4, "0")}:${chunks[part]}`,
         });
       }
@@ -601,7 +912,11 @@ async function persistSync(
       : serializedObjectEdges.match(/[\s\S]{1,1960}/g) ?? [];
   for (let part = 0; part < objectEdgeChunks.length; part += 1) {
     objectEdgeRows.push({
-      itemFabricId: atlas.workspace.fabricId,
+      itemFabricId: requiredExactPersistedText(
+        atlas.workspace.fabricId,
+        PERSISTED_TEXT_LIMITS.reference.fabricId,
+        "Object lineage workspace ID",
+      ),
       section: "__object_edges__",
       label: "workspace",
       value: `v1:${String(part + 1).padStart(4, "0")}:${String(objectEdgeChunks.length).padStart(4, "0")}:${objectEdgeChunks[part]}`,
@@ -621,10 +936,24 @@ async function persistSync(
     syncSectionsJson: atlas.workspace.syncSections
       ? JSON.stringify(atlas.workspace.syncSections)
       : undefined,
-    fabricId: atlas.workspace.fabricId,
-    displayName: atlas.workspace.displayName,
-    capacity: atlas.workspace.capacity,
-    region: atlas.workspace.region,
+    fabricId: requiredExactPersistedText(
+      atlas.workspace.fabricId,
+      PERSISTED_TEXT_LIMITS.reference.fabricId,
+      "Workspace Fabric ID",
+    ),
+    displayName: requiredPersistedText(
+      atlas.workspace.displayName || atlas.workspace.fabricId,
+      PERSISTED_TEXT_LIMITS.workspace.displayName,
+      "Workspace display name",
+    ),
+    capacity: persistedText(
+      atlas.workspace.capacity,
+      PERSISTED_TEXT_LIMITS.workspace.capacity,
+    ),
+    region: persistedText(
+      atlas.workspace.region,
+      PERSISTED_TEXT_LIMITS.workspace.region,
+    ),
     itemCount: atlas.items.length,
     edgeCount: atlas.edges.length,
     principalCount: atlas.principals.length,
@@ -871,6 +1200,7 @@ function parseSchemaRows(
       "snapshot contains an incomplete schema",
     );
     const parsed = JSON.parse(serialized) as {
+      name?: string;
       rows?: number;
       objectType?: string;
       source?: string;
@@ -882,7 +1212,7 @@ function parseSchemaRows(
     };
     const tables = schema[itemId] ?? [];
     tables.push({
-      name: label,
+      name: realText(parsed.name) ?? label,
       rows: parsed.rows,
       objectType: parsed.objectType,
       source: parsed.source,

@@ -4,13 +4,20 @@ All notable changes to Fabric Atlas are documented in this file.
 
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [1.12.1] - 2026-09-10
 
-### Added
+### Fixed
 
-- Added the complete Fabric Atlas accelerator to Microsoft Fabric Toolbox with
-  Toolbox-specific installation, contribution and support links.
-- Added a public example configuration for the Rayfin deployment values.
+- External Fabric metadata is normalized to the Rayfin entity limits before
+  snapshot writes, with explicit truncation markers for display values and
+  stable shortened keys for long identifiers.
+- Schema objects keep their original names after chunked persistence even when
+  the storage key must be shortened.
+- Live synchronization is reported as unconfigured when the tenant is missing,
+  and the application shell disables Sync when required settings are invalid.
+- Saved views cannot be created while their initial personal state is loading.
+- Team-note documentation now matches the authenticated email and subject
+  binding used by the application.
 
 ## [1.12.0] - 2026-09-05
 

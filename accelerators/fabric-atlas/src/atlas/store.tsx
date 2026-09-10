@@ -258,6 +258,7 @@ export function AtlasProvider({
   const findingAcksRef = useRef(findingAcks);
   const findingAckQueues = useRef(new Map<string, Promise<void>>());
   const findingAckGeneration = useRef(0);
+  const savedViewsLoadingRef = useRef(savedViewsLoading);
   const findingAcksLoadingRef = useRef(findingAcksLoading);
   const governancePolicyGeneration = useRef(0);
   const governancePolicyLoadingRef = useRef(governancePolicyLoading);
@@ -277,6 +278,10 @@ export function AtlasProvider({
   useEffect(() => {
     findingAcksRef.current = findingAcks;
   }, [findingAcks]);
+
+  useEffect(() => {
+    savedViewsLoadingRef.current = savedViewsLoading;
+  }, [savedViewsLoading]);
 
   useEffect(() => {
     findingAcksLoadingRef.current = findingAcksLoading;
@@ -327,7 +332,11 @@ export function AtlasProvider({
 
   useEffect(() => {
     if (isPreview) return;
+    savedViewsLoadingRef.current = true;
     let alive = true;
+    window.queueMicrotask(() => {
+      if (alive) setSavedViewsLoading(true);
+    });
     void loadSavedViews(
       false,
       data.workspace.fabricId,
@@ -344,7 +353,10 @@ export function AtlasProvider({
         }
       })
       .finally(() => {
-        if (alive) setSavedViewsLoading(false);
+        if (alive) {
+          savedViewsLoadingRef.current = false;
+          setSavedViewsLoading(false);
+        }
       });
     return () => {
       alive = false;
@@ -701,6 +713,11 @@ export function AtlasProvider({
       section: SavedViewSection;
       filters: SavedViewFilters;
     }) => {
+      if (savedViewsLoadingRef.current) {
+        const error = new Error("Personal saved views are still loading.");
+        setSavedViewsError(error.message);
+        throw error;
+      }
       setSavedViewsError(undefined);
       try {
         const view = await createSavedView(

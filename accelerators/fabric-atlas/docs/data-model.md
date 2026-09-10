@@ -122,17 +122,18 @@ A team note on the workspace or an item.
 
 Comments are not tied to a catalog snapshot, so they survive every refresh.
 They are append-only in v1.x because `Comment` exposes create and read but no
-update or delete action. `authorName` stores the uniquely resolved synchronized
-principal display name when available, with the authenticated session label as
-a fallback. `authorEmail` is the authoritative authenticated identity and the
-UI shows it whenever it differs from `authorName`.
+update or delete action. `authorName` and `authorEmail` store the authenticated
+email supplied by the Rayfin session. `authorId` is bound to the authenticated
+subject. Client-selected catalog labels cannot impersonate another note author.
 
 ## SyncRun
 
-The audit record for a completed snapshot.
+The durable audit record for a running, completed or failed synchronization
+attempt.
 
-`workspace_id`, `snapshotId`, `writerEmail?`, `startedAt`, `finishedAt?`, `status`,
-`itemsSynced?`, `triggeredBy?`, `summary?`
+`workspace_id`, `snapshotId`, `correlationId?`, `writerEmail?`, `startedAt`,
+`finishedAt?`, `status`, `itemsSynced?`, `durationMs?`, `failureCode?`,
+`failureMessage?`, `triggeredBy?`, `summary?`
 
 ## SavedView
 

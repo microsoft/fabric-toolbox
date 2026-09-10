@@ -3,6 +3,29 @@ import { describe, expect, it, vi } from "vitest";
 import { SavedViewsMenu } from "./SavedViewsMenu";
 
 describe("SavedViewsMenu", () => {
+  it("prevents creating a view while the initial list is loading", () => {
+    const onCreate = vi.fn();
+    render(
+      <SavedViewsMenu
+        views={[]}
+        loading
+        activeSection="governance"
+        currentFilters={{ section: "findings" }}
+        onCreate={onCreate}
+        onApply={() => undefined}
+        onDelete={async () => undefined}
+      />,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: /Saved views/ }));
+    const create = screen.getByRole("button", {
+      name: "Save current filters",
+    });
+    expect(create).toBeDisabled();
+    fireEvent.click(create);
+    expect(onCreate).not.toHaveBeenCalled();
+  });
+
   it("shows mutation failures instead of leaving an unhandled action", async () => {
     const onCreate = vi.fn().mockRejectedValue(new Error("Save failed"));
     render(

@@ -252,9 +252,9 @@ created, then re-add the new hosting origin to the app registration.
 | `npm run test` | Vitest |
 | `npx rayfin up` | Deploy app + apply schema to Fabric |
 
-Team notes are shared and append-only in v1.x. Atlas stores the uniquely
-resolved synchronized principal display name when available and otherwise uses
-the authenticated session email. That stored author label survives reload, but
-notes cannot currently be edited or deleted.
+Team notes are shared and append-only in v1.x. Atlas stores the authenticated
+session email as the author label and binds the note to the authenticated
+subject. That label survives reload, but notes cannot currently be edited or
+deleted.
 
 See [architecture.md](architecture.md) for how it all fits together.

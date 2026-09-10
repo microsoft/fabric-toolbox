@@ -392,6 +392,123 @@ describe("Rayfin snapshot persistence", () => {
     expect(hydrated?.principals[0].workspaceRole).toBe("Admin");
   });
 
+  it("bounds external metadata before Rayfin writes without breaking references", async () => {
+    const atlas = structuredClone(SAMPLE_DATA);
+    const item = atlas.items[0];
+    const principal = atlas.principals[0];
+    const originalPrincipalRefs = new Set([
+      principal.principalId,
+      principal.displayName,
+      principal.email,
+    ]);
+    const longPrincipalId = `principal-${"p".repeat(220)}`;
+    const longTableName = `table-${"t".repeat(220)}`;
+
+    atlas.workspace.fabricId = workspaceId;
+    atlas.workspace.displayName = "w".repeat(260);
+    item.displayName = "i".repeat(260);
+    item.description = "d".repeat(700);
+    item.ownerName = "o".repeat(180);
+    item.ownerEmail = `${"e".repeat(160)}@example.com`;
+    item.configuredBy = "c".repeat(220);
+    item.modifiedBy = "m".repeat(220);
+    item.tags = Array.from(
+      { length: 20 },
+      (_, index) => `tag-${index}-${"x".repeat(30)}`,
+    );
+    item.tagIds = Array.from(
+      { length: 80 },
+      (_, index) => `tag-id-${index}-${"y".repeat(30)}`,
+    );
+    principal.principalId = longPrincipalId;
+    principal.displayName = "n".repeat(260);
+    principal.email = `${"a".repeat(180)}@example.com`;
+    atlas.grants = atlas.grants.map((grant) => ({
+      ...grant,
+      principalRef: originalPrincipalRefs.has(grant.principalRef)
+        ? longPrincipalId
+        : grant.principalRef,
+      roleName: "r".repeat(90),
+    }));
+    atlas.jobs[0].itemName = "j".repeat(260);
+    atlas.jobs[0].jobType = "k".repeat(90);
+    atlas.jobs[0].message = "q".repeat(500);
+    atlas.edges[0].relation = "l".repeat(90);
+    atlas.config = [
+      {
+        itemFabricId: item.fabricId,
+        section: "s".repeat(100),
+        label: "b".repeat(220),
+        value: "v".repeat(2200),
+      },
+    ];
+    atlas.schema = {
+      [item.fabricId]: [
+        {
+          name: longTableName,
+          objectType: "Table",
+          columns: [],
+          measures: [],
+        },
+      ],
+    };
+    atlas.objectEdges = [];
+    mocks.mapSyncToAtlas.mockReturnValue(atlas);
+
+    const persisted = await runFabricSync(false, identity);
+
+    const persistedItem = mocks.data.FabricItem.rows.find(
+      (row) => row.fabricId === item.fabricId,
+    )!;
+    expect(String(persistedItem.displayName)).toHaveLength(200);
+    expect(String(persistedItem.description)).toHaveLength(600);
+    expect(String(persistedItem.description)).toMatch(/\[truncated\]$/);
+    expect(String(persistedItem.ownerName).length).toBeLessThanOrEqual(120);
+    expect(String(persistedItem.ownerEmail).length).toBeLessThanOrEqual(150);
+    expect(String(persistedItem.tags).length).toBeLessThanOrEqual(300);
+    expect(String(persistedItem.tags)).toContain(
+      "[additional values omitted]",
+    );
+    expect(String(persistedItem.tagIds).length).toBeLessThanOrEqual(2000);
+
+    const persistedPrincipal = mocks.data.Principal.rows[0];
+    const persistedGrant = mocks.data.AccessGrant.rows.find(
+      (row) => row.principalRef === persistedPrincipal.principalId,
+    );
+    expect(String(persistedPrincipal.principalId).length).toBeLessThanOrEqual(
+      150,
+    );
+    expect(String(persistedPrincipal.principalId)).toContain("[sha256:");
+    expect(persistedGrant).toBeDefined();
+    expect(String(persistedPrincipal.displayName).length).toBeLessThanOrEqual(
+      200,
+    );
+
+    expect(
+      mocks.data.JobRun.rows.every(
+        (row) =>
+          String(row.itemName).length <= 200 &&
+          String(row.jobType).length <= 60 &&
+          String(row.message ?? "").length <= 400,
+      ),
+    ).toBe(true);
+    expect(
+      mocks.data.LineageEdge.rows.every(
+        (row) => String(row.relation).length <= 60,
+      ),
+    ).toBe(true);
+    expect(
+      mocks.data.ConfigEntry.rows.every(
+        (row) =>
+          String(row.section).length <= 80 &&
+          String(row.label).length <= 160 &&
+          String(row.value ?? "").length <= 2000,
+      ),
+    ).toBe(true);
+    expect(persisted).not.toBeNull();
+    expect(persisted!.schema?.[item.fabricId][0].name).toBe(longTableName);
+  });
+
   it("cleans orphan snapshot rows after a later successful publication", async () => {
     const orphanSnapshotId = "99999999-9999-4999-8999-999999999999";
     mocks.data.SyncRun.rows.push({

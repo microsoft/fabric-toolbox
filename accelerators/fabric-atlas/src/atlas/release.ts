@@ -15,7 +15,7 @@ export const REPOSITORY_URL =
   "https://github.com/fredgis/FabricAtlas";
 
 export const APP_VERSION =
-  (import.meta.env.VITE_APP_VERSION as string | undefined) ?? "1.12.0";
+  (import.meta.env.VITE_APP_VERSION as string | undefined) ?? "1.12.1";
 
 export const BUILD_COMMIT =
   (import.meta.env.VITE_APP_BUILD_COMMIT as string | undefined) ?? "development";
@@ -59,8 +59,8 @@ export const RELEASES: AtlasRelease[] = [
       {
         title: "Collaboration correctness",
         items: [
-          "Team notes resolve a unique synchronized Fabric principal display name and preserve it through persistence and reload.",
-          "A distinct note display label is shown together with the policy-bound authenticated email.",
+          "Team notes preserve the authenticated session email as the author label through persistence and reload.",
+          "Client-selected catalog labels cannot replace the authenticated note author.",
           "Comment creation binds both the authenticated email and subject to the stored author identity.",
           "The guided sync gate tells blocked users which configured synchronizer account to contact.",
         ],

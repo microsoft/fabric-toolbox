@@ -514,12 +514,10 @@ without hiding it or improving the underlying score, and it remains separate
 from a user's personal mute.
 
 Team notes are append-only in v1.x. Creation is bound to the authenticated
-email and subject. Atlas resolves a unique synchronized Fabric principal by
-email and stores that display name separately; when no unique principal exists,
-the authenticated session label remains the fallback. The stored label remains
-stable after reload. When the label differs from the policy-bound email, the
-note displays both so readers can verify the author. Notes cannot currently be
-edited or deleted.
+email and subject. Atlas stores the authenticated session email as the author
+label, and that label remains stable after reload. Client-selected catalog
+labels cannot impersonate another note author. Notes cannot currently be edited
+or deleted.
 
 Only the configured synchronization administrator can publish or prune
 snapshots. When another user reaches the first-sync gate, Atlas displays the
