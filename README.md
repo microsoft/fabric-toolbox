@@ -16,6 +16,7 @@ These assets should be treated as examples that you can use to create the soluti
 - [Fabric Spark Monitoring (Monitor Spark with RTI)](./monitoring/fabric-spark-monitoring)
 
 ## Accelerators
+- $${\color{green}NEW!}$$ [Fabric Atlas: workspace governance, catalog and lineage](./accelerators/fabric-atlas)
 - $${\color{green}NEW!}$$ [pq-adbc-advisor — Power Query ODBC → ADBC migration scanner](./accelerators/pq-adbc-advisor)
 - [BCDR Accelerator](./accelerators/BCDR)
 - [CICD: Git-Based Deployments](./accelerators/CICD/Git-based-deployments)

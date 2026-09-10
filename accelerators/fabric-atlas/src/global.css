@@ -1,0 +1,630 @@
+@import "tailwindcss";
+
+@custom-variant dark (&:is(.dark *));
+
+/* Bridged tokens — kept in `@theme static` so the CSS vars are always
+   emitted, not tree-shaken when no Tailwind utility consumes them.
+   Required because <VegaVisual> and <DataGrid> read these at runtime via
+   `useCssTheme()` and project them into a JS theme object (Vega's SVG output
+   cannot resolve `var()` references). */
+@theme static {
+  --color-brand:            #117865;  /* Fabric UX brand action */
+  --color-brand-foreground: #0c695a;  /* Fabric UX brand emphasis */
+  --color-hover:            #f5f5f5;  /* row/cell hover surface in DataGrid + visuals */
+  --color-lineage-upstream: #742774;
+  --color-lineage-downstream: #117865;
+  --color-lineage-neutral: #94a3b8;
+  --color-object-source: #2f9e6f;
+  --color-object-table: #0c695a;
+  --color-object-column: #0078d4;
+  --color-object-measure: #817400;
+  --color-status-healthy: #0e700e;
+  --color-status-warning: #817400;
+  --color-status-failing: #bc2f32;
+  --color-endorsement-certified: #0c695a;
+  --color-endorsement-certified-background: #e3f7ef;
+  --color-endorsement-promoted: #742774;
+  --color-endorsement-promoted-background: #f7eff8;
+}
+
+@theme {
+  /* Color tokens — light theme
+     Usage: bg-*, text-*, border-* (e.g. bg-primary text-primary-foreground)
+     Each token has a -foreground pair for text on that surface. */
+  --color-background: #f5f5f5;                                       /* Fabric canvas */
+  --color-foreground: #242424;                                       /* default text */
+
+  --color-card: #ffffff;                                             /* card surfaces */
+  --color-card-foreground: #242424;
+
+  --color-popover: #ffffff;                                          /* popover/dropdown surfaces */
+  --color-popover-foreground: #242424;
+
+  --color-primary: #117865;                                          /* Fabric primary action */
+  --color-primary-hover: #0c695a;
+  --color-primary-foreground: #ffffff;
+
+  --color-secondary: #fafafa;                                        /* raised neutral surface */
+  --color-secondary-foreground: #242424;
+
+  --color-muted: #f0f0f0;                                            /* subtle backgrounds */
+  --color-muted-foreground: #616161;                                 /* secondary text */
+
+  --color-accent: #f5f5f5;                                           /* accent highlights */
+  --color-accent-foreground: #242424;
+
+  --color-destructive: #bc2f32;                                      /* Fluent danger */
+  --color-destructive-foreground: #ffffff;
+
+  --color-border: #e0e0e0;                                           /* neutral stroke 2 */
+  --color-input: #d1d1d1;                                            /* neutral stroke 1 */
+  --color-ring: #117865;                                             /* Fabric focus */
+
+  --color-fabric-purple: #742774;
+  --color-fabric-magenta: #b146c2;
+  --color-fabric-blue: #0078d4;
+  --color-fabric-teal: #117865;
+
+  --shadow-fabric-2: 0 0 2px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.14);
+  --shadow-fabric-4: 0 0 2px rgba(0, 0, 0, 0.12), 0 2px 4px rgba(0, 0, 0, 0.14);
+  --shadow-fabric-8: 0 0 2px rgba(0, 0, 0, 0.12), 0 4px 8px rgba(0, 0, 0, 0.14);
+  --shadow-fabric-16: 0 0 2px rgba(0, 0, 0, 0.12), 0 8px 16px rgba(0, 0, 0, 0.14);
+
+  --radius-none: 0;
+  --radius-sm: 2px;
+  --radius-md: 4px;
+  --radius-lg: 6px;
+  --radius-xl: 8px;
+  --radius-2xl: 12px;
+  --radius-3xl: 16px;
+  --radius-4xl: 24px;
+  --radius-5xl: 32px;
+  --radius-6xl: 40px;
+  --radius-full: 9999px;
+  --radius: 6px;
+
+    /* Spacing — 4px baseline grid
+      Usage: p-*, m-*, gap-* (e.g. p-l gap-m) */
+  --spacing-none: 0;
+  --spacing-xxs: 2px;
+  --spacing-xs: 4px;
+  --spacing-s-nudge: 6px;
+  --spacing-s: 8px;
+  --spacing-m-nudge: 10px;
+  --spacing-m: 12px;
+  --spacing-l: 16px;
+  --spacing-xl: 20px;
+  --spacing-xxl: 24px;
+  --spacing-xxxl: 32px;
+
+  /* Font Sizes — 100-based scale
+     Usage: text-* (e.g. text-300, text-hero-900) */
+  --text-100: 10px;
+  --text-200: 12px;
+  --text-300: 14px;
+  --text-400: 16px;
+  --text-500: 20px;
+  --text-600: 24px;
+  --text-hero-700: 28px;
+  --text-hero-800: 32px;
+  --text-hero-900: 40px;
+  --text-hero-1000: 68px;
+
+  /* Line Heights — paired with font sizes
+     Usage: leading-* (e.g. leading-300) */
+  --leading-100: 14px;
+  --leading-200: 16px;
+  --leading-300: 20px;
+  --leading-400: 22px;
+  --leading-500: 28px;
+  --leading-600: 32px;
+  --leading-hero-700: 36px;
+  --leading-hero-800: 40px;
+  --leading-hero-900: 52px;
+  --leading-hero-1000: 92px;
+
+  /* Font Weights
+     Usage: font-* (e.g. font-semibold) */
+  --font-weight-regular: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+  --font-weight-bold: 700;
+
+  /* Font Families
+     Usage: font-* (e.g. font-heading, font-base) */
+  --font-heading: 'Segoe UI', 'Segoe UI Web (West European)',       /* headings, titles, display text */
+    -apple-system, BlinkMacSystemFont, Roboto, 'Helvetica Neue', sans-serif;
+  --font-base: 'Segoe UI', 'Segoe UI Web (West European)',          /* body text, labels, UI controls */
+    -apple-system, BlinkMacSystemFont, Roboto, 'Helvetica Neue', sans-serif;
+  --font-monospace: Consolas, 'Courier New', Courier, monospace;     /* code, pre-formatted text */
+  --font-numeric: Bahnschrift, 'Segoe UI',                          /* KPI values, numeric displays */
+    'Segoe UI Web (West European)', -apple-system, BlinkMacSystemFont, Roboto,
+    'Helvetica Neue', sans-serif;
+
+  /* Icon Sizes — 100-based scale
+     Usage: icon-size-* custom utility (e.g. icon-size-200) */
+  --icon-size-100: 12px;
+  --icon-size-200: 16px;
+  --icon-size-300: 20px;
+  --icon-size-400: 24px;
+  --icon-size-500: 28px;
+  --icon-size-600: 32px;
+  --icon-size-700: 48px;
+  --icon-size-800: 96px;
+}
+
+@utility icon-size-* {
+  width: --value(--icon-size-*);
+  height: --value(--icon-size-*);
+}
+
+@layer base {
+  .dark {
+    /* Color tokens — dark theme */
+    --color-background: #1f1f1f;
+    --color-foreground: #ffffff;
+
+    --color-card: #292929;
+    --color-card-foreground: #ffffff;
+
+    --color-popover: #333333;
+    --color-popover-foreground: #ffffff;
+
+    --color-primary: #117865;
+    --color-primary-hover: #0c695a;
+    --color-primary-foreground: #ffffff;
+
+    --color-secondary: #141414;
+    --color-secondary-foreground: #ffffff;
+
+    --color-muted: #333333;
+    --color-muted-foreground: #d6d6d6;
+
+    --color-accent: #383838;
+    --color-accent-foreground: #ffffff;
+
+    --color-destructive: #dc5e62;
+    --color-destructive-foreground: #ffffff;
+
+    --color-border: #424242;
+    --color-input: #616161;
+    --color-ring: #9ee0cb;
+
+    --color-brand:            #117865;
+    --color-brand-foreground: #9ee0cb;
+    --color-hover:            #333333;
+    --color-lineage-upstream: #d8b9f2;
+    --color-lineage-downstream: #9ee0cb;
+    --color-lineage-neutral: #adadad;
+    --color-object-source: #2f9e6f;
+    --color-object-table: #9ee0cb;
+    --color-object-column: #75b6e7;
+    --color-object-measure: #fef7b2;
+    --color-status-healthy: #54b054;
+    --color-status-warning: #fde300;
+    --color-status-failing: #ff6577;
+    --color-endorsement-certified: #9ee0cb;
+    --color-endorsement-certified-background: #263834;
+    --color-endorsement-promoted: #d8b9f2;
+    --color-endorsement-promoted-background: #382d3d;
+  }
+}
+
+@layer utilities {
+  .dark .text-primary {
+    color: var(--color-brand-foreground);
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background font-base text-foreground antialiased;
+  }
+
+  button,
+  input,
+  select,
+  textarea {
+    font-family: inherit;
+  }
+
+  ::selection {
+    background: color-mix(in srgb, var(--color-primary) 24%, transparent);
+    color: var(--color-foreground);
+  }
+
+  button,
+  a,
+  input,
+  select,
+  textarea {
+    @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background;
+  }
+
+  button:disabled,
+  input:disabled,
+  select:disabled,
+  textarea:disabled {
+    cursor: not-allowed;
+  }
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+:root {
+  --atlas-control-height: 36px;
+  --atlas-control-padding: 6px;
+  --atlas-row-padding: 10px;
+  --atlas-page-spacing: 24px;
+  --atlas-header-padding: 16px;
+  --atlas-card-min-height: 168px;
+  --atlas-touch-target: 44px;
+}
+
+:root[data-atlas-density="compact"] {
+  --atlas-control-height: 32px;
+  --atlas-control-padding: 4px;
+  --atlas-row-padding: 6px;
+  --atlas-page-spacing: 16px;
+  --atlas-header-padding: 12px;
+  --atlas-card-min-height: 136px;
+}
+
+.atlas-control,
+.atlas-toolbar :is(button:not([role="tab"]), select, input:not([type="checkbox"]):not([type="radio"])) {
+  min-height: var(--atlas-control-height);
+  padding-block: var(--atlas-control-padding);
+  font-family: var(--font-base);
+  font-size: var(--text-300);
+  line-height: var(--leading-300);
+}
+
+.atlas-toolbar :is(select, input:not([type="checkbox"]):not([type="radio"])) {
+  height: var(--atlas-control-height);
+}
+
+.atlas-toolbar {
+  gap: var(--spacing-s);
+}
+
+.atlas-page-header {
+  gap: var(--spacing-m);
+  padding-block: var(--atlas-header-padding);
+  padding-inline: var(--spacing-l);
+}
+
+.atlas-row {
+  padding-block: var(--atlas-row-padding);
+}
+
+.atlas-catalog-card {
+  min-height: var(--atlas-card-min-height);
+}
+
+.atlas-catalog-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--text-300);
+}
+
+.atlas-catalog-table :is(th, td) {
+  padding: var(--atlas-row-padding) var(--spacing-m);
+  border-bottom: 1px solid var(--color-border);
+  text-align: left;
+  vertical-align: middle;
+}
+
+.atlas-catalog-table th {
+  background: var(--color-secondary);
+  font-weight: var(--font-weight-semibold);
+}
+
+.atlas-catalog-table tbody tr:hover {
+  background: var(--color-accent);
+}
+
+@media (max-width: 639px) {
+  .atlas-control,
+  .atlas-toolbar :is(button:not([role="tab"]), select, input:not([type="checkbox"]):not([type="radio"])) {
+    min-height: var(--atlas-touch-target);
+    min-width: var(--atlas-touch-target);
+  }
+}
+
+/* Animated flow along active lineage edges. */
+@keyframes atlas-flow {
+  to {
+    stroke-dashoffset: -24;
+  }
+}
+
+.atlas-flow {
+  animation: atlas-flow 0.9s linear infinite;
+}
+
+.atlas-windowed-block {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 72px;
+}
+
+.atlas-windowed-group {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 180px;
+}
+
+.atlas-map-grid {
+  background-image:
+    linear-gradient(color-mix(in srgb, var(--color-border) 28%, transparent) 1px, transparent 1px),
+    linear-gradient(90deg, color-mix(in srgb, var(--color-border) 28%, transparent) 1px, transparent 1px),
+    radial-gradient(circle at 55% 42%, color-mix(in srgb, var(--color-lineage-downstream) 8%, transparent), transparent 38%);
+  background-size: 24px 24px, 24px 24px, auto;
+  background-position: -1px -1px;
+}
+
+.atlas-shell-canvas {
+  background:
+    radial-gradient(
+      circle at 92% -8%,
+      color-mix(in srgb, var(--color-fabric-purple) 5%, transparent),
+      transparent 28%
+    ),
+    var(--color-background);
+}
+
+.atlas-brand-spectrum {
+  background: linear-gradient(
+    90deg,
+    var(--color-fabric-purple),
+    var(--color-fabric-magenta) 34%,
+    var(--color-fabric-blue) 67%,
+    var(--color-fabric-teal)
+  );
+}
+
+.atlas-brand-mark {
+  background:
+    linear-gradient(
+      145deg,
+      var(--color-fabric-purple),
+      var(--color-fabric-blue) 56%,
+      var(--color-fabric-teal)
+    );
+  box-shadow: var(--shadow-fabric-4);
+}
+
+.atlas-fabric-hero {
+  background:
+    linear-gradient(
+      112deg,
+      color-mix(in srgb, var(--color-primary) 8%, var(--color-card)),
+      var(--color-card) 54%,
+      color-mix(in srgb, var(--color-fabric-purple) 6%, var(--color-card))
+    );
+}
+
+.atlas-first-sync-bg {
+  background:
+    radial-gradient(
+      circle at 15% 10%,
+      color-mix(in srgb, var(--color-primary) 18%, transparent),
+      transparent 34%
+    ),
+    radial-gradient(
+      circle at 85% 20%,
+      color-mix(in srgb, var(--color-lineage-downstream) 14%, transparent),
+      transparent 30%
+    );
+}
+
+.atlas-sync-frame {
+    width: min(1280px, calc(100vw - 48px));
+}
+
+.atlas-sync-copy {
+    max-width: 700px;
+}
+
+.atlas-sync-title {
+    max-width: 760px;
+}
+
+.atlas-narrow-panel {
+    max-width: 420px;
+}
+
+.atlas-search-empty-copy {
+    width: 100%;
+    max-width: 36rem;
+}
+
+.atlas-content-frame {
+    width: 100%;
+    max-width: 1480px;
+    margin-inline: auto;
+    padding: var(--atlas-page-spacing);
+}
+
+.atlas-sync-grid {
+    background-image:
+      linear-gradient(
+        color-mix(in srgb, var(--color-border) 28%, transparent) 1px,
+        transparent 1px
+      ),
+      linear-gradient(
+        90deg,
+        color-mix(in srgb, var(--color-border) 28%, transparent) 1px,
+        transparent 1px
+      );
+    background-size: 40px 40px;
+}
+
+.atlas-sync-orb {
+    top: 7%;
+    right: 4%;
+    width: 520px;
+    height: 520px;
+}
+
+@keyframes atlas-sync-node-float {
+    0%,
+    100% {
+      transform: translateY(0);
+    }
+    50% {
+      transform: translateY(-7px);
+    }
+}
+
+.atlas-sync-node {
+    transform-box: fill-box;
+    transform-origin: center;
+    animation: atlas-sync-node-float 3.6s ease-in-out infinite;
+}
+
+.atlas-overview-hero {
+    background:
+      linear-gradient(
+        115deg,
+        color-mix(in srgb, var(--color-primary) 8%, var(--color-card)),
+        var(--color-card) 52%,
+        color-mix(in srgb, var(--color-fabric-purple) 6%, var(--color-card))
+      );
+}
+
+.atlas-overview-hero::before {
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    background-image:
+      linear-gradient(
+        color-mix(in srgb, var(--color-border) 22%, transparent) 1px,
+        transparent 1px
+      ),
+      linear-gradient(
+        90deg,
+        color-mix(in srgb, var(--color-border) 22%, transparent) 1px,
+        transparent 1px
+      );
+    background-size: 32px 32px;
+    mask-image: linear-gradient(90deg, transparent, black 45%, black);
+    content: "";
+}
+
+@keyframes atlas-overview-beam {
+    0% {
+      transform: translateX(-30%) rotate(-8deg);
+      opacity: 0;
+    }
+    20%,
+    70% {
+      opacity: 0.55;
+    }
+    100% {
+      transform: translateX(170%) rotate(-8deg);
+      opacity: 0;
+    }
+}
+
+.atlas-overview-beam {
+    display: none;
+}
+
+.atlas-overview-title {
+    max-width: 900px;
+}
+
+.atlas-overview-copy {
+    max-width: 760px;
+}
+
+.atlas-owner-name {
+    max-width: 190px;
+}
+
+@keyframes atlas-pulse-breathe {
+    0%,
+    100% {
+      box-shadow: 0 0 0 0
+        color-mix(in srgb, var(--color-primary) 16%, transparent);
+    }
+    50% {
+      box-shadow: 0 0 0 18px
+        color-mix(in srgb, var(--color-primary) 0%, transparent);
+    }
+}
+
+.atlas-pulse-dial {
+    --pulse: 0%;
+    display: grid;
+    width: 176px;
+    height: 176px;
+    place-items: center;
+    border-radius: 50%;
+    background: conic-gradient(
+      var(--color-status-healthy) var(--pulse),
+      color-mix(in srgb, var(--color-muted) 82%, transparent) 0
+    );
+    animation: atlas-pulse-breathe 3.8s ease-in-out infinite;
+}
+
+.atlas-pulse-core {
+    display: grid;
+    width: 136px;
+    height: 136px;
+    place-items: center;
+    border: 1px solid var(--color-border);
+    border-radius: 50%;
+    background: var(--color-card);
+    text-align: center;
+}
+
+@media (max-width: 640px) {
+    .atlas-sync-frame {
+      width: calc(100vw - 24px);
+    }
+
+    .atlas-sync-orb {
+      width: 320px;
+      height: 320px;
+    }
+}
+
+* {
+  scrollbar-color: color-mix(in srgb, var(--color-border) 88%, transparent) transparent;
+  scrollbar-width: thin;
+}
+
+::-webkit-scrollbar {
+  width: 9px;
+  height: 9px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  border: 2px solid transparent;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--color-border) 88%, transparent);
+  background-clip: padding-box;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

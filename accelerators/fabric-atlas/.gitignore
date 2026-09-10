@@ -1,0 +1,33 @@
+# Logs
+logs
+*.log
+npm-debug.log*
+
+# Dependencies
+node_modules
+
+# Build output
+dist
+src/fabric.generated.ts
+
+# Added by Rayfin CLI
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+dist-ssr
+*.tsbuildinfo
+.vite
+coverage
+*.local
+rayfin/.env*
+rayfin/.lockfile.json
+rayfin/.deployments.json
+rayfin/.temp/
+.idea
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?

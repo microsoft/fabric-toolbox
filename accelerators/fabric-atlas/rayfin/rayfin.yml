@@ -1,0 +1,22 @@
+id: fabricatlas
+name: FabricAtlas
+version: 1.12.0
+services:
+  auth:
+    enabled: true
+    fabric:
+      enabled: true
+    allowedRedirectUris:
+      - http://localhost:5173
+  data:
+    enabled: true
+    dialect: mssql
+  storage:
+    enabled: true
+  staticHosting:
+    enabled: true
+    folder: dist
+    buildCommand: npm run build:fabric
+    indexDocument: index.html
+  functions:
+    enabled: false
