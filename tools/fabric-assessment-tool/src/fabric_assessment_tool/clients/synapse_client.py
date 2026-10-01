@@ -25,6 +25,51 @@ from ..assessment.synapse import (
     SynapseSparkJobDefinitions, SynapseSparkPool, SynapseSparkPools, SynapseSqlPools,
     SynapseSqlScript, SynapseSqlScripts, SynapseTable, SynapseTables, SynapseView,
     SynapseViews, SynapseWideObject, SynapseWorkspaceInfo, TableStatistics,
+    CodeObjectCount,
+    CodeObjectLines,
+    SynapseAssessment,
+    SynapseAssessmentMetadata,
+    SynapseDataflow,
+    SynapseDataflows,
+    SynapseDataset,
+    SynapseDatasets,
+    SynapseDefinitionSummary,
+    SynapseDedicatedDatabase,
+    SynapseDedicatedPool,
+    SynapseDedicatedPools,
+    SynapseIntegrationRuntime,
+    SynapseIntegrationRuntimes,
+    SynapseLibraries,
+    SynapseLibrary,
+    SynapseLinkedService,
+    SynapseLinkedServices,
+    SynapseManagedPrivateEndpoint,
+    SynapseManagedPrivateEndpoints,
+    SynapseNotebook,
+    SynapseNotebooks,
+    SynapsePipeline,
+    SynapsePipelines,
+    SynapseSchema,
+    SynapseSchemas,
+    SynapseServerlessDatabase,
+    SynapseServerlessDatabases,
+    SynapseServerlessPool,
+    SynapseSparkConfiguration,
+    SynapseSparkConfigurations,
+    SynapseSparkJobDefinition,
+    SynapseSparkJobDefinitions,
+    SynapseSparkPool,
+    SynapseSparkPools,
+    SynapseSqlPools,
+    SynapseSqlDefinitions,
+    SynapseSqlScript,
+    SynapseSqlScripts,
+    SynapseTable,
+    SynapseTables,
+    SynapseView,
+    SynapseViews,
+    SynapseWorkspaceInfo,
+    TableStatistics,
 )
 from ..services.sql_complexity_scorer import SqlComplexityScorer
 from ..utils import ui as utils_ui
@@ -36,6 +81,14 @@ from .odbc_client import (
     get_fabric_type_compatibility,
 )
 from .token_provider import FabricNotebookTokenProvider, TokenProvider, create_token_provider
+from .odbc_client import DefinitionRedactionMode, OdbcClient, SqlAuthMode
+from .token_provider import (
+    FabricNotebookTokenProvider,
+    TokenProvider,
+    create_token_provider,
+)
+
+
 class SynapseClient:
     """Client for Azure Synapse Analytics APIs."""
 
@@ -68,6 +121,10 @@ class SynapseClient:
         sql_complexity: bool = False,
         sql_definition_redaction: str = "full",
         sql_complexity_schemas: Optional[list[str]] = None,
+        extract_definitions: bool = False,
+        definition_redaction: DefinitionRedactionMode = "partial",
+        definition_schema_filter: Optional[list[str]] = None,
+        max_definition_size: int = 1_000_000,
         **kwargs,
     ):
         """
@@ -101,6 +158,10 @@ class SynapseClient:
             sql_complexity: Enable SQL code complexity scoring
             sql_definition_redaction: Definition export mode ('full' or 'none')
             sql_complexity_schemas: Optional schema allowlist for scoring
+            extract_definitions: Extract SQL module definitions from dedicated pools
+            definition_redaction: Definition protection mode
+            definition_schema_filter: Exact schema names to include
+            max_definition_size: Maximum stored definition characters; 0 is unlimited
         """
         if max_column_objects is not None and max_column_objects <= 0:
             raise ValueError("max_column_objects must be a positive integer")
@@ -132,6 +193,10 @@ class SynapseClient:
         self.sql_definition_redaction = sql_definition_redaction
         self.sql_complexity_schemas = sql_complexity_schemas or []
         self.sql_complexity_scorer = SqlComplexityScorer(sql_definition_redaction)
+        self.extract_definitions = extract_definitions
+        self.definition_redaction = definition_redaction
+        self.definition_schema_filter = definition_schema_filter or []
+        self.max_definition_size = max_definition_size
         self.authenticate()
         self._workspace_cache: dict[str, SynapseWorkspaceInfo] = {}
         self.dev_endpoint_permission_issues = False
@@ -151,6 +216,7 @@ class SynapseClient:
             tuple[str, str], list[SynapseColumnMetadataObject]
         ] = {}
         self.sql_complexity_issues: list[str] = []
+        self.definition_extraction_issues: list[str] = []
 
     def authenticate(self) -> None:
         """Authenticate with Azure using the configured token provider."""
@@ -251,6 +317,7 @@ class SynapseClient:
             self._column_metadata_cache = {}
             self._object_inventory_cache = {}
             self.sql_complexity_issues = []
+            self.definition_extraction_issues = []
 
             # Get workspace details
             workspace_info = self._get_workspace_info(workspace_name)
@@ -369,13 +436,17 @@ class SynapseClient:
                 for pool in sql_pools.dedicated_pools:
                     # Get dedicated databases table statistics - odbc client
                     db = pool.database
-                    table_statistics, code_object_count, code_object_lines = (
-                        self._get_dedicated_database_statistics(
-                            workspace_name,
-                            db.name,
-                            sql_admin_login,
-                            sql_admin_password,
-                        )
+                    (
+                        table_statistics,
+                        code_object_count,
+                        code_object_lines,
+                        definitions,
+                        definition_summary,
+                    ) = self._get_dedicated_database_statistics(
+                        workspace_name,
+                        db.name,
+                        sql_admin_login,
+                        sql_admin_password,
                     )
 
                     for schema in db.schemas.schemas:
@@ -408,12 +479,26 @@ class SynapseClient:
                         ),
                         2,
                     )
+                    db.definitions = definitions
+                    db.definition_summary = definition_summary
                 utils_ui.print_extraction_done("Table Statistics")
 
             else:
                 utils_ui.print_warning(
                     "Skipping dedicated SQL databases table statistics collection."
                 )
+                if self.extract_definitions:
+                    for pool in sql_pools.dedicated_pools:
+                        pool.database.definition_summary = SynapseDefinitionSummary(
+                            extraction_status="unavailable",
+                            status_description=(
+                                "Definition extraction requires dedicated SQL pool "
+                                "authentication."
+                            ),
+                        )
+                    self.definition_extraction_issues.append(
+                        "dedicated SQL authentication was not available"
+                    )
 
             if self.sql_complexity:
                 utils_ui.print_extracting("SQL Complexity")
@@ -484,6 +569,12 @@ class SynapseClient:
                 incomplete_reasons.append(
                     "SQL complexity collection issues: ["
                     + "; ".join(self.sql_complexity_issues)
+                    + "]"
+                )
+            if self.definition_extraction_issues:
+                incomplete_reasons.append(
+                    "definition extraction issues: ["
+                    + "; ".join(self.definition_extraction_issues)
                     + "]"
                 )
 
@@ -1823,7 +1914,13 @@ class SynapseClient:
         database_name: str,
         sql_user: Optional[str],
         sql_password: Optional[str],
-    ) -> tuple[list[TableStatistics], list[CodeObjectCount], list[CodeObjectLines]]:
+    ) -> tuple[
+        list[TableStatistics],
+        list[CodeObjectCount],
+        list[CodeObjectLines],
+        SynapseSqlDefinitions,
+        SynapseDefinitionSummary,
+    ]:
         """Get table statistics from a database."""
 
         odbc_client = self._create_odbc_client(
@@ -1833,13 +1930,16 @@ class SynapseClient:
             sql_admin_password=sql_password,
         )
 
-        if not odbc_client.check_table_statistics_dmv_exists():
+        table_statistics: list[TableStatistics] = []
+        collect_table_statistics = odbc_client.check_table_statistics_dmv_exists()
+        if not collect_table_statistics:
             if self.create_dmv:
                 # Auto-create DMV in non-interactive mode
                 utils_ui.print_extracting(
                     f"Creating table statistics DMV in database {database_name}"
                 )
                 odbc_client.create_table_statistics_dmv()
+                collect_table_statistics = True
                 utils_ui.print_extraction_done(
                     f"Creating table statistics DMV in database {database_name}"
                 )
@@ -1849,6 +1949,11 @@ class SynapseClient:
                     "vTableSizes does not exist. SQL complexity collection will continue."
                 )
                 return ([], [], [])
+            elif self.extract_definitions:
+                utils_ui.print_warning(
+                    f"Skipping table statistics for database {database_name}; "
+                    "the vTableSizes DMV does not exist."
+                )
             else:
                 # Ask for permission to create the view
                 builtins.print("\r")  # Clear previous line
@@ -1860,6 +1965,7 @@ class SynapseClient:
                         f"Creating table statistics DMV in database {database_name}"
                     )
                     odbc_client.create_table_statistics_dmv()
+                    collect_table_statistics = True
                     utils_ui.print_extraction_done(
                         f"Creating table statistics DMV in database {database_name}"
                     )
@@ -1867,12 +1973,45 @@ class SynapseClient:
                     utils_ui.print_warning(
                         f"Skipping table statistics collection for database {database_name}"
                     )
-                    return ([], [], [])
+                    return (
+                        [],
+                        [],
+                        [],
+                        SynapseSqlDefinitions(),
+                        SynapseDefinitionSummary(),
+                    )
+
+        if collect_table_statistics:
+            table_statistics = list(odbc_client.get_table_statistics(database_name))
+
+        definitions = SynapseSqlDefinitions()
+        definition_summary = SynapseDefinitionSummary()
+        if self.extract_definitions:
+            try:
+                definitions, definition_summary = odbc_client.get_sql_definitions(
+                    redaction_mode=self.definition_redaction,
+                    schema_filter=self.definition_schema_filter,
+                    max_definition_size=self.max_definition_size,
+                )
+                if definition_summary.extraction_status in ("partial", "unavailable"):
+                    self.definition_extraction_issues.append(
+                        f"{database_name}: {definition_summary.status_description}"
+                    )
+            except Exception as exc:
+                definition_summary = SynapseDefinitionSummary(
+                    extraction_status="unavailable",
+                    status_description=f"Definition extraction failed: {exc}",
+                )
+                self.definition_extraction_issues.append(
+                    f"{database_name}: definition extraction failed"
+                )
 
         return (
-            list(odbc_client.get_table_statistics(database_name)),
+            table_statistics,
             list(odbc_client.get_object_count(database_name)),
             list(odbc_client.get_code_lines_statistics(database_name)),
+            definitions,
+            definition_summary,
         )
 
     def _collect_sql_complexity(

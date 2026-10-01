@@ -235,6 +235,25 @@ class SqlCodeObjectDefinition:
     is_encrypted: bool
     created_at: Optional[str]
     modified_at: Optional[str]
+class SynapseSqlDefinition:
+    """Stored SQL module definition and extraction metadata."""
+
+    name: str
+    database: str
+    schema: str
+    object_type: str
+    sql_type: str
+    sql_type_description: str
+    definition: Optional[str]
+    original_length: int
+    stored_length: int
+    created_at: Optional[str]
+    modified_at: Optional[str]
+    is_encrypted: bool
+    is_unavailable: bool
+    is_truncated: bool
+    redaction_mode: str
+    definition_hash: Optional[str]
     json_response: Any
 
 
@@ -283,6 +302,26 @@ class SqlComplexityAssessment:
 
     summary: SqlComplexitySummary
     objects: List[SqlComplexityObject]
+class SynapseSqlDefinitions:
+    """Collection of SQL module definitions in a dedicated database."""
+
+    definitions: List[SynapseSqlDefinition] = field(default_factory=list)
+
+
+@dataclass
+class SynapseDefinitionSummary:
+    """Definition extraction summary for a dedicated database."""
+
+    extraction_status: str = "not_requested"
+    status_description: str = ""
+    total_objects: int = 0
+    counts_by_type: Dict[str, int] = field(default_factory=dict)
+    encrypted_objects: int = 0
+    unavailable_objects: int = 0
+    truncated_objects: int = 0
+    total_definition_characters: int = 0
+    age_buckets: Dict[str, int] = field(default_factory=dict)
+    largest_objects: List[Dict[str, Any]] = field(default_factory=list)
 
 
 @dataclass
@@ -348,6 +387,10 @@ class SynapseDedicatedDatabase:
     schemas: SynapseSchemas
     json_response: Any
     complexity: Optional[SqlComplexityAssessment] = None
+    definitions: SynapseSqlDefinitions = field(default_factory=SynapseSqlDefinitions)
+    definition_summary: SynapseDefinitionSummary = field(
+        default_factory=SynapseDefinitionSummary
+    )
 
 
 @dataclass
@@ -1103,6 +1146,53 @@ class SynapseAssessment:
                     readiness_percentage
                 ),
             }
+        definition_summaries = [
+            pool.database.definition_summary for pool in self.sql_pools.dedicated_pools
+        ]
+        definition_counts_by_type: Dict[str, int] = {}
+        definition_age_buckets: Dict[str, int] = {}
+        definition_largest_objects: List[Dict[str, Any]] = []
+
+        for definition_summary in definition_summaries:
+            for object_type, count in definition_summary.counts_by_type.items():
+                definition_counts_by_type[object_type] = (
+                    definition_counts_by_type.get(object_type, 0) + count
+                )
+            for bucket, count in definition_summary.age_buckets.items():
+                definition_age_buckets[bucket] = (
+                    definition_age_buckets.get(bucket, 0) + count
+                )
+            definition_largest_objects.extend(definition_summary.largest_objects)
+
+        summary["data_warehouse"]["counts"]["dedicated"]["definitions"] = {
+            "databases_requested": sum(
+                item.extraction_status != "not_requested"
+                for item in definition_summaries
+            ),
+            "databases_completed": sum(
+                item.extraction_status == "completed" for item in definition_summaries
+            ),
+            "total_objects": sum(item.total_objects for item in definition_summaries),
+            "counts_by_type": definition_counts_by_type,
+            "encrypted_objects": sum(
+                item.encrypted_objects for item in definition_summaries
+            ),
+            "unavailable_objects": sum(
+                item.unavailable_objects for item in definition_summaries
+            ),
+            "truncated_objects": sum(
+                item.truncated_objects for item in definition_summaries
+            ),
+            "total_definition_characters": sum(
+                item.total_definition_characters for item in definition_summaries
+            ),
+            "age_buckets": definition_age_buckets,
+            "largest_objects": sorted(
+                definition_largest_objects,
+                key=lambda item: item.get("original_length", 0),
+                reverse=True,
+            )[:10],
+        }
 
         return summary
 

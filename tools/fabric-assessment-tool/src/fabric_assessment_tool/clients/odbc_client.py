@@ -7,6 +7,20 @@ from datetime import datetime, timedelta, timezone
 from typing import Any, Iterator, Literal, Optional, Sequence
 
 from mssql_python import connect  # type: ignore[import-untyped]
+import hashlib
+from datetime import datetime, timezone
+from typing import Any, Iterator, Literal, Optional, Sequence
+
+from mssql_python import connect  # type: ignore[import-untyped]
+
+from ..assessment.synapse import (
+    CodeObjectCount,
+    CodeObjectLines,
+    SynapseDefinitionSummary,
+    SynapseSqlDefinition,
+    SynapseSqlDefinitions,
+    TableStatistics,
+)
 
 from ..assessment.synapse import (
     CodeObjectCount, CodeObjectLines, ColumnCompatibility, SqlCodeObjectDefinition,
@@ -253,6 +267,10 @@ def get_fabric_type_compatibility(data_type: str) -> FabricTypeCompatibility:
             "review", "Unknown type; review target support and conversion requirements."
         ),
     )
+DefinitionRedactionMode = Literal["none", "full", "partial", "hash"]
+
+PARTIAL_REDACTION_LENGTH = 256
+PARTIAL_REDACTION_MARKER = "\n/* ... definition redacted ... */\n"
 
 
 class OdbcClient:
@@ -427,6 +445,10 @@ class OdbcClient:
         conn = self._ensure_connection()
         with conn.cursor() as cursor:
             self._execute_cursor(cursor, query, params)
+            if parameters:
+                cursor.execute(query, tuple(parameters))
+            else:
+                cursor.execute(query)
             for row in cursor:
                 yield row
 
@@ -1902,6 +1924,231 @@ ORDER BY activity_date, database_name
     @staticmethod
     def _to_isoformat(value: Any) -> Optional[str]:
         """Normalize datetime-like values to ISO 8601 strings."""
+    def get_sql_definitions(
+        self,
+        redaction_mode: DefinitionRedactionMode = "partial",
+        schema_filter: Optional[Sequence[str]] = None,
+        max_definition_size: int = 1_000_000,
+    ) -> tuple[SynapseSqlDefinitions, SynapseDefinitionSummary]:
+        """Extract and protect SQL module definitions with one set-based query."""
+
+        if redaction_mode not in ("none", "full", "partial", "hash"):
+            raise ValueError(f"Unsupported definition redaction mode: {redaction_mode}")
+        if max_definition_size < 0:
+            raise ValueError("max_definition_size must be non-negative")
+
+        normalized_schemas = [
+            schema.strip()
+            for schema in (schema_filter or [])
+            if schema and schema.strip()
+        ]
+        schema_clause = ""
+        parameters: list[Any] = []
+        if normalized_schemas:
+            placeholders = ", ".join("?" for _ in normalized_schemas)
+            schema_clause = f"AND s.name COLLATE DATABASE_DEFAULT IN ({placeholders})"
+            parameters.extend(normalized_schemas)
+
+        query = f"""
+WITH definition_objects AS
+(
+SELECT
+    DB_NAME() AS database_name,
+    s.name AS schema_name,
+    o.name AS object_name,
+    o.type AS sql_type,
+    o.type_desc AS sql_type_description,
+    o.create_date,
+    o.modify_date,
+    OBJECTPROPERTY(o.object_id, 'IsEncrypted') AS is_encrypted,
+    HAS_PERMS_BY_NAME(
+        QUOTENAME(s.name) + '.' + QUOTENAME(o.name),
+        'OBJECT',
+        'VIEW DEFINITION'
+    ) AS has_view_definition,
+    HAS_PERMS_BY_NAME(DB_NAME(), 'DATABASE', 'VIEW DEFINITION')
+        AS has_database_view_definition,
+    DATALENGTH(m.definition) / 2 AS definition_length,
+    m.definition
+FROM sys.objects AS o
+INNER JOIN sys.schemas AS s
+    ON o.schema_id = s.schema_id
+LEFT JOIN sys.sql_modules AS m
+    ON o.object_id = m.object_id
+WHERE o.is_ms_shipped = 0
+  AND o.type IN ('P', 'PC', 'V', 'FN', 'IF', 'TF', 'FS', 'FT')
+  {schema_clause}
+)
+SELECT *
+FROM definition_objects
+UNION ALL
+SELECT
+    DB_NAME(),
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    0,
+    NULL,
+    HAS_PERMS_BY_NAME(DB_NAME(), 'DATABASE', 'VIEW DEFINITION'),
+    NULL,
+    NULL
+WHERE NOT EXISTS (SELECT 1 FROM definition_objects)
+ORDER BY schema_name, sql_type, object_name
+"""
+
+        definitions: list[SynapseSqlDefinition] = []
+        database_has_view_definition: Optional[bool] = None
+        for row in self.execute_query(query, parameters):
+            database_has_view_definition = bool(row.has_database_view_definition)
+            if row.object_name is None:
+                continue
+            definitions.append(
+                self._transform_definition_row(
+                    row=row,
+                    redaction_mode=redaction_mode,
+                    max_definition_size=max_definition_size,
+                )
+            )
+
+        collection = SynapseSqlDefinitions(definitions=definitions)
+        summary = self.build_definition_summary(collection)
+        if summary.unavailable_objects:
+            summary.extraction_status = "partial"
+            summary.status_description = (
+                f"{summary.unavailable_objects} object definitions were unavailable."
+            )
+        elif database_has_view_definition is False and not definitions:
+            summary.extraction_status = "unavailable"
+            summary.status_description = (
+                "The identity does not have VIEW DEFINITION permission."
+            )
+        return collection, summary
+
+    @staticmethod
+    def _transform_definition_row(
+        row: Any,
+        redaction_mode: DefinitionRedactionMode,
+        max_definition_size: int,
+    ) -> SynapseSqlDefinition:
+        """Convert a SQL row without retaining unredacted text in raw metadata."""
+
+        source_definition = row.definition
+        is_encrypted = bool(row.is_encrypted)
+        is_unavailable = source_definition is None and not is_encrypted
+        definition_hash = (
+            hashlib.sha256(source_definition.encode("utf-8")).hexdigest()
+            if source_definition is not None
+            else None
+        )
+        original_length = (
+            int(row.definition_length)
+            if row.definition_length is not None
+            else len(source_definition or "")
+        )
+
+        protected_definition: Optional[str]
+        is_truncated = False
+        if source_definition is None or redaction_mode in ("full", "hash"):
+            protected_definition = None
+        elif redaction_mode == "partial":
+            protected_definition = OdbcClient._partially_redact(
+                source_definition, max_definition_size
+            )
+            is_truncated = (
+                max_definition_size > 0 and original_length > max_definition_size
+            )
+        else:
+            protected_definition = source_definition
+
+        if (
+            protected_definition is not None
+            and redaction_mode == "none"
+            and max_definition_size > 0
+            and len(protected_definition) > max_definition_size
+        ):
+            protected_definition = protected_definition[:max_definition_size]
+            is_truncated = True
+
+        sql_type = row.sql_type.strip()
+        object_type = OdbcClient._normalize_definition_type(sql_type)
+        created_at = OdbcClient._format_datetime(row.create_date)
+        modified_at = OdbcClient._format_datetime(row.modify_date)
+        stored_length = len(protected_definition or "")
+
+        safe_metadata = {
+            "database_name": row.database_name,
+            "schema_name": row.schema_name,
+            "object_name": row.object_name,
+            "sql_type": row.sql_type,
+            "sql_type_description": row.sql_type_description,
+            "create_date": created_at,
+            "modify_date": modified_at,
+            "is_encrypted": is_encrypted,
+            "has_view_definition": bool(row.has_view_definition),
+            "has_database_view_definition": bool(row.has_database_view_definition),
+            "definition_length": original_length,
+        }
+
+        return SynapseSqlDefinition(
+            name=row.object_name,
+            database=row.database_name,
+            schema=row.schema_name,
+            object_type=object_type,
+            sql_type=sql_type,
+            sql_type_description=row.sql_type_description,
+            definition=protected_definition,
+            original_length=original_length,
+            stored_length=stored_length,
+            created_at=created_at,
+            modified_at=modified_at,
+            is_encrypted=is_encrypted,
+            is_unavailable=is_unavailable,
+            is_truncated=is_truncated,
+            redaction_mode=redaction_mode,
+            definition_hash=definition_hash if redaction_mode == "hash" else None,
+            json_response=safe_metadata,
+        )
+
+    @staticmethod
+    def _partially_redact(definition: str, max_definition_size: int = 0) -> str:
+        """Keep a bounded prefix and suffix while removing the middle."""
+
+        if len(definition) <= 2:
+            return definition
+        output_budget = (
+            max_definition_size
+            if max_definition_size > 0
+            else PARTIAL_REDACTION_LENGTH * 2 + len(PARTIAL_REDACTION_MARKER)
+        )
+        if output_budget <= len(PARTIAL_REDACTION_MARKER):
+            return PARTIAL_REDACTION_MARKER[:output_budget]
+
+        edge_budget = (output_budget - len(PARTIAL_REDACTION_MARKER)) // 2
+        edge_length = min(
+            PARTIAL_REDACTION_LENGTH,
+            max(1, len(definition) // 4),
+            edge_budget,
+        )
+        return (
+            definition[:edge_length]
+            + PARTIAL_REDACTION_MARKER
+            + definition[-edge_length:]
+        )
+
+    @staticmethod
+    def _normalize_definition_type(sql_type: str) -> str:
+        sql_type = sql_type.strip()
+        if sql_type in ("P", "PC"):
+            return "stored_procedure"
+        if sql_type == "V":
+            return "view"
+        return "function"
+
+    @staticmethod
+    def _format_datetime(value: Any) -> Optional[str]:
         if value is None:
             return None
         if isinstance(value, datetime):
@@ -2049,3 +2296,91 @@ ORDER BY activity_date, database_name
             if any(pattern in lowered for pattern in patterns):
                 return f"{category}: {message}"
         return None
+        return str(value)
+
+    @staticmethod
+    def build_definition_summary(
+        definitions: SynapseSqlDefinitions,
+        now: Optional[datetime] = None,
+    ) -> SynapseDefinitionSummary:
+        """Build deterministic metadata used by JSON summaries and HTML reports."""
+
+        current_time = now or datetime.now(timezone.utc)
+        counts_by_type: dict[str, int] = {}
+        age_buckets = {
+            "less_than_1_year": 0,
+            "1_to_3_years": 0,
+            "3_to_5_years": 0,
+            "more_than_5_years": 0,
+            "unknown": 0,
+        }
+
+        for definition in definitions.definitions:
+            counts_by_type[definition.object_type] = (
+                counts_by_type.get(definition.object_type, 0) + 1
+            )
+            age_buckets[
+                OdbcClient._get_age_bucket(definition.modified_at, current_time)
+            ] += 1
+
+        largest_objects = [
+            {
+                "database": definition.database,
+                "schema": definition.schema,
+                "name": definition.name,
+                "object_type": definition.object_type,
+                "original_length": definition.original_length,
+                "is_encrypted": definition.is_encrypted,
+                "is_unavailable": definition.is_unavailable,
+                "is_truncated": definition.is_truncated,
+                "modified_at": definition.modified_at,
+            }
+            for definition in sorted(
+                definitions.definitions,
+                key=lambda item: item.original_length,
+                reverse=True,
+            )[:10]
+        ]
+
+        return SynapseDefinitionSummary(
+            extraction_status="completed",
+            total_objects=len(definitions.definitions),
+            counts_by_type=counts_by_type,
+            encrypted_objects=sum(
+                definition.is_encrypted for definition in definitions.definitions
+            ),
+            unavailable_objects=sum(
+                definition.is_unavailable for definition in definitions.definitions
+            ),
+            truncated_objects=sum(
+                definition.is_truncated for definition in definitions.definitions
+            ),
+            total_definition_characters=sum(
+                definition.original_length for definition in definitions.definitions
+            ),
+            age_buckets=age_buckets,
+            largest_objects=largest_objects,
+        )
+
+    @staticmethod
+    def _get_age_bucket(modified_at: Optional[str], now: datetime) -> str:
+        if not modified_at:
+            return "unknown"
+        try:
+            modified = datetime.fromisoformat(modified_at.replace("Z", "+00:00"))
+            if modified.tzinfo is None:
+                modified = modified.replace(tzinfo=timezone.utc)
+            reference = now
+            if reference.tzinfo is None:
+                reference = reference.replace(tzinfo=timezone.utc)
+            age_days = max((reference - modified).days, 0)
+        except (TypeError, ValueError):
+            return "unknown"
+
+        if age_days < 365:
+            return "less_than_1_year"
+        if age_days < 365 * 3:
+            return "1_to_3_years"
+        if age_days < 365 * 5:
+            return "3_to_5_years"
+        return "more_than_5_years"

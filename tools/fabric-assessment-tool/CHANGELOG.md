@@ -49,6 +49,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - **Assess**: Expected serverless connection, permission, unsupported-object, and query-shape failures now degrade to `partial` or `unavailable` activity metadata instead of failing the whole workspace; explicit `--skip-serverless-activity` is treated as a clean skip rather than an incomplete assessment
 - **Export**: Fixed the serverless pool export mismatch between the dataclass (`serverless_pool`) and structured exporter (`serverless_pools`)
+- **Synapse SQL Definition Extraction**: Optional full-length extraction of stored procedure, function, and view definitions from dedicated SQL pools using `sys.sql_modules`
+- **Definition Protection**: `none`, `full`, `partial`, and SHA-256 `hash` redaction modes, exact schema filtering, configurable maximum stored size, encryption/permission detection, and truncation metadata
+- **Definition Export and Visualization**: Per-object JSON organized by type, database summaries, and HTML type, size, status, largest-object, and age analysis
 
 ## [0.2.2] - 2026-04-22
 

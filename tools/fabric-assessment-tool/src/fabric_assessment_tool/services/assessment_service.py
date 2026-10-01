@@ -54,6 +54,10 @@ class AssessmentService:
         sql_complexity: bool = False,
         sql_definition_redaction: str = "full",
         sql_complexity_schemas: Optional[List[str]] = None,
+        extract_definitions: bool = False,
+        definition_redaction: str = "partial",
+        definition_schema_filter: Optional[List[str]] = None,
+        max_definition_size: int = 1_000_000,
     ) -> Dict[str, Any]:
         """
         Perform assessment on specified workspaces.
@@ -91,6 +95,10 @@ class AssessmentService:
             sql_complexity: Enable SQL code complexity scoring
             sql_definition_redaction: Definition export mode ('full' or 'none')
             sql_complexity_schemas: Optional schema allowlist for scoring
+            extract_definitions: Extract SQL module definitions from dedicated pools
+            definition_redaction: Definition protection mode
+            definition_schema_filter: Exact schema names to include
+            max_definition_size: Maximum stored definition characters; 0 is unlimited
 
         Returns:
             Assessment results dictionary
@@ -166,6 +174,10 @@ class AssessmentService:
             client_kwargs["sql_complexity"] = sql_complexity
             client_kwargs["sql_definition_redaction"] = sql_definition_redaction
             client_kwargs["sql_complexity_schemas"] = sql_complexity_schemas or []
+        client_kwargs["extract_definitions"] = extract_definitions
+        client_kwargs["definition_redaction"] = definition_redaction
+        client_kwargs["definition_schema_filter"] = definition_schema_filter or []
+        client_kwargs["max_definition_size"] = max_definition_size
         client = self._get_client(source=source, **client_kwargs)
 
         # Perform assessment
@@ -244,7 +256,7 @@ class AssessmentService:
                     "success" if assessment_status == "completed" else "incomplete"
                 )
 
-                result_entry = {
+                result_entry: Dict[str, Any] = {
                     "workspace": workspace,
                     "status": result_status,
                     "summary": workspace_assessment.get_summary(),

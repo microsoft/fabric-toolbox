@@ -1153,6 +1153,20 @@ class VisualizationService:
             "complexity_unavailable_definitions": 0,
             "complexity_readiness_percentage": None,
             "complexity_readiness_indicator": "UNKNOWN",
+            "definitions": {
+                "databases_requested": 0,
+                "databases_completed": 0,
+                "total_objects": 0,
+                "counts_by_type": {},
+                "encrypted_objects": 0,
+                "unavailable_objects": 0,
+                "truncated_objects": 0,
+                "total_definition_characters": 0,
+                "age_buckets": {},
+                "largest_objects": [],
+                "database_summaries": [],
+                "by_workspace": {},
+            },
         }
 
         for ws_name, ws_data in workspaces.items():
@@ -1354,6 +1368,43 @@ class VisualizationService:
                                         object_entry["workspace"] = ws_name
                                         object_entry["database"] = db_entry["name"]
                                         dw["complexity_objects"].append(object_entry)
+                                db_wrapper = db_folder_data.get(db_folder_name)
+                                if not isinstance(db_wrapper, dict):
+                                    db_wrapper = next(
+                                        (
+                                            value
+                                            for value in db_folder_data.values()
+                                            if isinstance(value, dict)
+                                            and value.get("type")
+                                            in (
+                                                "dedicated_database",
+                                                "serverless_database",
+                                            )
+                                        ),
+                                        {},
+                                    )
+                                db_info = db_wrapper.get("data", db_wrapper)
+                                if isinstance(db_info, dict):
+                                    db_entry = {
+                                        "name": db_info.get("name", db_folder_name),
+                                        "workspace": ws_name,
+                                        "db_type": db_type,
+                                    }
+                                    dw["databases"].append(db_entry)
+
+                                if db_type == "dedicated_databases":
+                                    self._add_definition_data(
+                                        aggregate=dw["definitions"],
+                                        definitions_data=db_folder_data.get(
+                                            "definitions", {}
+                                        ),
+                                        workspace=ws_name,
+                                        database=(
+                                            db_info.get("name", db_folder_name)
+                                            if isinstance(db_info, dict)
+                                            else db_folder_name
+                                        ),
+                                    )
 
             elif platform == "databricks":
                 # SQL warehouses
@@ -1688,6 +1739,109 @@ class VisualizationService:
             )
 
         return summary
+        dw["definitions"]["largest_objects"] = sorted(
+            dw["definitions"]["largest_objects"],
+            key=lambda item: item.get("original_length", 0),
+            reverse=True,
+        )[:20]
+        return dw
+
+    def _add_definition_data(
+        self,
+        aggregate: Dict[str, Any],
+        definitions_data: Dict[str, Any],
+        workspace: str,
+        database: str,
+    ) -> None:
+        """Add one exported database definition hierarchy to report metadata."""
+
+        if not isinstance(definitions_data, dict):
+            return
+
+        summary_wrapper = definitions_data.get("summary", {})
+        summary = (
+            summary_wrapper.get("data", summary_wrapper)
+            if isinstance(summary_wrapper, dict)
+            else {}
+        )
+        if not isinstance(summary, dict) or not summary:
+            return
+
+        status = summary.get("extraction_status", "unknown")
+        aggregate["databases_requested"] += int(status != "not_requested")
+        aggregate["databases_completed"] += int(status == "completed")
+        aggregate["total_objects"] += summary.get("total_objects", 0)
+        aggregate["encrypted_objects"] += summary.get("encrypted_objects", 0)
+        aggregate["unavailable_objects"] += summary.get("unavailable_objects", 0)
+        aggregate["truncated_objects"] += summary.get("truncated_objects", 0)
+        aggregate["total_definition_characters"] += summary.get(
+            "total_definition_characters", 0
+        )
+
+        for object_type, count in summary.get("counts_by_type", {}).items():
+            aggregate["counts_by_type"][object_type] = (
+                aggregate["counts_by_type"].get(object_type, 0) + count
+            )
+        for bucket, count in summary.get("age_buckets", {}).items():
+            aggregate["age_buckets"][bucket] = (
+                aggregate["age_buckets"].get(bucket, 0) + count
+            )
+
+        database_summary = dict(summary)
+        database_summary["workspace"] = workspace
+        database_summary["database"] = database
+        aggregate["database_summaries"].append(database_summary)
+
+        workspace_summary = aggregate["by_workspace"].setdefault(
+            workspace,
+            {
+                "total_objects": 0,
+                "encrypted_objects": 0,
+                "unavailable_objects": 0,
+                "truncated_objects": 0,
+                "counts_by_type": {},
+                "age_buckets": {},
+            },
+        )
+        workspace_summary["total_objects"] += summary.get("total_objects", 0)
+        workspace_summary["encrypted_objects"] += summary.get("encrypted_objects", 0)
+        workspace_summary["unavailable_objects"] += summary.get(
+            "unavailable_objects", 0
+        )
+        workspace_summary["truncated_objects"] += summary.get("truncated_objects", 0)
+        for object_type, count in summary.get("counts_by_type", {}).items():
+            workspace_summary["counts_by_type"][object_type] = (
+                workspace_summary["counts_by_type"].get(object_type, 0) + count
+            )
+        for bucket, count in summary.get("age_buckets", {}).items():
+            workspace_summary["age_buckets"][bucket] = (
+                workspace_summary["age_buckets"].get(bucket, 0) + count
+            )
+
+        for type_directory in ("stored_procedures", "functions", "views"):
+            objects = definitions_data.get(type_directory, {})
+            if not isinstance(objects, dict):
+                continue
+            for wrapper in objects.values():
+                if not isinstance(wrapper, dict):
+                    continue
+                definition = wrapper.get("data", wrapper)
+                if not isinstance(definition, dict):
+                    continue
+                aggregate["largest_objects"].append(
+                    {
+                        "workspace": workspace,
+                        "database": definition.get("database", database),
+                        "schema": definition.get("schema", "unknown"),
+                        "name": definition.get("name", "unknown"),
+                        "object_type": definition.get("object_type", "unknown"),
+                        "original_length": definition.get("original_length", 0),
+                        "is_encrypted": definition.get("is_encrypted", False),
+                        "is_unavailable": definition.get("is_unavailable", False),
+                        "is_truncated": definition.get("is_truncated", False),
+                        "modified_at": definition.get("modified_at"),
+                    }
+                )
 
     def _aggregate_data_integration(
         self, workspaces: Dict[str, Dict[str, Any]]

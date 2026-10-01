@@ -5,6 +5,7 @@
     <h1>🏭 Data Warehousing View</h1>
     <p>SQL pools, databases, tables, SQL scripts, and serverless activity</p>
 </div>
+{% set definitions = warehousing.definitions | default({}) %}
 
 <!-- Summary Stats -->
 <div class="row">
@@ -116,6 +117,33 @@
                             {% endfor %}
                         </tbody>
                     </table>
+{% if definitions.databases_requested | default(0) > 0 %}
+<div class="card mt-2">
+    <div class="card-header">SQL Definition Analysis</div>
+    <div class="card-body">
+        <div class="row">
+            <div class="col">
+                <div class="stat-card">
+                    <div class="stat-value" id="stat-definitions">{{ definitions.total_objects | default(0) | format_number }}</div>
+                    <div class="stat-label">Definitions</div>
+                </div>
+            </div>
+            <div class="col">
+                <div class="stat-card">
+                    <div class="stat-value" id="stat-definition-encrypted">{{ definitions.encrypted_objects | default(0) | format_number }}</div>
+                    <div class="stat-label">Encrypted</div>
+                </div>
+            </div>
+            <div class="col">
+                <div class="stat-card">
+                    <div class="stat-value" id="stat-definition-unavailable">{{ definitions.unavailable_objects | default(0) | format_number }}</div>
+                    <div class="stat-label">Unavailable</div>
+                </div>
+            </div>
+            <div class="col">
+                <div class="stat-card">
+                    <div class="stat-value" id="stat-definition-truncated">{{ definitions.truncated_objects | default(0) | format_number }}</div>
+                    <div class="stat-label">Truncated</div>
                 </div>
             </div>
         </div>
@@ -162,6 +190,10 @@
             <div class="col col-6">
                 <div class="chart-container">
                     <canvas id="complexityDistributionChart"></canvas>
+        <div class="row mt-2">
+            <div class="col col-6">
+                <div class="chart-container">
+                    <canvas id="definitionTypeChart"></canvas>
                 </div>
             </div>
             <div class="col col-6">
@@ -177,6 +209,13 @@
     <div class="card-header">Objects Needing Review</div>
     <div class="card-body">
         <div class="table-responsive">
+                    <canvas id="definitionAgeChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        {% if definitions.database_summaries %}
+        <div class="table-responsive mt-2">
             <table class="table">
                 <thead>
                     <tr>
@@ -264,6 +303,65 @@
                         <td>{{ item.object_type | title }}</td>
                         <td>{{ item.name }}</td>
                         <td class="text-right">{{ item.column_count | format_number }}</td>
+                        <th>Database</th>
+                        <th>Status</th>
+                        <th class="text-right">Objects</th>
+                        <th>Description</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in definitions.database_summaries %}
+                    <tr data-workspace="{{ item.workspace }}">
+                        <td>{{ item.workspace }}</td>
+                        <td>{{ item.database }}</td>
+                        <td>
+                            <span class="badge {% if item.extraction_status == 'completed' %}badge-success{% elif item.extraction_status == 'partial' %}badge-warning{% else %}badge-secondary{% endif %}">
+                                {{ item.extraction_status | replace('_', ' ') | title }}
+                            </span>
+                        </td>
+                        <td class="text-right">{{ item.total_objects | default(0) | format_number }}</td>
+                        <td>{{ item.status_description | default('') }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+{% if definitions.largest_objects %}
+<div class="card">
+    <div class="card-header">Largest SQL Definitions</div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Object</th>
+                        <th>Type</th>
+                        <th>Database</th>
+                        <th>Workspace</th>
+                        <th class="text-right">Characters</th>
+                        <th>Status</th>
+                        <th>Last Modified</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in definitions.largest_objects %}
+                    <tr data-workspace="{{ item.workspace }}">
+                        <td>{{ item.schema }}.{{ item.name }}</td>
+                        <td><span class="badge badge-secondary">{{ item.object_type | replace('_', ' ') | title }}</span></td>
+                        <td>{{ item.database }}</td>
+                        <td>{{ item.workspace }}</td>
+                        <td class="text-right">{{ item.original_length | default(0) | format_number }}</td>
+                        <td>
+                            {% if item.is_encrypted %}<span class="badge badge-warning">Encrypted</span>{% endif %}
+                            {% if item.is_unavailable %}<span class="badge badge-warning">Unavailable</span>{% endif %}
+                            {% if item.is_truncated %}<span class="badge badge-secondary">Truncated</span>{% endif %}
+                            {% if not item.is_encrypted and not item.is_unavailable and not item.is_truncated %}<span class="badge badge-success">Available</span>{% endif %}
+                        </td>
+                        <td>{{ item.modified_at | default('Unknown', true) }}</td>
                     </tr>
                     {% endfor %}
                 </tbody>
@@ -276,6 +374,10 @@
         SQL complexity scoring was not enabled for this assessment.
     </div>
 </div>
+{% endif %}
+    </div>
+</div>
+{% endif %}
 {% endif %}
 
 <!-- Dedicated SQL Pools (Synapse) -->
@@ -664,6 +766,7 @@
 {% endblock %}
 
 {% block scripts %}
+{% set definitions = warehousing.definitions | default({}) %}
 <script>
 const warehousingData = {
 {% for ws_name, ws in workspaces.items() %}
@@ -1057,6 +1160,21 @@ function updateFilteredStats(selectedWorkspaces) {
     let ded = 0, srv = 0, db = 0, tables = 0, sizeGb = 0, columns = 0;
     const compatibility = { compatible: 0, review: 0, unsupported: 0 };
     const dataTypes = {};
+const definitionDataByWorkspace = {{ definitions.by_workspace | default({}) | tojson }};
+let definitionTypeChart = null;
+let definitionAgeChart = null;
+
+function updateFilteredStats(selectedWorkspaces) {
+    let ded = 0, srv = 0, db = 0, tables = 0, sizeGb = 0;
+    let definitionTotal = 0, encrypted = 0, unavailable = 0, truncated = 0;
+    const definitionTypes = {stored_procedure: 0, function: 0, view: 0};
+    const definitionAges = {
+        less_than_1_year: 0,
+        "1_to_3_years": 0,
+        "3_to_5_years": 0,
+        more_than_5_years: 0,
+        unknown: 0
+    };
     selectedWorkspaces.forEach(ws => {
         const data = warehousingData[ws];
         if (data) {
@@ -1071,6 +1189,19 @@ function updateFilteredStats(selectedWorkspaces) {
             });
             (data.data_types || []).forEach(entry => {
                 dataTypes[entry.data_type] = (dataTypes[entry.data_type] || 0) + (entry.column_count || 0);
+            });
+        }
+        const definitionData = definitionDataByWorkspace[ws];
+        if (definitionData) {
+            definitionTotal += definitionData.total_objects || 0;
+            encrypted += definitionData.encrypted_objects || 0;
+            unavailable += definitionData.unavailable_objects || 0;
+            truncated += definitionData.truncated_objects || 0;
+            Object.keys(definitionTypes).forEach(key => {
+                definitionTypes[key] += (definitionData.counts_by_type || {})[key] || 0;
+            });
+            Object.keys(definitionAges).forEach(key => {
+                definitionAges[key] += (definitionData.age_buckets || {})[key] || 0;
             });
         }
     });
@@ -1176,12 +1307,56 @@ if (complexityDistributionCtx) {
                     {{ warehousing.complexity_distribution.VERY_HIGH }}
                 ],
                 backgroundColor: ['#107c10', '#ffb900', '#d83b01', '#a80000']
+    const definitionStat = document.getElementById('stat-definitions');
+    if (definitionStat) {
+        definitionStat.textContent = definitionTotal.toLocaleString();
+        document.getElementById('stat-definition-encrypted').textContent = encrypted.toLocaleString();
+        document.getElementById('stat-definition-unavailable').textContent = unavailable.toLocaleString();
+        document.getElementById('stat-definition-truncated').textContent = truncated.toLocaleString();
+    }
+    if (definitionTypeChart) {
+        definitionTypeChart.data.datasets[0].data = [
+            definitionTypes.stored_procedure,
+            definitionTypes.function,
+            definitionTypes.view
+        ];
+        definitionTypeChart.update();
+    }
+    if (definitionAgeChart) {
+        definitionAgeChart.data.datasets[0].data = [
+            definitionAges.less_than_1_year,
+            definitionAges["1_to_3_years"],
+            definitionAges["3_to_5_years"],
+            definitionAges.more_than_5_years,
+            definitionAges.unknown
+        ];
+        definitionAgeChart.update();
+    }
+}
+
+{% if definitions.databases_requested | default(0) > 0 %}
+const definitionTypeCtx = document.getElementById('definitionTypeChart');
+if (definitionTypeCtx) {
+    definitionTypeChart = new Chart(definitionTypeCtx, {
+        type: 'bar',
+        data: {
+            labels: ['Stored Procedures', 'Functions', 'Views'],
+            datasets: [{
+                label: 'Definitions',
+                data: [
+                    {{ definitions.counts_by_type.get('stored_procedure', 0) }},
+                    {{ definitions.counts_by_type.get('function', 0) }},
+                    {{ definitions.counts_by_type.get('view', 0) }}
+                ],
+                backgroundColor: ['#5c2d91', '#0078d4', '#00a4ef']
             }]
         },
         options: {
             responsive: true,
             maintainAspectRatio: false,
             plugins: {title: {display: true, text: 'Complexity Distribution'}}
+            plugins: {title: {display: true, text: 'Definitions by Type'}},
+            scales: {y: {beginAtZero: true}}
         }
     });
 }
@@ -1198,12 +1373,29 @@ if (complexityTypeCtx) {
                 label: 'Objects',
                 data: typeLabels.map(type => typeData[type].total || 0),
                 backgroundColor: '#5c2d91'
+const definitionAgeCtx = document.getElementById('definitionAgeChart');
+if (definitionAgeCtx) {
+    definitionAgeChart = new Chart(definitionAgeCtx, {
+        type: 'bar',
+        data: {
+            labels: ['< 1 year', '1-3 years', '3-5 years', '> 5 years', 'Unknown'],
+            datasets: [{
+                label: 'Definitions',
+                data: [
+                    {{ definitions.age_buckets.get('less_than_1_year', 0) }},
+                    {{ definitions.age_buckets.get('1_to_3_years', 0) }},
+                    {{ definitions.age_buckets.get('3_to_5_years', 0) }},
+                    {{ definitions.age_buckets.get('more_than_5_years', 0) }},
+                    {{ definitions.age_buckets.get('unknown', 0) }}
+                ],
+                backgroundColor: '#0078d4'
             }]
         },
         options: {
             responsive: true,
             maintainAspectRatio: false,
             plugins: {title: {display: true, text: 'Complexity by Object Type'}},
+            plugins: {title: {display: true, text: 'Definitions by Last Modified Age'}},
             scales: {y: {beginAtZero: true}}
         }
     });

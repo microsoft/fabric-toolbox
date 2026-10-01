@@ -179,6 +179,33 @@ Examples:
             ),
         )
 
+        parser.add_argument(
+            "--extract-definitions",
+            action="store_true",
+            default=False,
+            help="Extract stored procedure, function, and view definitions from dedicated SQL pools",
+        )
+
+        parser.add_argument(
+            "--definition-redaction",
+            choices=["none", "full", "partial", "hash"],
+            default="partial",
+            help="Definition protection mode (default: partial)",
+        )
+
+        parser.add_argument(
+            "--definition-schema-filter",
+            default="",
+            help="Comma-separated exact schema names to include in definition extraction",
+        )
+
+        parser.add_argument(
+            "--max-definition-size",
+            type=self._non_negative_int,
+            default=1_000_000,
+            help="Maximum stored definition characters; 0 disables the limit",
+        )
+
         # SQL authentication mode options for dedicated SQL pools
         parser.add_argument(
             "--sql-auth-mode",
@@ -418,6 +445,16 @@ Examples:
                     args, "sql_definition_redaction", "full"
                 ),
                 sql_complexity_schemas=complexity_schemas,
+                extract_definitions=getattr(args, "extract_definitions", False),
+                definition_redaction=getattr(args, "definition_redaction", "partial"),
+                definition_schema_filter=[
+                    schema.strip()
+                    for schema in getattr(args, "definition_schema_filter", "").split(
+                        ","
+                    )
+                    if schema.strip()
+                ],
+                max_definition_size=getattr(args, "max_definition_size", 1_000_000),
             )
 
             utils_ui.print(f"Assessment completed successfully!")
@@ -465,3 +502,10 @@ Examples:
         except Exception as e:
             print(f"Assessment failed: {e}")
             raise
+
+    @staticmethod
+    def _non_negative_int(value: str) -> int:
+        parsed = int(value)
+        if parsed < 0:
+            raise argparse.ArgumentTypeError("value must be non-negative")
+        return parsed

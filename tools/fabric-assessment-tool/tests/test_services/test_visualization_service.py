@@ -240,6 +240,57 @@ def sample_synapse_assessment_dir(tmp_path):
     with open(ls_dir / "AzureBlobStorage1.json", "w") as f:
         json.dump(ls_data, f)
 
+    # Create dedicated database definition metadata
+    db_dir = workspace_dir / "data" / "dedicated_databases" / "databases" / "warehouse"
+    definitions_dir = db_dir / "definitions"
+    procedures_dir = definitions_dir / "stored_procedures"
+    procedures_dir.mkdir(parents=True)
+    with open(db_dir / "warehouse.json", "w") as f:
+        json.dump(
+            {
+                "type": "dedicated_database",
+                "data": {"name": "warehouse"},
+            },
+            f,
+        )
+    with open(definitions_dir / "summary.json", "w") as f:
+        json.dump(
+            {
+                "type": "sql_definition_summary",
+                "data": {
+                    "extraction_status": "completed",
+                    "status_description": "",
+                    "total_objects": 1,
+                    "counts_by_type": {"stored_procedure": 1},
+                    "encrypted_objects": 0,
+                    "unavailable_objects": 0,
+                    "truncated_objects": 1,
+                    "total_definition_characters": 5000,
+                    "age_buckets": {"less_than_1_year": 1},
+                },
+            },
+            f,
+        )
+    with open(procedures_dir / "dbo.large_proc.json", "w") as f:
+        json.dump(
+            {
+                "type": "sql_definition",
+                "data": {
+                    "name": "large_proc",
+                    "database": "warehouse",
+                    "schema": "dbo",
+                    "object_type": "stored_procedure",
+                    "original_length": 5000,
+                    "is_encrypted": False,
+                    "is_unavailable": False,
+                    "is_truncated": True,
+                    "modified_at": "2026-01-01T00:00:00",
+                    "definition": "not rendered",
+                },
+            },
+            f,
+        )
+
     return tmp_path
 
 
@@ -352,6 +403,45 @@ class TestVisualizationService:
         assert ws["platform"] == "synapse"
         assert "summary" in ws
         assert "resources" in ws
+
+    def test_aggregate_definition_metadata(
+        self, visualization_service, sample_synapse_assessment_dir
+    ):
+        data = visualization_service._load_assessment_data(
+            sample_synapse_assessment_dir
+        )
+
+        warehousing = visualization_service._aggregate_data_warehousing(
+            data["workspaces"], "synapse"
+        )
+        definitions = warehousing["definitions"]
+
+        assert definitions["databases_requested"] == 1
+        assert definitions["databases_completed"] == 1
+        assert definitions["total_objects"] == 1
+        assert definitions["counts_by_type"] == {"stored_procedure": 1}
+        assert definitions["truncated_objects"] == 1
+        assert definitions["largest_objects"][0]["name"] == "large_proc"
+        assert definitions["by_workspace"]["test-workspace"]["total_objects"] == 1
+
+    def test_render_definition_analysis_without_sql_text(
+        self, visualization_service, sample_synapse_assessment_dir, tmp_path
+    ):
+        output_dir = tmp_path / "definition-report"
+
+        visualization_service.generate_report(
+            input_path=str(sample_synapse_assessment_dir),
+            output_path=str(output_dir),
+            view="data-warehousing",
+        )
+
+        html = (output_dir / "views" / "data_warehousing.html").read_text(
+            encoding="utf-8"
+        )
+        assert "SQL Definition Analysis" in html
+        assert "Largest SQL Definitions" in html
+        assert "large_proc" in html
+        assert "not rendered" not in html
 
     def test_load_assessment_data_databricks(
         self, visualization_service, sample_databricks_assessment_dir
