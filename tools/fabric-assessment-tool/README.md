@@ -155,6 +155,42 @@ When using a service principal for Databricks assessments (via `DATABRICKS_CLIEN
 
 > **Tip:** For the most complete assessment, grant the service principal **Workspace Admin** role on each workspace. Without this, some resources may silently return empty results.
 
+### Synapse Serverless SQL Activity Collection
+
+By default, `fat assess --source synapse` now attempts to collect recent serverless SQL activity from the built-in on-demand endpoint:
+
+- Hostname: `<workspace>-ondemand.sql.azuresynapse.net`
+- Database: `master`
+- Default history window: `30` days
+- Default detailed-row cap: `1000`
+
+#### Authentication precedence
+
+Serverless SQL activity inherits the existing dedicated SQL settings unless you provide serverless-specific overrides:
+
+1. Explicit `--serverless-sql-*` override
+2. Matching existing `--sql-*` option or workspace SQL administrator login/password
+3. Existing default behavior for the selected auth mode
+
+This means you do **not** need to provide serverless credentials separately when the inherited dedicated SQL settings are already sufficient.
+
+#### Capability probing and graceful degradation
+
+Serverless SQL metadata is not exposed uniformly across all Synapse environments. The tool probes compatible DMV/view sources before collecting activity and degrades gracefully when a source is unavailable, unsupported, or missing columns:
+
+- `completed`: activity sources were collected successfully
+- `partial`: at least one detailed activity source worked, but other compatible sources were unavailable
+- `unavailable`: no detailed activity source was usable; the overall workspace assessment still completes, but is marked incomplete
+- `skipped`: activity collection was explicitly disabled with `--skip-serverless-activity`
+
+Expected connection, permission, unsupported-object, and column-shape failures do **not** fail the entire workspace assessment.
+
+#### Permissions, reachability, and privacy
+
+- The client must be able to reach the on-demand SQL endpoint over the network.
+- The chosen SQL identity must be allowed to connect to the endpoint and query the available activity DMVs/views.
+- Structured JSON export preserves full query text **when the source exposes it** under `resources/sql_pools/serverless_pool_Built-in.json`.
+- Generated HTML reports intentionally exclude query text and only show safe identifiers, timestamps, durations, and processed-byte metrics.
 
 ## CLI Commands
 
@@ -201,6 +237,15 @@ fat assess --source <synapse|databricks> \
 - `--query-history-top`: Maximum recent requests and sessions retained per pool (default: `1000`, range: `1-10000`)
 - `--include-sql-text`: Include SQL command text in dedicated-pool JSON. SQL text is redacted by default and is never rendered in HTML reports.
 - `--skip-query-history`: Skip dedicated SQL pool request/session workload collection
+- `--serverless-history-days`: Days of Synapse serverless SQL activity to collect (default: `30`, range: `1..45`)
+- `--serverless-top-n`: Maximum number of detailed serverless SQL activity rows to retain (default: `1000`, range: `1..10000`)
+- `--skip-serverless-activity`: Skip optional serverless SQL activity collection entirely
+- `--serverless-sql-auth-mode`: Optional serverless SQL auth override. If omitted, inherits `--sql-auth-mode`
+- `--serverless-sql-username`: Optional serverless SQL username override. If omitted, inherits the workspace SQL admin login when available
+- `--serverless-sql-password`: Optional serverless SQL password override. If omitted, inherits `--sql-admin-password` when available
+- `--serverless-sql-client-id`: Optional service principal client ID override for serverless SQL
+- `--serverless-sql-client-secret`: Optional service principal client secret override for serverless SQL
+- `--serverless-sql-tenant-id`: Optional tenant override for serverless SQL SPN authentication
 
 **Examples:**
 ```bash
@@ -231,6 +276,14 @@ fat assess --source synapse --ws workspace1 -o ./results \
 
 # Explicitly include SQL text in JSON output
 fat assess --source synapse --ws workspace1 -o ./results --include-sql-text
+# Assess while overriding only the serverless SQL activity auth mode
+fat assess --source synapse --ws workspace1 -o ./results \
+    --sql-auth-mode sql \
+    --sql-admin-password "your-sql-password" \
+    --serverless-sql-auth-mode entra-default
+
+# Assess while skipping optional serverless SQL activity collection
+fat assess --source synapse --ws workspace1 -o ./results --skip-serverless-activity
 
 # Assess Databricks workspace
 fat assess --source databricks --ws my-workspace --output results_folder
@@ -306,6 +359,7 @@ fat visualize -i ./assessment_output --view data-engineering -o ./engineering_re
 - **Data Engineering**: Notebooks (with language, Spark config, MSSparkUtils usage), Spark pools, Spark job definitions
 - **Data Warehousing**: Dedicated SQL pools (tables, size, stored procedures), serverless databases
 - **Dedicated SQL Workloads**: Request/session counts, resource-class and status distributions, duration percentiles, peak concurrency, observed history window, and day/hour heatmaps
+- **Data Warehousing**: Dedicated SQL pools (tables, size, stored procedures), serverless databases, serverless SQL activity trends, processed bytes, query counts, and top slow/large query metrics (without query text)
 - **Data Integration**: Pipelines (activity counts, complexity), dataflows, datasets
 
 **Databricks-Specific Views:**

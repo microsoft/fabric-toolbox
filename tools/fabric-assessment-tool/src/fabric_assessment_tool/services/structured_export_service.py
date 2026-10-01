@@ -213,8 +213,10 @@ class JSONExporter(BaseExporter):
                     )
                 files_created.append(str(pool_file))
 
-            # Serverless pools
-            for i, pool in enumerate(data["sql_pools"].get("serverless_pools", [])):
+            # Serverless pool
+            serverless_pool = data["sql_pools"].get("serverless_pool")
+            if serverless_pool:
+                pool = serverless_pool
                 pool_file = sql_pools_dir / f"serverless_pool_{pool['name']}.json"
                 with open(pool_file, "w") as f:
                     json.dump(

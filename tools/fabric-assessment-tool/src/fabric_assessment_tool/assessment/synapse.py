@@ -1,4 +1,4 @@
-from dataclasses import asdict, dataclass
+from dataclasses import asdict, dataclass, field
 from typing import Any, Dict, List, Optional
 
 from .common import AssessmentStatus
@@ -234,6 +234,148 @@ class SynapseServerlessDatabases:
 
 
 @dataclass
+class SynapseServerlessActivitySourceDiagnostic:
+    """Capability probe result for a serverless activity source."""
+
+    source_name: str
+    status: str
+    available_columns: List[str] = field(default_factory=list)
+    message: Optional[str] = None
+
+
+@dataclass
+class SynapseServerlessQueryActivity:
+    """Detailed serverless SQL query activity."""
+
+    source_name: str
+    request_id: Optional[str] = None
+    session_id: Optional[int] = None
+    connection_id: Optional[str] = None
+    query_hash: Optional[str] = None
+    database_name: Optional[str] = None
+    principal_name: Optional[str] = None
+    status: Optional[str] = None
+    submit_time: Optional[str] = None
+    start_time: Optional[str] = None
+    end_time: Optional[str] = None
+    elapsed_time_ms: Optional[int] = None
+    processed_bytes: Optional[int] = None
+    remote_processed_bytes: Optional[int] = None
+    memory_processed_bytes: Optional[int] = None
+    disk_processed_bytes: Optional[int] = None
+    row_count: Optional[int] = None
+    statement_type: Optional[str] = None
+    program_name: Optional[str] = None
+    error_code: Optional[int] = None
+    query_text: Optional[str] = None
+
+
+@dataclass
+class SynapseServerlessDailyDatabaseUsage:
+    """Daily aggregated serverless SQL usage by database."""
+
+    date: str
+    database_name: str
+    query_count: int
+    processed_bytes: int
+    total_elapsed_time_ms: int
+    average_elapsed_time_ms: float
+
+
+@dataclass
+class SynapseServerlessDatabaseSummary:
+    """Serverless SQL summary for one database."""
+
+    database_name: str
+    query_count: int
+    processed_bytes: int
+    average_elapsed_time_ms: float
+    max_elapsed_time_ms: int
+    success_count: int
+    failure_count: int
+    cancelled_count: int = 0
+
+
+@dataclass
+class SynapseServerlessTopQueryMetric:
+    """Redacted query metric for visualization-safe summaries."""
+
+    source_name: str
+    request_id: Optional[str] = None
+    session_id: Optional[int] = None
+    connection_id: Optional[str] = None
+    query_hash: Optional[str] = None
+    database_name: Optional[str] = None
+    principal_name: Optional[str] = None
+    status: Optional[str] = None
+    start_time: Optional[str] = None
+    end_time: Optional[str] = None
+    elapsed_time_ms: Optional[int] = None
+    processed_bytes: Optional[int] = None
+
+
+@dataclass
+class SynapseServerlessPerformanceSummary:
+    """Overall serverless SQL activity summary."""
+
+    total_queries: int = 0
+    queries_last_24h: Optional[int] = None
+    total_processed_bytes: int = 0
+    total_elapsed_time_ms: int = 0
+    average_elapsed_time_ms: float = 0.0
+    max_elapsed_time_ms: int = 0
+    success_count: int = 0
+    failure_count: int = 0
+    cancelled_count: int = 0
+    collection_window_start: Optional[str] = None
+    collection_window_end: Optional[str] = None
+    top_slowest_queries: List[SynapseServerlessTopQueryMetric] = field(
+        default_factory=list
+    )
+    top_largest_queries: List[SynapseServerlessTopQueryMetric] = field(
+        default_factory=list
+    )
+
+
+@dataclass
+class SynapseServerlessActivityCollectionMetadata:
+    """Collection metadata for serverless SQL activity."""
+
+    status: str = "unavailable"
+    attempted: bool = False
+    history_days: int = 0
+    top_n: int = 0
+    requested_sources: List[str] = field(default_factory=list)
+    available_sources: List[str] = field(default_factory=list)
+    detailed_sources_used: List[str] = field(default_factory=list)
+    supplemental_sources_used: List[str] = field(default_factory=list)
+    collected_at: Optional[str] = None
+    warnings: List[str] = field(default_factory=list)
+    source_diagnostics: List[SynapseServerlessActivitySourceDiagnostic] = field(
+        default_factory=list
+    )
+
+
+@dataclass
+class SynapseServerlessActivity:
+    """Serverless SQL activity payload."""
+
+    metadata: SynapseServerlessActivityCollectionMetadata = field(
+        default_factory=SynapseServerlessActivityCollectionMetadata
+    )
+    queries: List[SynapseServerlessQueryActivity] = field(default_factory=list)
+    daily_database_usage: List[SynapseServerlessDailyDatabaseUsage] = field(
+        default_factory=list
+    )
+    database_summaries: List[SynapseServerlessDatabaseSummary] = field(
+        default_factory=list
+    )
+    performance_summary: SynapseServerlessPerformanceSummary = field(
+        default_factory=SynapseServerlessPerformanceSummary
+    )
+
+
+@dataclass
 class SynapseServerlessPool:
     """Synapse serverless SQL pool information."""
 
@@ -242,6 +384,9 @@ class SynapseServerlessPool:
     queries_last_24h: Optional[int]
     databases: SynapseServerlessDatabases
     json_response: Any
+    activity: SynapseServerlessActivity = field(
+        default_factory=SynapseServerlessActivity
+    )
 
 
 @dataclass
@@ -589,6 +734,27 @@ class SynapseAssessment:
         summary["data_warehouse"]["counts"]["serverless"][
             "views"
         ] = total_serverless_views
+        summary["data_warehouse"]["counts"]["serverless"][
+            "queries_last_24h"
+        ] = self.sql_pools.serverless_pool.queries_last_24h
+
+        serverless_activity = self.sql_pools.serverless_pool.activity
+        serverless_performance = serverless_activity.performance_summary
+        serverless_metadata = serverless_activity.metadata
+        summary["data_warehouse"]["counts"]["serverless"]["activity"] = {
+            "status": serverless_metadata.status,
+            "attempted": serverless_metadata.attempted,
+            "queries": serverless_performance.total_queries,
+            "processed_bytes": serverless_performance.total_processed_bytes,
+            "average_duration_ms": round(
+                serverless_performance.average_elapsed_time_ms, 2
+            ),
+            "max_duration_ms": serverless_performance.max_elapsed_time_ms,
+            "success_count": serverless_performance.success_count,
+            "failure_count": serverless_performance.failure_count,
+            "cancelled_count": serverless_performance.cancelled_count,
+            "warnings": len(serverless_metadata.warnings),
+        }
 
         ## Data Warehouse
         summary["data_warehouse"]["counts"]["dedicated"] = {}

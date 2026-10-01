@@ -3,6 +3,8 @@ import json
 from argparse import Namespace
 from datetime import datetime, timezone
 from typing import Dict, Optional
+from datetime import datetime, timedelta, timezone
+from typing import Dict, Optional, cast
 
 from fabric_assessment_tool.errors.api import FATError
 
@@ -11,6 +13,9 @@ from ..assessment.synapse import (
     CodeObjectCount,
     CodeObjectLines,
     SynapseAssessment,
+    SynapseServerlessActivity,
+    SynapseServerlessActivityCollectionMetadata,
+    SynapseServerlessActivitySourceDiagnostic,
     SynapseAssessmentMetadata,
     SynapseDataflow,
     SynapseDataflows,
@@ -35,6 +40,7 @@ from ..assessment.synapse import (
     SynapseSchemas,
     SynapseServerlessDatabase,
     SynapseServerlessDatabases,
+    SynapseServerlessPerformanceSummary,
     SynapseServerlessPool,
     SynapseSparkConfiguration,
     SynapseSparkConfigurations,
@@ -59,6 +65,12 @@ from ..utils.workload_profile import (
 )
 from .api_client import ApiClient
 from .odbc_client import OdbcClient, SqlAuthMode
+from .odbc_client import (
+    EndpointKind,
+    OdbcClient,
+    ServerlessActivityExpectedError,
+    SqlAuthMode,
+)
 from .token_provider import (
     FabricNotebookTokenProvider,
     TokenProvider,
@@ -84,6 +96,15 @@ class SynapseClient:
         query_history_top: int = 1000,
         include_sql_text: bool = False,
         skip_query_history: bool = False,
+        serverless_history_days: int = 30,
+        serverless_top_n: int = 1000,
+        skip_serverless_activity: bool = False,
+        serverless_sql_auth_mode: Optional[str] = None,
+        serverless_sql_username: Optional[str] = None,
+        serverless_sql_password: Optional[str] = None,
+        serverless_sql_client_id: Optional[str] = None,
+        serverless_sql_client_secret: Optional[str] = None,
+        serverless_sql_tenant_id: Optional[str] = None,
         **kwargs,
     ):
         """
@@ -103,6 +124,15 @@ class SynapseClient:
             sql_client_id: Service principal client ID (required for 'entra-spn' mode)
             sql_client_secret: Service principal client secret (required for 'entra-spn' mode)
             sql_tenant_id: Azure tenant ID (optional for 'entra-spn' mode)
+            serverless_history_days: Number of days of serverless SQL history to collect
+            serverless_top_n: Maximum number of detailed serverless SQL records to keep
+            skip_serverless_activity: Skip serverless SQL activity collection
+            serverless_sql_auth_mode: Optional auth-mode override for serverless SQL
+            serverless_sql_username: Optional SQL username override for serverless SQL
+            serverless_sql_password: Optional SQL password override for serverless SQL
+            serverless_sql_client_id: Optional SPN client ID override for serverless SQL
+            serverless_sql_client_secret: Optional SPN secret override for serverless SQL
+            serverless_sql_tenant_id: Optional SPN tenant override for serverless SQL
         """
         self.token_provider = token_provider or create_token_provider(auth_method)
         self.custom_subscription_id = subscription_id
@@ -116,11 +146,28 @@ class SynapseClient:
         self.query_history_top = query_history_top
         self.include_sql_text = include_sql_text
         self.skip_query_history = skip_query_history
+        self.serverless_history_days = serverless_history_days
+        self.serverless_top_n = serverless_top_n
+        self.skip_serverless_activity = skip_serverless_activity
+        self.serverless_sql_auth_mode = serverless_sql_auth_mode
+        self.serverless_sql_username = serverless_sql_username
+        self.serverless_sql_password = serverless_sql_password
+        self.serverless_sql_client_id = serverless_sql_client_id
+        self.serverless_sql_client_secret = serverless_sql_client_secret
+        self.serverless_sql_tenant_id = serverless_sql_tenant_id
+        self._validate_serverless_options()
         self.authenticate()
         self._workspace_cache: dict[str, SynapseWorkspaceInfo] = {}
         self.dev_endpoint_permission_issues = False
         self.unreached_components: list[str] = []
         self.paused_databases: list[str] = []
+
+    def _validate_serverless_options(self) -> None:
+        """Validate serverless activity collection options."""
+        if not 1 <= self.serverless_history_days <= 45:
+            raise ValueError("serverless_history_days must be between 1 and 45")
+        if not 1 <= self.serverless_top_n <= 10000:
+            raise ValueError("serverless_top_n must be between 1 and 10000")
 
     def authenticate(self) -> None:
         """Authenticate with Azure using the configured token provider."""
@@ -400,6 +447,11 @@ class SynapseClient:
                     + ", ".join(unavailable_workload_pools)
                     + "]"
                 )
+            serverless_activity_status = (
+                sql_pools.serverless_pool.activity.metadata.status
+            )
+            if serverless_activity_status == "unavailable":
+                incomplete_reasons.append("serverless SQL activity was unavailable")
 
             if incomplete_reasons:
                 status = AssessmentStatus(
@@ -536,12 +588,34 @@ class SynapseClient:
             for pool in json_req["value"]
         ]
 
+        serverless_databases = self._get_serverless_databases(workspace_name)
+
+        if self.skip_serverless_activity:
+            serverless_activity = self._build_skipped_serverless_activity()
+        else:
+            try:
+                serverless_activity = self._collect_serverless_activity(
+                    workspace_name=workspace_name,
+                    sql_admin_login=sql_admin_login,
+                    sql_admin_password=sql_admin_password,
+                )
+            except ServerlessActivityExpectedError as exc:
+                utils_ui.print_warning(
+                    f"Serverless SQL activity collection unavailable: {exc.message}"
+                )
+                serverless_activity = self._build_unavailable_serverless_activity(
+                    warning=exc.message
+                )
+
+        serverless_queries_last_24h = self._count_queries_last_24h(serverless_activity)
+
         serverless_pool = SynapseServerlessPool(
             name="Built-in",
             status="Online",
-            databases=self._get_serverless_databases(workspace_name),
-            queries_last_24h=0,
+            databases=serverless_databases,
+            queries_last_24h=serverless_queries_last_24h,
             json_response=None,
+            activity=serverless_activity,
         )
 
         return SynapseSqlPools(
@@ -1575,29 +1649,174 @@ class SynapseClient:
         database_name: str,
         sql_admin_login: Optional[str] = None,
         sql_admin_password: Optional[str] = None,
+        auth_mode: Optional[SqlAuthMode] = None,
+        client_id: Optional[str] = None,
+        client_secret: Optional[str] = None,
+        tenant_id: Optional[str] = None,
+        endpoint_kind: EndpointKind = "dedicated",
+        server_host: Optional[str] = None,
     ) -> OdbcClient:
-        """
-        Create an OdbcClient with the appropriate authentication parameters.
-
-        Args:
-            workspace_name: The Synapse workspace name
-            database_name: The database name
-            sql_admin_login: SQL admin login (for SQL auth mode)
-            sql_admin_password: SQL admin password (for SQL auth mode)
-
-        Returns:
-            Configured OdbcClient instance
-        """
+        """Create an OdbcClient with the appropriate authentication parameters."""
         return OdbcClient(
             workspace_name=workspace_name,
             database=database_name,
             username=sql_admin_login,
             password=sql_admin_password,
-            auth_mode=self.sql_auth_mode,
-            client_id=self.sql_client_id,
-            client_secret=self.sql_client_secret,
-            tenant_id=self.sql_tenant_id,
+            auth_mode=cast(SqlAuthMode, auth_mode or self.sql_auth_mode),
+            client_id=client_id or self.sql_client_id,
+            client_secret=client_secret or self.sql_client_secret,
+            tenant_id=tenant_id or self.sql_tenant_id,
+            endpoint_kind=cast(EndpointKind, endpoint_kind),
+            server_host=server_host,
         )
+
+    def _resolve_serverless_sql_settings(
+        self,
+        sql_admin_login: Optional[str],
+        sql_admin_password: Optional[str],
+    ) -> Dict[str, Optional[str]]:
+        """Resolve serverless SQL settings using override-then-inherit precedence."""
+        auth_mode = self.serverless_sql_auth_mode or self.sql_auth_mode
+        username = self.serverless_sql_username or sql_admin_login
+        password = (
+            self.serverless_sql_password
+            if self.serverless_sql_password is not None
+            else sql_admin_password
+        )
+
+        if auth_mode == "sql" and password == "__entra_auth__":
+            password = None
+
+        return {
+            "auth_mode": auth_mode,
+            "username": username,
+            "password": password,
+            "client_id": self.serverless_sql_client_id or self.sql_client_id,
+            "client_secret": self.serverless_sql_client_secret
+            or self.sql_client_secret,
+            "tenant_id": self.serverless_sql_tenant_id or self.sql_tenant_id,
+        }
+
+    def _collect_serverless_activity(
+        self,
+        workspace_name: str,
+        sql_admin_login: Optional[str],
+        sql_admin_password: Optional[str],
+    ) -> SynapseServerlessActivity:
+        """Collect serverless SQL activity using inherited or overridden SQL settings."""
+        serverless_settings = self._resolve_serverless_sql_settings(
+            sql_admin_login, sql_admin_password
+        )
+
+        try:
+            odbc_client = self._create_odbc_client(
+                workspace_name=workspace_name,
+                database_name="master",
+                sql_admin_login=serverless_settings.get("username"),
+                sql_admin_password=serverless_settings.get("password"),
+                auth_mode=cast(
+                    Optional[SqlAuthMode], serverless_settings.get("auth_mode")
+                ),
+                client_id=serverless_settings.get("client_id"),
+                client_secret=serverless_settings.get("client_secret"),
+                tenant_id=serverless_settings.get("tenant_id"),
+                endpoint_kind="serverless",
+            )
+            try:
+                return odbc_client.collect_serverless_activity(
+                    history_days=self.serverless_history_days,
+                    top_n=self.serverless_top_n,
+                )
+            finally:
+                odbc_client.close()
+        except ServerlessActivityExpectedError:
+            raise
+        except ValueError as exc:
+            raise ServerlessActivityExpectedError("configuration", str(exc)) from exc
+
+    def _build_skipped_serverless_activity(self) -> SynapseServerlessActivity:
+        """Build skipped activity metadata without opening a serverless connection."""
+        return SynapseServerlessActivity(
+            metadata=SynapseServerlessActivityCollectionMetadata(
+                status="skipped",
+                attempted=False,
+                history_days=self.serverless_history_days,
+                top_n=self.serverless_top_n,
+                requested_sources=[
+                    "sys.dm_exec_requests_history",
+                    "queryinsights.exec_requests_history",
+                    "queryinsights.long_running_queries",
+                    "queryinsights.frequently_run_queries",
+                ],
+                collected_at=self._get_timestamp(),
+            ),
+            performance_summary=SynapseServerlessPerformanceSummary(),
+        )
+
+    def _build_unavailable_serverless_activity(
+        self, warning: Optional[str]
+    ) -> SynapseServerlessActivity:
+        """Build unavailable activity metadata for expected serverless failures."""
+        warnings = [warning] if warning else []
+        diagnostics = []
+        if warning:
+            diagnostics.append(
+                SynapseServerlessActivitySourceDiagnostic(
+                    source_name="serverless_activity",
+                    status="unavailable",
+                    message=warning,
+                )
+            )
+
+        return SynapseServerlessActivity(
+            metadata=SynapseServerlessActivityCollectionMetadata(
+                status="unavailable",
+                attempted=True,
+                history_days=self.serverless_history_days,
+                top_n=self.serverless_top_n,
+                requested_sources=[
+                    "sys.dm_exec_requests_history",
+                    "queryinsights.exec_requests_history",
+                    "queryinsights.long_running_queries",
+                    "queryinsights.frequently_run_queries",
+                ],
+                collected_at=self._get_timestamp(),
+                warnings=warnings,
+                source_diagnostics=diagnostics,
+            ),
+            performance_summary=SynapseServerlessPerformanceSummary(),
+        )
+
+    def _count_queries_last_24h(
+        self, activity: SynapseServerlessActivity
+    ) -> Optional[int]:
+        """Derive queries_last_24h from collected serverless activity."""
+        if activity.metadata.status == "skipped":
+            return None
+        if activity.metadata.status == "unavailable" and not activity.queries:
+            return None
+        if activity.performance_summary.queries_last_24h is not None:
+            return activity.performance_summary.queries_last_24h
+
+        cutoff = datetime.now(timezone.utc).replace(tzinfo=None) - timedelta(hours=24)
+        query_count = 0
+        for query in activity.queries:
+            start_time = query.start_time
+            if not start_time:
+                continue
+            try:
+                parsed = (
+                    datetime.fromisoformat(start_time.replace("Z", "+00:00"))
+                    if start_time.endswith("Z")
+                    else datetime.fromisoformat(start_time)
+                )
+                if parsed.tzinfo is not None:
+                    parsed = parsed.replace(tzinfo=None)
+            except ValueError:
+                continue
+            if parsed >= cutoff:
+                query_count += 1
+        return query_count
 
     def _get_timestamp(self) -> str:
         """Get current timestamp."""

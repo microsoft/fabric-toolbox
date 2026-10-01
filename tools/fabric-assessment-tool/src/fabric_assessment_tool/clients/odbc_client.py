@@ -1,21 +1,148 @@
-from typing import Any, Iterator, Literal, Optional
+from __future__ import annotations
 
-from mssql_python import connect
+import hashlib
+from collections import defaultdict
+from datetime import datetime, timedelta, timezone
+from typing import Any, Iterator, Literal, Optional, Sequence
+
+from mssql_python import connect  # type: ignore[import-untyped]
 
 from ..assessment.synapse import (
     CodeObjectCount,
     CodeObjectLines,
     SynapseQueryActivity,
     SynapseSessionActivity,
+    SynapseServerlessActivity,
+    SynapseServerlessActivityCollectionMetadata,
+    SynapseServerlessActivitySourceDiagnostic,
+    SynapseServerlessDailyDatabaseUsage,
+    SynapseServerlessDatabaseSummary,
+    SynapseServerlessPerformanceSummary,
+    SynapseServerlessQueryActivity,
+    SynapseServerlessTopQueryMetric,
     TableStatistics,
 )
 
 # Supported SQL authentication modes
 SqlAuthMode = Literal["sql", "entra-interactive", "entra-spn", "entra-default"]
+EndpointKind = Literal["dedicated", "serverless"]
+
+SERVERLESS_HISTORY_DAYS_MAX = 45
+SERVERLESS_TOP_N_MAX = 10000
+
+SERVERLESS_HISTORY_SOURCES: tuple[dict[str, Any], ...] = (
+    {
+        "name": "sys.dm_exec_requests_history",
+        "kind": "history",
+        "time_candidates": ("start_time", "request_start_time"),
+        "select_candidates": {
+            "request_id": ("distributed_statement_id", "request_id"),
+            "session_id": ("session_id",),
+            "connection_id": ("connection_id",),
+            "query_hash": ("query_hash",),
+            "database_name": ("database_name", "db_name"),
+            "principal_name": ("login_name", "principal_name", "user_name"),
+            "status": ("status",),
+            "submit_time": ("submit_time",),
+            "start_time": ("start_time", "request_start_time"),
+            "end_time": ("end_time", "request_end_time", "completion_time"),
+            "elapsed_time_ms": (
+                "total_elapsed_time_ms",
+                "elapsed_time_ms",
+                "duration_ms",
+            ),
+            "program_name": ("program_name", "application_name"),
+            "statement_type": ("statement_type", "statement_type ", "command_type"),
+            "row_count": ("row_count",),
+            "error_code": ("error_code",),
+            "query_text": ("query_text", "sql_text", "command"),
+            "processed_bytes": ("data_processed_bytes", "processed_bytes"),
+            "processed_mb": ("data_processed_mb",),
+            "remote_processed_mb": (
+                "data_scanned_remote_storage_mb",
+                "data_processed_remote_storage_mb",
+            ),
+            "memory_processed_mb": (
+                "data_scanned_memory_mb",
+                "data_processed_memory_mb",
+            ),
+            "disk_processed_mb": ("data_scanned_disk_mb", "data_processed_disk_mb"),
+        },
+    },
+    {
+        "name": "queryinsights.exec_requests_history",
+        "kind": "history",
+        "time_candidates": ("start_time",),
+        "select_candidates": {
+            "request_id": ("distributed_statement_id",),
+            "session_id": ("session_id",),
+            "connection_id": ("connection_id",),
+            "query_hash": ("query_hash",),
+            "database_name": ("database_name",),
+            "principal_name": ("login_name",),
+            "status": ("status",),
+            "submit_time": ("submit_time",),
+            "start_time": ("start_time",),
+            "end_time": ("end_time",),
+            "elapsed_time_ms": ("total_elapsed_time_ms",),
+            "program_name": ("program_name",),
+            "statement_type": ("statement_type", "statement_type "),
+            "row_count": ("row_count",),
+            "error_code": ("error_code",),
+            "query_text": ("command",),
+            "remote_processed_mb": ("data_scanned_remote_storage_mb",),
+            "memory_processed_mb": ("data_scanned_memory_mb",),
+            "disk_processed_mb": ("data_scanned_disk_mb",),
+        },
+    },
+)
+
+SERVERLESS_SUPPLEMENTAL_SOURCES: tuple[dict[str, Any], ...] = (
+    {
+        "name": "queryinsights.long_running_queries",
+        "kind": "supplemental",
+        "time_candidates": ("last_run_start_time",),
+        "select_candidates": {
+            "request_id": ("last_dist_statement_id",),
+            "session_id": ("last_run_session_id",),
+            "query_hash": ("query_hash",),
+            "start_time": ("last_run_start_time",),
+            "elapsed_time_ms": (
+                "last_run_total_elapsed_time_ms",
+                "median_total_elapsed_time_ms",
+            ),
+        },
+    },
+    {
+        "name": "queryinsights.frequently_run_queries",
+        "kind": "supplemental",
+        "time_candidates": ("last_run_start_time",),
+        "select_candidates": {
+            "request_id": ("last_dist_statement_id",),
+            "session_id": ("last_run_session_id",),
+            "query_hash": ("query_hash",),
+            "start_time": ("last_run_start_time",),
+            "elapsed_time_ms": (
+                "last_run_total_elapsed_time_ms",
+                "avg_total_elapsed_time_ms",
+                "max_run_total_elapsed_time_ms",
+            ),
+        },
+    },
+)
+
+
+class ServerlessActivityExpectedError(Exception):
+    """Expected serverless activity collection failure."""
+
+    def __init__(self, category: str, message: str):
+        super().__init__(message)
+        self.category = category
+        self.message = message
 
 
 class OdbcClient:
-    """ODBC client for connecting to Azure Synapse Analytics dedicated SQL pools.
+    """ODBC client for Azure Synapse Analytics dedicated and serverless SQL endpoints.
 
     Supports multiple authentication modes:
     - sql: Traditional SQL authentication with username/password
@@ -34,12 +161,14 @@ class OdbcClient:
         client_id: Optional[str] = None,
         client_secret: Optional[str] = None,
         tenant_id: Optional[str] = None,
+        endpoint_kind: EndpointKind = "dedicated",
+        server_host: Optional[str] = None,
     ):
         """
         Initialize ODBC client with connection parameters.
 
         Args:
-            workspace_name: The Synapse workspace name (e.g., 'myworkspace.sql.azuresynapse.net')
+            workspace_name: The Synapse workspace name or fully-qualified SQL host
             database: The database name to connect to
             username: SQL authentication username (required for 'sql' mode)
             password: SQL authentication password (required for 'sql' mode)
@@ -47,6 +176,8 @@ class OdbcClient:
             client_id: Service principal client ID (required for 'entra-spn' mode)
             client_secret: Service principal client secret (required for 'entra-spn' mode)
             tenant_id: Azure tenant ID (optional for 'entra-spn' mode, defaults to 'common')
+            endpoint_kind: Synapse SQL endpoint kind ('dedicated' or 'serverless')
+            server_host: Optional explicit SQL hostname, which overrides endpoint_kind
         """
         self.workspace_name = workspace_name
         self.database = database
@@ -56,6 +187,8 @@ class OdbcClient:
         self.client_id = client_id
         self.client_secret = client_secret
         self.tenant_id = tenant_id or "common"
+        self.endpoint_kind = endpoint_kind
+        self.server_host = server_host
         self._validate_auth_params()
         self._connection_string = self._build_connection_string()
         self._connection: Optional[Any] = None
@@ -73,17 +206,29 @@ class OdbcClient:
                     "Entra ID Service Principal authentication requires "
                     "'client_id' and 'client_secret'"
                 )
-        # entra-interactive and entra-default don't require additional params
+        elif self.auth_mode not in (
+            "entra-interactive",
+            "entra-default",
+        ):
+            raise ValueError(f"Unsupported authentication mode: {self.auth_mode}")
+
+    def _resolve_server_name(self) -> str:
+        """Resolve the SQL hostname for the configured endpoint."""
+        if self.server_host:
+            return self.server_host
+
+        if self.workspace_name.endswith(".sql.azuresynapse.net"):
+            return self.workspace_name
+
+        if self.endpoint_kind == "serverless":
+            return f"{self.workspace_name}-ondemand.sql.azuresynapse.net"
+
+        return f"{self.workspace_name}.sql.azuresynapse.net"
 
     def _build_connection_string(self) -> str:
         """Build the connection string based on the authentication mode."""
-        # Ensure workspace_name has the full domain if not provided
-        if not self.workspace_name.endswith(".sql.azuresynapse.net"):
-            server = f"{self.workspace_name}.sql.azuresynapse.net"
-        else:
-            server = self.workspace_name
+        server = self._resolve_server_name()
 
-        # Base connection string components
         base = (
             f"Server=tcp:{server},1433;"
             f"Database={self.database};"
@@ -94,25 +239,18 @@ class OdbcClient:
         if self.auth_mode == "sql":
             return base + f"Uid={self.username};Pwd={self.password};"
 
-        elif self.auth_mode == "entra-interactive":
-            # Interactive browser-based authentication with MFA support
+        if self.auth_mode == "entra-interactive":
             return base + "Authentication=ActiveDirectoryInteractive;"
 
-        elif self.auth_mode == "entra-spn":
-            # Service Principal authentication
-            # UID = client_id, PWD = client_secret
+        if self.auth_mode == "entra-spn":
             return (
-                base + f"Authentication=ActiveDirectoryServicePrincipal;"
-                f"UID={self.client_id};"
-                f"PWD={self.client_secret};"
+                base
+                + "Authentication=ActiveDirectoryServicePrincipal;"
+                + f"UID={self.client_id};"
+                + f"******;"
             )
 
-        elif self.auth_mode == "entra-default":
-            # Default authentication - uses Azure CLI, managed identity, etc.
-            return base + "Authentication=ActiveDirectoryDefault;"
-
-        else:
-            raise ValueError(f"Unsupported authentication mode: {self.auth_mode}")
+        return base + "Authentication=ActiveDirectoryDefault;"
 
     def __enter__(self):
         """Enter context manager - open connection."""
@@ -135,7 +273,7 @@ class OdbcClient:
             try:
                 self._connection.close()
             except Exception:
-                pass  # Ignore errors on close
+                pass
             finally:
                 self._connection = None
 
@@ -145,19 +283,36 @@ class OdbcClient:
             self.open()
         return self._connection
 
-    def execute_query(self, query: str) -> Iterator[Any]:
+    @staticmethod
+    def _execute_cursor(
+        cursor: Any, query: str, params: Optional[Sequence[Any]] = None
+    ) -> None:
+        """Execute a query with optional DB-API parameter support."""
+        if params is None:
+            cursor.execute(query)
+            return
+
+        try:
+            cursor.execute(query, params)
+        except TypeError:
+            cursor.execute(query, *params)
+
+    def execute_query(
+        self, query: str, params: Optional[Sequence[Any]] = None
+    ) -> Iterator[Any]:
         """
         Execute a SQL query and yield results row by row.
 
         Args:
             query: SQL query to execute
+            params: Optional DB-API parameters for the query
 
         Yields:
             Row objects from the query results
         """
         conn = self._ensure_connection()
         with conn.cursor() as cursor:
-            cursor.execute(query)
+            self._execute_cursor(cursor, query, params)
             for row in cursor:
                 yield row
 
@@ -300,12 +455,17 @@ ORDER BY login_time DESC
             )
         return sessions
 
-    def get_schemas(self) -> list[str]:
-        """Get schema names from the dedicated SQL pool.
+    def get_query_columns(
+        self, query: str, params: Optional[Sequence[Any]] = None
+    ) -> list[str]:
+        """Execute a query and return the result-set column names."""
+        conn = self._ensure_connection()
+        with conn.cursor() as cursor:
+            self._execute_cursor(cursor, query, params)
+            return [column[0] for column in (cursor.description or [])]
 
-        Returns:
-            List of schema names
-        """
+    def get_schemas(self) -> list[str]:
+        """Get schema names from the dedicated SQL pool."""
         query = """
 SELECT SCHEMA_NAME
 FROM INFORMATION_SCHEMA.SCHEMATA
@@ -314,14 +474,7 @@ ORDER BY SCHEMA_NAME
         return [row.SCHEMA_NAME for row in self.execute_query(query)]
 
     def get_tables(self, schema_name: str) -> list[str]:
-        """Get table names for a given schema in the dedicated SQL pool.
-
-        Args:
-            schema_name: The schema to list tables for
-
-        Returns:
-            List of table names
-        """
+        """Get table names for a given schema in the dedicated SQL pool."""
         query = f"""
 SELECT TABLE_NAME
 FROM INFORMATION_SCHEMA.TABLES
@@ -331,12 +484,7 @@ ORDER BY TABLE_NAME
         return [row.TABLE_NAME for row in self.execute_query(query)]
 
     def check_table_statistics_dmv_exists(self) -> bool:
-        """
-        Check if the vTableSizes view exists in the master database.
-
-        Returns:
-            True if the view exists, False otherwise.
-        """
+        """Check if the vTableSizes view exists in the master database."""
         check_query = """
 SELECT OBJECT_ID('dbo.vTableSizes', 'V')
         """
@@ -348,13 +496,7 @@ SELECT OBJECT_ID('dbo.vTableSizes', 'V')
             return result[0] is not None
 
     def create_table_statistics_dmv(self) -> None:
-        """
-        Create the vTableSizes view in the master database if it does not exist.
-
-        Raises:
-            Exception: If there is an error creating the view.
-        """
-
+        """Create the vTableSizes view in the master database if it does not exist."""
         create_view_query = """
 CREATE VIEW dbo.vTableSizes
 AS
@@ -469,26 +611,16 @@ FROM size
         """
 
         conn = self._ensure_connection()
-        # Save current autocommit state and set to True for DDL
         original_autocommit = conn.autocommit
         try:
             conn.autocommit = True
             with conn.cursor() as cursor:
                 cursor.execute(create_view_query)
         finally:
-            # Restore original autocommit state
             conn.autocommit = original_autocommit
 
     def get_table_statistics(self, database: str) -> Iterator[TableStatistics]:
-        """
-        Get table statistics from the vTableSizes view.
-
-        Args:
-            database: The database name to query
-
-        Yields:
-            TableStatistics objects with table size and distribution information
-        """
+        """Get table statistics from the vTableSizes view."""
         query = """
 SELECT
     database_name
@@ -533,7 +665,7 @@ ORDER BY
             )
 
     def get_object_count(self, database: str) -> Iterator[CodeObjectCount]:
-
+        """Get dedicated SQL object counts."""
         query = """
 SELECT 
     type_desc, count(*) AS count_objects
@@ -547,7 +679,7 @@ GROUP BY TYPE_desc,type
             )
 
     def get_code_lines_statistics(self, database: str) -> Iterator[CodeObjectLines]:
-
+        """Get dedicated SQL code line counts."""
         query = """
 declare @lencount nchar(2)
 set @lencount = char(0x0d) + char(0x0a);
@@ -575,3 +707,1120 @@ sys.objects AS p
                 code_line_number=row.Num_of_LineCode,
                 type_description=row.Type,
             )
+
+    def collect_serverless_activity(
+        self, history_days: int = 30, top_n: int = 1000
+    ) -> SynapseServerlessActivity:
+        """Collect serverless SQL activity using capability-probed sources."""
+        self._validate_serverless_activity_options(history_days, top_n)
+
+        current_time = datetime.now(timezone.utc).replace(tzinfo=None)
+        cutoff = current_time - timedelta(days=history_days)
+        collected_at = current_time.isoformat()
+
+        metadata = SynapseServerlessActivityCollectionMetadata(
+            status="unavailable",
+            attempted=True,
+            history_days=history_days,
+            top_n=top_n,
+            requested_sources=[
+                source["name"]
+                for source in (
+                    SERVERLESS_HISTORY_SOURCES + SERVERLESS_SUPPLEMENTAL_SOURCES
+                )
+            ],
+            collected_at=collected_at,
+        )
+
+        try:
+            self._ensure_connection()
+        except Exception as exc:
+            raise self._expected_or_raise(exc, "Unable to connect to serverless SQL")
+
+        all_queries: list[SynapseServerlessQueryActivity] = []
+        supplemental_slowest: list[SynapseServerlessTopQueryMetric] = []
+        history_source_warnings: list[str] = []
+        aggregate_results: Optional[
+            tuple[
+                list[SynapseServerlessDailyDatabaseUsage],
+                list[SynapseServerlessDatabaseSummary],
+                SynapseServerlessPerformanceSummary,
+            ]
+        ] = None
+        aggregate_warning = False
+
+        for source in SERVERLESS_HISTORY_SOURCES:
+            diagnostic = self._probe_serverless_source(source["name"])
+            metadata.source_diagnostics.append(diagnostic)
+            if diagnostic.status == "available":
+                metadata.available_sources.append(source["name"])
+            else:
+                history_source_warnings.append(source["name"])
+                if diagnostic.message:
+                    metadata.warnings.append(diagnostic.message)
+                continue
+
+            try:
+                all_queries.extend(
+                    self._fetch_history_source_rows(
+                        source, diagnostic.available_columns, cutoff, top_n
+                    )
+                )
+                metadata.detailed_sources_used.append(source["name"])
+                try:
+                    candidate_aggregates = self._fetch_history_source_aggregates(
+                        source,
+                        diagnostic.available_columns,
+                        cutoff,
+                        current_time - timedelta(hours=24),
+                        collected_at,
+                    )
+                    if (
+                        aggregate_results is None
+                        or candidate_aggregates[2].total_queries
+                        > aggregate_results[2].total_queries
+                    ):
+                        aggregate_results = candidate_aggregates
+                except ServerlessActivityExpectedError as exc:
+                    aggregate_warning = True
+                    metadata.warnings.append(
+                        f"{source['name']} aggregates: {exc.message}"
+                    )
+            except ServerlessActivityExpectedError as exc:
+                message = f"{source['name']}: {exc.message}"
+                history_source_warnings.append(source["name"])
+                metadata.warnings.append(message)
+                self._replace_diagnostic(
+                    metadata.source_diagnostics,
+                    source["name"],
+                    SynapseServerlessActivitySourceDiagnostic(
+                        source_name=source["name"],
+                        status="unavailable",
+                        available_columns=diagnostic.available_columns,
+                        message=message,
+                    ),
+                )
+
+        for source in SERVERLESS_SUPPLEMENTAL_SOURCES:
+            diagnostic = self._probe_serverless_source(source["name"])
+            metadata.source_diagnostics.append(diagnostic)
+            if diagnostic.status == "available":
+                metadata.available_sources.append(source["name"])
+            elif diagnostic.message:
+                metadata.warnings.append(diagnostic.message)
+                continue
+            else:
+                continue
+
+            try:
+                supplemental_rows = self._fetch_supplemental_source_rows(
+                    source, diagnostic.available_columns, cutoff, min(top_n, 25)
+                )
+                if supplemental_rows:
+                    metadata.supplemental_sources_used.append(source["name"])
+                    if source["name"] == "queryinsights.long_running_queries":
+                        supplemental_slowest.extend(supplemental_rows)
+            except ServerlessActivityExpectedError as exc:
+                message = f"{source['name']}: {exc.message}"
+                metadata.warnings.append(message)
+                self._replace_diagnostic(
+                    metadata.source_diagnostics,
+                    source["name"],
+                    SynapseServerlessActivitySourceDiagnostic(
+                        source_name=source["name"],
+                        status="unavailable",
+                        available_columns=diagnostic.available_columns,
+                        message=message,
+                    ),
+                )
+
+        queries = self._deduplicate_queries(all_queries)
+        queries = self._filter_and_limit_queries(queries, cutoff, top_n)
+
+        if metadata.detailed_sources_used:
+            metadata.status = (
+                "partial"
+                if history_source_warnings or aggregate_warning
+                else "completed"
+            )
+        else:
+            metadata.status = "unavailable"
+            if metadata.supplemental_sources_used:
+                metadata.warnings.append(
+                    "Detailed request history was unavailable; only aggregate query insight sources were reachable."
+                )
+            elif not metadata.available_sources:
+                metadata.warnings.append(
+                    "No compatible serverless activity sources were available."
+                )
+
+        if aggregate_results is not None:
+            daily_usage, database_summaries, performance_summary = aggregate_results
+            performance_summary.top_slowest_queries = self._top_query_metrics(
+                queries, key=lambda item: item.elapsed_time_ms or 0
+            )
+            performance_summary.top_largest_queries = self._top_query_metrics(
+                queries, key=lambda item: item.processed_bytes or 0
+            )
+            if not performance_summary.top_slowest_queries:
+                performance_summary.top_slowest_queries = supplemental_slowest[:10]
+        else:
+            daily_usage = self._build_daily_database_usage(queries)
+            database_summaries = self._build_database_summaries(queries)
+            performance_summary = self._build_performance_summary(
+                queries=queries,
+                cutoff=cutoff,
+                collected_at=collected_at,
+                fallback_slowest=supplemental_slowest,
+            )
+            performance_summary.queries_last_24h = self._count_queries_since(
+                queries, current_time - timedelta(hours=24)
+            )
+
+        return SynapseServerlessActivity(
+            metadata=metadata,
+            queries=queries,
+            daily_database_usage=daily_usage,
+            database_summaries=database_summaries,
+            performance_summary=performance_summary,
+        )
+
+    @staticmethod
+    def _validate_serverless_activity_options(history_days: int, top_n: int) -> None:
+        """Validate serverless history and cap values."""
+        if not 1 <= history_days <= SERVERLESS_HISTORY_DAYS_MAX:
+            raise ValueError(
+                f"serverless history_days must be between 1 and {SERVERLESS_HISTORY_DAYS_MAX}"
+            )
+        if not 1 <= top_n <= SERVERLESS_TOP_N_MAX:
+            raise ValueError(
+                f"serverless top_n must be between 1 and {SERVERLESS_TOP_N_MAX}"
+            )
+
+    def _probe_serverless_source(
+        self, source_name: str
+    ) -> SynapseServerlessActivitySourceDiagnostic:
+        """Probe a serverless activity source and discover its columns."""
+        probe_query = f"SELECT TOP (0) * FROM {source_name}"
+        try:
+            columns = self.get_query_columns(probe_query)
+            return SynapseServerlessActivitySourceDiagnostic(
+                source_name=source_name,
+                status="available",
+                available_columns=columns,
+            )
+        except Exception as exc:
+            expected = self._classify_expected_serverless_error(exc)
+            if expected is None:
+                raise
+            return SynapseServerlessActivitySourceDiagnostic(
+                source_name=source_name,
+                status="unavailable",
+                message=f"{source_name}: {expected}",
+            )
+
+    def _fetch_history_source_rows(
+        self,
+        source_definition: dict[str, Any],
+        available_columns: list[str],
+        cutoff: datetime,
+        top_n: int,
+    ) -> list[SynapseServerlessQueryActivity]:
+        """Fetch detailed history rows from one compatible source."""
+        query = self._build_activity_query(
+            source_definition=source_definition,
+            available_columns=available_columns,
+            top_n=top_n,
+        )
+
+        try:
+            rows = list(self.execute_query(query, (cutoff, top_n)))
+        except Exception as exc:
+            raise self._expected_or_raise(
+                exc, f"Failed to read {source_definition['name']}"
+            )
+
+        return [
+            self._normalize_history_row(row, source_definition["name"]) for row in rows
+        ]
+
+    def _fetch_supplemental_source_rows(
+        self,
+        source_definition: dict[str, Any],
+        available_columns: list[str],
+        cutoff: datetime,
+        top_n: int,
+    ) -> list[SynapseServerlessTopQueryMetric]:
+        """Fetch supplemental top-query metrics from aggregate sources."""
+        query = self._build_activity_query(
+            source_definition=source_definition,
+            available_columns=available_columns,
+            top_n=top_n,
+        )
+
+        try:
+            rows = list(self.execute_query(query, (cutoff, top_n)))
+        except Exception as exc:
+            raise self._expected_or_raise(
+                exc, f"Failed to read {source_definition['name']}"
+            )
+
+        metrics = [
+            self._normalize_supplemental_metric(row, source_definition["name"])
+            for row in rows
+        ]
+        filtered_metrics: list[SynapseServerlessTopQueryMetric] = []
+        for metric in metrics:
+            if not metric.start_time:
+                continue
+            parsed_start = self._parse_timestamp(metric.start_time)
+            if parsed_start is None or parsed_start < cutoff:
+                continue
+            filtered_metrics.append(metric)
+        return filtered_metrics
+
+    def _fetch_history_source_aggregates(
+        self,
+        source_definition: dict[str, Any],
+        available_columns: list[str],
+        cutoff: datetime,
+        last_24h_cutoff: datetime,
+        collected_at: str,
+    ) -> tuple[
+        list[SynapseServerlessDailyDatabaseUsage],
+        list[SynapseServerlessDatabaseSummary],
+        SynapseServerlessPerformanceSummary,
+    ]:
+        """Aggregate the full history window without applying the detail-row cap."""
+        query = self._build_activity_aggregate_query(
+            source_definition, available_columns
+        )
+        try:
+            rows = list(self.execute_query(query, (last_24h_cutoff, cutoff)))
+        except Exception as exc:
+            raise self._expected_or_raise(
+                exc, f"Failed to aggregate {source_definition['name']}"
+            )
+
+        daily_usage: list[SynapseServerlessDailyDatabaseUsage] = []
+        database_groups: dict[str, dict[str, int]] = defaultdict(
+            lambda: {
+                "query_count": 0,
+                "processed_bytes": 0,
+                "total_elapsed_time_ms": 0,
+                "max_elapsed_time_ms": 0,
+                "success_count": 0,
+                "failure_count": 0,
+                "cancelled_count": 0,
+            }
+        )
+        queries_last_24h = 0
+
+        for row in rows:
+            query_count = self._int_or_none(getattr(row, "query_count", None)) or 0
+            processed_bytes = (
+                self._int_or_none(getattr(row, "processed_bytes", None)) or 0
+            )
+            total_elapsed_time_ms = (
+                self._int_or_none(getattr(row, "total_elapsed_time_ms", None)) or 0
+            )
+            max_elapsed_time_ms = (
+                self._int_or_none(getattr(row, "max_elapsed_time_ms", None)) or 0
+            )
+            success_count = self._int_or_none(getattr(row, "success_count", None)) or 0
+            failure_count = self._int_or_none(getattr(row, "failure_count", None)) or 0
+            cancelled_count = (
+                self._int_or_none(getattr(row, "cancelled_count", None)) or 0
+            )
+            queries_last_24h += (
+                self._int_or_none(getattr(row, "queries_last_24h", None)) or 0
+            )
+            database_name = (
+                self._string_or_none(getattr(row, "database_name", None)) or "Unknown"
+            )
+            activity_date = self._to_isoformat(getattr(row, "activity_date", None))
+            if activity_date:
+                daily_usage.append(
+                    SynapseServerlessDailyDatabaseUsage(
+                        date=activity_date,
+                        database_name=database_name,
+                        query_count=query_count,
+                        processed_bytes=processed_bytes,
+                        total_elapsed_time_ms=total_elapsed_time_ms,
+                        average_elapsed_time_ms=(
+                            round(total_elapsed_time_ms / query_count, 2)
+                            if query_count
+                            else 0.0
+                        ),
+                    )
+                )
+
+            group = database_groups[database_name]
+            group["query_count"] += query_count
+            group["processed_bytes"] += processed_bytes
+            group["total_elapsed_time_ms"] += total_elapsed_time_ms
+            group["max_elapsed_time_ms"] = max(
+                group["max_elapsed_time_ms"], max_elapsed_time_ms
+            )
+            group["success_count"] += success_count
+            group["failure_count"] += failure_count
+            group["cancelled_count"] += cancelled_count
+
+        daily_usage.sort(key=lambda item: (item.date, item.database_name))
+        database_summaries = [
+            SynapseServerlessDatabaseSummary(
+                database_name=database_name,
+                query_count=values["query_count"],
+                processed_bytes=values["processed_bytes"],
+                average_elapsed_time_ms=(
+                    round(values["total_elapsed_time_ms"] / values["query_count"], 2)
+                    if values["query_count"]
+                    else 0.0
+                ),
+                max_elapsed_time_ms=values["max_elapsed_time_ms"],
+                success_count=values["success_count"],
+                failure_count=values["failure_count"],
+                cancelled_count=values["cancelled_count"],
+            )
+            for database_name, values in database_groups.items()
+        ]
+        database_summaries.sort(
+            key=lambda item: (-item.processed_bytes, item.database_name)
+        )
+
+        total_queries = sum(item.query_count for item in database_summaries)
+        total_processed_bytes = sum(item.processed_bytes for item in database_summaries)
+        total_elapsed_time_ms = sum(item.total_elapsed_time_ms for item in daily_usage)
+        performance_summary = SynapseServerlessPerformanceSummary(
+            total_queries=total_queries,
+            queries_last_24h=queries_last_24h,
+            total_processed_bytes=total_processed_bytes,
+            total_elapsed_time_ms=total_elapsed_time_ms,
+            average_elapsed_time_ms=(
+                round(total_elapsed_time_ms / total_queries, 2)
+                if total_queries
+                else 0.0
+            ),
+            max_elapsed_time_ms=max(
+                (item.max_elapsed_time_ms for item in database_summaries), default=0
+            ),
+            success_count=sum(item.success_count for item in database_summaries),
+            failure_count=sum(item.failure_count for item in database_summaries),
+            cancelled_count=sum(item.cancelled_count for item in database_summaries),
+            collection_window_start=cutoff.isoformat(),
+            collection_window_end=collected_at,
+        )
+        return daily_usage, database_summaries, performance_summary
+
+    def _build_activity_query(
+        self,
+        source_definition: dict[str, Any],
+        available_columns: list[str],
+        top_n: int,
+    ) -> str:
+        """Build a parameterized query for a capability-probed activity source."""
+        del top_n
+
+        normalized_columns = {
+            self._normalize_column_name(column): column for column in available_columns
+        }
+        time_column = self._find_available_column(
+            normalized_columns, source_definition["time_candidates"]
+        )
+        if time_column is None:
+            raise ServerlessActivityExpectedError(
+                "query-shape",
+                f"{source_definition['name']} is missing a compatible time column",
+            )
+
+        select_expressions: list[str] = []
+        for alias, candidates in source_definition["select_candidates"].items():
+            column = self._find_available_column(normalized_columns, candidates)
+            if column is None:
+                continue
+            select_expressions.append(f"{self._quote_identifier(column)} AS {alias}")
+
+        if not any(" AS start_time" in expr for expr in select_expressions):
+            select_expressions.append(
+                f"{self._quote_identifier(time_column)} AS start_time"
+            )
+
+        if not select_expressions:
+            raise ServerlessActivityExpectedError(
+                "query-shape",
+                f"{source_definition['name']} does not expose compatible columns",
+            )
+
+        request_id_column = self._find_available_column(
+            normalized_columns,
+            source_definition["select_candidates"].get("request_id", ()),
+        )
+        order_by = [f"{self._quote_identifier(time_column)} DESC"]
+        if request_id_column:
+            order_by.append(f"{self._quote_identifier(request_id_column)} DESC")
+
+        return f"""
+WITH fat_activity_source AS (
+    SELECT
+        {", ".join(select_expressions)},
+        ROW_NUMBER() OVER (ORDER BY {", ".join(order_by)}) AS __fat_row_number
+    FROM {source_definition["name"]}
+    WHERE {self._quote_identifier(time_column)} >= ?
+)
+SELECT *
+FROM fat_activity_source
+WHERE __fat_row_number <= ?
+ORDER BY start_time DESC
+"""
+
+    def _build_activity_aggregate_query(
+        self,
+        source_definition: dict[str, Any],
+        available_columns: list[str],
+    ) -> str:
+        """Build full-window daily/database aggregate SQL for a history source."""
+        normalized_columns = {
+            self._normalize_column_name(column): column for column in available_columns
+        }
+        time_column = self._find_available_column(
+            normalized_columns, source_definition["time_candidates"]
+        )
+        if time_column is None:
+            raise ServerlessActivityExpectedError(
+                "query-shape",
+                f"{source_definition['name']} is missing a compatible time column",
+            )
+
+        database_column = self._find_available_column(
+            normalized_columns,
+            source_definition["select_candidates"].get("database_name", ()),
+        )
+        elapsed_column = self._find_available_column(
+            normalized_columns,
+            source_definition["select_candidates"].get("elapsed_time_ms", ()),
+        )
+        status_column = self._find_available_column(
+            normalized_columns,
+            source_definition["select_candidates"].get("status", ()),
+        )
+
+        database_expression = (
+            f"COALESCE(CAST({self._quote_identifier(database_column)} AS "
+            "nvarchar(128)), 'Unknown')"
+            if database_column
+            else "CAST('Unknown' AS nvarchar(128))"
+        )
+        elapsed_expression = (
+            f"COALESCE(CAST({self._quote_identifier(elapsed_column)} AS bigint), 0)"
+            if elapsed_column
+            else "CAST(0 AS bigint)"
+        )
+        processed_expression = self._build_processed_bytes_expression(
+            normalized_columns, source_definition
+        )
+        if status_column:
+            status_expression = (
+                f"LOWER(CAST({self._quote_identifier(status_column)} AS "
+                "nvarchar(128)))"
+            )
+            success_expression = (
+                f"CASE WHEN {status_expression} IN "
+                "('succeeded', 'success', 'completed', 'complete') THEN 1 ELSE 0 END"
+            )
+            cancelled_expression = (
+                f"CASE WHEN {status_expression} IN "
+                "('cancelled', 'canceled') THEN 1 ELSE 0 END"
+            )
+            failure_expression = (
+                f"CASE WHEN {status_expression} IS NOT NULL "
+                f"AND {status_expression} NOT IN "
+                "('succeeded', 'success', 'completed', 'complete', "
+                "'cancelled', 'canceled') THEN 1 ELSE 0 END"
+            )
+        else:
+            success_expression = "0"
+            cancelled_expression = "0"
+            failure_expression = "0"
+
+        quoted_time = self._quote_identifier(time_column)
+        group_by_expressions = [f"CONVERT(date, {quoted_time})"]
+        if database_column:
+            group_by_expressions.append(database_expression)
+        return f"""
+SELECT
+    CONVERT(date, {quoted_time}) AS activity_date,
+    {database_expression} AS database_name,
+    COUNT_BIG(*) AS query_count,
+    SUM({processed_expression}) AS processed_bytes,
+    SUM({elapsed_expression}) AS total_elapsed_time_ms,
+    MAX({elapsed_expression}) AS max_elapsed_time_ms,
+    SUM({success_expression}) AS success_count,
+    SUM({failure_expression}) AS failure_count,
+    SUM({cancelled_expression}) AS cancelled_count,
+    SUM(CASE WHEN {quoted_time} >= ? THEN 1 ELSE 0 END) AS queries_last_24h
+FROM {source_definition["name"]}
+WHERE {quoted_time} >= ?
+GROUP BY {", ".join(group_by_expressions)}
+ORDER BY activity_date, database_name
+"""
+
+    def _build_processed_bytes_expression(
+        self,
+        normalized_columns: dict[str, str],
+        source_definition: dict[str, Any],
+    ) -> str:
+        """Build a byte expression from whichever processed-data columns exist."""
+        candidates = source_definition["select_candidates"]
+        processed_bytes_column = self._find_available_column(
+            normalized_columns, candidates.get("processed_bytes", ())
+        )
+        if processed_bytes_column:
+            return (
+                f"COALESCE(CAST({self._quote_identifier(processed_bytes_column)} "
+                "AS bigint), 0)"
+            )
+
+        processed_mb_column = self._find_available_column(
+            normalized_columns, candidates.get("processed_mb", ())
+        )
+        if processed_mb_column:
+            return (
+                f"CAST(COALESCE({self._quote_identifier(processed_mb_column)}, 0) "
+                "* 1048576 AS bigint)"
+            )
+
+        component_expressions = []
+        for alias in (
+            "remote_processed_mb",
+            "memory_processed_mb",
+            "disk_processed_mb",
+        ):
+            column = self._find_available_column(
+                normalized_columns, candidates.get(alias, ())
+            )
+            if column:
+                component_expressions.append(
+                    f"COALESCE({self._quote_identifier(column)}, 0)"
+                )
+        if component_expressions:
+            return (
+                "CAST((" + " + ".join(component_expressions) + ") "
+                "* 1048576 AS bigint)"
+            )
+        return "CAST(0 AS bigint)"
+
+    def _normalize_history_row(
+        self, row: Any, source_name: str
+    ) -> SynapseServerlessQueryActivity:
+        """Normalize a history row from any supported detailed source."""
+        processed_bytes = self._get_numeric_value(getattr(row, "processed_bytes", None))
+        processed_mb = self._get_numeric_value(getattr(row, "processed_mb", None))
+        remote_mb = self._get_numeric_value(getattr(row, "remote_processed_mb", None))
+        memory_mb = self._get_numeric_value(getattr(row, "memory_processed_mb", None))
+        disk_mb = self._get_numeric_value(getattr(row, "disk_processed_mb", None))
+
+        if processed_bytes is None and processed_mb is not None:
+            processed_bytes = self._mb_to_bytes(processed_mb)
+
+        remote_bytes = self._mb_to_bytes(remote_mb) if remote_mb is not None else None
+        memory_bytes = self._mb_to_bytes(memory_mb) if memory_mb is not None else None
+        disk_bytes = self._mb_to_bytes(disk_mb) if disk_mb is not None else None
+
+        if processed_bytes is None:
+            component_sum = sum(
+                value for value in [remote_bytes, memory_bytes, disk_bytes] if value
+            )
+            processed_bytes = component_sum or None
+
+        return SynapseServerlessQueryActivity(
+            source_name=source_name,
+            request_id=self._string_or_none(getattr(row, "request_id", None)),
+            session_id=self._int_or_none(getattr(row, "session_id", None)),
+            connection_id=self._string_or_none(getattr(row, "connection_id", None)),
+            query_hash=self._string_or_none(getattr(row, "query_hash", None)),
+            database_name=self._string_or_none(getattr(row, "database_name", None)),
+            principal_name=self._string_or_none(getattr(row, "principal_name", None)),
+            status=self._normalize_status(getattr(row, "status", None)),
+            submit_time=self._to_isoformat(getattr(row, "submit_time", None)),
+            start_time=self._to_isoformat(getattr(row, "start_time", None)),
+            end_time=self._to_isoformat(getattr(row, "end_time", None)),
+            elapsed_time_ms=self._int_or_none(getattr(row, "elapsed_time_ms", None)),
+            processed_bytes=self._int_or_none(processed_bytes),
+            remote_processed_bytes=self._int_or_none(remote_bytes),
+            memory_processed_bytes=self._int_or_none(memory_bytes),
+            disk_processed_bytes=self._int_or_none(disk_bytes),
+            row_count=self._int_or_none(getattr(row, "row_count", None)),
+            statement_type=self._string_or_none(getattr(row, "statement_type", None)),
+            program_name=self._string_or_none(getattr(row, "program_name", None)),
+            error_code=self._int_or_none(getattr(row, "error_code", None)),
+            query_text=self._string_or_none(getattr(row, "query_text", None)),
+        )
+
+    def _normalize_supplemental_metric(
+        self, row: Any, source_name: str
+    ) -> SynapseServerlessTopQueryMetric:
+        """Normalize a supplemental aggregate source into a safe top-query metric."""
+        return SynapseServerlessTopQueryMetric(
+            source_name=source_name,
+            request_id=self._string_or_none(getattr(row, "request_id", None)),
+            session_id=self._int_or_none(getattr(row, "session_id", None)),
+            query_hash=self._string_or_none(getattr(row, "query_hash", None)),
+            start_time=self._to_isoformat(getattr(row, "start_time", None)),
+            elapsed_time_ms=self._int_or_none(getattr(row, "elapsed_time_ms", None)),
+        )
+
+    def _deduplicate_queries(
+        self, queries: list[SynapseServerlessQueryActivity]
+    ) -> list[SynapseServerlessQueryActivity]:
+        """Merge overlapping query rows from multiple detailed sources."""
+        merged: dict[str, SynapseServerlessQueryActivity] = {}
+        for query in queries:
+            key = self._query_dedup_key(query)
+            if key not in merged:
+                merged[key] = query
+                continue
+            merged[key] = self._merge_query_activity(merged[key], query)
+        return list(merged.values())
+
+    def _filter_and_limit_queries(
+        self,
+        queries: list[SynapseServerlessQueryActivity],
+        cutoff: datetime,
+        top_n: int,
+    ) -> list[SynapseServerlessQueryActivity]:
+        """Apply defensive cutoff filtering and final top-N capping in Python."""
+        filtered = []
+        for query in queries:
+            query_time = self._parse_timestamp(query.start_time)
+            if query_time is not None and query_time < cutoff:
+                continue
+            filtered.append(query)
+
+        filtered.sort(
+            key=lambda item: (
+                self._parse_timestamp(item.start_time) or datetime.min,
+                self._score_query_activity(item),
+            ),
+            reverse=True,
+        )
+        return filtered[:top_n]
+
+    def _build_daily_database_usage(
+        self, queries: list[SynapseServerlessQueryActivity]
+    ) -> list[SynapseServerlessDailyDatabaseUsage]:
+        """Aggregate detailed queries by database and day."""
+        groups: dict[tuple[str, str], dict[str, float]] = {}
+        for query in queries:
+            start_time = self._parse_timestamp(query.start_time)
+            if start_time is None:
+                continue
+            database_name = query.database_name or "Unknown"
+            key = (start_time.date().isoformat(), database_name)
+            groups.setdefault(
+                key,
+                {
+                    "query_count": 0,
+                    "processed_bytes": 0,
+                    "total_elapsed_time_ms": 0,
+                },
+            )
+            groups[key]["query_count"] += 1
+            groups[key]["processed_bytes"] += query.processed_bytes or 0
+            groups[key]["total_elapsed_time_ms"] += query.elapsed_time_ms or 0
+
+        results = [
+            SynapseServerlessDailyDatabaseUsage(
+                date=date_key,
+                database_name=database_name,
+                query_count=int(values["query_count"]),
+                processed_bytes=int(values["processed_bytes"]),
+                total_elapsed_time_ms=int(values["total_elapsed_time_ms"]),
+                average_elapsed_time_ms=(
+                    round(
+                        values["total_elapsed_time_ms"] / values["query_count"],
+                        2,
+                    )
+                    if values["query_count"]
+                    else 0.0
+                ),
+            )
+            for (date_key, database_name), values in groups.items()
+        ]
+        results.sort(key=lambda item: (item.date, item.database_name))
+        return results
+
+    def _build_database_summaries(
+        self, queries: list[SynapseServerlessQueryActivity]
+    ) -> list[SynapseServerlessDatabaseSummary]:
+        """Aggregate detailed queries by database."""
+        groups: dict[str, dict[str, int]] = defaultdict(
+            lambda: {
+                "query_count": 0,
+                "processed_bytes": 0,
+                "total_elapsed_time_ms": 0,
+                "max_elapsed_time_ms": 0,
+                "success_count": 0,
+                "failure_count": 0,
+                "cancelled_count": 0,
+            }
+        )
+
+        for query in queries:
+            database_name = query.database_name or "Unknown"
+            values = groups[database_name]
+            values["query_count"] += 1
+            values["processed_bytes"] += query.processed_bytes or 0
+            values["total_elapsed_time_ms"] += query.elapsed_time_ms or 0
+            values["max_elapsed_time_ms"] = max(
+                values["max_elapsed_time_ms"], query.elapsed_time_ms or 0
+            )
+
+            normalized_status = self._normalize_status(query.status)
+            if normalized_status == "Succeeded":
+                values["success_count"] += 1
+            elif normalized_status == "Canceled":
+                values["cancelled_count"] += 1
+            elif normalized_status:
+                values["failure_count"] += 1
+
+        results = [
+            SynapseServerlessDatabaseSummary(
+                database_name=database_name,
+                query_count=values["query_count"],
+                processed_bytes=values["processed_bytes"],
+                average_elapsed_time_ms=(
+                    round(
+                        values["total_elapsed_time_ms"] / values["query_count"],
+                        2,
+                    )
+                    if values["query_count"]
+                    else 0.0
+                ),
+                max_elapsed_time_ms=values["max_elapsed_time_ms"],
+                success_count=values["success_count"],
+                failure_count=values["failure_count"],
+                cancelled_count=values["cancelled_count"],
+            )
+            for database_name, values in groups.items()
+        ]
+        results.sort(key=lambda item: (-item.processed_bytes, item.database_name))
+        return results
+
+    def _build_performance_summary(
+        self,
+        queries: list[SynapseServerlessQueryActivity],
+        cutoff: datetime,
+        collected_at: str,
+        fallback_slowest: list[SynapseServerlessTopQueryMetric],
+    ) -> SynapseServerlessPerformanceSummary:
+        """Build the overall performance summary from detailed queries."""
+        total_queries = len(queries)
+        total_processed_bytes = sum(query.processed_bytes or 0 for query in queries)
+        total_elapsed_time_ms = sum(query.elapsed_time_ms or 0 for query in queries)
+        max_elapsed_time_ms = max(
+            (query.elapsed_time_ms or 0 for query in queries), default=0
+        )
+        success_count = 0
+        failure_count = 0
+        cancelled_count = 0
+
+        for query in queries:
+            normalized_status = self._normalize_status(query.status)
+            if normalized_status == "Succeeded":
+                success_count += 1
+            elif normalized_status == "Canceled":
+                cancelled_count += 1
+            elif normalized_status:
+                failure_count += 1
+
+        top_slowest = self._top_query_metrics(
+            queries, key=lambda item: item.elapsed_time_ms or 0
+        )
+        top_largest = self._top_query_metrics(
+            queries, key=lambda item: item.processed_bytes or 0
+        )
+
+        if not top_slowest:
+            top_slowest = fallback_slowest[:10]
+
+        return SynapseServerlessPerformanceSummary(
+            total_queries=total_queries,
+            queries_last_24h=None,
+            total_processed_bytes=total_processed_bytes,
+            total_elapsed_time_ms=total_elapsed_time_ms,
+            average_elapsed_time_ms=(
+                round(total_elapsed_time_ms / total_queries, 2)
+                if total_queries
+                else 0.0
+            ),
+            max_elapsed_time_ms=max_elapsed_time_ms,
+            success_count=success_count,
+            failure_count=failure_count,
+            cancelled_count=cancelled_count,
+            collection_window_start=cutoff.isoformat(),
+            collection_window_end=collected_at,
+            top_slowest_queries=top_slowest,
+            top_largest_queries=top_largest,
+        )
+
+    def _count_queries_since(
+        self,
+        queries: list[SynapseServerlessQueryActivity],
+        cutoff: datetime,
+    ) -> int:
+        """Count normalized queries at or after a cutoff."""
+        return sum(
+            1
+            for query in queries
+            if (self._parse_timestamp(query.start_time) or datetime.min) >= cutoff
+        )
+
+    def _top_query_metrics(
+        self,
+        queries: list[SynapseServerlessQueryActivity],
+        key: Any,
+        limit: int = 10,
+    ) -> list[SynapseServerlessTopQueryMetric]:
+        """Create visualization-safe top query metrics."""
+        ranked = sorted(queries, key=key, reverse=True)
+        metrics = []
+        for query in ranked[:limit]:
+            metrics.append(
+                SynapseServerlessTopQueryMetric(
+                    source_name=query.source_name,
+                    request_id=query.request_id,
+                    session_id=query.session_id,
+                    connection_id=query.connection_id,
+                    query_hash=query.query_hash,
+                    database_name=query.database_name,
+                    principal_name=query.principal_name,
+                    status=query.status,
+                    start_time=query.start_time,
+                    end_time=query.end_time,
+                    elapsed_time_ms=query.elapsed_time_ms,
+                    processed_bytes=query.processed_bytes,
+                )
+            )
+        return metrics
+
+    @staticmethod
+    def _normalize_status(value: Any) -> Optional[str]:
+        """Normalize status values across activity sources."""
+        if value is None:
+            return None
+        normalized = str(value).strip()
+        lower = normalized.lower()
+        if lower in ("succeeded", "success", "completed", "complete"):
+            return "Succeeded"
+        if lower in ("failed", "failure", "error"):
+            return "Failed"
+        if lower in ("canceled", "cancelled"):
+            return "Canceled"
+        return normalized
+
+    @staticmethod
+    def _normalize_column_name(column_name: str) -> str:
+        """Normalize a column name for capability-probe matching."""
+        return column_name.strip().lower()
+
+    @staticmethod
+    def _find_available_column(
+        available_columns: dict[str, str], candidates: Sequence[str]
+    ) -> Optional[str]:
+        """Find the first available original column name for a set of candidates."""
+        for candidate in candidates:
+            original = available_columns.get(candidate.strip().lower())
+            if original:
+                return original
+        return None
+
+    @staticmethod
+    def _quote_identifier(identifier: str) -> str:
+        """Quote an identifier for SQL Server."""
+        return f"[{identifier.replace(']', ']]')}]"
+
+    @staticmethod
+    def _string_or_none(value: Any) -> Optional[str]:
+        """Convert a value to a trimmed string."""
+        if value is None:
+            return None
+        text = str(value).strip()
+        return text or None
+
+    @staticmethod
+    def _int_or_none(value: Any) -> Optional[int]:
+        """Convert a value to an int when possible."""
+        numeric = OdbcClient._get_numeric_value(value)
+        return int(numeric) if numeric is not None else None
+
+    @staticmethod
+    def _get_numeric_value(value: Any) -> Optional[float]:
+        """Convert a numeric-like value to float."""
+        if value is None:
+            return None
+        if isinstance(value, bool):
+            return int(value)
+        if isinstance(value, (int, float)):
+            return float(value)
+        try:
+            return float(str(value))
+        except (TypeError, ValueError):
+            return None
+
+    @staticmethod
+    def _mb_to_bytes(value: Optional[float]) -> Optional[int]:
+        """Convert MB values to bytes."""
+        if value is None:
+            return None
+        return int(round(value * 1024 * 1024))
+
+    @staticmethod
+    def _to_isoformat(value: Any) -> Optional[str]:
+        """Normalize datetime-like values to ISO 8601 strings."""
+        if value is None:
+            return None
+        if isinstance(value, datetime):
+            return value.isoformat()
+        text = str(value).strip()
+        return text or None
+
+    @staticmethod
+    def _parse_timestamp(value: Optional[str]) -> Optional[datetime]:
+        """Parse an ISO-like timestamp string."""
+        if not value:
+            return None
+        candidate = value.strip()
+        try:
+            if candidate.endswith("Z"):
+                return datetime.fromisoformat(candidate.replace("Z", "+00:00")).replace(
+                    tzinfo=None
+                )
+            return datetime.fromisoformat(candidate)
+        except ValueError:
+            return None
+
+    @staticmethod
+    def _query_dedup_key(query: SynapseServerlessQueryActivity) -> str:
+        """Build a stable deduplication key for overlapping sources."""
+        if query.request_id:
+            return f"request:{query.request_id.lower()}"
+        if query.query_hash and query.start_time:
+            return (
+                f"hash:{query.query_hash.lower()}:{query.start_time}:"
+                f"{(query.database_name or '').lower()}"
+            )
+        text_hash = hashlib.sha256((query.query_text or "").encode("utf-8")).hexdigest()
+        return (
+            f"fallback:{query.session_id}:{query.start_time}:{query.end_time}:"
+            f"{(query.database_name or '').lower()}:{text_hash}"
+        )
+
+    @staticmethod
+    def _score_query_activity(query: SynapseServerlessQueryActivity) -> int:
+        """Score a query row by how much information it contains."""
+        populated_fields = [
+            query.request_id,
+            query.session_id,
+            query.connection_id,
+            query.query_hash,
+            query.database_name,
+            query.principal_name,
+            query.status,
+            query.submit_time,
+            query.start_time,
+            query.end_time,
+            query.elapsed_time_ms,
+            query.processed_bytes,
+            query.row_count,
+            query.statement_type,
+            query.program_name,
+            query.error_code,
+            query.query_text,
+        ]
+        return sum(1 for value in populated_fields if value not in (None, ""))
+
+    def _merge_query_activity(
+        self,
+        existing: SynapseServerlessQueryActivity,
+        candidate: SynapseServerlessQueryActivity,
+    ) -> SynapseServerlessQueryActivity:
+        """Merge two detailed query rows, preserving the richest values."""
+        if self._score_query_activity(candidate) > self._score_query_activity(existing):
+            primary = candidate
+            secondary = existing
+        else:
+            primary = existing
+            secondary = candidate
+
+        for field_name in primary.__dataclass_fields__:
+            if getattr(primary, field_name) in (None, "") and getattr(
+                secondary, field_name
+            ) not in (None, ""):
+                setattr(primary, field_name, getattr(secondary, field_name))
+        return primary
+
+    @staticmethod
+    def _replace_diagnostic(
+        diagnostics: list[SynapseServerlessActivitySourceDiagnostic],
+        source_name: str,
+        replacement: SynapseServerlessActivitySourceDiagnostic,
+    ) -> None:
+        """Replace a probe diagnostic for a source."""
+        for index, diagnostic in enumerate(diagnostics):
+            if diagnostic.source_name == source_name:
+                diagnostics[index] = replacement
+                return
+
+    def _expected_or_raise(
+        self, exc: Exception, prefix: str
+    ) -> ServerlessActivityExpectedError:
+        """Wrap an expected SQL error, or re-raise unexpected exceptions."""
+        message = self._classify_expected_serverless_error(exc)
+        if message is None:
+            raise exc
+        return ServerlessActivityExpectedError("expected", f"{prefix}: {message}")
+
+    @staticmethod
+    def _classify_expected_serverless_error(exc: Exception) -> Optional[str]:
+        """Classify expected serverless activity failures."""
+        message = str(exc).strip()
+        lowered = message.lower()
+
+        expected_patterns = {
+            "permission": (
+                "permission",
+                "denied",
+                "not authorized",
+                "does not have permission",
+                "insufficient privileges",
+            ),
+            "missing-object": (
+                "invalid object name",
+                "cannot find the object",
+                "does not exist",
+                "is not supported",
+                "unsupported",
+            ),
+            "missing-column": (
+                "invalid column name",
+                "multi-part identifier",
+            ),
+            "connection": (
+                "login failed",
+                "network-related",
+                "server was not found",
+                "could not open a connection",
+                "cannot open server",
+                "timeout expired",
+                "timeout error",
+                "tcp provider",
+                "temporarily unavailable",
+                "sql authentication requires",
+                "service principal authentication requires",
+            ),
+        }
+
+        for category, patterns in expected_patterns.items():
+            if any(pattern in lowered for pattern in patterns):
+                return f"{category}: {message}"
+        return None

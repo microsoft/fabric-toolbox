@@ -1,5 +1,6 @@
 """Visualization service for generating HTML reports from assessment data."""
 
+import copy
 import json
 import os
 from datetime import datetime
@@ -277,7 +278,7 @@ class VisualizationService:
         self, input_dir: Path, workspace: Optional[str] = None
     ) -> Dict[str, Any]:
         """Load assessment data from JSON files in the input directory."""
-        data = {
+        data: Dict[str, Any] = {
             "workspaces": {},
             "platform": None,
             "generated_at": datetime.now().isoformat(),
@@ -312,7 +313,7 @@ class VisualizationService:
         except (json.JSONDecodeError, IOError):
             return None
 
-        ws_data = {
+        ws_data: Dict[str, Any] = {
             "name": workspace_dir.name,
             "summary": summary,
             "platform": self._detect_platform(summary),
@@ -346,7 +347,7 @@ class VisualizationService:
 
     def _load_resources(self, resources_dir: Path) -> Dict[str, List[Dict[str, Any]]]:
         """Load all resources from a resources directory."""
-        resources = {}
+        resources: Dict[str, List[Dict[str, Any]]] = {}
         for category_dir in resources_dir.iterdir():
             if category_dir.is_dir():
                 resources[category_dir.name] = []
@@ -361,7 +362,7 @@ class VisualizationService:
 
     def _load_data_catalog(self, data_dir: Path) -> Dict[str, Any]:
         """Load data catalog information (databases, schemas, tables)."""
-        catalog = {}
+        catalog: Dict[str, Any] = {}
         for subdir in data_dir.iterdir():
             if subdir.is_dir():
                 catalog[subdir.name] = self._load_nested_data(subdir)
@@ -388,7 +389,7 @@ class VisualizationService:
         self, workspaces: Dict[str, Dict[str, Any]]
     ) -> Dict[str, Any]:
         """Calculate aggregate summary statistics across all workspaces."""
-        summary = {
+        summary: Dict[str, Any] = {
             "workspace_count": len(workspaces),
             "total_notebooks": 0,
             "total_pipelines": 0,
@@ -735,7 +736,7 @@ class VisualizationService:
         self, workspaces: Dict[str, Dict[str, Any]]
     ) -> Dict[str, Any]:
         """Aggregate admin-related data across workspaces."""
-        admin = {
+        admin: Dict[str, Any] = {
             "integration_runtimes": [],
             "linked_services": [],
             "managed_private_endpoints": [],
@@ -777,7 +778,7 @@ class VisualizationService:
         self, workspaces: Dict[str, Dict[str, Any]], platform: str = "synapse"
     ) -> Dict[str, Any]:
         """Aggregate data engineering resources across workspaces."""
-        de = {
+        de: Dict[str, Any] = {
             "notebooks": [],
             "spark_pools": [],
             "spark_job_definitions": [],
@@ -1037,6 +1038,28 @@ class VisualizationService:
             "databases": [],
             "total_tables": 0,
             "total_size_gb": 0,
+            "serverless_activity_by_workspace": {},
+            "serverless_activity_summary": {
+                "workspace_count": 0,
+                "completed_workspaces": 0,
+                "partial_workspaces": 0,
+                "unavailable_workspaces": 0,
+                "skipped_workspaces": 0,
+                "total_queries": 0,
+                "queries_last_24h": 0,
+                "processed_bytes": 0,
+                "total_elapsed_time_ms": 0,
+                "average_duration_ms": 0.0,
+                "max_duration_ms": 0,
+                "success_count": 0,
+                "failure_count": 0,
+                "cancelled_count": 0,
+            },
+            "serverless_activity_notices": [],
+            "serverless_activity_daily_usage": [],
+            "serverless_activity_database_summaries": [],
+            "serverless_activity_top_slowest_queries": [],
+            "serverless_activity_top_largest_queries": [],
         }
 
         for ws_name, ws_data in workspaces.items():
@@ -1082,6 +1105,7 @@ class VisualizationService:
                         dw["total_tables"] += pool_data.get("tables_count", 0)
                         dw["total_size_gb"] += pool_data.get("size_gb", 0)
                     else:
+                        pool_data = self._sanitize_serverless_pool_data(pool_data)
                         # For serverless, get tables from summary
                         if pool_data.get("tables_count", 0) == 0:
                             pool_data["tables_count"] = serverless_counts.get(
@@ -1089,6 +1113,34 @@ class VisualizationService:
                             )
                         dw["serverless_pools"].append(pool_data)
                         dw["total_tables"] += pool_data.get("tables_count", 0)
+
+                        activity_view = self._build_serverless_activity_view(
+                            ws_name, pool_data
+                        )
+                        dw["serverless_activity_by_workspace"][ws_name] = activity_view
+                        dw["serverless_activity_daily_usage"].extend(
+                            activity_view["daily_usage"]
+                        )
+                        dw["serverless_activity_database_summaries"].extend(
+                            activity_view["database_summaries"]
+                        )
+                        dw["serverless_activity_top_slowest_queries"].extend(
+                            activity_view["top_slowest_queries"]
+                        )
+                        dw["serverless_activity_top_largest_queries"].extend(
+                            activity_view["top_largest_queries"]
+                        )
+                        if (
+                            activity_view["status"] != "completed"
+                            or activity_view["warnings"]
+                        ):
+                            dw["serverless_activity_notices"].append(
+                                {
+                                    "workspace": ws_name,
+                                    "status": activity_view["status"],
+                                    "warnings": activity_view["warnings"],
+                                }
+                            )
 
                 # SQL scripts
                 for script in resources.get("sql_scripts", []):
@@ -1232,14 +1284,141 @@ class VisualizationService:
 
                     dw.setdefault("schemas", []).extend(schema_list)
                     dw["total_tables"] += managed_count + external_count
+        dw["serverless_activity_top_slowest_queries"] = sorted(
+            dw["serverless_activity_top_slowest_queries"],
+            key=lambda item: item.get("elapsed_time_ms") or 0,
+            reverse=True,
+        )[:10]
+        dw["serverless_activity_top_largest_queries"] = sorted(
+            dw["serverless_activity_top_largest_queries"],
+            key=lambda item: item.get("processed_bytes") or 0,
+            reverse=True,
+        )[:10]
+        dw["serverless_activity_summary"] = self._summarize_serverless_activity(
+            dw["serverless_activity_by_workspace"]
+        )
 
         return dw
+
+    def _sanitize_serverless_pool_data(
+        self, pool_data: Dict[str, Any]
+    ) -> Dict[str, Any]:
+        """Remove sensitive query text before passing serverless activity to HTML templates."""
+        sanitized = copy.deepcopy(pool_data)
+        activity = sanitized.get("activity")
+        if isinstance(activity, dict):
+            activity.pop("queries", None)
+        return sanitized
+
+    def _build_serverless_activity_view(
+        self, workspace_name: str, pool_data: Dict[str, Any]
+    ) -> Dict[str, Any]:
+        """Create a visualization-safe serverless activity view for one workspace."""
+        activity = pool_data.get("activity") or {}
+        metadata = activity.get("metadata") or {}
+        performance = activity.get("performance_summary") or {}
+
+        def attach_workspace(items: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+            results = []
+            for item in items:
+                safe_item = dict(item)
+                safe_item["workspace"] = workspace_name
+                results.append(safe_item)
+            return results
+
+        daily_usage = attach_workspace(activity.get("daily_database_usage", []))
+        database_summaries = attach_workspace(activity.get("database_summaries", []))
+        top_slowest_queries = attach_workspace(
+            performance.get("top_slowest_queries", [])
+        )
+        top_largest_queries = attach_workspace(
+            performance.get("top_largest_queries", [])
+        )
+
+        return {
+            "workspace": workspace_name,
+            "status": metadata.get("status", "unavailable"),
+            "warnings": metadata.get("warnings", []),
+            "available_sources": metadata.get("available_sources", []),
+            "detailed_sources_used": metadata.get("detailed_sources_used", []),
+            "history_days": metadata.get("history_days", 0),
+            "top_n": metadata.get("top_n", 0),
+            "total_queries": performance.get("total_queries", 0),
+            "queries_last_24h": pool_data.get("queries_last_24h"),
+            "processed_bytes": performance.get("total_processed_bytes", 0),
+            "total_elapsed_time_ms": performance.get("total_elapsed_time_ms", 0),
+            "average_duration_ms": performance.get("average_elapsed_time_ms", 0),
+            "max_duration_ms": performance.get("max_elapsed_time_ms", 0),
+            "success_count": performance.get("success_count", 0),
+            "failure_count": performance.get("failure_count", 0),
+            "cancelled_count": performance.get("cancelled_count", 0),
+            "collection_window_start": performance.get("collection_window_start"),
+            "collection_window_end": performance.get("collection_window_end"),
+            "daily_usage": daily_usage,
+            "database_summaries": database_summaries,
+            "top_slowest_queries": top_slowest_queries,
+            "top_largest_queries": top_largest_queries,
+        }
+
+    def _summarize_serverless_activity(
+        self, activity_by_workspace: Dict[str, Dict[str, Any]]
+    ) -> Dict[str, Any]:
+        """Summarize serverless activity across all loaded workspaces."""
+        summary: Dict[str, Any] = {
+            "workspace_count": len(activity_by_workspace),
+            "completed_workspaces": 0,
+            "partial_workspaces": 0,
+            "unavailable_workspaces": 0,
+            "skipped_workspaces": 0,
+            "total_queries": 0,
+            "queries_last_24h": None,
+            "processed_bytes": 0,
+            "total_elapsed_time_ms": 0,
+            "average_duration_ms": 0.0,
+            "max_duration_ms": 0,
+            "success_count": 0,
+            "failure_count": 0,
+            "cancelled_count": 0,
+        }
+
+        for activity in activity_by_workspace.values():
+            status = activity.get("status", "unavailable")
+            if status == "completed":
+                summary["completed_workspaces"] += 1
+            elif status == "partial":
+                summary["partial_workspaces"] += 1
+            elif status == "skipped":
+                summary["skipped_workspaces"] += 1
+            else:
+                summary["unavailable_workspaces"] += 1
+
+            summary["total_queries"] += activity.get("total_queries", 0)
+            queries_last_24h = activity.get("queries_last_24h")
+            if queries_last_24h is not None:
+                if summary["queries_last_24h"] is None:
+                    summary["queries_last_24h"] = 0
+                summary["queries_last_24h"] += queries_last_24h
+            summary["processed_bytes"] += activity.get("processed_bytes", 0)
+            summary["total_elapsed_time_ms"] += activity.get("total_elapsed_time_ms", 0)
+            summary["max_duration_ms"] = max(
+                summary["max_duration_ms"], activity.get("max_duration_ms", 0)
+            )
+            summary["success_count"] += activity.get("success_count", 0)
+            summary["failure_count"] += activity.get("failure_count", 0)
+            summary["cancelled_count"] += activity.get("cancelled_count", 0)
+
+        if summary["total_queries"]:
+            summary["average_duration_ms"] = round(
+                summary["total_elapsed_time_ms"] / summary["total_queries"], 2
+            )
+
+        return summary
 
     def _aggregate_data_integration(
         self, workspaces: Dict[str, Dict[str, Any]]
     ) -> Dict[str, Any]:
         """Aggregate data integration resources across workspaces."""
-        di = {
+        di: Dict[str, Any] = {
             "pipelines": [],
             "dataflows": [],
             "datasets": [],

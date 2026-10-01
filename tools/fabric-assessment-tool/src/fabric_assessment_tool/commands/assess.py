@@ -4,6 +4,23 @@ from ..utils import ui as utils_ui
 from ..services.assessment_service import AssessmentService
 from .base import BaseCommand
 
+SERVERLESS_HISTORY_DAYS_MAX = 45
+SERVERLESS_TOP_N_MAX = 10000
+
+
+def _int_range(min_value: int, max_value: int):
+    """Build an argparse type for bounded integers."""
+
+    def _parse(value: str) -> int:
+        int_value = int(value)
+        if not min_value <= int_value <= max_value:
+            raise argparse.ArgumentTypeError(
+                f"value must be between {min_value} and {max_value}"
+            )
+        return int_value
+
+    return _parse
+
 
 def _bounded_integer(minimum: int, maximum: int):
     def parse(value: str) -> int:
@@ -193,6 +210,88 @@ Examples:
             help="Skip dedicated SQL pool request/session workload collection",
         )
 
+        parser.add_argument(
+            "--serverless-history-days",
+            type=_int_range(1, SERVERLESS_HISTORY_DAYS_MAX),
+            default=30,
+            help=(
+                "Serverless SQL activity history window in days "
+                f"(default: 30, range: 1-{SERVERLESS_HISTORY_DAYS_MAX})"
+            ),
+        )
+
+        parser.add_argument(
+            "--serverless-top-n",
+            type=_int_range(1, SERVERLESS_TOP_N_MAX),
+            default=1000,
+            help=(
+                "Maximum number of detailed serverless SQL activity rows to retain "
+                f"(default: 1000, range: 1-{SERVERLESS_TOP_N_MAX})"
+            ),
+        )
+
+        parser.add_argument(
+            "--skip-serverless-activity",
+            action="store_true",
+            default=False,
+            help="Skip optional serverless SQL activity collection",
+        )
+
+        parser.add_argument(
+            "--serverless-sql-auth-mode",
+            choices=["sql", "entra-interactive", "entra-spn", "entra-default"],
+            default=None,
+            help=(
+                "Optional serverless SQL auth-mode override. If omitted, inherits "
+                "--sql-auth-mode or the existing dedicated SQL settings."
+            ),
+        )
+
+        parser.add_argument(
+            "--serverless-sql-username",
+            default=None,
+            help=(
+                "Optional SQL username override for serverless activity collection. "
+                "If omitted, inherits the workspace SQL admin login when available."
+            ),
+        )
+
+        parser.add_argument(
+            "--serverless-sql-password",
+            default=None,
+            help=(
+                "Optional SQL password override for serverless activity collection. "
+                "If omitted, inherits --sql-admin-password when available."
+            ),
+        )
+
+        parser.add_argument(
+            "--serverless-sql-client-id",
+            default=None,
+            help=(
+                "Optional service principal client ID override for serverless SQL "
+                "when using --serverless-sql-auth-mode entra-spn."
+            ),
+        )
+
+        parser.add_argument(
+            "--serverless-sql-client-secret",
+            default=None,
+            help=(
+                "Optional service principal client secret override for serverless SQL "
+                "when using --serverless-sql-auth-mode entra-spn."
+            ),
+        )
+
+        parser.add_argument(
+            "--serverless-sql-tenant-id",
+            default=None,
+            help=(
+                "Optional service principal tenant override for serverless SQL "
+                "(defaults to inherited dedicated SQL tenant or 'common')."
+            ),
+        )
+
     def handle(self, args: argparse.Namespace) -> None:
         """Handle the assess command execution."""
         print(f"Starting assessment of {args.source} workspaces...")
@@ -229,6 +328,25 @@ Examples:
                 query_history_top=getattr(args, "query_history_top", 1000),
                 include_sql_text=getattr(args, "include_sql_text", False),
                 skip_query_history=getattr(args, "skip_query_history", False),
+                serverless_history_days=getattr(args, "serverless_history_days", 30),
+                serverless_top_n=getattr(args, "serverless_top_n", 1000),
+                skip_serverless_activity=getattr(
+                    args, "skip_serverless_activity", False
+                ),
+                serverless_sql_auth_mode=getattr(
+                    args, "serverless_sql_auth_mode", None
+                ),
+                serverless_sql_username=getattr(args, "serverless_sql_username", None),
+                serverless_sql_password=getattr(args, "serverless_sql_password", None),
+                serverless_sql_client_id=getattr(
+                    args, "serverless_sql_client_id", None
+                ),
+                serverless_sql_client_secret=getattr(
+                    args, "serverless_sql_client_secret", None
+                ),
+                serverless_sql_tenant_id=getattr(
+                    args, "serverless_sql_tenant_id", None
+                ),
             )
 
             utils_ui.print(f"Assessment completed successfully!")
