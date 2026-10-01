@@ -248,6 +248,9 @@ fat assess --source <synapse|databricks> \
 - `--serverless-sql-client-id`: Optional service principal client ID override for serverless SQL
 - `--serverless-sql-client-secret`: Optional service principal client secret override for serverless SQL
 - `--serverless-sql-tenant-id`: Optional tenant override for serverless SQL SPN authentication
+- `--sql-complexity`: Enable procedure, function, and view complexity scoring for reachable Synapse SQL databases
+- `--sql-definition-redaction`: SQL definition export mode (`full` or `none`). Default: `full`
+- `--sql-complexity-schemas`: Optional comma-separated schema allowlist for SQL complexity scoring
 
 **Examples:**
 ```bash
@@ -293,6 +296,17 @@ fat assess --source synapse --ws workspace1 -o ./results --skip-columns
 fat assess --source synapse --ws workspace1 -o ./results \
     --sql-auth-mode entra-default \
     --max-column-objects 500
+# Assess SQL code complexity with definitions redacted from output
+fat assess --source synapse --ws workspace1 -o ./results \
+    --sql-auth-mode entra-default \
+    --sql-complexity
+
+# Score selected schemas and include definitions in per-object JSON
+fat assess --source synapse --ws workspace1 -o ./results \
+    --sql-auth-mode entra-default \
+    --sql-complexity \
+    --sql-complexity-schemas dbo,reporting \
+    --sql-definition-redaction none
 
 # Assess Databricks workspace
 fat assess --source databricks --ws my-workspace --output results_folder
@@ -339,6 +353,61 @@ compatibility counts, wide objects, configured cap, and explicit
 Serverless column collection depends on ODBC connectivity and permissions; a
 failure retains the existing inventory and is reported as unavailable rather
 than as a successful empty result.
+### SQL Complexity Scoring
+
+SQL complexity scoring is opt-in and covers stored procedures, scalar and
+table-valued functions, and views in reachable dedicated and serverless
+databases. The tool performs one catalog query per database and records
+encrypted, permission-hidden, and failed definitions explicitly instead of
+assigning them a misleading score.
+
+Definitions are fully redacted by default. Redacted object files retain the
+definition length and SHA-256 hash for traceability but contain no SQL text.
+Use `--sql-definition-redaction none` only when the output location is approved
+to store source definitions.
+
+The versioned heuristic assigns points for code size and migration-risk
+patterns including branching, loops, transactions, error handling, dynamic
+SQL, cursors, temporary objects, cross-database references, external access,
+and compatibility-sensitive T-SQL. Score bands are:
+
+| Score | Level |
+|---:|---|
+| 0-2 | LOW |
+| 3-6 | MEDIUM |
+| 7-11 | HIGH |
+| 12+ | VERY_HIGH |
+
+Severe patterns can raise the minimum level to HIGH, and multiple severe
+patterns can raise it to VERY_HIGH. Each scored object includes the matched
+rules and human-readable escalation reasons.
+
+Migration readiness is the percentage of successfully scored objects rated
+LOW or MEDIUM:
+
+| Percentage | Indicator |
+|---:|---|
+| 80-100% | READY |
+| 50-79.9% | REVIEW |
+| Below 50% | HIGH_EFFORT |
+| No scored definitions | UNKNOWN |
+
+Complexity output is stored below each database:
+
+```text
+data/<database_type>/databases/<database>/complexity/
+├── summary.json
+└── objects/
+    ├── procedures/
+    ├── functions/
+    └── views/
+```
+
+The Synapse data-warehousing HTML view shows readiness, level distribution,
+complexity by object type, unavailable definitions, and objects requiring
+review. SQL connectivity and metadata visibility depend on the selected
+`--sql-auth-mode`; missing `VIEW DEFINITION` permission is reported as an
+incomplete assessment rather than failing the workspace.
 
 ### `fat visualize` - Generate interactive HTML reports
 

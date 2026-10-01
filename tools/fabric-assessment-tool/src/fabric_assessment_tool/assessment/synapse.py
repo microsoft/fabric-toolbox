@@ -224,6 +224,68 @@ class CodeObjectLines:
 
 
 @dataclass
+class SqlCodeObjectDefinition:
+    """SQL code object definition extracted from a database."""
+
+    database_name: str
+    schema_name: str
+    object_name: str
+    object_type: str
+    definition: Optional[str]
+    is_encrypted: bool
+    created_at: Optional[str]
+    modified_at: Optional[str]
+    json_response: Any
+
+
+@dataclass
+class SqlComplexityObject:
+    """Scored SQL code object."""
+
+    database_name: str
+    schema_name: str
+    object_name: str
+    object_type: str
+    definition_status: str
+    definition_length: int
+    definition_hash: Optional[str]
+    definition: Optional[str]
+    line_count: int
+    score: Optional[int]
+    complexity_level: Optional[str]
+    matched_rules: List[str]
+    escalation_reasons: List[str]
+    created_at: Optional[str]
+    modified_at: Optional[str]
+
+
+@dataclass
+class SqlComplexitySummary:
+    """Database-level SQL complexity summary."""
+
+    status: str
+    rubric_version: str
+    total_objects: int
+    scored_objects: int
+    unavailable_definitions: int
+    distribution: Dict[str, int]
+    by_type: Dict[str, Dict[str, int]]
+    objects_needing_review: int
+    readiness_percentage: Optional[float]
+    readiness_indicator: str
+    elapsed_seconds: float
+    errors: List[str]
+
+
+@dataclass
+class SqlComplexityAssessment:
+    """SQL complexity results for a database."""
+
+    summary: SqlComplexitySummary
+    objects: List[SqlComplexityObject]
+
+
+@dataclass
 class SynapseTable:
     """Synapse Table information."""
 
@@ -285,6 +347,7 @@ class SynapseDedicatedDatabase:
     name: str
     schemas: SynapseSchemas
     json_response: Any
+    complexity: Optional[SqlComplexityAssessment] = None
 
 
 @dataclass
@@ -319,6 +382,7 @@ class SynapseServerlessDatabase:
     origin_type: str
     schemas: SynapseSchemas
     json_response: Any
+    complexity: Optional[SqlComplexityAssessment] = None
 
 
 @dataclass
@@ -988,5 +1052,66 @@ class SynapseAssessment:
                 default=0,
             ),
         }
+        complexity_assessments = [
+            pool.database.complexity
+            for pool in self.sql_pools.dedicated_pools
+            if pool.database.complexity is not None
+        ]
+        complexity_assessments.extend(
+            database.complexity
+            for database in self.sql_pools.serverless_pool.databases.databases
+            if database.complexity is not None
+        )
+
+        if complexity_assessments:
+            distribution = {
+                level: sum(
+                    assessment.summary.distribution.get(level, 0)
+                    for assessment in complexity_assessments
+                )
+                for level in ("LOW", "MEDIUM", "HIGH", "VERY_HIGH")
+            }
+            scored_objects = sum(
+                assessment.summary.scored_objects
+                for assessment in complexity_assessments
+            )
+            ready_objects = distribution["LOW"] + distribution["MEDIUM"]
+            readiness_percentage = (
+                round((ready_objects / scored_objects) * 100, 1)
+                if scored_objects
+                else None
+            )
+
+            summary["data_warehouse"]["complexity"] = {
+                "databases": len(complexity_assessments),
+                "total_objects": sum(
+                    assessment.summary.total_objects
+                    for assessment in complexity_assessments
+                ),
+                "scored_objects": scored_objects,
+                "unavailable_definitions": sum(
+                    assessment.summary.unavailable_definitions
+                    for assessment in complexity_assessments
+                ),
+                "objects_needing_review": sum(
+                    assessment.summary.objects_needing_review
+                    for assessment in complexity_assessments
+                ),
+                "distribution": distribution,
+                "readiness_percentage": readiness_percentage,
+                "readiness_indicator": self._get_readiness_indicator(
+                    readiness_percentage
+                ),
+            }
 
         return summary
+
+    @staticmethod
+    def _get_readiness_indicator(readiness_percentage: Optional[float]) -> str:
+        if readiness_percentage is None:
+            return "UNKNOWN"
+        if readiness_percentage >= 80:
+            return "READY"
+        if readiness_percentage >= 50:
+            return "REVIEW"
+        return "HIGH_EFFORT"

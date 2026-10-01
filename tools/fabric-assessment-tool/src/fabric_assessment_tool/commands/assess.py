@@ -100,10 +100,11 @@ Examples:
         )
 
         parser.add_argument(
+            "-ws",
             "--ws",
             "--workspace",
-            default="",
             dest="workspace",
+            default="",
             help="Comma-separated list of workspace names to assess",
         )
 
@@ -320,6 +321,26 @@ Examples:
             ),
         )
 
+        parser.add_argument(
+            "--sql-complexity",
+            action="store_true",
+            default=False,
+            help="Enable SQL complexity scoring for procedures, functions, and views",
+        )
+
+        parser.add_argument(
+            "--sql-definition-redaction",
+            choices=["full", "none"],
+            default="full",
+            help="Definition export mode for SQL complexity results (default: full)",
+        )
+
+        parser.add_argument(
+            "--sql-complexity-schemas",
+            default="",
+            help="Comma-separated schema allowlist for SQL complexity scoring",
+        )
+
     def handle(self, args: argparse.Namespace) -> None:
         """Handle the assess command execution."""
         print(f"Starting assessment of {args.source} workspaces...")
@@ -328,6 +349,21 @@ Examples:
         workspaces = [
             ws.strip() for ws in args.workspace.split(",") if ws.strip() != ""
         ]
+        complexity_schemas = [
+            schema.strip()
+            for schema in getattr(args, "sql_complexity_schemas", "").split(",")
+            if schema.strip()
+        ]
+
+        if args.source != "synapse" and getattr(args, "sql_complexity", False):
+            raise ValueError("--sql-complexity is only supported for Synapse")
+        if not getattr(args, "sql_complexity", False) and (
+            getattr(args, "sql_definition_redaction", "full") != "full"
+            or complexity_schemas
+        ):
+            raise ValueError(
+                "--sql-definition-redaction and --sql-complexity-schemas require --sql-complexity"
+            )
 
         # Parse resources filter
         resources = None
@@ -377,6 +413,11 @@ Examples:
                 ),
                 skip_columns=getattr(args, "skip_columns", False),
                 max_column_objects=getattr(args, "max_column_objects", None),
+                sql_complexity=getattr(args, "sql_complexity", False),
+                sql_definition_redaction=getattr(
+                    args, "sql_definition_redaction", "full"
+                ),
+                sql_complexity_schemas=complexity_schemas,
             )
 
             utils_ui.print(f"Assessment completed successfully!")

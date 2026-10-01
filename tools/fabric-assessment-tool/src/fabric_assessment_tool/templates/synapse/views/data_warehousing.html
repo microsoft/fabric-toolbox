@@ -121,6 +121,61 @@
         </div>
 
         <h3>Collection Status</h3>
+<!-- SQL Complexity -->
+{% if warehousing.complexity_summaries %}
+<div class="card mt-2">
+    <div class="card-header">SQL Migration Readiness</div>
+    <div class="card-body">
+        <div class="row">
+            <div class="col">
+                <div class="stat-card">
+                    <div class="stat-value" id="stat-complexity-readiness">
+                        {% if warehousing.complexity_readiness_percentage is not none %}
+                        {{ warehousing.complexity_readiness_percentage }}%
+                        {% else %}
+                        N/A
+                        {% endif %}
+                    </div>
+                    <div class="stat-label">Ready or Medium Complexity</div>
+                </div>
+            </div>
+            <div class="col">
+                <div class="stat-card">
+                    <div class="stat-value" id="stat-complexity-indicator">{{ warehousing.complexity_readiness_indicator | replace('_', ' ') }}</div>
+                    <div class="stat-label">Readiness Indicator</div>
+                </div>
+            </div>
+            <div class="col">
+                <div class="stat-card">
+                    <div class="stat-value" id="stat-complexity-scored">{{ warehousing.complexity_scored_objects | format_number }}</div>
+                    <div class="stat-label">Scored Objects</div>
+                </div>
+            </div>
+            <div class="col">
+                <div class="stat-card">
+                    <div class="stat-value" id="stat-complexity-unavailable">{{ warehousing.complexity_unavailable_definitions | format_number }}</div>
+                    <div class="stat-label">Unavailable Definitions</div>
+                </div>
+            </div>
+        </div>
+        <div class="row mt-2">
+            <div class="col col-6">
+                <div class="chart-container">
+                    <canvas id="complexityDistributionChart"></canvas>
+                </div>
+            </div>
+            <div class="col col-6">
+                <div class="chart-container">
+                    <canvas id="complexityByTypeChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header">Objects Needing Review</div>
+    <div class="card-body">
         <div class="table-responsive">
             <table class="table">
                 <thead>
@@ -147,6 +202,36 @@
                         <td>{{ entry.configured_cap | default('None', true) }}</td>
                         <td>{{ entry.unavailable_databases | join(', ') }}</td>
                     </tr>
+                        <th>Object</th>
+                        <th>Type</th>
+                        <th>Database</th>
+                        <th>Complexity</th>
+                        <th class="text-right">Score</th>
+                        <th>Reason</th>
+                        <th>Workspace</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for obj in warehousing.complexity_objects %}
+                    {% if obj.complexity_level in ['HIGH', 'VERY_HIGH'] or obj.definition_status != 'available' %}
+                    <tr data-workspace="{{ obj.workspace }}">
+                        <td>{{ obj.schema_name }}.{{ obj.object_name }}</td>
+                        <td><span class="badge badge-secondary">{{ obj.object_type | title }}</span></td>
+                        <td>{{ obj.database }}</td>
+                        <td>
+                            {% if obj.complexity_level %}
+                            <span class="badge {% if obj.complexity_level == 'VERY_HIGH' %}badge-primary{% elif obj.complexity_level == 'HIGH' %}badge-warning{% else %}badge-secondary{% endif %}">
+                                {{ obj.complexity_level | replace('_', ' ') }}
+                            </span>
+                            {% else %}
+                            <span class="badge badge-warning">{{ obj.definition_status | replace('_', ' ') | title }}</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-right">{{ obj.score if obj.score is not none else 'N/A' }}</td>
+                        <td>{{ obj.escalation_reasons | join('; ') }}</td>
+                        <td>{{ obj.workspace }}</td>
+                    </tr>
+                    {% endif %}
                     {% endfor %}
                 </tbody>
             </table>
@@ -184,6 +269,11 @@
                 </tbody>
             </table>
         </div>
+{% else %}
+<div class="card mt-2">
+    <div class="card-header">SQL Migration Readiness</div>
+    <div class="card-body text-muted">
+        SQL complexity scoring was not enabled for this assessment.
     </div>
 </div>
 {% endif %}
@@ -600,6 +690,11 @@ const warehousingData = {
 {% endfor %}
 };
 
+const complexityWorkspaceData = {{ warehousing.complexity_by_workspace | tojson }};
+let complexityDistributionChart = null;
+let complexityByTypeChart = null;
+
+// Store the database count from template for initial display
 const totalDatabases = {{ warehousing.databases | length }};
 const serverlessActivityData = {{ warehousing.serverless_activity_by_workspace | tojson }};
 let serverlessDailyUsageChart = null;
@@ -1016,7 +1111,104 @@ if (columnTypeCtx) {
             scales: { y: { beginAtZero: true } }
         }
     });
+
+    const complexityTotals = {
+        scored: 0,
+        unavailable: 0,
+        distribution: {LOW: 0, MEDIUM: 0, HIGH: 0, VERY_HIGH: 0},
+        byType: {}
+    };
+    selectedWorkspaces.forEach(ws => {
+        const data = complexityWorkspaceData[ws];
+        if (!data) return;
+        complexityTotals.scored += data.scored_objects || 0;
+        complexityTotals.unavailable += data.unavailable_definitions || 0;
+        Object.keys(complexityTotals.distribution).forEach(level => {
+            complexityTotals.distribution[level] += (data.distribution || {})[level] || 0;
+        });
+        Object.entries(data.by_type || {}).forEach(([type, counts]) => {
+            complexityTotals.byType[type] = (complexityTotals.byType[type] || 0) + (counts.total || 0);
+        });
+    });
+
+    const readyObjects = complexityTotals.distribution.LOW + complexityTotals.distribution.MEDIUM;
+    const readiness = complexityTotals.scored ? (readyObjects / complexityTotals.scored) * 100 : null;
+    const readinessElement = document.getElementById('stat-complexity-readiness');
+    const indicatorElement = document.getElementById('stat-complexity-indicator');
+    const scoredElement = document.getElementById('stat-complexity-scored');
+    const unavailableElement = document.getElementById('stat-complexity-unavailable');
+    if (readinessElement) readinessElement.textContent = readiness === null ? 'N/A' : readiness.toFixed(1) + '%';
+    if (indicatorElement) {
+        indicatorElement.textContent = readiness === null ? 'UNKNOWN' : readiness >= 80 ? 'READY' : readiness >= 50 ? 'REVIEW' : 'HIGH EFFORT';
+    }
+    if (scoredElement) scoredElement.textContent = complexityTotals.scored.toLocaleString();
+    if (unavailableElement) unavailableElement.textContent = complexityTotals.unavailable.toLocaleString();
+
+    if (complexityDistributionChart) {
+        complexityDistributionChart.data.datasets[0].data = [
+            complexityTotals.distribution.LOW,
+            complexityTotals.distribution.MEDIUM,
+            complexityTotals.distribution.HIGH,
+            complexityTotals.distribution.VERY_HIGH
+        ];
+        complexityDistributionChart.update();
+    }
+    if (complexityByTypeChart) {
+        const typeLabels = Object.keys(complexityTotals.byType).sort();
+        complexityByTypeChart.data.labels = typeLabels;
+        complexityByTypeChart.data.datasets[0].data = typeLabels.map(type => complexityTotals.byType[type]);
+        complexityByTypeChart.update();
+    }
 }
+
+{% if warehousing.complexity_summaries %}
+const complexityDistributionCtx = document.getElementById('complexityDistributionChart');
+if (complexityDistributionCtx) {
+    complexityDistributionChart = new Chart(complexityDistributionCtx, {
+        type: 'doughnut',
+        data: {
+            labels: ['Low', 'Medium', 'High', 'Very High'],
+            datasets: [{
+                data: [
+                    {{ warehousing.complexity_distribution.LOW }},
+                    {{ warehousing.complexity_distribution.MEDIUM }},
+                    {{ warehousing.complexity_distribution.HIGH }},
+                    {{ warehousing.complexity_distribution.VERY_HIGH }}
+                ],
+                backgroundColor: ['#107c10', '#ffb900', '#d83b01', '#a80000']
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {title: {display: true, text: 'Complexity Distribution'}}
+        }
+    });
+}
+
+const complexityTypeCtx = document.getElementById('complexityByTypeChart');
+if (complexityTypeCtx) {
+    const typeData = {{ warehousing.complexity_by_type | tojson }};
+    const typeLabels = Object.keys(typeData).sort();
+    complexityByTypeChart = new Chart(complexityTypeCtx, {
+        type: 'bar',
+        data: {
+            labels: typeLabels,
+            datasets: [{
+                label: 'Objects',
+                data: typeLabels.map(type => typeData[type].total || 0),
+                backgroundColor: '#5c2d91'
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {title: {display: true, text: 'Complexity by Object Type'}},
+            scales: {y: {beginAtZero: true}}
+        }
+    });
+}
+{% endif %}
 
 {% if warehousing.dedicated_pools %}
 const poolCtx = document.getElementById('poolSizeChart');

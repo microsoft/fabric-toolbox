@@ -51,6 +51,9 @@ class AssessmentService:
         serverless_sql_tenant_id: Optional[str] = None,
         skip_columns: bool = False,
         max_column_objects: Optional[int] = None,
+        sql_complexity: bool = False,
+        sql_definition_redaction: str = "full",
+        sql_complexity_schemas: Optional[List[str]] = None,
     ) -> Dict[str, Any]:
         """
         Perform assessment on specified workspaces.
@@ -85,6 +88,9 @@ class AssessmentService:
             serverless_sql_tenant_id: Optional SPN tenant override for serverless SQL
             skip_columns: Skip Synapse column metadata collection
             max_column_objects: Optional positive per-database table/view collection cap
+            sql_complexity: Enable SQL code complexity scoring
+            sql_definition_redaction: Definition export mode ('full' or 'none')
+            sql_complexity_schemas: Optional schema allowlist for scoring
 
         Returns:
             Assessment results dictionary
@@ -156,6 +162,10 @@ class AssessmentService:
             client_kwargs["skip_columns"] = True
         if max_column_objects is not None:
             client_kwargs["max_column_objects"] = max_column_objects
+        if source == "synapse":
+            client_kwargs["sql_complexity"] = sql_complexity
+            client_kwargs["sql_definition_redaction"] = sql_definition_redaction
+            client_kwargs["sql_complexity_schemas"] = sql_complexity_schemas or []
         client = self._get_client(source=source, **client_kwargs)
 
         # Perform assessment

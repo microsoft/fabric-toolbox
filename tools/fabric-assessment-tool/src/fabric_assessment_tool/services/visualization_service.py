@@ -1139,6 +1139,20 @@ class VisualizationService:
             "column_type_totals": [],
             "wide_objects": [],
             "column_collection_statuses": [],
+            "complexity_summaries": [],
+            "complexity_objects": [],
+            "complexity_distribution": {
+                "LOW": 0,
+                "MEDIUM": 0,
+                "HIGH": 0,
+                "VERY_HIGH": 0,
+            },
+            "complexity_by_type": {},
+            "complexity_by_workspace": {},
+            "complexity_scored_objects": 0,
+            "complexity_unavailable_definitions": 0,
+            "complexity_readiness_percentage": None,
+            "complexity_readiness_indicator": "UNKNOWN",
         }
 
         for ws_name, ws_data in workspaces.items():
@@ -1298,21 +1312,48 @@ class VisualizationService:
                         databases_dict = db_type_data.get("databases", {})
                         for db_folder_name, db_folder_data in databases_dict.items():
                             if isinstance(db_folder_data, dict):
-                                # Find the database JSON file inside
-                                for key, value in db_folder_data.items():
-                                    if isinstance(value, dict):
-                                        # Extract the data from the JSON structure
-                                        db_info = value.get("data", value)
-                                        if isinstance(db_info, dict):
-                                            db_entry = {
-                                                "name": db_info.get(
-                                                    "name", db_folder_name
-                                                ),
-                                                "workspace": ws_name,
-                                                "db_type": db_type,
-                                            }
-                                            dw["databases"].append(db_entry)
-                                            break  # Only take one per folder
+                                database_wrapper = db_folder_data.get(
+                                    db_folder_name, {}
+                                )
+                                db_info = (
+                                    database_wrapper.get("data", database_wrapper)
+                                    if isinstance(database_wrapper, dict)
+                                    else {}
+                                )
+                                db_entry = {
+                                    "name": db_info.get("name", db_folder_name),
+                                    "workspace": ws_name,
+                                    "db_type": db_type,
+                                }
+                                dw["databases"].append(db_entry)
+
+                                complexity = db_folder_data.get("complexity", {})
+                                summary_wrapper = complexity.get("summary", {})
+                                complexity_summary = (
+                                    summary_wrapper.get("data", summary_wrapper)
+                                    if isinstance(summary_wrapper, dict)
+                                    else {}
+                                )
+                                if complexity_summary:
+                                    summary_entry = dict(complexity_summary)
+                                    summary_entry["workspace"] = ws_name
+                                    summary_entry["database"] = db_entry["name"]
+                                    dw["complexity_summaries"].append(summary_entry)
+
+                                object_groups = complexity.get("objects", {})
+                                for type_group in object_groups.values():
+                                    if not isinstance(type_group, dict):
+                                        continue
+                                    for object_wrapper in type_group.values():
+                                        if not isinstance(object_wrapper, dict):
+                                            continue
+                                        obj = object_wrapper.get("data", object_wrapper)
+                                        if not isinstance(obj, dict):
+                                            continue
+                                        object_entry = dict(obj)
+                                        object_entry["workspace"] = ws_name
+                                        object_entry["database"] = db_entry["name"]
+                                        dw["complexity_objects"].append(object_entry)
 
             elif platform == "databricks":
                 # SQL warehouses
@@ -1461,6 +1502,77 @@ class VisualizationService:
                 item.get("name", "").lower(),
             )
         )
+        for summary in dw["complexity_summaries"]:
+            workspace = summary.get("workspace", "Unknown")
+            workspace_summary = dw["complexity_by_workspace"].setdefault(
+                workspace,
+                {
+                    "scored_objects": 0,
+                    "unavailable_definitions": 0,
+                    "distribution": {
+                        "LOW": 0,
+                        "MEDIUM": 0,
+                        "HIGH": 0,
+                        "VERY_HIGH": 0,
+                    },
+                    "by_type": {},
+                },
+            )
+            scored_objects = summary.get("scored_objects", 0)
+            unavailable = summary.get("unavailable_definitions", 0)
+            dw["complexity_scored_objects"] += scored_objects
+            dw["complexity_unavailable_definitions"] += unavailable
+            workspace_summary["scored_objects"] += scored_objects
+            workspace_summary["unavailable_definitions"] += unavailable
+
+            for level in ("LOW", "MEDIUM", "HIGH", "VERY_HIGH"):
+                count = summary.get("distribution", {}).get(level, 0)
+                dw["complexity_distribution"][level] += count
+                workspace_summary["distribution"][level] += count
+
+            for object_type, type_counts in summary.get("by_type", {}).items():
+                aggregate_type = dw["complexity_by_type"].setdefault(
+                    object_type,
+                    {
+                        "total": 0,
+                        "LOW": 0,
+                        "MEDIUM": 0,
+                        "HIGH": 0,
+                        "VERY_HIGH": 0,
+                        "unavailable": 0,
+                    },
+                )
+                workspace_type = workspace_summary["by_type"].setdefault(
+                    object_type,
+                    {
+                        "total": 0,
+                        "LOW": 0,
+                        "MEDIUM": 0,
+                        "HIGH": 0,
+                        "VERY_HIGH": 0,
+                        "unavailable": 0,
+                    },
+                )
+                for key in aggregate_type:
+                    value = type_counts.get(key, 0)
+                    aggregate_type[key] += value
+                    workspace_type[key] += value
+
+        scored_objects = dw["complexity_scored_objects"]
+        if scored_objects:
+            ready_objects = (
+                dw["complexity_distribution"]["LOW"]
+                + dw["complexity_distribution"]["MEDIUM"]
+            )
+            readiness_percentage = round((ready_objects / scored_objects) * 100, 1)
+            dw["complexity_readiness_percentage"] = readiness_percentage
+            if readiness_percentage >= 80:
+                dw["complexity_readiness_indicator"] = "READY"
+            elif readiness_percentage >= 50:
+                dw["complexity_readiness_indicator"] = "REVIEW"
+            else:
+                dw["complexity_readiness_indicator"] = "HIGH_EFFORT"
+
         return dw
 
     def _sanitize_serverless_pool_data(

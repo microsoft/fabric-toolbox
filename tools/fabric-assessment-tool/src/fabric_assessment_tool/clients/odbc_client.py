@@ -9,21 +9,12 @@ from typing import Any, Iterator, Literal, Optional, Sequence
 from mssql_python import connect  # type: ignore[import-untyped]
 
 from ..assessment.synapse import (
-    CodeObjectCount,
-    CodeObjectLines,
-    ColumnCompatibility,
-    SynapseColumn,
-    SynapseQueryActivity,
-    SynapseSessionActivity,
-    SynapseServerlessActivity,
-    SynapseServerlessActivityCollectionMetadata,
-    SynapseServerlessActivitySourceDiagnostic,
-    SynapseServerlessDailyDatabaseUsage,
-    SynapseServerlessDatabaseSummary,
-    SynapseServerlessPerformanceSummary,
-    SynapseServerlessQueryActivity,
-    SynapseServerlessTopQueryMetric,
-    TableStatistics,
+    CodeObjectCount, CodeObjectLines, ColumnCompatibility, SqlCodeObjectDefinition,
+    SynapseColumn, SynapseQueryActivity, SynapseSessionActivity,
+    SynapseServerlessActivity, SynapseServerlessActivityCollectionMetadata,
+    SynapseServerlessActivitySourceDiagnostic, SynapseServerlessDailyDatabaseUsage,
+    SynapseServerlessDatabaseSummary, SynapseServerlessPerformanceSummary,
+    SynapseServerlessQueryActivity, SynapseServerlessTopQueryMetric, TableStatistics,
 )
 # Supported SQL authentication modes
 SqlAuthMode = Literal["sql", "entra-interactive", "entra-spn", "entra-default"]
@@ -446,137 +437,74 @@ class OdbcClient:
                 return getattr(row, candidate)
         return default
 
+    def get_sql_code_objects(
+        self, schema_names: Optional[list[str]] = None
+    ) -> list[SqlCodeObjectDefinition]:
+        """Extract procedure, function, and view definitions in one query."""
+        schema_filter = ""
+        parameters: list[Any] = []
+        if schema_names:
+            placeholders = ", ".join("?" for _ in schema_names)
+            schema_filter = f"AND LOWER(s.name) IN ({placeholders})"
+            parameters.extend(schema_name.lower() for schema_name in schema_names)
+
+        query = f"""
+SELECT
+    DB_NAME() AS database_name,
+    s.name AS schema_name,
+    o.name AS object_name,
+    CASE
+        WHEN o.type = 'P' THEN 'PROCEDURE'
+        WHEN o.type = 'V' THEN 'VIEW'
+        ELSE 'FUNCTION'
+    END AS object_type,
+    m.definition AS definition,
+    CAST(OBJECTPROPERTYEX(o.object_id, 'IsEncrypted') AS bit) AS is_encrypted,
+    o.create_date AS created_at,
+    o.modify_date AS modified_at,
+    o.object_id AS object_id,
+    o.type AS object_type_code
+FROM sys.objects AS o
+INNER JOIN sys.schemas AS s
+    ON o.schema_id = s.schema_id
+LEFT JOIN sys.sql_modules AS m
+    ON o.object_id = m.object_id
+WHERE o.type IN ('P', 'V', 'FN', 'IF', 'TF')
+  AND o.is_ms_shipped = 0
+  AND s.name NOT IN ('sys', 'INFORMATION_SCHEMA')
+  {schema_filter}
+ORDER BY s.name, o.name
+"""
+
+        definitions = []
+        for row in self.execute_query(query, parameters):
+            created_at = self._format_datetime(row.created_at)
+            modified_at = self._format_datetime(row.modified_at)
+            definitions.append(
+                SqlCodeObjectDefinition(
+                    database_name=row.database_name,
+                    schema_name=row.schema_name,
+                    object_name=row.object_name,
+                    object_type=row.object_type,
+                    definition=row.definition,
+                    is_encrypted=bool(row.is_encrypted),
+                    created_at=created_at,
+                    modified_at=modified_at,
+                    json_response={
+                        "object_id": row.object_id,
+                        "object_type_code": row.object_type_code,
+                    },
+                )
+            )
+        return definitions
+
     @staticmethod
-    def _timestamp_value(value: Any) -> Optional[str]:
+    def _format_datetime(value: Any) -> Optional[str]:
         if value is None:
             return None
         if hasattr(value, "isoformat"):
             return value.isoformat()
         return str(value)
-
-    def get_query_history(
-        self, history_days: int, top_n: int, include_sql_text: bool
-    ) -> list[SynapseQueryActivity]:
-        """Get recent dedicated-pool requests from sys.dm_pdw_exec_requests."""
-        command_column = ", [command] AS command" if include_sql_text else ""
-        query = f"""
-SELECT TOP ({top_n})
-    request_id,
-    session_id,
-    status,
-    resource_class,
-    importance,
-    submit_time,
-    start_time,
-    end_time,
-    total_elapsed_time AS duration_ms,
-    CASE
-        WHEN start_time IS NULL THEN NULL
-        ELSE DATEDIFF(millisecond, submit_time, start_time)
-    END AS queue_duration_ms,
-    [label],
-    CAST(NULL AS nvarchar(128)) AS login_name
-    {command_column}
-FROM sys.dm_pdw_exec_requests
-WHERE submit_time >= DATEADD(day, -{history_days}, GETUTCDATE())
-ORDER BY submit_time DESC
-"""
-        requests = []
-        for row in self.execute_query(query):
-            raw = {
-                "request_id": self._row_value(row, "request_id"),
-                "session_id": self._row_value(row, "session_id"),
-                "status": self._row_value(row, "status"),
-                "resource_class": self._row_value(row, "resource_class"),
-                "importance": self._row_value(row, "importance"),
-                "submit_time": self._timestamp_value(
-                    self._row_value(row, "submit_time")
-                ),
-                "start_time": self._timestamp_value(self._row_value(row, "start_time")),
-                "end_time": self._timestamp_value(self._row_value(row, "end_time")),
-                "duration_ms": self._row_value(row, "duration_ms"),
-                "queue_duration_ms": self._row_value(row, "queue_duration_ms"),
-                "label": self._row_value(row, "label"),
-                "login_name": self._row_value(row, "login_name"),
-            }
-            command = self._row_value(row, "command") if include_sql_text else None
-            requests.append(
-                SynapseQueryActivity(
-                    request_id=str(raw["request_id"] or ""),
-                    session_id=str(raw["session_id"] or ""),
-                    status=str(raw["status"] or "Unknown"),
-                    resource_class=str(raw["resource_class"] or "Unknown"),
-                    importance=str(raw["importance"] or "Unknown"),
-                    submit_time=raw["submit_time"],
-                    start_time=raw["start_time"],
-                    end_time=raw["end_time"],
-                    duration_ms=(
-                        float(raw["duration_ms"])
-                        if raw["duration_ms"] is not None
-                        else None
-                    ),
-                    queue_duration_ms=(
-                        float(raw["queue_duration_ms"])
-                        if raw["queue_duration_ms"] is not None
-                        else None
-                    ),
-                    label=raw["label"],
-                    login_name=raw["login_name"],
-                    command=command,
-                    json_response={
-                        **raw,
-                        **({"command": command} if include_sql_text else {}),
-                    },
-                )
-            )
-        return requests
-
-    def get_session_history(
-        self, history_days: int, top_n: int
-    ) -> list[SynapseSessionActivity]:
-        """Get the recent/current session snapshot for a dedicated SQL pool."""
-        query = f"""
-SELECT TOP ({top_n})
-    session_id,
-    status,
-    login_name,
-    login_time,
-    query_count,
-    client_id,
-    app_name
-FROM sys.dm_pdw_exec_sessions
-WHERE login_time >= DATEADD(day, -{history_days}, GETUTCDATE())
-   OR status <> 'Closed'
-ORDER BY login_time DESC
-"""
-        sessions = []
-        for row in self.execute_query(query):
-            raw = {
-                "session_id": self._row_value(row, "session_id"),
-                "status": self._row_value(row, "status"),
-                "login_name": self._row_value(row, "login_name"),
-                "login_time": self._timestamp_value(self._row_value(row, "login_time")),
-                "query_count": self._row_value(row, "query_count"),
-                "client_id": self._row_value(row, "client_id"),
-                "app_name": self._row_value(row, "app_name"),
-            }
-            sessions.append(
-                SynapseSessionActivity(
-                    session_id=str(raw["session_id"] or ""),
-                    status=str(raw["status"] or "Unknown"),
-                    login_name=raw["login_name"],
-                    login_time=raw["login_time"],
-                    query_count=(
-                        int(raw["query_count"])
-                        if raw["query_count"] is not None
-                        else None
-                    ),
-                    client_id=raw["client_id"],
-                    app_name=raw["app_name"],
-                    json_response=raw,
-                )
-            )
-        return sessions
 
     def get_query_columns(
         self, query: str, params: Optional[Sequence[Any]] = None

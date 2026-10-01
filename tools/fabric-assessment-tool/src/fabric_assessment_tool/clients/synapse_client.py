@@ -1,5 +1,6 @@
 import builtins
 import json
+import time
 from collections import Counter
 from argparse import Namespace
 from datetime import datetime, timedelta, timezone
@@ -9,10 +10,10 @@ from fabric_assessment_tool.errors.api import FATError
 
 from ..assessment.common import AssessmentStatus
 from ..assessment.synapse import (
-    CodeObjectCount, CodeObjectLines, SynapseAssessment, SynapseAssessmentMetadata,
-    SynapseColumnDatabaseStatus, SynapseColumnSummary, SynapseCompatibilityTotals,
-    SynapseDataflow, SynapseDataflows, SynapseDataset, SynapseDatasets,
-    SynapseDedicatedDatabase, SynapseDedicatedPool, SynapseDedicatedPools,
+    CodeObjectCount, CodeObjectLines, SqlComplexityAssessment, SynapseAssessment,
+    SynapseAssessmentMetadata, SynapseColumnDatabaseStatus, SynapseColumnSummary,
+    SynapseCompatibilityTotals, SynapseDataflow, SynapseDataflows, SynapseDataset,
+    SynapseDatasets, SynapseDedicatedDatabase, SynapseDedicatedPool, SynapseDedicatedPools,
     SynapseIntegrationRuntime, SynapseIntegrationRuntimes, SynapseLibraries,
     SynapseLibrary, SynapseLinkedService, SynapseLinkedServices,
     SynapseManagedPrivateEndpoint, SynapseManagedPrivateEndpoints, SynapseNotebook,
@@ -25,6 +26,7 @@ from ..assessment.synapse import (
     SynapseSqlScript, SynapseSqlScripts, SynapseTable, SynapseTables, SynapseView,
     SynapseViews, SynapseWideObject, SynapseWorkspaceInfo, TableStatistics,
 )
+from ..services.sql_complexity_scorer import SqlComplexityScorer
 from ..utils import ui as utils_ui
 from ..utils.workload_profile import build_workload_profile, unavailable_workload_profile
 from .api_client import ApiClient
@@ -63,6 +65,9 @@ class SynapseClient:
         serverless_sql_tenant_id: Optional[str] = None,
         skip_columns: bool = False,
         max_column_objects: Optional[int] = None,
+        sql_complexity: bool = False,
+        sql_definition_redaction: str = "full",
+        sql_complexity_schemas: Optional[list[str]] = None,
         **kwargs,
     ):
         """
@@ -93,6 +98,9 @@ class SynapseClient:
             serverless_sql_tenant_id: Optional SPN tenant override for serverless SQL
             skip_columns: Skip column metadata collection
             max_column_objects: Optional positive per-database table/view collection cap
+            sql_complexity: Enable SQL code complexity scoring
+            sql_definition_redaction: Definition export mode ('full' or 'none')
+            sql_complexity_schemas: Optional schema allowlist for scoring
         """
         if max_column_objects is not None and max_column_objects <= 0:
             raise ValueError("max_column_objects must be a positive integer")
@@ -120,6 +128,10 @@ class SynapseClient:
         self._validate_serverless_options()
         self.skip_columns = skip_columns
         self.max_column_objects = max_column_objects
+        self.sql_complexity = sql_complexity
+        self.sql_definition_redaction = sql_definition_redaction
+        self.sql_complexity_schemas = sql_complexity_schemas or []
+        self.sql_complexity_scorer = SqlComplexityScorer(sql_definition_redaction)
         self.authenticate()
         self._workspace_cache: dict[str, SynapseWorkspaceInfo] = {}
         self.dev_endpoint_permission_issues = False
@@ -138,6 +150,7 @@ class SynapseClient:
         self._object_inventory_cache: dict[
             tuple[str, str], list[SynapseColumnMetadataObject]
         ] = {}
+        self.sql_complexity_issues: list[str] = []
 
     def authenticate(self) -> None:
         """Authenticate with Azure using the configured token provider."""
@@ -237,6 +250,7 @@ class SynapseClient:
             self.paused_databases = []
             self._column_metadata_cache = {}
             self._object_inventory_cache = {}
+            self.sql_complexity_issues = []
 
             # Get workspace details
             workspace_info = self._get_workspace_info(workspace_name)
@@ -401,6 +415,16 @@ class SynapseClient:
                     "Skipping dedicated SQL databases table statistics collection."
                 )
 
+            if self.sql_complexity:
+                utils_ui.print_extracting("SQL Complexity")
+                self._collect_sql_complexity(
+                    workspace_name=workspace_name,
+                    sql_pools=sql_pools,
+                    sql_admin_login=sql_admin_login,
+                    sql_admin_password=sql_admin_password,
+                )
+                utils_ui.print_extraction_done("SQL Complexity")
+
             # Create assessment metadata
             assessment_metadata = SynapseAssessmentMetadata(
                 mode=mode,
@@ -454,6 +478,12 @@ class SynapseClient:
                 incomplete_reasons.append(
                     "column metadata incomplete for databases: ["
                     + ", ".join(limited_databases)
+                    + "]"
+                )
+            if self.sql_complexity_issues:
+                incomplete_reasons.append(
+                    "SQL complexity collection issues: ["
+                    + "; ".join(self.sql_complexity_issues)
                     + "]"
                 )
 
@@ -1796,15 +1826,36 @@ class SynapseClient:
     ) -> tuple[list[TableStatistics], list[CodeObjectCount], list[CodeObjectLines]]:
         """Get table statistics from a database."""
 
-        with self._create_odbc_client(
+        odbc_client = self._create_odbc_client(
             workspace_name=workspace_name,
             database_name=database_name,
             sql_admin_login=sql_user,
             sql_admin_password=sql_password,
-        ) as odbc_client:
-            if not odbc_client.check_table_statistics_dmv_exists():
-                if self.create_dmv:
-                    # Auto-create DMV in non-interactive mode
+        )
+
+        if not odbc_client.check_table_statistics_dmv_exists():
+            if self.create_dmv:
+                # Auto-create DMV in non-interactive mode
+                utils_ui.print_extracting(
+                    f"Creating table statistics DMV in database {database_name}"
+                )
+                odbc_client.create_table_statistics_dmv()
+                utils_ui.print_extraction_done(
+                    f"Creating table statistics DMV in database {database_name}"
+                )
+            elif self.sql_complexity:
+                utils_ui.print_warning(
+                    f"Skipping table statistics for '{database_name}' because "
+                    "vTableSizes does not exist. SQL complexity collection will continue."
+                )
+                return ([], [], [])
+            else:
+                # Ask for permission to create the view
+                builtins.print("\r")  # Clear previous line
+                confirmation = utils_ui.prompt_confirm(
+                    f"Do you want to create the vTableSizes DMV in database '{database_name}' to obtain detailed table statistics? (y/n): "
+                )
+                if confirmation:
                     utils_ui.print_extracting(
                         f"Creating table statistics DMV in database {database_name}"
                     )
@@ -1813,30 +1864,55 @@ class SynapseClient:
                         f"Creating table statistics DMV in database {database_name}"
                     )
                 else:
-                    # Ask for permission to create the view
-                    builtins.print("\r")  # Clear previous line
-                    confirmation = utils_ui.prompt_confirm(
-                        f"Do you want to create the vTableSizes DMV in database '{database_name}' to obtain detailed table statistics? (y/n): "
+                    utils_ui.print_warning(
+                        f"Skipping table statistics collection for database {database_name}"
                     )
-                    if confirmation:
-                        utils_ui.print_extracting(
-                            f"Creating table statistics DMV in database {database_name}"
-                        )
-                        odbc_client.create_table_statistics_dmv()
-                        utils_ui.print_extraction_done(
-                            f"Creating table statistics DMV in database {database_name}"
-                        )
-                    else:
-                        utils_ui.print_warning(
-                            f"Skipping table statistics collection for database {database_name}"
-                        )
-                        return ([], [], [])
+                    return ([], [], [])
 
-            return (
-                list(odbc_client.get_table_statistics(database_name)),
-                list(odbc_client.get_object_count(database_name)),
-                list(odbc_client.get_code_lines_statistics(database_name)),
+        return (
+            list(odbc_client.get_table_statistics(database_name)),
+            list(odbc_client.get_object_count(database_name)),
+            list(odbc_client.get_code_lines_statistics(database_name)),
+        )
+
+    def _collect_sql_complexity(
+        self,
+        workspace_name: str,
+        sql_pools: SynapseSqlPools,
+        sql_admin_login: Optional[str],
+        sql_admin_password: Optional[str],
+    ) -> None:
+        """Collect SQL complexity for every discovered database."""
+        databases = [pool.database for pool in sql_pools.dedicated_pools] + list(
+            sql_pools.serverless_pool.databases.databases
+        )
+
+        if not self._has_sql_credentials(sql_admin_login, sql_admin_password):
+            reason = "SQL credentials were not provided"
+            for database in databases:
+                database.complexity = self.sql_complexity_scorer.unavailable_assessment(
+                    reason
+                )
+            self.sql_complexity_issues.append(reason)
+            utils_ui.print_warning(f"Skipping SQL complexity collection: {reason}.")
+            return
+
+        for database in databases:
+            database.complexity = self._get_database_sql_complexity(
+                workspace_name=workspace_name,
+                database_name=database.name,
+                sql_admin_login=sql_admin_login,
+                sql_admin_password=sql_admin_password,
             )
+            summary = database.complexity.summary
+            if summary.status == "unavailable":
+                self.sql_complexity_issues.append(
+                    f"{database.name}: {summary.errors[0]}"
+                )
+            elif summary.unavailable_definitions:
+                self.sql_complexity_issues.append(
+                    f"{database.name}: {summary.unavailable_definitions} definitions unavailable"
+                )
 
     def _get_dedicated_pool_workload(
         self,
@@ -1947,6 +2023,77 @@ class SynapseClient:
         return isinstance(exc, (FATError, OSError, RuntimeError)) or any(
             marker in message for marker in expected_markers
         )
+
+    def _collect_sql_complexity(
+        self,
+        workspace_name: str,
+        sql_pools: SynapseSqlPools,
+        sql_admin_login: Optional[str],
+        sql_admin_password: Optional[str],
+    ) -> None:
+        """Collect SQL complexity for every discovered database."""
+        databases = [pool.database for pool in sql_pools.dedicated_pools] + list(
+            sql_pools.serverless_pool.databases.databases
+        )
+
+        if not self._has_sql_credentials(sql_admin_login, sql_admin_password):
+            reason = "SQL credentials were not provided"
+            for database in databases:
+                database.complexity = self.sql_complexity_scorer.unavailable_assessment(
+                    reason
+                )
+            self.sql_complexity_issues.append(reason)
+            utils_ui.print_warning(f"Skipping SQL complexity collection: {reason}.")
+            return
+
+        for database in databases:
+            database.complexity = self._get_database_sql_complexity(
+                workspace_name=workspace_name,
+                database_name=database.name,
+                sql_admin_login=sql_admin_login,
+                sql_admin_password=sql_admin_password,
+            )
+            summary = database.complexity.summary
+            if summary.status == "unavailable":
+                self.sql_complexity_issues.append(
+                    f"{database.name}: {summary.errors[0]}"
+                )
+            elif summary.unavailable_definitions:
+                self.sql_complexity_issues.append(
+                    f"{database.name}: {summary.unavailable_definitions} definitions unavailable"
+                )
+
+    def _get_database_sql_complexity(
+        self,
+        workspace_name: str,
+        database_name: str,
+        sql_admin_login: Optional[str],
+        sql_admin_password: Optional[str],
+    ) -> SqlComplexityAssessment:
+        started_at = time.perf_counter()
+        try:
+            with self._create_odbc_client(
+                workspace_name=workspace_name,
+                database_name=database_name,
+                sql_admin_login=sql_admin_login,
+                sql_admin_password=sql_admin_password,
+            ) as odbc_client:
+                definitions = odbc_client.get_sql_code_objects(
+                    self.sql_complexity_schemas
+                )
+            extraction_elapsed = time.perf_counter() - started_at
+            return self.sql_complexity_scorer.score_database(
+                definitions, elapsed_seconds=extraction_elapsed
+            )
+        except Exception as error:
+            elapsed_seconds = time.perf_counter() - started_at
+            reason = f"definition query failed: {error}"
+            utils_ui.print_warning(
+                f"SQL complexity collection failed for '{database_name}': {error}"
+            )
+            return self.sql_complexity_scorer.unavailable_assessment(
+                reason, elapsed_seconds=elapsed_seconds
+            )
 
     def _has_sql_credentials(
         self,

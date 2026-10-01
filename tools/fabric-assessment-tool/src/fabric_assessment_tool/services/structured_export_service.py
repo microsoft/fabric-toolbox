@@ -394,7 +394,9 @@ class JSONExporter(BaseExporter):
             # Export database info
             db_file = db_dir / f"{db_name}.json"
             db_info = {
-                key: value for key, value in database.items() if key != "schemas"
+                key: value
+                for key, value in database.items()
+                if key not in {"schemas", "complexity"}
             }
             with open(db_file, "w") as f:
                 json.dump(
@@ -408,6 +410,8 @@ class JSONExporter(BaseExporter):
                     cls=DecimalEncoder,
                 )
             files_created.append(str(db_file))
+
+            self._export_sql_complexity(database, db_dir, files_created)
 
             # Export schemas
             if "schemas" in database and "schemas" in database["schemas"]:
@@ -503,7 +507,9 @@ class JSONExporter(BaseExporter):
                 # Export database info
                 db_file = db_dir / f"{db_name}.json"
                 db_info = {
-                    key: value for key, value in database.items() if key != "schemas"
+                    key: value
+                    for key, value in database.items()
+                    if key not in {"schemas", "complexity"}
                 }
                 db_info["pool_name"] = pool_name  # Add reference to the pool
                 with open(db_file, "w") as f:
@@ -518,6 +524,8 @@ class JSONExporter(BaseExporter):
                         cls=DecimalEncoder,
                     )
                 files_created.append(str(db_file))
+
+                self._export_sql_complexity(database, db_dir, files_created)
 
                 # Export schemas
                 if "schemas" in database and "schemas" in database["schemas"]:
@@ -590,6 +598,61 @@ class JSONExporter(BaseExporter):
                                         cls=DecimalEncoder,
                                     )
                                 files_created.append(str(view_file))
+
+    def _export_sql_complexity(
+        self,
+        database: Dict[str, Any],
+        database_dir: Path,
+        files_created: List[str],
+    ) -> None:
+        complexity = database.get("complexity")
+        if not complexity:
+            return
+
+        complexity_dir = database_dir / "complexity"
+        complexity_dir.mkdir(exist_ok=True)
+
+        summary_path = complexity_dir / "summary.json"
+        with open(summary_path, "w") as f:
+            json.dump(
+                {
+                    "type": "sql_complexity_summary",
+                    "data": complexity.get("summary", {}),
+                    "exported_at": datetime.now().isoformat(),
+                },
+                f,
+                indent=2,
+                cls=DecimalEncoder,
+            )
+        files_created.append(str(summary_path))
+
+        type_folders = {
+            "PROCEDURE": "procedures",
+            "FUNCTION": "functions",
+            "VIEW": "views",
+        }
+        objects_dir = complexity_dir / "objects"
+        for obj in complexity.get("objects", []):
+            folder_name = type_folders.get(obj.get("object_type", ""), "other")
+            object_type_dir = objects_dir / folder_name
+            object_type_dir.mkdir(parents=True, exist_ok=True)
+
+            safe_name = self._safe_filename(
+                f"{obj.get('schema_name', 'unknown')}.{obj.get('object_name', 'unknown')}"
+            )
+            object_path = object_type_dir / f"{safe_name}.json"
+            with open(object_path, "w") as f:
+                json.dump(
+                    {
+                        "type": "sql_complexity_object",
+                        "data": obj,
+                        "exported_at": datetime.now().isoformat(),
+                    },
+                    f,
+                    indent=2,
+                    cls=DecimalEncoder,
+                )
+            files_created.append(str(object_path))
 
     @staticmethod
     def _safe_filename(name: str) -> str:
