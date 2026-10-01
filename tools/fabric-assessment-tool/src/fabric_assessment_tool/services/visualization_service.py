@@ -1028,8 +1028,9 @@ class VisualizationService:
         self, workspaces: Dict[str, Dict[str, Any]], platform: str = "synapse"
     ) -> Dict[str, Any]:
         """Aggregate data warehousing resources across workspaces."""
-        dw = {
+        dw: Dict[str, Any] = {
             "dedicated_pools": [],
+            "workloads": [],
             "serverless_pools": [],
             "sql_warehouses": [],
             "sql_scripts": [],
@@ -1052,7 +1053,7 @@ class VisualizationService:
 
                 # SQL pools - try both 'data' and 'pool_data' keys
                 for pool in resources.get("sql_pools", []):
-                    pool_data = pool.get("data") or pool.get("pool_data") or pool
+                    pool_data = dict(pool.get("data") or pool.get("pool_data") or pool)
                     pool_data["workspace"] = ws_name
                     pool_type = pool.get("type", "")
                     if "dedicated" in pool_type.lower() or pool_data.get("sku"):
@@ -1069,6 +1070,15 @@ class VisualizationService:
                                 else size_val
                             )
                         dw["dedicated_pools"].append(pool_data)
+                        workload = pool_data.get("workload")
+                        if isinstance(workload, dict):
+                            dw["workloads"].append(
+                                {
+                                    "pool_name": pool_data.get("name", "Unknown"),
+                                    "workspace": ws_name,
+                                    "profile": workload,
+                                }
+                            )
                         dw["total_tables"] += pool_data.get("tables_count", 0)
                         dw["total_size_gb"] += pool_data.get("size_gb", 0)
                     else:

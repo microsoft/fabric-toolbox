@@ -1,4 +1,5 @@
 import json
+from copy import deepcopy
 from abc import ABC, abstractmethod
 from dataclasses import asdict
 from datetime import datetime
@@ -194,12 +195,16 @@ class JSONExporter(BaseExporter):
 
             # Dedicated pools
             for i, pool in enumerate(data["sql_pools"].get("dedicated_pools", [])):
-                pool_file = sql_pools_dir / f"dedicated_pool_{pool['name']}.json"
+                export_pool = deepcopy(pool)
+                workload = export_pool.get("workload") or {}
+                if workload.get("sql_text_redacted", True):
+                    export_pool = self._strip_sql_text(export_pool)
+                pool_file = sql_pools_dir / f"dedicated_pool_{export_pool['name']}.json"
                 with open(pool_file, "w") as f:
                     json.dump(
                         {
                             "type": "dedicated_pool",
-                            "pool_data": pool,
+                            "pool_data": export_pool,
                             "exported_at": datetime.now().isoformat(),
                         },
                         f,
@@ -334,6 +339,19 @@ class JSONExporter(BaseExporter):
         self._export_synapse_dedicated_databases(data, data_dir, files_created)
 
         return files_created
+
+    @classmethod
+    def _strip_sql_text(cls, value: Any) -> Any:
+        """Remove SQL command text recursively from a serialized structure."""
+        if isinstance(value, dict):
+            return {
+                key: cls._strip_sql_text(item)
+                for key, item in value.items()
+                if key != "command"
+            }
+        if isinstance(value, list):
+            return [cls._strip_sql_text(item) for item in value]
+        return value
 
     def _export_synapse_serverless_databases(
         self, data: Dict[str, Any], data_dir: Path, files_created: List[str]

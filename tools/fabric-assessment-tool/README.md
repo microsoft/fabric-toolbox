@@ -131,6 +131,13 @@ When using Entra ID authentication modes (`entra-interactive`, `entra-spn`, or `
    GRANT CREATE VIEW TO [user@yourdomain.com];
    ```
 
+4. **Workload Profiling Permissions**: Query-history profiling reads the dedicated-pool DMVs directly and does not require `vTableSizes`:
+   ```sql
+   GRANT VIEW DATABASE STATE TO [user@yourdomain.com];
+   GRANT SELECT ON sys.dm_pdw_exec_requests TO [user@yourdomain.com];
+   GRANT SELECT ON sys.dm_pdw_exec_sessions TO [user@yourdomain.com];
+   ```
+
 > **Note:** Ensure that the Azure Synapse workspace has Entra ID authentication enabled with an Entra ID admin configured. See [Microsoft documentation](https://learn.microsoft.com/en-us/azure/synapse-analytics/sql/active-directory-authentication) for details.
 
 ### Databricks Service Principal Permissions
@@ -190,6 +197,10 @@ fat assess --source <synapse|databricks> \
 - `--sql-tenant-id`: Azure tenant ID (optional, defaults to 'common')
 - `--resources`: Comma-separated list of resource types to extract. When omitted, all resources are extracted. Use this to re-extract only specific resources without repeating a full assessment. Previously exported data for other resources is preserved and summaries are recalculated accurately.
   - Valid Databricks resources: `clusters`, `sql_warehouses`, `notebooks`, `jobs`, `catalogs`, `external_locations`, `connections`, `secret_scopes`, `pipelines`, `repos`, `experiments`, `serving_endpoints`, `alerts`, `genie_spaces`, `cluster_policies`, `instance_pools`
+- `--query-history-days`: Dedicated SQL pool workload lookback in days (default: `7`, range: `1-365`)
+- `--query-history-top`: Maximum recent requests and sessions retained per pool (default: `1000`, range: `1-10000`)
+- `--include-sql-text`: Include SQL command text in dedicated-pool JSON. SQL text is redacted by default and is never rendered in HTML reports.
+- `--skip-query-history`: Skip dedicated SQL pool request/session workload collection
 
 **Examples:**
 ```bash
@@ -212,6 +223,14 @@ fat assess --source synapse --ws workspace1 -o ./results \
 
 # Assess with Entra ID default (uses Azure CLI credentials)
 fat assess --source synapse --ws workspace1 -o ./results --sql-auth-mode entra-default
+
+# Assess a 30-day workload window while retaining the 5,000 newest requests
+fat assess --source synapse --ws workspace1 -o ./results \
+    --query-history-days 30 \
+    --query-history-top 5000
+
+# Explicitly include SQL text in JSON output
+fat assess --source synapse --ws workspace1 -o ./results --include-sql-text
 
 # Assess Databricks workspace
 fat assess --source databricks --ws my-workspace --output results_folder
@@ -286,12 +305,19 @@ fat visualize -i ./assessment_output --view data-engineering -o ./engineering_re
 - **Admin**: Linked services, integration runtimes, managed private endpoints, Spark libraries, Spark configurations
 - **Data Engineering**: Notebooks (with language, Spark config, MSSparkUtils usage), Spark pools, Spark job definitions
 - **Data Warehousing**: Dedicated SQL pools (tables, size, stored procedures), serverless databases
+- **Dedicated SQL Workloads**: Request/session counts, resource-class and status distributions, duration percentiles, peak concurrency, observed history window, and day/hour heatmaps
 - **Data Integration**: Pipelines (activity counts, complexity), dataflows, datasets
 
 **Databricks-Specific Views:**
 - **Data Engineering**: Notebooks (with language, dbutils usage), clusters, jobs, DLT pipelines, MLflow experiments, repos
 - **Data Warehousing**: SQL warehouses, Unity Catalog (catalogs, schemas, tables)
 - **Overview**: Resource Summary chart (logarithmic y-axis) covering all 11 Databricks resource categories — Notebooks, Clusters, Jobs, SQL Warehouses, Tables, DLT Pipelines, Repos, MLflow Experiments, Serving Endpoints, SQL Alerts, Genie Spaces
+
+### Dedicated SQL workload output
+
+Each dedicated pool JSON under `resources/sql_pools/` contains a `workload` object with collection status, configured and observed windows, aggregate metrics, temporal buckets, and bounded request/session activity. Synapse DMVs have finite retention, so the observed window may be shorter than the configured lookback.
+
+SQL command text is omitted by default. `--include-sql-text` adds command text to the pool JSON only; generated HTML reports never display query text. Permission, paused-pool, and connectivity failures are recorded as explicit unavailable states so unrelated assessment data and reports can still be produced.
 
 **Screenshots:**
 

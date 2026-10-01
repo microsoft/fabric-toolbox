@@ -5,6 +5,83 @@ from .common import AssessmentStatus
 
 
 @dataclass
+class SynapseQueryActivity:
+    """A request observed in a Synapse dedicated SQL pool."""
+
+    request_id: str
+    session_id: str
+    status: str
+    resource_class: str
+    importance: str
+    submit_time: Optional[str]
+    start_time: Optional[str]
+    end_time: Optional[str]
+    duration_ms: Optional[float]
+    queue_duration_ms: Optional[float]
+    label: Optional[str]
+    login_name: Optional[str]
+    command: Optional[str]
+    json_response: Any
+
+
+@dataclass
+class SynapseSessionActivity:
+    """A session observed in a Synapse dedicated SQL pool."""
+
+    session_id: str
+    status: str
+    login_name: Optional[str]
+    login_time: Optional[str]
+    query_count: Optional[int]
+    client_id: Optional[str]
+    app_name: Optional[str]
+    json_response: Any
+
+
+@dataclass
+class SynapseDurationStatistics:
+    """Duration distribution for completed dedicated-pool requests."""
+
+    average_ms: Optional[float]
+    p50_ms: Optional[float]
+    p90_ms: Optional[float]
+    p99_ms: Optional[float]
+    max_ms: Optional[float]
+
+
+@dataclass
+class SynapseTemporalBucket:
+    """Request count for a day-of-week and hour-of-day bucket."""
+
+    day_of_week: int
+    hour: int
+    request_count: int
+
+
+@dataclass
+class SynapseWorkloadProfile:
+    """Collected activity and derived workload metrics for a dedicated SQL pool."""
+
+    collection_status: str
+    description: str
+    configured_window_days: int
+    configured_top_n: int
+    sql_text_redacted: bool
+    collected_at: str
+    observed_start: Optional[str]
+    observed_end: Optional[str]
+    request_count: int
+    session_count: int
+    peak_concurrency: int
+    status_distribution: Dict[str, int]
+    resource_class_distribution: Dict[str, int]
+    duration_statistics: SynapseDurationStatistics
+    temporal_buckets: List[SynapseTemporalBucket]
+    requests: List[SynapseQueryActivity]
+    sessions: List[SynapseSessionActivity]
+
+
+@dataclass
 class SynapseWorkspaceInfo:
     """Synapse workspace information."""
 
@@ -128,6 +205,7 @@ class SynapseDedicatedPool:
     code_lines: list[CodeObjectLines]
     code_objects: list[CodeObjectCount]
     json_response: Any
+    workload: Optional[SynapseWorkloadProfile] = None
 
 
 @dataclass
@@ -269,6 +347,10 @@ class SynapseAssessmentMetadata:
 
     mode: str
     timestamp: str
+    query_history_days: int = 7
+    query_history_top: int = 1000
+    sql_text_redacted: bool = True
+    query_history_skipped: bool = False
 
 
 @dataclass
@@ -596,5 +678,30 @@ class SynapseAssessment:
             )
             for pool in self.sql_pools.dedicated_pools
         )
+
+        workload_profiles = [
+            pool.workload
+            for pool in self.sql_pools.dedicated_pools
+            if pool.workload is not None
+        ]
+        collected_profiles = [
+            profile
+            for profile in workload_profiles
+            if profile.collection_status == "collected"
+        ]
+        summary["data_warehouse"]["workload"] = {
+            "pool_count": len(workload_profiles),
+            "collected_pool_count": len(collected_profiles),
+            "request_count": sum(
+                profile.request_count for profile in collected_profiles
+            ),
+            "session_count": sum(
+                profile.session_count for profile in collected_profiles
+            ),
+            "max_peak_concurrency": max(
+                (profile.peak_concurrency for profile in collected_profiles),
+                default=0,
+            ),
+        }
 
         return summary

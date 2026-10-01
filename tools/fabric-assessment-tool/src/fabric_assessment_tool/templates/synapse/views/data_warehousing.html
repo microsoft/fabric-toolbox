@@ -88,6 +88,18 @@
 </div>
 {% endif %}
 
+<!-- Dedicated SQL Pool Workloads -->
+{% if warehousing.workloads %}
+<h2 class="mt-2 mb-1">Dedicated SQL Pool Workloads</h2>
+{% for workload_item in warehousing.workloads %}
+{% set workload = workload_item.profile %}
+{% set workload_pool_name = workload_item.pool_name %}
+{% set workload_workspace = workload_item.workspace %}
+{% set workload_id = 'dw-workload-' ~ loop.index %}
+{% include "synapse/_workload_profile.html" %}
+{% endfor %}
+{% endif %}
+
 <!-- SQL Warehouses (Databricks) -->
 {% if warehousing.sql_warehouses %}
 <div class="card">

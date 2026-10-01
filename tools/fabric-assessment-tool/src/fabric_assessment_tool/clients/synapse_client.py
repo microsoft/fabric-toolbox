@@ -1,6 +1,7 @@
 import builtins
 import json
 from argparse import Namespace
+from datetime import datetime, timezone
 from typing import Dict, Optional
 
 from fabric_assessment_tool.errors.api import FATError
@@ -52,9 +53,17 @@ from ..assessment.synapse import (
     TableStatistics,
 )
 from ..utils import ui as utils_ui
+from ..utils.workload_profile import (
+    build_workload_profile,
+    unavailable_workload_profile,
+)
 from .api_client import ApiClient
-from .odbc_client import OdbcClient
-from .token_provider import FabricNotebookTokenProvider, TokenProvider, create_token_provider
+from .odbc_client import OdbcClient, SqlAuthMode
+from .token_provider import (
+    FabricNotebookTokenProvider,
+    TokenProvider,
+    create_token_provider,
+)
 
 
 class SynapseClient:
@@ -67,10 +76,14 @@ class SynapseClient:
         auth_method: Optional[str] = None,
         sql_admin_password: Optional[str] = None,
         create_dmv: bool = False,
-        sql_auth_mode: str = "sql",
+        sql_auth_mode: SqlAuthMode = "sql",
         sql_client_id: Optional[str] = None,
         sql_client_secret: Optional[str] = None,
         sql_tenant_id: Optional[str] = None,
+        query_history_days: int = 7,
+        query_history_top: int = 1000,
+        include_sql_text: bool = False,
+        skip_query_history: bool = False,
         **kwargs,
     ):
         """
@@ -99,11 +112,15 @@ class SynapseClient:
         self.sql_client_id = sql_client_id
         self.sql_client_secret = sql_client_secret
         self.sql_tenant_id = sql_tenant_id
+        self.query_history_days = query_history_days
+        self.query_history_top = query_history_top
+        self.include_sql_text = include_sql_text
+        self.skip_query_history = skip_query_history
         self.authenticate()
         self._workspace_cache: dict[str, SynapseWorkspaceInfo] = {}
         self.dev_endpoint_permission_issues = False
-        self.unreached_components = []
-        self.paused_databases = []
+        self.unreached_components: list[str] = []
+        self.paused_databases: list[str] = []
 
     def authenticate(self) -> None:
         """Authenticate with Azure using the configured token provider."""
@@ -231,6 +248,16 @@ class SynapseClient:
             )
             utils_ui.print_extraction_done("SQL Pools")
 
+            utils_ui.print_extracting("Dedicated SQL Pool Workload")
+            for pool in sql_pools.dedicated_pools:
+                pool.workload = self._get_dedicated_pool_workload(
+                    workspace_name,
+                    pool,
+                    sql_admin_login,
+                    sql_admin_password,
+                )
+            utils_ui.print_extraction_done("Dedicated SQL Pool Workload")
+
             # Get Spark pools - azure endpoint
             utils_ui.print_extracting("Spark Pools")
             spark_pools = self._get_spark_pools(workspace_name)
@@ -337,7 +364,12 @@ class SynapseClient:
 
             # Create assessment metadata
             assessment_metadata = SynapseAssessmentMetadata(
-                mode=mode, timestamp=self._get_timestamp()
+                mode=mode,
+                timestamp=self._get_timestamp(),
+                query_history_days=self.query_history_days,
+                query_history_top=self.query_history_top,
+                sql_text_redacted=not self.include_sql_text,
+                query_history_skipped=self.skip_query_history,
             )
 
             # Determine final status based on permission issues
@@ -353,6 +385,20 @@ class SynapseClient:
             if len(self.paused_databases) > 0:
                 incomplete_reasons.append(
                     f"paused dedicated SQL databases: [{', '.join(self.paused_databases)}]"
+                )
+
+            unavailable_workload_pools = [
+                pool.name
+                for pool in sql_pools.dedicated_pools
+                if pool.workload is not None
+                and pool.workload.collection_status == "unavailable"
+                and pool.name not in self.paused_databases
+            ]
+            if unavailable_workload_pools:
+                incomplete_reasons.append(
+                    "unavailable dedicated SQL workload DMVs: ["
+                    + ", ".join(unavailable_workload_pools)
+                    + "]"
                 )
 
             if incomplete_reasons:
@@ -1171,8 +1217,11 @@ class SynapseClient:
 
         # Fall back to ODBC
         return self._get_dedicated_schema_tables_odbc(
-            workspace_name, database_name, schema_name,
-            sql_admin_login, sql_admin_password,
+            workspace_name,
+            database_name,
+            schema_name,
+            sql_admin_login,
+            sql_admin_password,
         )
 
     def _get_dedicated_schema_tables_arm(
@@ -1251,7 +1300,11 @@ class SynapseClient:
             raise e
 
     def _get_dedicated_database_statistics(
-        self, workspace_name: str, database_name: str, sql_user: str, sql_password: str
+        self,
+        workspace_name: str,
+        database_name: str,
+        sql_user: Optional[str],
+        sql_password: Optional[str],
     ) -> tuple[list[TableStatistics], list[CodeObjectCount], list[CodeObjectLines]]:
         """Get table statistics from a database."""
 
@@ -1296,6 +1349,116 @@ class SynapseClient:
             list(odbc_client.get_table_statistics(database_name)),
             list(odbc_client.get_object_count(database_name)),
             list(odbc_client.get_code_lines_statistics(database_name)),
+        )
+
+    def _get_dedicated_pool_workload(
+        self,
+        workspace_name: str,
+        pool: SynapseDedicatedPool,
+        sql_admin_login: Optional[str],
+        sql_admin_password: Optional[str],
+    ):
+        """Collect request/session history and derive a workload profile."""
+        collected_at = datetime.now(timezone.utc)
+        redacted = not self.include_sql_text
+
+        if self.skip_query_history:
+            return unavailable_workload_profile(
+                status="skipped",
+                description="Workload collection was disabled by --skip-query-history.",
+                window_days=self.query_history_days,
+                top_n=self.query_history_top,
+                sql_text_redacted=redacted,
+                collected_at=collected_at,
+            )
+
+        if pool.name in self.paused_databases or pool.status.lower() == "paused":
+            return unavailable_workload_profile(
+                status="unavailable",
+                description="The dedicated SQL pool is paused.",
+                window_days=self.query_history_days,
+                top_n=self.query_history_top,
+                sql_text_redacted=redacted,
+                collected_at=collected_at,
+            )
+
+        if not self._has_sql_credentials(sql_admin_login, sql_admin_password):
+            utils_ui.print_warning(
+                f"Skipping workload collection for '{pool.name}' - SQL authentication is not available."
+            )
+            return unavailable_workload_profile(
+                status="skipped",
+                description="SQL authentication was not available for workload collection.",
+                window_days=self.query_history_days,
+                top_n=self.query_history_top,
+                sql_text_redacted=redacted,
+                collected_at=collected_at,
+            )
+
+        try:
+            odbc_client = self._create_odbc_client(
+                workspace_name=workspace_name,
+                database_name=pool.database.name,
+                sql_admin_login=sql_admin_login,
+                sql_admin_password=sql_admin_password,
+            )
+            requests = odbc_client.get_query_history(
+                history_days=self.query_history_days,
+                top_n=self.query_history_top,
+                include_sql_text=self.include_sql_text,
+            )
+            sessions = odbc_client.get_session_history(
+                history_days=self.query_history_days,
+                top_n=self.query_history_top,
+            )
+            return build_workload_profile(
+                requests=requests,
+                sessions=sessions,
+                window_days=self.query_history_days,
+                top_n=self.query_history_top,
+                sql_text_redacted=redacted,
+                collected_at=collected_at,
+            )
+        except Exception as exc:
+            if not self._is_expected_workload_access_error(exc):
+                raise
+            description = (
+                "Workload DMVs could not be queried. Verify CONNECT, "
+                "VIEW DATABASE STATE, and DMV SELECT permissions."
+            )
+            utils_ui.print_warning(
+                f"Workload collection unavailable for '{pool.name}': {exc}"
+            )
+            return unavailable_workload_profile(
+                status="unavailable",
+                description=description,
+                window_days=self.query_history_days,
+                top_n=self.query_history_top,
+                sql_text_redacted=redacted,
+                collected_at=collected_at,
+            )
+
+    @staticmethod
+    def _is_expected_workload_access_error(exc: Exception) -> bool:
+        """Identify database access/state failures that should degrade per pool."""
+        message = str(exc).lower()
+        expected_markers = (
+            "permission",
+            "denied",
+            "forbidden",
+            "not authorized",
+            "login failed",
+            "cannot open",
+            "not accessible",
+            "paused",
+            "view database state",
+            "dm_pdw_exec",
+            "invalid object name",
+            "connection",
+            "timeout",
+        )
+        return isinstance(exc, (FATError, OSError, RuntimeError)) or any(
+            marker in message for marker in expected_markers
         )
 
     def _has_sql_credentials(
@@ -1387,7 +1550,9 @@ class SynapseClient:
 
         elif selected_auth.startswith("SQL Authentication"):
             if not sql_admin_login:
-                utils_ui.print_warning("SQL admin login not available for this workspace.")
+                utils_ui.print_warning(
+                    "SQL admin login not available for this workspace."
+                )
                 return None
             sql_admin_password = utils_ui.prompt_password(
                 f"Enter SQL admin (login: {sql_admin_login}) password: "

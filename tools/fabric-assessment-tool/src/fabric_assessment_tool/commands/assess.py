@@ -5,6 +5,19 @@ from ..services.assessment_service import AssessmentService
 from .base import BaseCommand
 
 
+def _bounded_integer(minimum: int, maximum: int):
+    def parse(value: str) -> int:
+        try:
+            parsed = int(value)
+        except ValueError as exc:
+            raise argparse.ArgumentTypeError("must be an integer") from exc
+        if not minimum <= parsed <= maximum:
+            raise argparse.ArgumentTypeError(f"must be between {minimum} and {maximum}")
+        return parsed
+
+    return parse
+
+
 class AssessCommand(BaseCommand):
     """Command for assessing data sources."""
 
@@ -152,6 +165,34 @@ Examples:
             help="Azure tenant ID for Entra ID SPN authentication (optional, defaults to 'common')",
         )
 
+        parser.add_argument(
+            "--query-history-days",
+            type=_bounded_integer(1, 365),
+            default=7,
+            help="Dedicated SQL pool query-history lookback in days (default: 7)",
+        )
+
+        parser.add_argument(
+            "--query-history-top",
+            type=_bounded_integer(1, 10000),
+            default=1000,
+            help="Maximum recent requests and sessions retained per dedicated pool (default: 1000)",
+        )
+
+        parser.add_argument(
+            "--include-sql-text",
+            action="store_true",
+            default=False,
+            help="Include SQL command text in JSON output (redacted by default)",
+        )
+
+        parser.add_argument(
+            "--skip-query-history",
+            action="store_true",
+            default=False,
+            help="Skip dedicated SQL pool request/session workload collection",
+        )
+
     def handle(self, args: argparse.Namespace) -> None:
         """Handle the assess command execution."""
         print(f"Starting assessment of {args.source} workspaces...")
@@ -184,6 +225,10 @@ Examples:
                 sql_tenant_id=getattr(args, "sql_tenant_id", None),
                 resources=resources,
                 download_notebooks=getattr(args, "download_notebooks", False),
+                query_history_days=getattr(args, "query_history_days", 7),
+                query_history_top=getattr(args, "query_history_top", 1000),
+                include_sql_text=getattr(args, "include_sql_text", False),
+                skip_query_history=getattr(args, "skip_query_history", False),
             )
 
             utils_ui.print(f"Assessment completed successfully!")

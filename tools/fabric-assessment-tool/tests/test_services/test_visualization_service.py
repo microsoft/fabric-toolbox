@@ -456,6 +456,74 @@ class TestVisualizationService:
             html = f.read()
             assert "test-workspace" in html
 
+    def test_generate_workload_profiles(
+        self, visualization_service, sample_synapse_assessment_dir, tmp_path
+    ):
+        resources_dir = (
+            sample_synapse_assessment_dir / "test-workspace" / "resources" / "sql_pools"
+        )
+        resources_dir.mkdir()
+        workload = {
+            "collection_status": "collected",
+            "description": "Collected",
+            "configured_window_days": 7,
+            "configured_top_n": 1000,
+            "sql_text_redacted": True,
+            "observed_start": "2026-01-01T10:00:00",
+            "observed_end": "2026-01-02T11:00:00",
+            "request_count": 3,
+            "session_count": 2,
+            "peak_concurrency": 2,
+            "status_distribution": {"Completed": 3},
+            "resource_class_distribution": {"smallrc": 2, "largerc": 1},
+            "duration_statistics": {
+                "average_ms": 1000,
+                "p50_ms": 900,
+                "p90_ms": 1800,
+                "p99_ms": 1980,
+                "max_ms": 2000,
+            },
+            "temporal_buckets": [
+                {"day_of_week": 0, "hour": 10, "request_count": 2},
+                {"day_of_week": 1, "hour": 11, "request_count": 1},
+            ],
+            "requests": [],
+            "sessions": [],
+        }
+        pool_data = {
+            "type": "dedicated_pool",
+            "pool_data": {
+                "name": "pool1",
+                "sku": "DW100c",
+                "status": "Online",
+                "tables_count": 0,
+                "size_gb": 0,
+                "workload": workload,
+            },
+        }
+        with open(resources_dir / "dedicated_pool_pool1.json", "w") as f:
+            json.dump(pool_data, f)
+
+        output_dir = tmp_path / "reports"
+        visualization_service.generate_report(
+            input_path=str(sample_synapse_assessment_dir),
+            output_path=str(output_dir),
+            view="data-warehousing",
+        )
+
+        warehousing_html = (output_dir / "views" / "data_warehousing.html").read_text(
+            encoding="utf-8"
+        )
+        workspace_html = (output_dir / "workspaces" / "test-workspace.html").read_text(
+            encoding="utf-8"
+        )
+        for html in (warehousing_html, workspace_html):
+            assert "Workload Profile: pool1" in html
+            assert "Resource Class Distribution" in html
+            assert "Duration Distribution (seconds)" in html
+            assert "Temporal Heatmap" in html
+            assert "SELECT " not in html
+
     def test_empty_input_directory(self, visualization_service, tmp_path):
         """Test handling of empty input directory."""
         empty_dir = tmp_path / "empty"

@@ -345,6 +345,20 @@
 </div>
 {% endif %}
 
+{% if workspace.platform == 'synapse' and workspace.resources.sql_pools %}
+<h3 class="mt-2 mb-1">Dedicated SQL Pool Workloads</h3>
+{% for pool in workspace.resources.sql_pools %}
+{% set pool_info = pool.data or pool.pool_data or pool %}
+{% if pool_info.workload %}
+{% set workload = pool_info.workload %}
+{% set workload_pool_name = pool_info.name | default('Unknown') %}
+{% set workload_workspace = workspace_name %}
+{% set workload_id = 'ws-workload-' ~ loop.index %}
+{% include "synapse/_workload_profile.html" %}
+{% endif %}
+{% endfor %}
+{% endif %}
+
 <!-- Admin Resources (Synapse) -->
 {% if workspace.admin %}
 <h3 class="mt-2 mb-1">Admin Resources</h3>
