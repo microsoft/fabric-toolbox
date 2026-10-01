@@ -223,6 +223,8 @@ fat assess --source <synapse|databricks> \
 - `--auth-method`: Authentication method (`azure-cli` or `fabric`). Default: auto-detect based on environment
 - `--sql-admin-password`: SQL admin password for dedicated SQL pools (bypasses interactive prompt)
 - `--create-dmv`: Auto-create vTableSizes DMV without confirmation prompt (for non-interactive execution)
+- `--skip-columns`: Skip all ODBC column metadata queries and emit an explicit `skipped` column collection status
+- `--max-column-objects N`: Collect columns for at most `N` tables and views per database. The positive limit is applied independently to each database using schema, object type, and object name ordering; selected objects always include every column.
 - `--sql-auth-mode`: SQL pool authentication mode for dedicated SQL pools:
   - `sql` (default): Traditional SQL authentication with username/password
   - `entra-interactive`: Entra ID interactive authentication (browser popup with MFA support)
@@ -284,6 +286,13 @@ fat assess --source synapse --ws workspace1 -o ./results \
 
 # Assess while skipping optional serverless SQL activity collection
 fat assess --source synapse --ws workspace1 -o ./results --skip-serverless-activity
+# Skip column collection while preserving the table/view inventory
+fat assess --source synapse --ws workspace1 -o ./results --skip-columns
+
+# Bound column collection for very large databases
+fat assess --source synapse --ws workspace1 -o ./results \
+    --sql-auth-mode entra-default \
+    --max-column-objects 500
 
 # Assess Databricks workspace
 fat assess --source databricks --ws my-workspace --output results_folder
@@ -305,6 +314,31 @@ fat assess --source databricks --cloud aws --ws dev,prod --resources jobs -o res
 # Re-extract jobs and notebooks without repeating the full assessment
 fat assess --source databricks --cloud aws --ws dev --resources jobs,notebooks -o results_folder
 ```
+
+### Synapse Column Metadata
+
+When SQL/Entra ODBC authentication is available, the tool executes one ordered
+`INFORMATION_SCHEMA` query per reachable dedicated or serverless database. The
+query returns tables, views, and their columns in a batch rather than issuing a
+query per object. Dedicated views are added from this ODBC inventory, while
+serverless ODBC results supplement the Synapse dev-endpoint inventory.
+
+Each table/view JSON includes a `columns` array with ordinal position, SQL type,
+nullability, length, precision/scale, datetime precision, default, character
+set, collation, and Fabric Warehouse migration guidance. Compatibility uses:
+
+- `compatible`: directly supported types
+- `review`: types needing size, precision, collation, or conversion review;
+  unknown types also default to this category
+- `unsupported`: types without a direct Fabric Warehouse representation
+
+Objects with 100 or more columns are reported as wide. A workspace-level
+`column_summary.json` records totals, normalized type distribution,
+compatibility counts, wide objects, configured cap, and explicit
+`completed`/`capped`/`partial`/`skipped`/`unavailable` database outcomes.
+Serverless column collection depends on ODBC connectivity and permissions; a
+failure retains the existing inventory and is reported as unavailable rather
+than as a successful empty result.
 
 ### `fat visualize` - Generate interactive HTML reports
 
@@ -338,6 +372,7 @@ fat visualize -i <assessment_output_dir> \
 - **Navigation**: Browse between Overview, Admin, Data Engineering, Data Warehousing, and Data Integration views
 - **Resource Details**: Drill down into individual workspaces for detailed artifact information
 - **Charts**: Visual breakdowns of languages, activity types, pool sizes, and more
+- **Synapse Column Analysis**: Column totals, SQL type distribution, Fabric compatibility, collection status, and workspace-filterable wide tables/views
 
 **Examples:**
 ```bash
@@ -440,6 +475,7 @@ The details of each extracted resource is stored in a specific file, the list of
       "workspace_directory": "/tmp/assessment/workspace1",
       "files_created": [
         "/tmp/assessment/workspace1/summary.json",
+        "/tmp/assessment/workspace1/column_summary.json",
         "/tmp/assessment/workspace1/workspace.json",
         "/tmp/assessment/workspace1/resources/sql_pools/dedicated_pool_dw100c.json",
         "/tmp/assessment/workspace1/resources/sql_pools/serverless_pool_Built-in.json",

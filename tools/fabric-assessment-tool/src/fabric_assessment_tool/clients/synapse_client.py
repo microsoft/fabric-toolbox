@@ -1,83 +1,39 @@
 import builtins
 import json
+from collections import Counter
 from argparse import Namespace
-from datetime import datetime, timezone
-from typing import Dict, Optional
 from datetime import datetime, timedelta, timezone
-from typing import Dict, Optional, cast
+from typing import Any, Dict, Literal, Optional, cast
 
 from fabric_assessment_tool.errors.api import FATError
 
 from ..assessment.common import AssessmentStatus
 from ..assessment.synapse import (
-    CodeObjectCount,
-    CodeObjectLines,
-    SynapseAssessment,
-    SynapseServerlessActivity,
-    SynapseServerlessActivityCollectionMetadata,
-    SynapseServerlessActivitySourceDiagnostic,
-    SynapseAssessmentMetadata,
-    SynapseDataflow,
-    SynapseDataflows,
-    SynapseDataset,
-    SynapseDatasets,
-    SynapseDedicatedDatabase,
-    SynapseDedicatedPool,
-    SynapseDedicatedPools,
-    SynapseIntegrationRuntime,
-    SynapseIntegrationRuntimes,
-    SynapseLibraries,
-    SynapseLibrary,
-    SynapseLinkedService,
-    SynapseLinkedServices,
-    SynapseManagedPrivateEndpoint,
-    SynapseManagedPrivateEndpoints,
-    SynapseNotebook,
-    SynapseNotebooks,
-    SynapsePipeline,
-    SynapsePipelines,
-    SynapseSchema,
-    SynapseSchemas,
-    SynapseServerlessDatabase,
-    SynapseServerlessDatabases,
-    SynapseServerlessPerformanceSummary,
-    SynapseServerlessPool,
-    SynapseSparkConfiguration,
-    SynapseSparkConfigurations,
-    SynapseSparkJobDefinition,
-    SynapseSparkJobDefinitions,
-    SynapseSparkPool,
-    SynapseSparkPools,
-    SynapseSqlPools,
-    SynapseSqlScript,
-    SynapseSqlScripts,
-    SynapseTable,
-    SynapseTables,
-    SynapseView,
-    SynapseViews,
-    SynapseWorkspaceInfo,
-    TableStatistics,
+    CodeObjectCount, CodeObjectLines, SynapseAssessment, SynapseAssessmentMetadata,
+    SynapseColumnDatabaseStatus, SynapseColumnSummary, SynapseCompatibilityTotals,
+    SynapseDataflow, SynapseDataflows, SynapseDataset, SynapseDatasets,
+    SynapseDedicatedDatabase, SynapseDedicatedPool, SynapseDedicatedPools,
+    SynapseIntegrationRuntime, SynapseIntegrationRuntimes, SynapseLibraries,
+    SynapseLibrary, SynapseLinkedService, SynapseLinkedServices,
+    SynapseManagedPrivateEndpoint, SynapseManagedPrivateEndpoints, SynapseNotebook,
+    SynapseNotebooks, SynapsePipeline, SynapsePipelines, SynapseSchema, SynapseSchemas,
+    SynapseServerlessActivity, SynapseServerlessActivityCollectionMetadata,
+    SynapseServerlessActivitySourceDiagnostic, SynapseServerlessDatabase,
+    SynapseServerlessDatabases, SynapseServerlessPerformanceSummary, SynapseServerlessPool,
+    SynapseSparkConfiguration, SynapseSparkConfigurations, SynapseSparkJobDefinition,
+    SynapseSparkJobDefinitions, SynapseSparkPool, SynapseSparkPools, SynapseSqlPools,
+    SynapseSqlScript, SynapseSqlScripts, SynapseTable, SynapseTables, SynapseView,
+    SynapseViews, SynapseWideObject, SynapseWorkspaceInfo, TableStatistics,
 )
 from ..utils import ui as utils_ui
-from ..utils.workload_profile import (
-    build_workload_profile,
-    unavailable_workload_profile,
-)
+from ..utils.workload_profile import build_workload_profile, unavailable_workload_profile
 from .api_client import ApiClient
-from .odbc_client import OdbcClient, SqlAuthMode
 from .odbc_client import (
-    EndpointKind,
-    OdbcClient,
-    ServerlessActivityExpectedError,
-    SqlAuthMode,
+    EndpointKind, OdbcClient, ServerlessActivityExpectedError, SqlAuthMode,
+    SynapseColumnMetadataObject, SynapseColumnMetadataResult,
+    get_fabric_type_compatibility,
 )
-from .token_provider import (
-    FabricNotebookTokenProvider,
-    TokenProvider,
-    create_token_provider,
-)
-
-
+from .token_provider import FabricNotebookTokenProvider, TokenProvider, create_token_provider
 class SynapseClient:
     """Client for Azure Synapse Analytics APIs."""
 
@@ -105,6 +61,8 @@ class SynapseClient:
         serverless_sql_client_id: Optional[str] = None,
         serverless_sql_client_secret: Optional[str] = None,
         serverless_sql_tenant_id: Optional[str] = None,
+        skip_columns: bool = False,
+        max_column_objects: Optional[int] = None,
         **kwargs,
     ):
         """
@@ -133,7 +91,11 @@ class SynapseClient:
             serverless_sql_client_id: Optional SPN client ID override for serverless SQL
             serverless_sql_client_secret: Optional SPN secret override for serverless SQL
             serverless_sql_tenant_id: Optional SPN tenant override for serverless SQL
+            skip_columns: Skip column metadata collection
+            max_column_objects: Optional positive per-database table/view collection cap
         """
+        if max_column_objects is not None and max_column_objects <= 0:
+            raise ValueError("max_column_objects must be a positive integer")
         self.token_provider = token_provider or create_token_provider(auth_method)
         self.custom_subscription_id = subscription_id
         self.sql_admin_password = sql_admin_password
@@ -156,6 +118,8 @@ class SynapseClient:
         self.serverless_sql_client_secret = serverless_sql_client_secret
         self.serverless_sql_tenant_id = serverless_sql_tenant_id
         self._validate_serverless_options()
+        self.skip_columns = skip_columns
+        self.max_column_objects = max_column_objects
         self.authenticate()
         self._workspace_cache: dict[str, SynapseWorkspaceInfo] = {}
         self.dev_endpoint_permission_issues = False
@@ -168,6 +132,12 @@ class SynapseClient:
             raise ValueError("serverless_history_days must be between 1 and 45")
         if not 1 <= self.serverless_top_n <= 10000:
             raise ValueError("serverless_top_n must be between 1 and 10000")
+        self._column_metadata_cache: dict[
+            tuple[str, str], SynapseColumnMetadataResult
+        ] = {}
+        self._object_inventory_cache: dict[
+            tuple[str, str], list[SynapseColumnMetadataObject]
+        ] = {}
 
     def authenticate(self) -> None:
         """Authenticate with Azure using the configured token provider."""
@@ -265,6 +235,8 @@ class SynapseClient:
             self.dev_endpoint_permission_issues = False
             self.unreached_components = []
             self.paused_databases = []
+            self._column_metadata_cache = {}
+            self._object_inventory_cache = {}
 
             # Get workspace details
             workspace_info = self._get_workspace_info(workspace_name)
@@ -304,6 +276,14 @@ class SynapseClient:
                     sql_admin_password,
                 )
             utils_ui.print_extraction_done("Dedicated SQL Pool Workload")
+            utils_ui.print_extracting("Column Metadata")
+            column_summary = self._collect_column_metadata(
+                workspace_name,
+                sql_pools,
+                sql_admin_login,
+                sql_admin_password,
+            )
+            utils_ui.print_extraction_done("Column Metadata")
 
             # Get Spark pools - azure endpoint
             utils_ui.print_extracting("Spark Pools")
@@ -402,6 +382,18 @@ class SynapseClient:
 
                     pool.code_lines = code_object_lines
                     pool.code_objects = code_object_count
+                    pool.tables_count = sum(
+                        len(schema.tables.tables) for schema in db.schemas.schemas
+                    )
+                    pool.size_gb = round(
+                        sum(
+                            table.statistics.table_reserved_space_gb
+                            for schema in db.schemas.schemas
+                            for table in schema.tables.tables
+                            if table.statistics is not None
+                        ),
+                        2,
+                    )
                 utils_ui.print_extraction_done("Table Statistics")
 
             else:
@@ -417,6 +409,8 @@ class SynapseClient:
                 query_history_top=self.query_history_top,
                 sql_text_redacted=not self.include_sql_text,
                 query_history_skipped=self.skip_query_history,
+                skip_columns=self.skip_columns,
+                max_column_objects=self.max_column_objects,
             )
 
             # Determine final status based on permission issues
@@ -452,6 +446,16 @@ class SynapseClient:
             )
             if serverless_activity_status == "unavailable":
                 incomplete_reasons.append("serverless SQL activity was unavailable")
+            if column_summary.collection_status in ("partial", "unavailable"):
+                limited_databases = (
+                    column_summary.partial_databases
+                    + column_summary.unavailable_databases
+                )
+                incomplete_reasons.append(
+                    "column metadata incomplete for databases: ["
+                    + ", ".join(limited_databases)
+                    + "]"
+                )
 
             if incomplete_reasons:
                 status = AssessmentStatus(
@@ -481,10 +485,422 @@ class SynapseClient:
                 assessment_metadata=assessment_metadata,
                 subscription_id=self.subscription_id,
                 resource_group=workspace_info.resource_group,
+                column_summary=column_summary,
             )
 
         except Exception as e:
             raise Exception(f"Failed to assess workspace {workspace_name}: {e}")
+
+    def _collect_column_metadata(
+        self,
+        workspace_name: str,
+        sql_pools: SynapseSqlPools,
+        sql_admin_login: Optional[str],
+        sql_admin_password: Optional[str],
+    ) -> SynapseColumnSummary:
+        """Collect, attach, and summarize column metadata for every SQL database."""
+
+        database_entries: list[tuple[Literal["dedicated", "serverless"], Any]] = [
+            ("dedicated", pool.database) for pool in sql_pools.dedicated_pools
+        ] + [
+            ("serverless", database)
+            for database in sql_pools.serverless_pool.databases.databases
+        ]
+        statuses: list[SynapseColumnDatabaseStatus] = []
+
+        if self.skip_columns:
+            reason = "Column collection was disabled by --skip-columns."
+            if self._has_sql_credentials(sql_admin_login, sql_admin_password):
+                for database_type, database in database_entries:
+                    if database_type != "dedicated":
+                        continue
+                    try:
+                        self._attach_column_metadata(
+                            database,
+                            self._get_or_collect_table_view_objects(
+                                workspace_name,
+                                database.name,
+                                sql_admin_login,
+                                sql_admin_password,
+                            ),
+                        )
+                    except Exception as error:
+                        utils_ui.print_warning(
+                            "Dedicated view inventory unavailable for database "
+                            f"'{database.name}': "
+                            f"{self._safe_odbc_error(error, sql_admin_password, self.sql_client_secret)}"
+                        )
+            statuses = [
+                SynapseColumnDatabaseStatus(
+                    database=database.name,
+                    database_type=database_type,
+                    status="skipped",
+                    objects_considered=self._count_database_objects(database),
+                    objects_collected=0,
+                    columns_collected=0,
+                    reason=reason,
+                )
+                for database_type, database in database_entries
+            ]
+            return self._build_column_summary(
+                statuses=statuses,
+                sql_pools=sql_pools,
+                collection_status="skipped",
+                skipped_reason=reason,
+            )
+
+        if not database_entries:
+            return self._build_column_summary(
+                statuses=[],
+                sql_pools=sql_pools,
+                collection_status="completed",
+            )
+
+        if not self._has_sql_credentials(sql_admin_login, sql_admin_password):
+            reason = (
+                "SQL/Entra credentials were not available for ODBC metadata collection."
+            )
+            statuses = [
+                SynapseColumnDatabaseStatus(
+                    database=database.name,
+                    database_type=database_type,
+                    status="unavailable",
+                    objects_considered=self._count_database_objects(database),
+                    objects_collected=0,
+                    columns_collected=0,
+                    reason=reason,
+                )
+                for database_type, database in database_entries
+            ]
+            return self._build_column_summary(
+                statuses=statuses,
+                sql_pools=sql_pools,
+                collection_status="unavailable",
+            )
+
+        for database_type, database in database_entries:
+            try:
+                metadata = self._get_or_collect_column_metadata(
+                    workspace_name,
+                    database.name,
+                    sql_admin_login,
+                    sql_admin_password,
+                )
+                self._attach_column_metadata(database, metadata.objects)
+                objects_considered = self._count_database_objects(database)
+                database_status: Literal["collected", "capped", "partial"]
+                status_reason: Optional[str] = None
+                if metadata.capped:
+                    database_status = "capped"
+                    status_reason = (
+                        f"Limited to the first {self.max_column_objects} objects "
+                        "ordered by schema, object type, and object name."
+                    )
+                elif metadata.selected_objects < objects_considered:
+                    database_status = "partial"
+                    status_reason = (
+                        f"{objects_considered - metadata.selected_objects} inventory "
+                        "objects were not returned by INFORMATION_SCHEMA.COLUMNS."
+                    )
+                else:
+                    database_status = "collected"
+                statuses.append(
+                    SynapseColumnDatabaseStatus(
+                        database=database.name,
+                        database_type=database_type,
+                        status=database_status,
+                        objects_considered=objects_considered,
+                        objects_collected=metadata.selected_objects,
+                        columns_collected=sum(
+                            len(item.columns)
+                            for item in metadata.objects
+                            if item.columns_collected
+                        ),
+                        reason=status_reason,
+                    )
+                )
+            except Exception as error:
+                reason = self._safe_odbc_error(
+                    error, sql_admin_password, self.sql_client_secret
+                )
+                statuses.append(
+                    SynapseColumnDatabaseStatus(
+                        database=database.name,
+                        database_type=database_type,
+                        status="unavailable",
+                        objects_considered=self._count_database_objects(database),
+                        objects_collected=0,
+                        columns_collected=0,
+                        reason=reason,
+                    )
+                )
+                utils_ui.print_warning(
+                    f"Column metadata unavailable for database '{database.name}': {reason}"
+                )
+
+        unavailable = any(status.status == "unavailable" for status in statuses)
+        partial = any(status.status == "partial" for status in statuses)
+        collected = any(
+            status.status in ("collected", "capped", "partial") for status in statuses
+        )
+        capped = any(status.status == "capped" for status in statuses)
+        if unavailable and collected:
+            collection_status: Literal[
+                "completed", "capped", "partial", "skipped", "unavailable"
+            ] = "partial"
+        elif unavailable:
+            collection_status = "unavailable"
+        elif partial:
+            collection_status = "partial"
+        elif capped:
+            collection_status = "capped"
+        else:
+            collection_status = "completed"
+
+        return self._build_column_summary(
+            statuses=statuses,
+            sql_pools=sql_pools,
+            collection_status=collection_status,
+        )
+
+    def _build_column_summary(
+        self,
+        statuses: list[SynapseColumnDatabaseStatus],
+        sql_pools: SynapseSqlPools,
+        collection_status: Literal[
+            "completed", "capped", "partial", "skipped", "unavailable"
+        ],
+        skipped_reason: Optional[str] = None,
+    ) -> SynapseColumnSummary:
+        """Build a typed workspace summary from attached column lists."""
+
+        data_type_counts: Counter[str] = Counter()
+        compatibility_counts: Counter[str] = Counter()
+        wide_objects: list[SynapseWideObject] = []
+        total_columns = 0
+        nullable_columns = 0
+
+        database_entries: list[tuple[Literal["dedicated", "serverless"], Any]] = [
+            ("dedicated", pool.database) for pool in sql_pools.dedicated_pools
+        ] + [
+            ("serverless", database)
+            for database in sql_pools.serverless_pool.databases.databases
+        ]
+        for database_type, database in database_entries:
+            for schema in database.schemas.schemas:
+                for object_type, objects in (
+                    ("table", schema.tables.tables),
+                    ("view", schema.views.views),
+                ):
+                    for item in objects:
+                        column_count = len(item.columns)
+                        total_columns += column_count
+                        nullable_columns += sum(
+                            1 for column in item.columns if column.is_nullable
+                        )
+                        data_type_counts.update(
+                            column.data_type for column in item.columns
+                        )
+                        compatibility_counts.update(
+                            column.compatibility for column in item.columns
+                        )
+                        if column_count >= 100:
+                            wide_objects.append(
+                                SynapseWideObject(
+                                    database=database.name,
+                                    schema=schema.name,
+                                    object_type=cast(
+                                        Literal["table", "view"], object_type
+                                    ),
+                                    name=item.name,
+                                    column_count=column_count,
+                                )
+                            )
+
+        data_types = []
+        for data_type, count in sorted(
+            data_type_counts.items(), key=lambda item: (-item[1], item[0])
+        ):
+            compatibility = get_fabric_type_compatibility(data_type)
+            data_types.append(
+                SynapseDataTypeSummary(
+                    data_type=data_type,
+                    column_count=count,
+                    compatibility=compatibility.classification,
+                    compatibility_note=compatibility.note,
+                )
+            )
+
+        wide_objects.sort(
+            key=lambda item: (
+                item.database.lower(),
+                item.schema.lower(),
+                item.object_type,
+                item.name.lower(),
+            )
+        )
+        return SynapseColumnSummary(
+            collection_status=collection_status,
+            generated_at=self._get_timestamp(),
+            configured_max_column_objects=self.max_column_objects,
+            wide_object_threshold=100,
+            total_objects_considered=sum(
+                status.objects_considered for status in statuses
+            ),
+            total_objects_collected=sum(
+                status.objects_collected for status in statuses
+            ),
+            total_columns=total_columns,
+            nullable_columns=nullable_columns,
+            data_types=data_types,
+            compatibility_totals=SynapseCompatibilityTotals(
+                compatible=compatibility_counts["compatible"],
+                review=compatibility_counts["review"],
+                unsupported=compatibility_counts["unsupported"],
+            ),
+            wide_objects=wide_objects,
+            database_statuses=statuses,
+            capped_databases=[
+                status.database for status in statuses if status.status == "capped"
+            ],
+            partial_databases=[
+                status.database for status in statuses if status.status == "partial"
+            ],
+            unavailable_databases=[
+                status.database for status in statuses if status.status == "unavailable"
+            ],
+            skipped_reason=skipped_reason,
+        )
+
+    def _get_or_collect_column_metadata(
+        self,
+        workspace_name: str,
+        database_name: str,
+        sql_admin_login: Optional[str],
+        sql_admin_password: Optional[str],
+    ) -> SynapseColumnMetadataResult:
+        """Return cached database metadata or execute its single batch query."""
+
+        cache_key = (workspace_name.lower(), database_name.lower())
+        if cache_key not in self._column_metadata_cache:
+            with self._create_odbc_client(
+                workspace_name=workspace_name,
+                database_name=database_name,
+                sql_admin_login=sql_admin_login,
+                sql_admin_password=sql_admin_password,
+            ) as odbc_client:
+                self._column_metadata_cache[cache_key] = (
+                    odbc_client.get_column_metadata(self.max_column_objects)
+                )
+        return self._column_metadata_cache[cache_key]
+
+    def _get_or_collect_table_view_objects(
+        self,
+        workspace_name: str,
+        database_name: str,
+        sql_admin_login: Optional[str],
+        sql_admin_password: Optional[str],
+    ) -> list[SynapseColumnMetadataObject]:
+        """Return cached table/view inventory without querying columns."""
+
+        cache_key = (workspace_name.lower(), database_name.lower())
+        if cache_key not in self._object_inventory_cache:
+            with self._create_odbc_client(
+                workspace_name=workspace_name,
+                database_name=database_name,
+                sql_admin_login=sql_admin_login,
+                sql_admin_password=sql_admin_password,
+            ) as odbc_client:
+                self._object_inventory_cache[cache_key] = (
+                    odbc_client.get_table_view_objects()
+                )
+        return self._object_inventory_cache[cache_key]
+
+    def _attach_column_metadata(
+        self, database, metadata_objects: list[SynapseColumnMetadataObject]
+    ) -> None:
+        """Attach columns and add ODBC-discovered tables/views to a database."""
+
+        schemas = {schema.name.lower(): schema for schema in database.schemas.schemas}
+        for metadata_object in metadata_objects:
+            schema_key = metadata_object.schema.lower()
+            schema = schemas.get(schema_key)
+            if schema is None:
+                schema = SynapseSchema(
+                    name=metadata_object.schema,
+                    database=database.name,
+                    tables=SynapseTables(tables=[]),
+                    views=SynapseViews(views=[]),
+                    json_response={
+                        "name": metadata_object.schema,
+                        "source": "INFORMATION_SCHEMA",
+                    },
+                )
+                database.schemas.schemas.append(schema)
+                schemas[schema_key] = schema
+
+            collection: Any = (
+                schema.tables.tables
+                if metadata_object.object_type == "table"
+                else schema.views.views
+            )
+            item = next(
+                (
+                    existing
+                    for existing in collection
+                    if existing.name.lower() == metadata_object.name.lower()
+                ),
+                None,
+            )
+            if item is None:
+                raw_response = {
+                    "name": metadata_object.name,
+                    "schema": metadata_object.schema,
+                    "object_type": metadata_object.object_type,
+                    "source": "INFORMATION_SCHEMA",
+                }
+                if metadata_object.object_type == "table":
+                    item = SynapseTable(
+                        name=metadata_object.name,
+                        database=database.name,
+                        schema=metadata_object.schema,
+                        statistics=None,
+                        json_response=raw_response,
+                    )
+                else:
+                    item = SynapseView(
+                        name=metadata_object.name,
+                        database=database.name,
+                        schema=metadata_object.schema,
+                        json_response=raw_response,
+                    )
+                collection.append(item)
+
+            if metadata_object.columns_collected:
+                item.columns = sorted(
+                    metadata_object.columns,
+                    key=lambda column: column.ordinal_position,
+                )
+
+        database.schemas.schemas.sort(key=lambda schema: schema.name.lower())
+        for schema in database.schemas.schemas:
+            schema.tables.tables.sort(key=lambda table: table.name.lower())
+            schema.views.views.sort(key=lambda view: view.name.lower())
+
+    @staticmethod
+    def _count_database_objects(database) -> int:
+        return sum(
+            len(schema.tables.tables) + len(schema.views.views)
+            for schema in database.schemas.schemas
+        )
+
+    @staticmethod
+    def _safe_odbc_error(error: Exception, *sensitive_values: Optional[str]) -> str:
+        message = str(error)
+        for value in sensitive_values:
+            if value and value != "__entra_auth__":
+                message = message.replace(value, "***")
+        return f"ODBC metadata query failed ({type(error).__name__}): {message[:500]}"
 
     def _get_workspace_info(self, workspace_name: str) -> SynapseWorkspaceInfo:
         """Get Synapse workspace information.
@@ -587,6 +1003,10 @@ class SynapseClient:
             )
             for pool in json_req["value"]
         ]
+        for pool in dedicated_pools:
+            pool.tables_count = sum(
+                len(schema.tables.tables) for schema in pool.database.schemas.schemas
+            )
 
         serverless_databases = self._get_serverless_databases(workspace_name)
 
@@ -1237,33 +1657,28 @@ class SynapseClient:
             return SynapseSchemas(schemas=[])
 
         try:
-            odbc_client = self._create_odbc_client(
-                workspace_name=workspace_name,
-                database_name=database_name,
-                sql_admin_login=sql_admin_login,
-                sql_admin_password=sql_admin_password,
-            )
-
-            schema_names = odbc_client.get_schemas()
-
-            schemas = [
-                SynapseSchema(
-                    name=schema_name,
-                    database=database_name,
-                    tables=self._get_dedicated_schema_tables(
-                        workspace_name,
-                        database_name,
-                        schema_name,
-                        sql_admin_login,
-                        sql_admin_password,
-                    ),
-                    views=SynapseViews(views=[]),
-                    json_response={"name": schema_name},
+            if self.skip_columns:
+                metadata_objects = self._get_or_collect_table_view_objects(
+                    workspace_name,
+                    database_name,
+                    sql_admin_login,
+                    sql_admin_password,
                 )
-                for schema_name in schema_names
-            ]
+            else:
+                metadata_objects = self._get_or_collect_column_metadata(
+                    workspace_name,
+                    database_name,
+                    sql_admin_login,
+                    sql_admin_password,
+                ).objects
 
-            return SynapseSchemas(schemas=schemas)
+            database = SynapseDedicatedDatabase(
+                name=database_name,
+                schemas=SynapseSchemas(schemas=[]),
+                json_response={"name": database_name},
+            )
+            self._attach_column_metadata(database, metadata_objects)
+            return database.schemas
 
         except FATError as e:
             if e.status_code == "UpdateNotAllowedOnPausedDatabase":
@@ -1346,14 +1761,13 @@ class SynapseClient:
             return SynapseTables(tables=[])
 
         try:
-            odbc_client = self._create_odbc_client(
+            with self._create_odbc_client(
                 workspace_name=workspace_name,
                 database_name=database_name,
                 sql_admin_login=sql_admin_login,
                 sql_admin_password=sql_admin_password,
-            )
-
-            table_names = odbc_client.get_tables(schema_name)
+            ) as odbc_client:
+                table_names = odbc_client.get_tables(schema_name)
 
             tables = [
                 SynapseTable(
@@ -1382,30 +1796,15 @@ class SynapseClient:
     ) -> tuple[list[TableStatistics], list[CodeObjectCount], list[CodeObjectLines]]:
         """Get table statistics from a database."""
 
-        odbc_client = self._create_odbc_client(
+        with self._create_odbc_client(
             workspace_name=workspace_name,
             database_name=database_name,
             sql_admin_login=sql_user,
             sql_admin_password=sql_password,
-        )
-
-        if not odbc_client.check_table_statistics_dmv_exists():
-            if self.create_dmv:
-                # Auto-create DMV in non-interactive mode
-                utils_ui.print_extracting(
-                    f"Creating table statistics DMV in database {database_name}"
-                )
-                odbc_client.create_table_statistics_dmv()
-                utils_ui.print_extraction_done(
-                    f"Creating table statistics DMV in database {database_name}"
-                )
-            else:
-                # Ask for permission to create the view
-                builtins.print("\r")  # Clear previous line
-                confirmation = utils_ui.prompt_confirm(
-                    f"Do you want to create the vTableSizes DMV in database '{database_name}' to obtain detailed table statistics? (y/n): "
-                )
-                if confirmation:
+        ) as odbc_client:
+            if not odbc_client.check_table_statistics_dmv_exists():
+                if self.create_dmv:
+                    # Auto-create DMV in non-interactive mode
                     utils_ui.print_extracting(
                         f"Creating table statistics DMV in database {database_name}"
                     )
@@ -1414,16 +1813,30 @@ class SynapseClient:
                         f"Creating table statistics DMV in database {database_name}"
                     )
                 else:
-                    utils_ui.print_warning(
-                        f"Skipping table statistics collection for database {database_name}"
+                    # Ask for permission to create the view
+                    builtins.print("\r")  # Clear previous line
+                    confirmation = utils_ui.prompt_confirm(
+                        f"Do you want to create the vTableSizes DMV in database '{database_name}' to obtain detailed table statistics? (y/n): "
                     )
-                    return ([], [], [])
+                    if confirmation:
+                        utils_ui.print_extracting(
+                            f"Creating table statistics DMV in database {database_name}"
+                        )
+                        odbc_client.create_table_statistics_dmv()
+                        utils_ui.print_extraction_done(
+                            f"Creating table statistics DMV in database {database_name}"
+                        )
+                    else:
+                        utils_ui.print_warning(
+                            f"Skipping table statistics collection for database {database_name}"
+                        )
+                        return ([], [], [])
 
-        return (
-            list(odbc_client.get_table_statistics(database_name)),
-            list(odbc_client.get_object_count(database_name)),
-            list(odbc_client.get_code_lines_statistics(database_name)),
-        )
+            return (
+                list(odbc_client.get_table_statistics(database_name)),
+                list(odbc_client.get_object_count(database_name)),
+                list(odbc_client.get_code_lines_statistics(database_name)),
+            )
 
     def _get_dedicated_pool_workload(
         self,
@@ -1598,8 +2011,8 @@ class SynapseClient:
 
         # Interactive mode - prompt user to choose authentication type
         utils_ui.print_fabric_assessment_tool(
-            "NOTICE: This tool can collect detailed table statistics from Azure Synapse "
-            "Analytics dedicated SQL pools using DMVs (Dynamic Management Views)."
+            "NOTICE: This tool can collect table/view column metadata and detailed "
+            "table statistics from Azure Synapse Analytics SQL endpoints."
         )
         utils_ui.print_fabric_assessment_tool(
             "For more information: "
@@ -1608,7 +2021,7 @@ class SynapseClient:
 
         # Prompt for authentication type
         auth_choices = [
-            "Skip - Do not collect dedicated pool statistics",
+            "Skip - Do not collect SQL metadata or dedicated pool statistics",
             "SQL Authentication - Use SQL admin username and password",
             "Entra ID Interactive - Browser login with MFA support",
             "Entra ID Default - Use Azure CLI credentials or managed identity",

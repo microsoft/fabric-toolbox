@@ -1,5 +1,6 @@
 from dataclasses import asdict, dataclass, field
 from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Literal, Optional
 
 from .common import AssessmentStatus
 
@@ -94,6 +95,98 @@ class SynapseWorkspaceInfo:
     json_response: Any
 
 
+ColumnCompatibility = Literal["compatible", "review", "unsupported"]
+
+
+@dataclass
+class SynapseColumn:
+    """Column metadata collected from INFORMATION_SCHEMA.COLUMNS."""
+
+    name: str
+    ordinal_position: int
+    data_type: str
+    is_nullable: bool
+    character_maximum_length: Optional[int]
+    numeric_precision: Optional[int]
+    numeric_scale: Optional[int]
+    datetime_precision: Optional[int]
+    column_default: Optional[str]
+    character_set_name: Optional[str]
+    collation_name: Optional[str]
+    compatibility: ColumnCompatibility
+    compatibility_note: str
+    json_response: Any
+
+
+@dataclass
+class SynapseDataTypeSummary:
+    """Column count and Fabric compatibility for a normalized SQL data type."""
+
+    data_type: str
+    column_count: int
+    compatibility: ColumnCompatibility
+    compatibility_note: str
+
+
+@dataclass
+class SynapseCompatibilityTotals:
+    """Column totals grouped by Fabric compatibility classification."""
+
+    compatible: int = 0
+    review: int = 0
+    unsupported: int = 0
+
+
+@dataclass
+class SynapseWideObject:
+    """Table or view meeting the configured wide-object threshold."""
+
+    database: str
+    schema: str
+    object_type: Literal["table", "view"]
+    name: str
+    column_count: int
+
+
+@dataclass
+class SynapseColumnDatabaseStatus:
+    """Column collection outcome for one dedicated or serverless database."""
+
+    database: str
+    database_type: Literal["dedicated", "serverless"]
+    status: Literal["collected", "capped", "partial", "skipped", "unavailable"]
+    objects_considered: int
+    objects_collected: int
+    columns_collected: int
+    reason: Optional[str] = None
+
+
+@dataclass
+class SynapseColumnSummary:
+    """Workspace-level column collection and Fabric compatibility summary."""
+
+    collection_status: Literal[
+        "completed", "capped", "partial", "skipped", "unavailable"
+    ]
+    generated_at: str
+    configured_max_column_objects: Optional[int]
+    wide_object_threshold: int
+    total_objects_considered: int
+    total_objects_collected: int
+    total_columns: int
+    nullable_columns: int
+    data_types: List[SynapseDataTypeSummary] = field(default_factory=list)
+    compatibility_totals: SynapseCompatibilityTotals = field(
+        default_factory=SynapseCompatibilityTotals
+    )
+    wide_objects: List[SynapseWideObject] = field(default_factory=list)
+    database_statuses: List[SynapseColumnDatabaseStatus] = field(default_factory=list)
+    capped_databases: List[str] = field(default_factory=list)
+    partial_databases: List[str] = field(default_factory=list)
+    unavailable_databases: List[str] = field(default_factory=list)
+    skipped_reason: Optional[str] = None
+
+
 @dataclass
 class TableStatistics:
     """Table statistics from vTableSizes view."""
@@ -139,6 +232,7 @@ class SynapseTable:
     schema: str
     statistics: Optional[TableStatistics]
     json_response: Any
+    columns: List[SynapseColumn] = field(default_factory=list)
 
 
 @dataclass
@@ -156,6 +250,7 @@ class SynapseView:
     database: str
     schema: str
     json_response: Any
+    columns: List[SynapseColumn] = field(default_factory=list)
 
 
 @dataclass
@@ -201,7 +296,7 @@ class SynapseDedicatedPool:
     sku: str
     database: SynapseDedicatedDatabase
     tables_count: int
-    size_gb: int
+    size_gb: float
     code_lines: list[CodeObjectLines]
     code_objects: list[CodeObjectCount]
     json_response: Any
@@ -496,6 +591,8 @@ class SynapseAssessmentMetadata:
     query_history_top: int = 1000
     sql_text_redacted: bool = True
     query_history_skipped: bool = False
+    skip_columns: bool = False
+    max_column_objects: Optional[int] = None
 
 
 @dataclass
@@ -644,6 +741,7 @@ class SynapseAssessment:
     # Connection information
     subscription_id: Optional[str] = None
     resource_group: Optional[str] = None
+    column_summary: Optional[SynapseColumnSummary] = None
 
     def get_summary(self) -> dict:
         """Create a summary of workspace assessment data."""
@@ -772,6 +870,27 @@ class SynapseAssessment:
         summary["data_warehouse"]["counts"]["dedicated"][
             "tables"
         ] = total_dedicated_tables
+        total_dedicated_views = sum(
+            len(schema.views.views)
+            for pool in self.sql_pools.dedicated_pools
+            for schema in pool.database.schemas.schemas
+        )
+        summary["data_warehouse"]["counts"]["dedicated"][
+            "views"
+        ] = total_dedicated_views
+
+        if self.column_summary is not None:
+            summary["data_warehouse"]["columns"] = {
+                "collection_status": self.column_summary.collection_status,
+                "objects_considered": self.column_summary.total_objects_considered,
+                "objects_collected": self.column_summary.total_objects_collected,
+                "total_columns": self.column_summary.total_columns,
+                "nullable_columns": self.column_summary.nullable_columns,
+                "wide_objects": len(self.column_summary.wide_objects),
+                "compatibility_totals": asdict(
+                    self.column_summary.compatibility_totals
+                ),
+            }
 
         dedicated_table_rows = sum(
             sum(

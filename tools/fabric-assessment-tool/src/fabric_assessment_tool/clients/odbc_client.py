@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import hashlib
 from collections import defaultdict
+from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
 from typing import Any, Iterator, Literal, Optional, Sequence
 
@@ -10,6 +11,8 @@ from mssql_python import connect  # type: ignore[import-untyped]
 from ..assessment.synapse import (
     CodeObjectCount,
     CodeObjectLines,
+    ColumnCompatibility,
+    SynapseColumn,
     SynapseQueryActivity,
     SynapseSessionActivity,
     SynapseServerlessActivity,
@@ -22,7 +25,6 @@ from ..assessment.synapse import (
     SynapseServerlessTopQueryMetric,
     TableStatistics,
 )
-
 # Supported SQL authentication modes
 SqlAuthMode = Literal["sql", "entra-interactive", "entra-spn", "entra-default"]
 EndpointKind = Literal["dedicated", "serverless"]
@@ -139,6 +141,127 @@ class ServerlessActivityExpectedError(Exception):
         super().__init__(message)
         self.category = category
         self.message = message
+
+
+@dataclass(frozen=True)
+class FabricTypeCompatibility:
+    """Fabric Warehouse compatibility guidance for a SQL data type."""
+
+    classification: ColumnCompatibility
+    note: str
+
+
+@dataclass
+class SynapseColumnMetadataObject:
+    """A table or view returned by the batched column metadata query."""
+
+    schema: str
+    object_type: Literal["table", "view"]
+    name: str
+    columns: list[SynapseColumn]
+    columns_collected: bool
+
+
+@dataclass
+class SynapseColumnMetadataResult:
+    """Batched metadata result for one database."""
+
+    objects: list[SynapseColumnMetadataObject]
+    total_objects: int
+    selected_objects: int
+    capped: bool
+
+
+_FABRIC_TYPE_COMPATIBILITY: dict[str, FabricTypeCompatibility] = {
+    "bigint": FabricTypeCompatibility("compatible", "Directly supported."),
+    "bit": FabricTypeCompatibility("compatible", "Directly supported."),
+    "date": FabricTypeCompatibility("compatible", "Directly supported."),
+    "datetime2": FabricTypeCompatibility("compatible", "Directly supported."),
+    "decimal": FabricTypeCompatibility("compatible", "Directly supported."),
+    "float": FabricTypeCompatibility("compatible", "Directly supported."),
+    "int": FabricTypeCompatibility("compatible", "Directly supported."),
+    "numeric": FabricTypeCompatibility("compatible", "Directly supported."),
+    "real": FabricTypeCompatibility("compatible", "Directly supported."),
+    "smallint": FabricTypeCompatibility("compatible", "Directly supported."),
+    "time": FabricTypeCompatibility("compatible", "Directly supported."),
+    "tinyint": FabricTypeCompatibility("compatible", "Directly supported."),
+    "binary": FabricTypeCompatibility(
+        "review", "Review binary length and downstream usage."
+    ),
+    "char": FabricTypeCompatibility("review", "Review character length and collation."),
+    "money": FabricTypeCompatibility(
+        "review", "Consider an explicit decimal precision and scale."
+    ),
+    "nchar": FabricTypeCompatibility(
+        "review", "Review character length and collation."
+    ),
+    "nvarchar": FabricTypeCompatibility(
+        "review", "Review character length and collation."
+    ),
+    "smalldatetime": FabricTypeCompatibility(
+        "review", "Review conversion to datetime2 and required precision."
+    ),
+    "smallmoney": FabricTypeCompatibility(
+        "review", "Consider an explicit decimal precision and scale."
+    ),
+    "varbinary": FabricTypeCompatibility(
+        "review", "Review binary length and downstream usage."
+    ),
+    "varchar": FabricTypeCompatibility(
+        "review", "Review character length and collation."
+    ),
+    "datetime": FabricTypeCompatibility(
+        "review", "Review conversion to datetime2 and required precision."
+    ),
+    "datetimeoffset": FabricTypeCompatibility(
+        "unsupported", "No direct Fabric Warehouse target representation."
+    ),
+    "geography": FabricTypeCompatibility(
+        "unsupported", "No direct Fabric Warehouse target representation."
+    ),
+    "geometry": FabricTypeCompatibility(
+        "unsupported", "No direct Fabric Warehouse target representation."
+    ),
+    "hierarchyid": FabricTypeCompatibility(
+        "unsupported", "No direct Fabric Warehouse target representation."
+    ),
+    "image": FabricTypeCompatibility(
+        "unsupported", "Deprecated type without a direct target representation."
+    ),
+    "ntext": FabricTypeCompatibility(
+        "unsupported", "Deprecated type without a direct target representation."
+    ),
+    "rowversion": FabricTypeCompatibility(
+        "unsupported", "No direct Fabric Warehouse target representation."
+    ),
+    "sql_variant": FabricTypeCompatibility(
+        "unsupported", "No direct Fabric Warehouse target representation."
+    ),
+    "text": FabricTypeCompatibility(
+        "unsupported", "Deprecated type without a direct target representation."
+    ),
+    "timestamp": FabricTypeCompatibility(
+        "unsupported", "No direct Fabric Warehouse target representation."
+    ),
+    "uniqueidentifier": FabricTypeCompatibility(
+        "unsupported", "No direct Fabric Warehouse target representation."
+    ),
+    "xml": FabricTypeCompatibility(
+        "unsupported", "No direct Fabric Warehouse target representation."
+    ),
+}
+
+
+def get_fabric_type_compatibility(data_type: str) -> FabricTypeCompatibility:
+    """Return centralized Fabric Warehouse compatibility guidance."""
+
+    normalized_type = (data_type or "").strip().lower()
+    return _FABRIC_TYPE_COMPATIBILITY.get(
+        normalized_type,
+        FabricTypeCompatibility(
+            "review", "Unknown type; review target support and conversion requirements."
+        ),
+    )
 
 
 class OdbcClient:
@@ -482,6 +605,180 @@ WHERE TABLE_SCHEMA = '{schema_name}' AND TABLE_TYPE = 'BASE TABLE'
 ORDER BY TABLE_NAME
 """
         return [row.TABLE_NAME for row in self.execute_query(query)]
+
+    @staticmethod
+    def _row_value(row: Any, name: str) -> Any:
+        """Read a driver row value without depending on one row implementation."""
+
+        if isinstance(row, dict):
+            return row.get(name)
+        if hasattr(row, name):
+            return getattr(row, name)
+        if hasattr(row, name.lower()):
+            return getattr(row, name.lower())
+        try:
+            return row[name]
+        except (KeyError, TypeError, IndexError):
+            return None
+
+    @staticmethod
+    def _optional_int(value: Any) -> Optional[int]:
+        if value is None:
+            return None
+        return int(value)
+
+    def get_column_metadata(
+        self, max_objects: Optional[int] = None
+    ) -> SynapseColumnMetadataResult:
+        """Retrieve all table/view columns using one ordered database query.
+
+        The optional cap is applied after grouping the complete result set, so a
+        selected object always receives all of its columns.
+        """
+
+        if max_objects is not None and max_objects <= 0:
+            raise ValueError("max_objects must be a positive integer")
+
+        query = """
+SELECT
+    c.TABLE_SCHEMA,
+    t.TABLE_TYPE,
+    c.TABLE_NAME,
+    c.COLUMN_NAME,
+    c.ORDINAL_POSITION,
+    c.COLUMN_DEFAULT,
+    c.IS_NULLABLE,
+    c.DATA_TYPE,
+    c.CHARACTER_MAXIMUM_LENGTH,
+    c.NUMERIC_PRECISION,
+    c.NUMERIC_SCALE,
+    c.DATETIME_PRECISION,
+    c.CHARACTER_SET_NAME,
+    c.COLLATION_NAME
+FROM INFORMATION_SCHEMA.COLUMNS AS c
+INNER JOIN INFORMATION_SCHEMA.TABLES AS t
+    ON t.TABLE_CATALOG = c.TABLE_CATALOG
+    AND t.TABLE_SCHEMA = c.TABLE_SCHEMA
+    AND t.TABLE_NAME = c.TABLE_NAME
+WHERE t.TABLE_TYPE IN ('BASE TABLE', 'VIEW')
+ORDER BY
+    c.TABLE_SCHEMA,
+    t.TABLE_TYPE,
+    c.TABLE_NAME,
+    c.ORDINAL_POSITION
+"""
+        grouped: dict[
+            tuple[str, Literal["table", "view"], str], list[SynapseColumn]
+        ] = {}
+
+        for row in self.execute_query(query):
+            schema = str(self._row_value(row, "TABLE_SCHEMA") or "")
+            table_type = str(self._row_value(row, "TABLE_TYPE") or "").upper()
+            object_type: Literal["table", "view"] = (
+                "view" if table_type == "VIEW" else "table"
+            )
+            object_name = str(self._row_value(row, "TABLE_NAME") or "")
+            data_type = str(self._row_value(row, "DATA_TYPE") or "").lower()
+            compatibility = get_fabric_type_compatibility(data_type)
+            raw_response = {
+                field.lower(): self._row_value(row, field)
+                for field in (
+                    "TABLE_SCHEMA",
+                    "TABLE_TYPE",
+                    "TABLE_NAME",
+                    "COLUMN_NAME",
+                    "ORDINAL_POSITION",
+                    "COLUMN_DEFAULT",
+                    "IS_NULLABLE",
+                    "DATA_TYPE",
+                    "CHARACTER_MAXIMUM_LENGTH",
+                    "NUMERIC_PRECISION",
+                    "NUMERIC_SCALE",
+                    "DATETIME_PRECISION",
+                    "CHARACTER_SET_NAME",
+                    "COLLATION_NAME",
+                )
+            }
+            column = SynapseColumn(
+                name=str(self._row_value(row, "COLUMN_NAME") or ""),
+                ordinal_position=int(self._row_value(row, "ORDINAL_POSITION") or 0),
+                data_type=data_type,
+                is_nullable=str(self._row_value(row, "IS_NULLABLE") or "").upper()
+                == "YES",
+                character_maximum_length=self._optional_int(
+                    self._row_value(row, "CHARACTER_MAXIMUM_LENGTH")
+                ),
+                numeric_precision=self._optional_int(
+                    self._row_value(row, "NUMERIC_PRECISION")
+                ),
+                numeric_scale=self._optional_int(self._row_value(row, "NUMERIC_SCALE")),
+                datetime_precision=self._optional_int(
+                    self._row_value(row, "DATETIME_PRECISION")
+                ),
+                column_default=self._row_value(row, "COLUMN_DEFAULT"),
+                character_set_name=self._row_value(row, "CHARACTER_SET_NAME"),
+                collation_name=self._row_value(row, "COLLATION_NAME"),
+                compatibility=compatibility.classification,
+                compatibility_note=compatibility.note,
+                json_response=raw_response,
+            )
+            grouped.setdefault((schema, object_type, object_name), []).append(column)
+
+        object_keys = list(grouped)
+        selected_keys = set(
+            object_keys if max_objects is None else object_keys[:max_objects]
+        )
+        objects = [
+            SynapseColumnMetadataObject(
+                schema=schema,
+                object_type=object_type,
+                name=name,
+                columns=(
+                    grouped[(schema, object_type, name)]
+                    if (schema, object_type, name) in selected_keys
+                    else []
+                ),
+                columns_collected=(schema, object_type, name) in selected_keys,
+            )
+            for schema, object_type, name in object_keys
+        ]
+        total_objects = len(objects)
+        selected_objects = len(selected_keys)
+        return SynapseColumnMetadataResult(
+            objects=objects,
+            total_objects=total_objects,
+            selected_objects=selected_objects,
+            capped=selected_objects < total_objects,
+        )
+
+    def get_table_view_objects(self) -> list[SynapseColumnMetadataObject]:
+        """Retrieve table/view inventory without querying column metadata."""
+
+        query = """
+SELECT
+    TABLE_SCHEMA,
+    TABLE_TYPE,
+    TABLE_NAME
+FROM INFORMATION_SCHEMA.TABLES
+WHERE TABLE_TYPE IN ('BASE TABLE', 'VIEW')
+ORDER BY
+    TABLE_SCHEMA,
+    TABLE_TYPE,
+    TABLE_NAME
+"""
+        objects = []
+        for row in self.execute_query(query):
+            table_type = str(self._row_value(row, "TABLE_TYPE") or "").upper()
+            objects.append(
+                SynapseColumnMetadataObject(
+                    schema=str(self._row_value(row, "TABLE_SCHEMA") or ""),
+                    object_type="view" if table_type == "VIEW" else "table",
+                    name=str(self._row_value(row, "TABLE_NAME") or ""),
+                    columns=[],
+                    columns_collected=False,
+                )
+            )
+        return objects
 
     def check_table_statistics_dmv_exists(self) -> bool:
         """Check if the vTableSizes view exists in the master database."""

@@ -35,6 +35,15 @@ def _bounded_integer(minimum: int, maximum: int):
     return parse
 
 
+def positive_int(value: str) -> int:
+    """Argparse type requiring a positive integer."""
+
+    parsed = int(value)
+    if parsed <= 0:
+        raise argparse.ArgumentTypeError("must be a positive integer")
+    return parsed
+
+
 class AssessCommand(BaseCommand):
     """Command for assessing data sources."""
 
@@ -50,6 +59,7 @@ class AssessCommand(BaseCommand):
 Examples:
   fat assess --source synapse --mode full --ws workspace1,workspace2 -o output_dir/
   fat assess --source synapse --mode full --ws workspace1 --subscription-id 12345678-1234-1234-1234-123456789012 -o output_dir/
+  fat assess --source synapse --mode full --ws workspace1 --max-column-objects 500 -o output_dir/
   fat assess --source databricks --mode full --ws my-workspace --output results/ --format json
   fat assess --source databricks --cloud aws --ws my-workspace --output results/
   fat assess --source databricks --cloud aws --ws dev,prod --resources jobs -o results/
@@ -148,6 +158,24 @@ Examples:
             action="store_true",
             default=False,
             help="Auto-create vTableSizes DMV without confirmation prompt (for non-interactive execution)",
+        )
+
+        parser.add_argument(
+            "--skip-columns",
+            action="store_true",
+            default=False,
+            help="Skip ODBC column metadata collection and compatibility summaries",
+        )
+
+        parser.add_argument(
+            "--max-column-objects",
+            type=positive_int,
+            default=None,
+            metavar="N",
+            help=(
+                "Collect columns for at most N tables/views per database, "
+                "ordered deterministically without partial objects"
+            ),
         )
 
         # SQL authentication mode options for dedicated SQL pools
@@ -347,6 +375,8 @@ Examples:
                 serverless_sql_tenant_id=getattr(
                     args, "serverless_sql_tenant_id", None
                 ),
+                skip_columns=getattr(args, "skip_columns", False),
+                max_column_objects=getattr(args, "max_column_objects", None),
             )
 
             utils_ui.print(f"Assessment completed successfully!")

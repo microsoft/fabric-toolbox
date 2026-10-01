@@ -49,6 +49,8 @@ class AssessmentService:
         serverless_sql_client_id: Optional[str] = None,
         serverless_sql_client_secret: Optional[str] = None,
         serverless_sql_tenant_id: Optional[str] = None,
+        skip_columns: bool = False,
+        max_column_objects: Optional[int] = None,
     ) -> Dict[str, Any]:
         """
         Perform assessment on specified workspaces.
@@ -81,6 +83,8 @@ class AssessmentService:
             serverless_sql_client_id: Optional SPN client ID override for serverless SQL
             serverless_sql_client_secret: Optional SPN secret override for serverless SQL
             serverless_sql_tenant_id: Optional SPN tenant override for serverless SQL
+            skip_columns: Skip Synapse column metadata collection
+            max_column_objects: Optional positive per-database table/view collection cap
 
         Returns:
             Assessment results dictionary
@@ -148,6 +152,10 @@ class AssessmentService:
             client_kwargs["serverless_sql_client_secret"] = serverless_sql_client_secret
         if serverless_sql_tenant_id:
             client_kwargs["serverless_sql_tenant_id"] = serverless_sql_tenant_id
+        if skip_columns:
+            client_kwargs["skip_columns"] = True
+        if max_column_objects is not None:
+            client_kwargs["max_column_objects"] = max_column_objects
         client = self._get_client(source=source, **client_kwargs)
 
         # Perform assessment
@@ -160,6 +168,10 @@ class AssessmentService:
                 "timestamp": datetime.now().isoformat(),
                 "version": "0.3.0",
                 "output_format": output_format,
+                "column_collection": {
+                    "skip_columns": skip_columns,
+                    "max_column_objects": max_column_objects,
+                },
             },
             "results": [],
             "summary": {

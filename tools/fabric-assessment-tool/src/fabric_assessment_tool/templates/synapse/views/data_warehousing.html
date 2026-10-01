@@ -38,6 +38,12 @@
             <div class="stat-label">Total Size</div>
         </div>
     </div>
+    <div class="col">
+        <div class="stat-card">
+            <div class="stat-value" id="stat-columns">{{ warehousing.total_columns | format_number }}</div>
+            <div class="stat-label">Columns</div>
+        </div>
+    </div>
 </div>
 
 {% if warehousing.serverless_pools %}
@@ -71,6 +77,112 @@
         <div class="stat-card">
             <div class="stat-value" id="serverless-stat-max">{{ serverless_summary.max_duration_ms | format_number }} ms</div>
             <div class="stat-label">Max Duration</div>
+<!-- Column Analysis -->
+<div class="card mt-2">
+    <div class="card-header">Column Metadata and Fabric Compatibility</div>
+    <div class="card-body">
+        <p>
+            <span class="badge badge-success">Compatible: <span id="dw-compat-compatible">{{ warehousing.compatibility_totals.compatible | format_number }}</span></span>
+            <span class="badge badge-warning">Review: <span id="dw-compat-review">{{ warehousing.compatibility_totals.review | format_number }}</span></span>
+            <span class="badge badge-danger">Unsupported: <span id="dw-compat-unsupported">{{ warehousing.compatibility_totals.unsupported | format_number }}</span></span>
+        </p>
+        <div class="row">
+            <div class="col col-6">
+                <div class="chart-container">
+                    <canvas id="columnTypeChart"></canvas>
+                </div>
+            </div>
+            <div class="col col-6">
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Workspace</th>
+                                <th>Data Type</th>
+                                <th>Compatibility</th>
+                                <th class="text-right">Columns</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for entry in warehousing.column_type_distribution %}
+                            <tr data-workspace="{{ entry.workspace }}">
+                                <td>{{ entry.workspace }}</td>
+                                <td>{{ entry.data_type }}</td>
+                                <td><span class="badge {% if entry.compatibility == 'compatible' %}badge-success{% elif entry.compatibility == 'unsupported' %}badge-danger{% else %}badge-warning{% endif %}">{{ entry.compatibility | title }}</span></td>
+                                <td class="text-right">{{ entry.column_count | format_number }}</td>
+                            </tr>
+                            {% else %}
+                            <tr><td colspan="4" class="text-muted">No column metadata is available.</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <h3>Collection Status</h3>
+        <div class="table-responsive">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Workspace</th>
+                        <th>Status</th>
+                        <th class="text-right">Objects</th>
+                        <th class="text-right">Collected</th>
+                        <th>Cap</th>
+                        <th>Unavailable Databases</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for entry in warehousing.column_collection_statuses %}
+                    <tr data-workspace="{{ entry.workspace }}">
+                        <td>{{ entry.workspace }}</td>
+                        <td>
+                            <span class="badge {% if entry.status == 'completed' %}badge-success{% elif entry.status in ['capped', 'partial'] %}badge-warning{% elif entry.status in ['skipped', 'legacy_no_data'] %}badge-secondary{% else %}badge-danger{% endif %}">
+                                {{ entry.status | replace('_', ' ') | title }}
+                            </span>
+                        </td>
+                        <td class="text-right">{{ entry.objects_considered | default('N/A', true) }}</td>
+                        <td class="text-right">{{ entry.objects_collected | default('N/A', true) }}</td>
+                        <td>{{ entry.configured_cap | default('None', true) }}</td>
+                        <td>{{ entry.unavailable_databases | join(', ') }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+{% if warehousing.wide_objects %}
+<div class="card">
+    <div class="card-header">Wide Tables and Views (100+ Columns)</div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Workspace</th>
+                        <th>Database</th>
+                        <th>Schema</th>
+                        <th>Type</th>
+                        <th>Name</th>
+                        <th class="text-right">Columns</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in warehousing.wide_objects %}
+                    <tr data-workspace="{{ item.workspace }}">
+                        <td>{{ item.workspace }}</td>
+                        <td>{{ item.database }}</td>
+                        <td>{{ item.schema }}</td>
+                        <td>{{ item.object_type | title }}</td>
+                        <td>{{ item.name }}</td>
+                        <td class="text-right">{{ item.column_count | format_number }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
         </div>
     </div>
 </div>
@@ -470,6 +582,7 @@ const warehousingData = {
 {% set dw_dedicated = dw_counts.get('dedicated', {}) if dw_counts is mapping else {} %}
 {% set dw_serverless = dw_counts.get('serverless', {}) if dw_counts is mapping else {} %}
 {% set dw_serverless_activity = dw_serverless.get('activity', {}) if dw_serverless is mapping else {} %}
+{% set column_summary = ws.column_summary if ws.column_summary is mapping else {} %}
     "{{ ws_name }}": {
         dedicated_pools: {{ dw_dedicated.get('sql_pools', dw.get('dedicated_pools', 0)) if dw_dedicated is mapping else dw.get('dedicated_pools', 0) }},
         serverless_pools: {{ dw_serverless.get('sql_pools', 1 if dw.get('serverless_pool') else 0) if dw_serverless is mapping else (1 if dw.get('serverless_pool') else 0) }},
@@ -480,6 +593,9 @@ const warehousingData = {
         serverless_processed_bytes: {{ dw_serverless_activity.get('processed_bytes', 0) if dw_serverless_activity is mapping else 0 }},
         serverless_average_duration_ms: {{ dw_serverless_activity.get('average_duration_ms', 0) if dw_serverless_activity is mapping else 0 }},
         serverless_queries_last_24h: {{ (dw_serverless.get('queries_last_24h') if dw_serverless is mapping else none) | tojson }}
+        columns: {{ column_summary.get('total_columns', 0) }},
+        compatibility: {{ column_summary.get('compatibility_totals', {}) | tojson }},
+        data_types: {{ column_summary.get('data_types', []) | tojson }}
     }{% if not loop.last %},{% endif %}
 {% endfor %}
 };
@@ -840,9 +956,12 @@ function renderServerlessActivity(selectedWorkspaces) {
     renderServerlessDailyUsageChart(selectedWorkspaces);
     renderServerlessDatabaseChart(selectedWorkspaces);
 }
+let columnTypeChart = null;
 
 function updateFilteredStats(selectedWorkspaces) {
-    let ded = 0, srv = 0, db = 0, tables = 0, sizeGb = 0;
+    let ded = 0, srv = 0, db = 0, tables = 0, sizeGb = 0, columns = 0;
+    const compatibility = { compatible: 0, review: 0, unsupported: 0 };
+    const dataTypes = {};
     selectedWorkspaces.forEach(ws => {
         const data = warehousingData[ws];
         if (data) {
@@ -851,6 +970,13 @@ function updateFilteredStats(selectedWorkspaces) {
             db += data.databases || 0;
             tables += data.tables || 0;
             sizeGb += data.size_gb || 0;
+            columns += data.columns || 0;
+            Object.keys(compatibility).forEach(key => {
+                compatibility[key] += (data.compatibility || {})[key] || 0;
+            });
+            (data.data_types || []).forEach(entry => {
+                dataTypes[entry.data_type] = (dataTypes[entry.data_type] || 0) + (entry.column_count || 0);
+            });
         }
     });
     document.getElementById('stat-ded').textContent = ded;
@@ -859,6 +985,37 @@ function updateFilteredStats(selectedWorkspaces) {
     document.getElementById('stat-tables').textContent = tables.toLocaleString();
     document.getElementById('stat-size').textContent = sizeGb.toFixed(2) + ' GB';
     renderServerlessActivity(selectedWorkspaces);
+    document.getElementById('stat-columns').textContent = columns.toLocaleString();
+    document.getElementById('dw-compat-compatible').textContent = compatibility.compatible.toLocaleString();
+    document.getElementById('dw-compat-review').textContent = compatibility.review.toLocaleString();
+    document.getElementById('dw-compat-unsupported').textContent = compatibility.unsupported.toLocaleString();
+    if (columnTypeChart) {
+        const entries = Object.entries(dataTypes).sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]));
+        columnTypeChart.data.labels = entries.map(entry => entry[0]);
+        columnTypeChart.data.datasets[0].data = entries.map(entry => entry[1]);
+        columnTypeChart.update();
+    }
+}
+
+const columnTypeCtx = document.getElementById('columnTypeChart');
+if (columnTypeCtx) {
+    columnTypeChart = new Chart(columnTypeCtx, {
+        type: 'bar',
+        data: {
+            labels: {{ warehousing.column_type_totals | map(attribute='data_type') | list | tojson }},
+            datasets: [{
+                label: 'Columns',
+                data: {{ warehousing.column_type_totals | map(attribute='column_count') | list | tojson }},
+                backgroundColor: '#008272'
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
+            scales: { y: { beginAtZero: true } }
+        }
+    });
 }
 
 {% if warehousing.dedicated_pools %}

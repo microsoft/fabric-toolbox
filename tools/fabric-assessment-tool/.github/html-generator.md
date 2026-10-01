@@ -24,6 +24,7 @@ VisualizationService.generate_report()
   ├── _load_assessment_data()                    # walk input dir
   │     └── _load_workspace_data()               # per workspace
   │           ├── summary.json  → summary
+  │           ├── column_summary.json → Synapse column analysis (optional/legacy-safe)
   │           ├── resources/    → _load_resources()      (flat category → list[JSON])
   │           ├── data/         → _load_data_catalog()   (nested Unity Catalog tree)
   │           └── admin/        → _load_resources()      (Synapse only)
@@ -141,6 +142,13 @@ function updateFilteredStats(selectedWorkspaces) {
 ```
 
 This is called automatically from `base.html` on selection changes.
+
+Synapse column distributions and wide-object rows follow the same rule.
+`VisualizationService` loads `column_summary.json` directly, adds a
+`workspace` attribute to every distribution and wide-object entry, and treats
+a missing file as `legacy_no_data` rather than as a successful zero-column
+collection. Column charts must be recomputed from the selected workspaces in
+`updateFilteredStats(selectedWorkspaces)`.
 
 ## Charts (Chart.js)
 
