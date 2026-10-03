@@ -5,7 +5,7 @@ export interface DaxRef {
 }
 
 function stripStringsAndComments(expression: string): string {
-  const output = [...expression];
+  const output = expression.split("");
   let index = 0;
   while (index < expression.length) {
     const current = expression[index];

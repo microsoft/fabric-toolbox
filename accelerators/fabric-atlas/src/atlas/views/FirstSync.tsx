@@ -16,9 +16,12 @@ import {
 import { useThemeContext } from "@/hooks/theme.context";
 import { ATLAS_CONFIG } from "../config";
 import { SynchronizationProgress } from "../components/SynchronizationProgress";
+import { WorkspaceSelector } from "../components/WorkspaceSelector";
 import { REPOSITORY_URL } from "../release";
 import { useAtlas } from "../store";
 import { syncContactMessage } from "../sync-contact";
+import { cn } from "../ui";
+import { FIRST_SYNC_WORKSPACE_SELECT_ID } from "../workspace-switch";
 
 const CAPABILITIES = [
   {
@@ -82,8 +85,11 @@ export function FirstSyncView() {
     syncStartedAt,
     hasData,
     requiresDeploymentSync,
+    hydrationError,
+    retryHydration,
   } = useAtlas();
   const deploymentRefresh = hasData && requiresDeploymentSync;
+  const loadFailed = !hasData && !!hydrationError;
   const workspaceName = safeText(
     data.workspace.displayName,
     ATLAS_CONFIG.workspaceName,
@@ -142,9 +148,14 @@ export function FirstSyncView() {
                 </span>
               </span>
             </div>
-            <div className="flex items-center gap-s rounded-full border border-status-healthy/25 bg-status-healthy/10 px-m py-s text-200 font-semibold text-status-healthy">
+            <div className={cn(
+              "flex items-center gap-s rounded-full border px-m py-s text-200 font-semibold",
+              loadFailed
+                ? "border-destructive/25 bg-destructive/10 text-destructive"
+                : "border-status-healthy/25 bg-status-healthy/10 text-status-healthy",
+            )}>
               <span className="h-xs w-xs rounded-full bg-current shadow-[0_0_12px_currentColor]" />
-              Sync services ready
+              {loadFailed ? "Snapshot unavailable" : "Sync services ready"}
             </div>
           </header>
 
@@ -162,20 +173,24 @@ export function FirstSyncView() {
               <div className="atlas-sync-copy">
                 <span className="inline-flex items-center gap-s rounded-full border border-primary/30 bg-primary/10 px-m py-s text-200 font-semibold text-primary">
                   <Sparkles className="icon-size-100" />
-                  {deploymentRefresh
-                    ? "New deployment detected"
-                    : "Your first workspace map"}
+                  {loadFailed
+                    ? "Validated snapshot unavailable"
+                    : deploymentRefresh
+                      ? "New deployment detected"
+                      : "Your first workspace map"}
                 </span>
 
                 <h1 className="atlas-sync-title mt-xl text-balance font-heading text-hero-800 font-bold leading-hero-800 sm:text-hero-900 sm:leading-hero-900">
-                  {deploymentRefresh
-                    ? "Refresh the map. Start from truth."
-                    : "Turn your Fabric workspace into a living atlas."}
+                  {loadFailed
+                    ? "Atlas could not load the current workspace snapshot."
+                    : deploymentRefresh
+                      ? "Refresh the map. Start from truth."
+                      : "Turn your Fabric workspace into a living atlas."}
                 </h1>
                 <p className="atlas-sync-copy mt-l text-300 leading-500 text-muted-foreground">
-                  One synchronization discovers the estate, orients its lineage,
-                  resolves effective access and prepares the governance dashboard.
-                  Business data never leaves Fabric.
+                  {loadFailed
+                    ? "Retry the read before starting another synchronization. The existing Fabric data has not been classified as missing."
+                    : "One synchronization discovers the estate, orients its lineage, resolves effective access and prepares the governance dashboard. Business data never leaves Fabric."}
                 </p>
 
                 <div className="mt-xl flex flex-wrap gap-s">
@@ -233,9 +248,11 @@ export function FirstSyncView() {
                 stage={
                   syncing
                     ? syncStage
-                    : deploymentRefresh
-                      ? "Ready to refresh the map"
-                      : "Ready to build the first atlas"
+                    : loadFailed
+                      ? "Waiting to retry snapshot loading"
+                      : deploymentRefresh
+                        ? "Ready to refresh the map"
+                        : "Ready to build the first atlas"
                 }
                 active={syncing}
               />
@@ -255,13 +272,20 @@ export function FirstSyncView() {
                   </div>
                 </div>
 
+                <WorkspaceSelector
+                  id={FIRST_SYNC_WORKSPACE_SELECT_ID}
+                  hideWhenSingle
+                  className="mt-l"
+                />
+
                 <button
                   type="button"
                   onClick={() => {
-                    if (syncing) cancelSync();
+                    if (loadFailed) retryHydration();
+                    else if (syncing) cancelSync();
                     else void sync();
                   }}
-                  disabled={!syncing && (!configured || !canSync)}
+                  disabled={!loadFailed && !syncing && (!configured || !canSync)}
                   className="mt-l flex h-10 w-full items-center justify-center gap-s rounded-md bg-primary px-l text-300 font-semibold text-primary-foreground shadow-fabric-2 transition-colors hover:bg-primary-hover disabled:opacity-55"
                 >
                   {syncing ? (
@@ -269,11 +293,13 @@ export function FirstSyncView() {
                   ) : (
                     <Waypoints className="icon-size-200" />
                   )}
-                  {syncing
-                    ? "Cancel synchronization"
-                    : deploymentRefresh
-                      ? "Sync this deployment"
-                      : "Start first sync"}
+                  {loadFailed
+                    ? "Retry loading snapshot"
+                    : syncing
+                      ? "Cancel synchronization"
+                      : deploymentRefresh
+                        ? "Sync this deployment"
+                        : "Start first sync"}
                 </button>
               </div>
 
@@ -308,7 +334,20 @@ export function FirstSyncView() {
                 </div>
               )}
 
-              {configured && !canSync && !syncError && !syncing && (
+              {hydrationError && (
+                <div
+                  role="alert"
+                  className="rounded-xl border border-destructive/35 bg-destructive/10 p-m text-200 leading-300 text-destructive"
+                >
+                  <div className="flex items-center gap-s font-semibold">
+                    <AlertTriangle className="icon-size-200" />
+                    Snapshot load failed
+                  </div>
+                  <p className="mt-xs break-words">{hydrationError}</p>
+                </div>
+              )}
+
+              {configured && !canSync && !syncError && !hydrationError && !syncing && (
                 <div className="rounded-xl border border-status-warning/35 bg-status-warning/10 p-m text-200 leading-300 text-status-warning">
                   <div className="flex items-center gap-s font-semibold">
                     <AlertTriangle className="icon-size-200" />
@@ -320,7 +359,7 @@ export function FirstSyncView() {
                 </div>
               )}
 
-              {configured && canSync && !syncError && !syncing && (
+              {configured && canSync && !syncError && !hydrationError && !syncing && (
                 <div className="flex items-center gap-s text-200 text-muted-foreground">
                   <CheckCircle2 className="icon-size-200 text-status-healthy" />
                   Sync endpoint, Entra client and publisher identity are configured.

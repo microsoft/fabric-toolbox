@@ -9,13 +9,19 @@ import {
   Map,
   Package,
 } from "lucide-react";
-import { Card, SectionLabel } from "../ui";
+import { pythonCollectorRollbackEnabled } from "../browser-collector-sync";
+import { PageHeader } from "../components/PageHeader";
 import {
   APP_VERSION,
   BUILD_COMMIT,
+  BUILD_DATE,
+  FUNCTIONS_API_VERSION,
+  RAYFIN_SDK_VERSION,
   REPOSITORY_URL,
+  SNAPSHOT_CONTRACT_ID,
   releaseUrl,
 } from "../release";
+import { Card, SectionLabel } from "../ui";
 
 const CLONE_COMMAND = `git clone ${REPOSITORY_URL}.git`;
 
@@ -61,11 +67,19 @@ export function AboutView() {
     }
   };
 
+  const syncMode = pythonCollectorRollbackEnabled()
+    ? "Python rollback"
+    : "Rayfin collectors with Python compatibility";
+
   return (
-    <div className="atlas-content-frame flex min-h-full items-center p-xl lg:p-xxl">
+    <div className="atlas-content-frame flex min-h-full flex-col gap-l p-l sm:p-xxl">
+      <PageHeader
+        title="About Fabric Atlas"
+        purpose="Version, runtime and project links."
+      />
       <Card className="atlas-fabric-hero relative isolate w-full overflow-hidden border-border shadow-fabric-4">
         <div className="atlas-overview-beam" aria-hidden="true" />
-        <div className="grid lg:grid-cols-[1.25fr_0.75fr]">
+        <div className="grid lg:grid-cols-[1.2fr_0.8fr]">
           <section className="flex flex-col justify-center p-xl sm:p-xxxl">
             <div className="flex flex-wrap items-center gap-s">
               <span className="inline-flex items-center gap-s rounded-full border border-status-healthy/30 bg-status-healthy/10 px-m py-s text-200 font-semibold text-status-healthy">
@@ -93,9 +107,8 @@ export function AboutView() {
             </div>
 
             <p className="atlas-overview-copy mt-l text-300 leading-500 text-muted-foreground">
-              An open-source workspace explorer for catalog, lineage, effective
-              access, sensitivity and operations — built as a Rayfin Data App and
-              deployed directly into Microsoft Fabric.
+              Workspace catalog, lineage, access evidence and operations in one
+              Fabric app. Atlas stores metadata only.
             </p>
 
             <div className="mt-xl flex flex-col gap-s sm:flex-row sm:flex-wrap">
@@ -115,52 +128,49 @@ export function AboutView() {
           </section>
 
           <aside className="flex flex-col justify-center border-t border-border bg-secondary/70 p-xl sm:p-xxl lg:border-l lg:border-t-0">
-            <SectionLabel>Clone &amp; run</SectionLabel>
-            <div className="mt-m overflow-hidden rounded-xl border border-border bg-secondary">
-              <div className="flex items-center gap-s border-b border-border px-m py-s text-200 text-muted-foreground">
-                <span className="h-xs w-xs rounded-full bg-status-failing" />
-                <span className="h-xs w-xs rounded-full bg-status-warning" />
-                <span className="h-xs w-xs rounded-full bg-status-healthy" />
-                <span className="ml-s">terminal</span>
-              </div>
-              <div className="flex items-center gap-m p-m">
-                <code className="min-w-0 flex-1 overflow-x-auto whitespace-nowrap font-mono text-200 text-foreground">
-                  {CLONE_COMMAND}
-                </code>
-                <button
-                  type="button"
-                  onClick={() => void copyCloneCommand()}
-                  aria-label="Copy clone command"
-                  className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-border bg-card text-muted-foreground hover:text-foreground"
-                >
-                  {copied ? (
-                    <Check className="icon-size-200 text-status-healthy" />
-                  ) : (
-                    <Copy className="icon-size-200" />
-                  )}
-                </button>
-              </div>
-            </div>
-
-            <div className="mt-l grid grid-cols-2 gap-s">
+            <SectionLabel>Runtime</SectionLabel>
+            <dl className="mt-m grid grid-cols-2 gap-s">
               {[
-                ["License", "MIT"],
+                ["Rayfin SDK", RAYFIN_SDK_VERSION],
+                ["Functions API", `v${FUNCTIONS_API_VERSION}`],
+                ["Snapshot", SNAPSHOT_CONTRACT_ID],
                 ["Build", BUILD_COMMIT],
-                ["Runtime", "Rayfin"],
-                ["Language", "TypeScript"],
+                ["Built", BUILD_DATE],
+                ["Sync", `${syncMode}, browser-run`],
               ].map(([label, value]) => (
                 <div
                   key={label}
-                  className="rounded-xl border border-border bg-card/65 p-m"
+                  className="min-w-0 rounded-xl border border-border bg-card/70 p-m"
                 >
-                  <div className="text-100 font-semibold uppercase tracking-wide text-muted-foreground">
+                  <dt className="text-100 font-semibold uppercase tracking-wide text-muted-foreground">
                     {label}
-                  </div>
-                  <div className="mt-xs truncate text-300 font-semibold" title={value}>
+                  </dt>
+                  <dd className="mt-xs break-words text-200 font-semibold" title={value}>
                     {value}
-                  </div>
+                  </dd>
                 </div>
               ))}
+            </dl>
+
+            <div className="mt-xl">
+              <SectionLabel>Clone</SectionLabel>
+            </div>
+            <div className="mt-m flex items-center gap-m rounded-xl border border-border bg-card p-m">
+              <code className="min-w-0 flex-1 overflow-x-auto whitespace-nowrap font-mono text-200 text-foreground">
+                {CLONE_COMMAND}
+              </code>
+              <button
+                type="button"
+                onClick={() => void copyCloneCommand()}
+                aria-label="Copy clone command"
+                className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-border bg-background text-muted-foreground hover:text-foreground"
+              >
+                {copied ? (
+                  <Check className="icon-size-200 text-status-healthy" />
+                ) : (
+                  <Copy className="icon-size-200" />
+                )}
+              </button>
             </div>
           </aside>
         </div>

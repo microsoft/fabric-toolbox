@@ -8,6 +8,8 @@ import {
 import { describe, expect, it, vi } from "vitest";
 import { buildAccessReviewRows } from "../governance";
 import { accessRowsToCsv } from "../access-export";
+import { GRANT_ONLY_NOTICE } from "../access-coverage";
+import { WHAT_IF_NOTICE } from "../access-what-if";
 import type { AccessReviewHistory } from "../access-reviews";
 import { SAMPLE_DATA } from "../model";
 import { AtlasProvider } from "../store";
@@ -29,7 +31,7 @@ describe("AccessView", () => {
       target: { value: "ext-partner@vendor.com" },
     });
 
-    expect(screen.getByText(/1 of \d+ reachable pairs/)).toBeInTheDocument();
+    expect(screen.getByText(/1 of \d+ recorded grant pairs/)).toBeInTheDocument();
     expect(
       screen.getAllByLabelText(
         /Review ext-partner@vendor\.com access to AlpineRent Executive Dashboard/,
@@ -39,7 +41,7 @@ describe("AccessView", () => {
     fireEvent.click(screen.getByRole("button", { name: "Clear filters" }));
     expect(
       screen.getByText(
-        `${buildAccessReviewRows(SAMPLE_DATA).filter((row) => row.effectiveAccess !== "none").length} of ${buildAccessReviewRows(SAMPLE_DATA).filter((row) => row.effectiveAccess !== "none").length} reachable pairs`,
+        `${buildAccessReviewRows(SAMPLE_DATA).filter((row) => row.effectiveAccess !== "none").length} of ${buildAccessReviewRows(SAMPLE_DATA).filter((row) => row.effectiveAccess !== "none").length} recorded grant pairs`,
       ),
     ).toBeInTheDocument();
   });
@@ -54,7 +56,7 @@ describe("AccessView", () => {
     expect(rows.at(-1)).toHaveFocus();
   });
 
-  it("shows additive grants and identifies the grants that determine access", () => {
+  it("shows additive grants without implying fully evaluated data access", () => {
     renderAccess();
 
     fireEvent.click(
@@ -65,10 +67,15 @@ describe("AccessView", () => {
 
     expect(screen.getByRole("heading", { name: "Review detail" })).toBeVisible();
     expect(
-      screen.getByText(/Additive access only\./),
+      within(screen.getByRole("region", { name: "Access evidence" })).getByText(GRANT_ONLY_NOTICE),
     ).toBeInTheDocument();
-    expect(screen.getByText("2 contributing grants · 2 determine effective access")).toBeInTheDocument();
-    expect(screen.getAllByText("Determines effective")).toHaveLength(2);
+    expect(screen.getByText("2 contributing grants · 2 determine the highest recorded grant")).toBeInTheDocument();
+    expect(screen.getAllByText("Determines highest grant")).toHaveLength(2);
+    expect(screen.getByRole("heading", { name: "1. Granted permissions" })).toBeVisible();
+    expect(screen.getByRole("heading", { name: "2. Restriction evidence" })).toBeVisible();
+    expect(screen.getByRole("heading", { name: "3. Assessment" })).toBeVisible();
+    expect(screen.getByRole("link", { name: "OneLake portal review guidance" }))
+      .toHaveAttribute("href", "https://learn.microsoft.com/en-us/fabric/onelake/security/data-access-control-model");
   });
 
   it("shows changed evidence as needing review while retaining the prior decision", () => {
@@ -122,7 +129,7 @@ describe("AccessView", () => {
 
     expect(screen.getByText("Needs review")).toBeVisible();
     expect(
-      screen.getByText(/effective permission evidence changed/i),
+      screen.getByText(/recorded grant evidence changed/i),
     ).toBeVisible();
     expect(screen.getByRole("button", { name: "Accepted" })).toHaveAttribute(
       "aria-pressed",
@@ -146,6 +153,9 @@ describe("AccessView", () => {
           ?.startsWith("principal-access-group-"),
       );
     expect(groups.length).toBeGreaterThan(0);
+    for (const group of groups) {
+      expect(group).toHaveAccessibleName(/Evaluated layers across recorded pairs:.+Restrictions not evaluated/);
+    }
     expect(
       screen.queryByLabelText(
         /Review System Administrator access to AlpineRent Daily Load/,
@@ -335,6 +345,9 @@ describe("AccessView", () => {
     expect(csv).toContain('"Principal","Principal ID","Resolution"');
     expect(csv).toContain('"ext-partner@vendor.com"');
     expect(csv.split("\r\n")).toHaveLength(2);
+    expect(csv).toContain('"Not evaluated","Partial"');
+    expect(csv).toContain("Evaluated layers");
+    expect(csv).toContain(GRANT_ONLY_NOTICE);
 
     createObjectURL.mockRestore();
     revokeObjectURL.mockRestore();
@@ -353,5 +366,103 @@ describe("AccessView", () => {
     expect(csv).toContain(
       "\"'=HYPERLINK(\"\"https://example.com\"\")\"",
     );
+  });
+
+  it("states evaluated layers on every matrix row and labels What-if as recorded grants only", () => {
+    renderAccess();
+    for (const row of screen.getAllByRole("option", { name: /Review .+ access to/ })) {
+      expect(row).toHaveAccessibleName(/Highest recorded grant.+Restrictions not evaluated.+Evaluated layers:/);
+      expect(row).toHaveClass("focus-visible:ring-ring");
+    }
+    expect(screen.getByRole("button", { name: "What-if" })).toBeEnabled();
+    expect(screen.getByRole("button", { name: "What-if" }))
+      .toHaveAccessibleDescription(WHAT_IF_NOTICE);
+    expect(screen.getByText(GRANT_ONLY_NOTICE)).toBeVisible();
+    expect(screen.queryByText(/effective permission|reachable pairs|no restrictions|none observed/i))
+      .not.toBeInTheDocument();
+    expect(screen.queryByRole("combobox", { name: "Workspace" })).toBeNull();
+  });
+
+  it("states evidence once in a legend and keeps rows to compact badges", () => {
+    renderAccess();
+    const legend = screen.getByRole("region", { name: "Access evidence legend" });
+    expect(
+      within(legend).getAllByRole("term").map((term) => term.textContent),
+    ).toEqual(["Granted", "Partial", "Unknown", "Denied"]);
+    expect(within(legend).getByText(GRANT_ONLY_NOTICE)).toBeInTheDocument();
+
+    const rows = screen.getAllByRole("option", { name: /Review .+ access to/ });
+    for (const row of rows) {
+      expect(within(row).getByText("Partial")).toHaveAttribute(
+        "title",
+        expect.stringMatching(/Evaluated: .+Unknown or incomplete layers:/),
+      );
+      expect(row).toHaveAccessibleName(/Restrictions not evaluated/);
+    }
+    expect(screen.queryByText(/^Restrictions: not evaluated$/)).toBeNull();
+    expect(screen.queryByText(/^Not evaluated$/)).toBeNull();
+    expect(screen.queryByText(/^Evaluated: /)).toBeNull();
+    expect(screen.queryByText(/^\d+ recorded grants$/)).toBeNull();
+    expect(screen.queryByText("No recorded flags")).toBeNull();
+    expect(screen.queryByText("Not fully evaluated")).toBeNull();
+    expect(screen.queryByText("Granted access only; restrictions not evaluated")).toBeNull();
+    expect(screen.getByText(WHAT_IF_NOTICE)).toHaveClass("sr-only");
+
+    fireEvent.click(screen.getByRole("button", { name: "Principals" }));
+    expect(screen.getAllByText(/Evaluated layers across recorded pairs/)[0]).toHaveClass("sr-only");
+  });
+
+  it.each(["Enter", " "])("opens evidence with %s and restores focus on Escape", (key) => {
+    renderAccess();
+    const row = screen.getAllByRole("option", { name: /Review .+ access to/ })[0];
+    row.focus();
+    fireEvent.keyDown(row, { key });
+    const close = screen.getByRole("button", { name: "Close review detail" });
+    expect(close).toHaveFocus();
+    fireEvent.keyDown(close, { key: "Escape" });
+    expect(screen.queryByRole("region", { name: "Access evidence" })).not.toBeInTheDocument();
+    expect(row).toHaveFocus();
+  });
+
+  it("filters by evidence state, clears the empty result and serializes the filter", async () => {
+    const onStateChange = vi.fn();
+    render(
+      <AtlasProvider isPreview>
+        <AccessView onStateChange={onStateChange} />
+      </AtlasProvider>,
+    );
+    const coverage = screen.getByRole("combobox", { name: "Evidence coverage" });
+    fireEvent.change(coverage, { target: { value: "unsupported" } });
+    expect(screen.getAllByRole("option", { name: /Review .+ access to/ }).length)
+      .toBeGreaterThan(0);
+    fireEvent.change(coverage, { target: { value: "denied" } });
+    expect(screen.getByText("No recorded grant pairs match")).toBeVisible();
+    expect(screen.getByRole("button", { name: "Export CSV" })).toBeDisabled();
+    await waitFor(() => expect(onStateChange).toHaveBeenLastCalledWith(
+      expect.objectContaining({
+        focus: expect.objectContaining({ filters: expect.objectContaining({ coverage: "denied" }) }),
+      }),
+    ));
+    fireEvent.click(screen.getByRole("button", { name: "Clear filters" }));
+    expect(coverage).toHaveValue("all");
+    expect(screen.getByRole("button", { name: "Export CSV" })).toBeEnabled();
+  });
+
+  it("copies grant and coverage evidence rather than an unrestricted result", async () => {
+    const writeText = vi.fn().mockResolvedValue(undefined);
+    vi.stubGlobal("navigator", { ...navigator, clipboard: { writeText } });
+    renderAccess();
+    fireEvent.click(screen.getAllByRole("option", { name: /Review .+ access to/ })[0]);
+    fireEvent.click(screen.getByRole("button", { name: "Copy review summary" }));
+    await waitFor(() => expect(writeText).toHaveBeenCalledOnce());
+    const summary = writeText.mock.calls[0][0] as string;
+    expect(summary).toContain("Highest recorded grant:");
+    expect(summary).toContain("Restrictions: Not evaluated");
+    expect(summary).toContain("Evaluated layers:");
+    expect(summary).toContain("OneLake security: Unsupported");
+    expect(summary).toContain("Purview DLP: Unsupported");
+    expect(summary).toContain(GRANT_ONLY_NOTICE);
+    expect(summary).not.toMatch(/Effective permission|no restrictions|none observed/i);
+    vi.unstubAllGlobals();
   });
 });

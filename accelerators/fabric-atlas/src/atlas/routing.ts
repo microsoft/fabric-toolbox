@@ -3,7 +3,9 @@ import type {
   AtlasNavigation,
   GovernanceSection,
   Tab,
+  WorkspaceSection,
 } from "./navigation";
+import { isWorkspaceSection } from "./navigation";
 import type { SavedViewFilters } from "./saved-views";
 import { ITEM_TYPES } from "./model";
 import { ASSET_OBJECT_KINDS } from "./catalog-objects";
@@ -37,6 +39,9 @@ const KNOWN_KEYS = new Set([
   "source",
   "objectKind",
   "inspector",
+  "view",
+  "preview",
+  "expand",
 ]);
 const KNOWN_PREFIXES = [
   "catalog.",
@@ -45,6 +50,8 @@ const KNOWN_PREFIXES = [
   "access.",
   "jobs.",
   "workspace.",
+  "tm.",
+  "xray.",
 ];
 const ASSET_KINDS = new Set<string>(ASSET_OBJECT_KINDS);
 const GOVERNANCE_SECTIONS = new Set([
@@ -53,6 +60,7 @@ const GOVERNANCE_SECTIONS = new Set([
   "history",
   "coverage",
   "posture",
+  "policies-ai",
 ]);
 const GOVERNANCE_SEVERITIES = new Set([
   "all",
@@ -109,7 +117,6 @@ const JOB_STATUSES = new Set([
   "running",
   "cancelled",
 ]);
-const WORKSPACE_SECTIONS = new Set(["configuration", "notes"]);
 const POSTURE_PILLARS = new Set([
   "documentation",
   "ownership",
@@ -155,12 +162,14 @@ function filters(
 
 function parseTab(hash: string): {
   tab: Tab;
-  legacySection?: "configuration" | "notes" | "coverage";
+  legacySection?: WorkspaceSection | "coverage";
 } {
   const raw = hash.replace(/^#/, "").split("?")[0];
   if (raw === "config") return { tab: "workspace", legacySection: "configuration" };
   if (raw === "comments") return { tab: "workspace", legacySection: "notes" };
   if (raw === "sensitivity") return { tab: "governance", legacySection: "coverage" };
+  // The experimental second lineage page folds into the single map.
+  if (raw === "map-beta") return { tab: "map" };
   const tab = raw as Tab;
   return { tab: TABS.has(tab) ? tab : "overview" };
 }
@@ -172,18 +181,24 @@ export function parseAtlasLocation(
   const { tab, legacySection } = parseTab(location.hash);
 
   if (tab === "map") {
-    const hasMapState = [
-      "lineage",
-      "item",
-      "q",
-      "type",
-      "health",
-      "impact",
-      "table",
-      "source",
-      "objectKind",
-      "inspector",
-    ].some((key) => params.has(key));
+    const hasMapState =
+      location.hash.replace(/^#/, "").split("?")[0] === "map-beta" ||
+      [
+        "lineage",
+        "item",
+        "q",
+        "type",
+        "health",
+        "impact",
+        "table",
+        "source",
+        "objectKind",
+        "inspector",
+        "view",
+        "preview",
+        "expand",
+      ].some((key) => params.has(key)) ||
+      [...params.keys()].some((key) => key.startsWith("tm.") || key.startsWith("xray."));
     return {
       tab,
       focus: hasMapState
@@ -322,22 +337,17 @@ export function parseAtlasLocation(
     };
   }
   if (tab === "workspace") {
+    const section = value(params, "workspace.section");
     return {
       tab,
       focus: request({
         itemId: value(params, "workspace.item"),
         commentId: value(params, "workspace.comment"),
-        workspaceSection:
-          legacySection === "notes" || legacySection === "configuration"
-            ? legacySection
-            : (allowed(
-                params,
-                "workspace.section",
-                WORKSPACE_SECTIONS,
-              ) as
-                | "configuration"
-                | "notes"
-                | undefined),
+        workspaceSection: isWorkspaceSection(legacySection)
+          ? legacySection
+          : isWorkspaceSection(section)
+            ? section
+            : undefined,
       }),
     };
   }
@@ -377,7 +387,12 @@ export function urlForNavigation(
   }
   const focus = navigation.focus;
 
-  if (navigation.tab === "catalog") {
+  if (navigation.tab === "map") {
+    set(params, "item", focus?.itemId);
+    if (filterValue(focus, "impact") === "focused") {
+      params.set("impact", "focused");
+    }
+  } else if (navigation.tab === "catalog") {
     set(params, "catalog.q", focus?.query ?? filterValue(focus, "search"));
     set(params, "catalog.type", filterValue(focus, "type"));
     set(params, "catalog.posture", filterValue(focus, "posturePillar"));

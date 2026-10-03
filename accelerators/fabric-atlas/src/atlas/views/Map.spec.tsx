@@ -289,6 +289,37 @@ describe("MapView selection", () => {
     ).toBeGreaterThan(0);
   });
 
+  it("opens the graph at 80% zoom and returns there on reset", () => {
+    window.history.replaceState(null, "", "/#map");
+    render(
+      <AtlasProvider isPreview>
+        <MapView />
+      </AtlasProvider>,
+    );
+
+    const lakehouse = screen.getByLabelText(
+      "alpinerent_lakehouse, Lakehouse, healthy",
+    );
+    const position = { left: lakehouse.style.left, top: lakehouse.style.top };
+    expect(screen.getByText("80%")).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: "Zoom in" }));
+    expect(screen.getByText("90%")).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Zoom out" }));
+    fireEvent.click(screen.getByRole("button", { name: "Zoom out" }));
+    expect(screen.getByText("70%")).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: "Reset" }));
+    expect(screen.getByText("80%")).toBeInTheDocument();
+    const reset = screen.getByLabelText(
+      "alpinerent_lakehouse, Lakehouse, healthy",
+    );
+    expect(reset.style.left).toBe(position.left);
+    expect(reset.style.top).toBe(position.top);
+    expect(document.querySelectorAll("button[aria-pressed='true']")).toHaveLength(0);
+    expect(new URL(window.location.href).searchParams.has("item")).toBe(false);
+  });
+
   it("keeps node coordinates stable when selection changes", () => {
     window.history.replaceState(null, "", "/#map");
     render(
@@ -327,7 +358,52 @@ describe("MapView selection", () => {
     expect(selectedLakehouse.style.top).toBe(position.top);
   });
 
-  it("keeps the complete graph and node positions when impact mode changes", () => {
+  it.each([
+    ["Atlas", "/#map"],
+    ["Item Relations Preview", "/?preview=item-relations#map"],
+  ])("keeps the %s viewport fixed when an item is selected", async (_source, url) => {
+    window.history.replaceState(null, "", url);
+    const { container } = render(
+      <AtlasProvider isPreview>
+        <MapView itemRelationsEnabled />
+      </AtlasProvider>,
+    );
+    const viewport = container.querySelector<HTMLDivElement>(".atlas-map-grid")!;
+    viewport.scrollLeft = 140;
+    viewport.scrollTop = 180;
+    const node = screen.getByLabelText(
+      "alpinerent_lakehouse, Lakehouse, healthy",
+    );
+
+    expect(fireEvent.mouseDown(node, {
+      button: 0,
+      clientX: 320,
+      clientY: 240,
+    })).toBe(false);
+    fireEvent.pointerDown(node, {
+      button: 0,
+      pointerId: 81,
+      clientX: 320,
+      clientY: 240,
+    });
+    fireEvent.pointerUp(node, {
+      button: 0,
+      pointerId: 81,
+      clientX: 320,
+      clientY: 240,
+    });
+    fireEvent.click(node);
+    await act(async () => {
+      await new Promise<void>((resolve) =>
+        window.requestAnimationFrame(() => resolve()),
+      );
+    });
+
+    expect(viewport.scrollLeft).toBe(140);
+    expect(viewport.scrollTop).toBe(180);
+  });
+
+  it("shows only the selected impact subgraph", () => {
     window.history.replaceState(null, "", "/#map");
     const { container } = render(
       <AtlasProvider isPreview>
@@ -337,43 +413,26 @@ describe("MapView selection", () => {
     fireEvent.click(
       screen.getByLabelText("alpinerent_lakehouse, Lakehouse, healthy"),
     );
-    const viewport = container.querySelector<HTMLDivElement>(".atlas-map-grid")!;
-    viewport.scrollLeft = 360;
-    viewport.scrollTop = 420;
-
-    const before = new Map(
-      SAMPLE_DATA.items.map((item) => {
-        const node = screen.getByLabelText(
-          `${item.displayName}, ${typeMeta(item.itemType).label}, ${item.health}`,
-        );
-        return [
-          item.fabricId,
-          { left: node.style.left, top: node.style.top },
-        ];
-      }),
-    );
-
     fireEvent.click(screen.getByRole("switch", { name: "Impact mode" }));
 
-    expect(viewport.scrollLeft).toBe(360);
-    expect(viewport.scrollTop).toBe(420);
-    for (const item of SAMPLE_DATA.items) {
-      const node = screen.getByLabelText(
-        `${item.displayName}, ${typeMeta(item.itemType).label}, ${item.health}`,
-      );
-      expect({ left: node.style.left, top: node.style.top }).toEqual(
-        before.get(item.fabricId),
-      );
-    }
     expect(
-      screen.getByLabelText("alpinerent_dw, Warehouse, healthy"),
-    ).toHaveClass("opacity-[0.14]");
+      screen.queryByLabelText("alpinerent_dw, Warehouse, healthy"),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.getByLabelText("alpinerent_lakehouse, Lakehouse, healthy"),
+    ).toBeVisible();
+    expect(
+      container.querySelectorAll("button[aria-pressed]").length,
+    ).toBeLessThan(SAMPLE_DATA.items.length);
     expect(
       document.querySelector('marker[id="atlas-up"]'),
     ).toHaveAttribute("markerWidth", "7");
+    expect(
+      document.querySelector('marker[id="atlas-up"] path'),
+    ).toHaveAttribute("fill", "none");
   });
 
-  it("does not reorder disconnected components when impact mode is enabled", () => {
+  it("hides disconnected components when impact mode is enabled", () => {
     const model = SAMPLE_DATA.items.find(
       (item) => item.itemType === "SemanticModel",
     )!;
@@ -394,7 +453,7 @@ describe("MapView selection", () => {
       },
     ];
     window.history.replaceState(null, "", "/#map");
-    const { container } = render(
+    render(
       <AtlasProvider isPreview>
         <MapView />
       </AtlasProvider>,
@@ -404,46 +463,22 @@ describe("MapView selection", () => {
     fireEvent.click(
       screen.getByLabelText("alpinerent_lakehouse, Lakehouse, healthy"),
     );
-    const viewport = container.querySelector<HTMLDivElement>(".atlas-map-grid")!;
-    viewport.scrollTop = 500;
-    const before = {
-      lakehouse: {
-        left: screen.getByLabelText(
-          "alpinerent_lakehouse, Lakehouse, healthy",
-        ).style.left,
-        top: screen.getByLabelText(
-          "alpinerent_lakehouse, Lakehouse, healthy",
-        ).style.top,
-      },
-      model: {
-        left: screen.getByLabelText(
-          "AlpineRent Sales Model, Semantic model, healthy",
-        ).style.left,
-        top: screen.getByLabelText(
-          "AlpineRent Sales Model, Semantic model, healthy",
-        ).style.top,
-      },
-    };
-
     fireEvent.click(screen.getByRole("switch", { name: "Impact mode" }));
 
-    expect(viewport.scrollTop).toBe(500);
-    expect({
-      left: screen.getByLabelText(
-        "alpinerent_lakehouse, Lakehouse, healthy",
-      ).style.left,
-      top: screen.getByLabelText(
-        "alpinerent_lakehouse, Lakehouse, healthy",
-      ).style.top,
-    }).toEqual(before.lakehouse);
-    expect({
-      left: screen.getByLabelText(
+    expect(
+      screen.getByLabelText("alpinerent_lakehouse, Lakehouse, healthy"),
+    ).toBeVisible();
+    expect(
+      screen.getByLabelText("alpinerent_dw, Warehouse, healthy"),
+    ).toBeVisible();
+    expect(
+      screen.queryByLabelText(
         "AlpineRent Sales Model, Semantic model, healthy",
-      ).style.left,
-      top: screen.getByLabelText(
-        "AlpineRent Sales Model, Semantic model, healthy",
-      ).style.top,
-    }).toEqual(before.model);
+      ),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByLabelText("AlpineRent Executive Report, Report, healthy"),
+    ).not.toBeInTheDocument();
   });
 
   it("pans the complete graph by dragging its background", () => {
@@ -584,7 +619,7 @@ describe("MapView selection", () => {
       pointerId: 2,
     });
 
-    expect(table.style.left).not.toBe(initialLeft);
+    expect(table.style.left).toBe(initialLeft);
     expect(table.style.top).not.toBe(initialTop);
 
     fireEvent.pointerDown(table, {
@@ -655,6 +690,30 @@ describe("MapView selection", () => {
     expect(
       selectedTable,
     ).toHaveAttribute("aria-pressed", "true");
+  });
+  it("uses local table controls when a relational schema also has metadata edges", () => {
+    const previous = SAMPLE_DATA.objectEdges;
+    const model = SAMPLE_DATA.items.find((item) => item.itemType === "SemanticModel")!;
+    const lakehouse = SAMPLE_DATA.items.find((item) => item.itemType === "Lakehouse")!;
+    SAMPLE_DATA.objectEdges = [{
+      source: { itemId: lakehouse.fabricId, kind: "sourceObject", id: "ExternalOnly", name: "ExternalOnly", tableName: "ExternalOnly" },
+      target: { itemId: model.fabricId, kind: "sourceObject", id: "ExternalOnly", name: "ExternalOnly", tableName: "ExternalOnly" },
+      relation: "binds source", confidence: "verified",
+    }];
+    try {
+      window.history.replaceState(null, "", "/#map");
+      render(<AtlasProvider isPreview><MapView /></AtlasProvider>);
+      fireEvent.click(screen.getByRole("button", { name: "objects" }));
+      const filter = screen.getByLabelText("Select object lineage table");
+      expect([...filter.querySelectorAll("option")].map((option) => option.value))
+        .toContain("rentals_daily_summary");
+      expect(screen.queryByLabelText("Filter object lineage by source item")).not.toBeInTheDocument();
+      expect(screen.queryByLabelText("Filter object lineage by object kind")).not.toBeInTheDocument();
+      fireEvent.change(filter, { target: { value: "station_utilization" } });
+      expect(screen.getByLabelText(/^station_utilization, \d+ columns/)).toHaveAttribute("aria-pressed", "true");
+    } finally {
+      SAMPLE_DATA.objectEdges = previous;
+    }
   });
 
   it("expands and collapses every deep-lineage table", async () => {

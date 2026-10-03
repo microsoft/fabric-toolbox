@@ -11,6 +11,7 @@ import {
   type HistoricalSnapshot,
 } from "./history";
 import { sameDeploymentGeneration } from "./release";
+import { diffIncidents, type IncidentDelta } from "./observability";
 
 export type FindingDeltaStatus = "new" | "resolved" | "persisting";
 
@@ -55,6 +56,8 @@ export type RadarResult =
       deltas: FindingDelta[];
       riskyChanges: RiskyChange[];
       observedChanges: AtlasChange[];
+      /** Operational incidents compared between the same two snapshots. */
+      incidents: IncidentDelta[];
       provenanceComplete: boolean;
     };
 
@@ -294,6 +297,112 @@ export function buildRadar(
       options.sensitivityRanks,
     ),
     observedChanges: changes,
+    incidents: diffIncidents(previous.catalog, current.catalog, {
+      previousSnapshotId: previous.snapshotId,
+      currentSnapshotId: current.snapshotId,
+      previousObservedAt: previous.syncedAt,
+      currentObservedAt: current.syncedAt,
+    }),
     provenanceComplete: history.summaries.length === history.snapshots.length,
   };
+}
+
+export interface IncidentRadarEntry {
+  id: string;
+  severity: "critical" | "high";
+  title: string;
+  detail: string;
+  delta: IncidentDelta;
+}
+
+/** One actionable Radar row: a new finding, a risky change or an opened incident. */
+export interface RadarEntry {
+  id: string;
+  severity: GovernanceSeverity;
+  title: string;
+  detail: string;
+  occurrenceSnapshotId?: string;
+  delta?: FindingDelta;
+  risk?: RiskyChange;
+  incident?: IncidentDelta;
+}
+
+/**
+ * Builds the Radar rows of a ready comparison. An opened incident replaces the
+ * new failed-run finding of the same run, so one failure is listed once.
+ */
+export function radarEntries(radar: RadarResult): RadarEntry[] {
+  if (radar.state !== "ready") return [];
+  const incidentEntries = incidentRadarEntries(radar.incidents).map(
+    (entry) => ({
+      id: entry.id,
+      severity: entry.severity,
+      title: entry.title,
+      detail: entry.detail,
+      occurrenceSnapshotId: radar.currentSnapshotId,
+      incident: entry.delta,
+    }),
+  );
+  const incidentRunIds = new Set(
+    incidentEntries.map((entry) => entry.incident.incident.id),
+  );
+  const findingEntries = radar.deltas
+    .filter(
+      (delta) =>
+        delta.status === "new" &&
+        !(delta.finding.jobId && incidentRunIds.has(delta.finding.jobId)),
+    )
+    .map((delta) => ({
+      id: delta.finding.id,
+      severity: delta.finding.severity,
+      title: delta.finding.title,
+      detail: delta.finding.detail,
+      occurrenceSnapshotId: delta.sinceSnapshotId,
+      delta,
+    }));
+  const riskEntries = radar.riskyChanges.map((risk) => ({
+    id: risk.id,
+    severity: risk.severity,
+    title: risk.change.label,
+    detail: risk.detail,
+    occurrenceSnapshotId: radar.currentSnapshotId,
+    risk,
+  }));
+  return [...findingEntries, ...riskEntries, ...incidentEntries];
+}
+
+/**
+ * Radar entries for incidents opened since the previous snapshot. Severity is
+ * critical only when a downstream consumer has its own observed failure.
+ */
+export function incidentRadarEntries(
+  incidents: readonly IncidentDelta[],
+): IncidentRadarEntry[] {
+  return incidents
+    .filter((delta) => delta.status === "opened")
+    .map((delta) => {
+      const observed = delta.impact.filter(
+        (impact) => impact.evidence === "observed",
+      ).length;
+      const inferred = delta.impact.length - observed;
+      const impactText = [
+        inferred > 0 &&
+          `${inferred} downstream item${inferred === 1 ? "" : "s"} inferred from snapshot lineage`,
+        observed > 0 &&
+          `${observed} downstream item${observed === 1 ? "" : "s"} also failing (observed)`,
+      ]
+        .filter(Boolean)
+        .join("; ");
+      return {
+        id: `incident:radar:v1:${delta.key}`,
+        severity: observed > 0 ? ("critical" as const) : ("high" as const),
+        title: `${delta.incident.jobType} failing: ${delta.incident.itemName}`,
+        detail: [
+          `The latest captured run failed at ${delta.incident.occurredAt}.`,
+          impactText ? `${impactText}.` : "No downstream consumer in snapshot lineage.",
+          "Source: Fabric job history in the compared snapshots; the failure reason is not collected.",
+        ].join(" "),
+        delta,
+      };
+    });
 }

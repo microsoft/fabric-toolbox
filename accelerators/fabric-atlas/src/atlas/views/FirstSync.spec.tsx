@@ -25,7 +25,7 @@ describe("FirstSyncView", () => {
       screen.getByRole("region", {
         name: "Workspace synchronization status",
       }),
-    ).toHaveTextContent("Phase 1 of 5");
+    ).toHaveTextContent("Phase 1 of 4");
     expect(
       screen.queryByLabelText(/Animated preview of Fabric lineage/),
     ).not.toBeInTheDocument();

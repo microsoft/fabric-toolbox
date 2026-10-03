@@ -318,6 +318,31 @@ describe("staged layout", () => {
     );
   });
 
+  it("never places a consumer to the left of its source", () => {
+    const items = [
+      item("source-report", "Report"),
+      item("target-lakehouse", "Lakehouse"),
+      item("cycle-a", "Notebook"),
+      item("cycle-b", "DataPipeline"),
+    ];
+    const layout = buildStagedLayout(items, [
+      {
+        source: "source-report",
+        target: "target-lakehouse",
+        relation: "feeds",
+      },
+      { source: "cycle-a", target: "cycle-b", relation: "orchestrates" },
+      { source: "cycle-b", target: "cycle-a", relation: "orchestrates" },
+    ]);
+
+    expect(layout.positions.get("target-lakehouse")!.x).toBeGreaterThan(
+      layout.positions.get("source-report")!.x,
+    );
+    expect(layout.positions.get("cycle-b")!.x).toBe(
+      layout.positions.get("cycle-a")!.x,
+    );
+  });
+
   it("separates disconnected data products into layout groups", () => {
     const items = [
       item("notebook-a", "Notebook"),
@@ -348,6 +373,31 @@ describe("staged layout", () => {
 
     expect(layout.groups[0].itemIds).toEqual(["pipeline", "notebook"]);
     expect(layout.groups[1].label).toBe("Unconnected items");
+  });
+
+  it("lays out dense acyclic fan-out without enumerating every path", () => {
+    const items = [item("root", "Lakehouse")];
+    const denseEdges: Edge[] = [];
+    let previous = "root";
+    for (let layer = 0; layer < 8; layer += 1) {
+      const merge = `merge-${layer}`;
+      items.push(item(merge, "Lakehouse"));
+      for (let branch = 0; branch < 6; branch += 1) {
+        const id = `branch-${layer}-${branch}`;
+        items.push(item(id, "Lakehouse"));
+        denseEdges.push(
+          { source: previous, target: id, relation: "feeds" },
+          { source: id, target: merge, relation: "feeds" },
+        );
+      }
+      previous = merge;
+    }
+
+    const startedAt = performance.now();
+    const layout = buildStagedLayout(items, denseEdges);
+
+    expect(layout.positions.size).toBe(items.length);
+    expect(performance.now() - startedAt).toBeLessThan(500);
   });
 });
 

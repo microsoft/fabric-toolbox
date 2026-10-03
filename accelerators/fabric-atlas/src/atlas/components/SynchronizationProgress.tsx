@@ -103,7 +103,7 @@ export function SynchronizationProgress({
       <ol
         aria-label="Synchronization phases"
         className={cn(
-          "mt-m grid grid-cols-5 gap-xs",
+          "mt-m grid grid-cols-4 gap-xs",
           compact && "hidden sm:grid",
         )}
       >
@@ -119,7 +119,7 @@ export function SynchronizationProgress({
             >
               <span
                 className={cn(
-                  "mx-auto flex h-7 w-7 items-center justify-center rounded-full border font-numeric text-100 font-semibold",
+                  "mx-auto flex h-7 w-7 items-center justify-center rounded-full border font-numeric text-200 font-semibold",
                   complete
                     ? "border-status-healthy bg-status-healthy/10 text-status-healthy"
                     : current
@@ -135,7 +135,7 @@ export function SynchronizationProgress({
               </span>
               <span
                 className={cn(
-                  "mt-xs block truncate text-100",
+                  "mt-xs block truncate text-200",
                   current ? "font-semibold text-foreground" : "text-muted-foreground",
                 )}
               >

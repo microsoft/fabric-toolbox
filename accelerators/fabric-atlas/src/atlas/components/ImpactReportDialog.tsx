@@ -473,7 +473,7 @@ function SchemaImpactList({
               </span>
               <span
                 className={cn(
-                  "shrink-0 rounded-full px-s py-xxs text-100 font-semibold",
+                  "shrink-0 rounded-full px-s py-xxs text-200 font-semibold",
                   entry.confidence === "verified"
                     ? "bg-status-healthy/10 text-status-healthy"
                     : "bg-status-warning/10 text-status-warning",

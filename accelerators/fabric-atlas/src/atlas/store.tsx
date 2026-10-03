@@ -56,6 +56,13 @@ import {
   type GovernanceException,
 } from "./governance-exceptions";
 import { POSTURE_TARGETS } from "./posture";
+import { SyncCancelledError } from "./live-sync";
+import { CANCELLING_STAGE } from "./synchronization-progress";
+import {
+  loadWorkspaceScopes,
+  type WorkspaceScope,
+} from "./workspace-scope";
+import type { WorkspaceSyncEntry } from "./workspace-sync";
 
 export interface CurrentUser {
   id: string;
@@ -96,9 +103,26 @@ export interface AtlasContextValue {
   canSync: boolean;
   hasData: boolean;
   requiresDeploymentSync: boolean;
+  hydrationError?: string;
+  retryHydration: () => void;
   syncError?: string;
   currentUser: CurrentUser;
+  workspaceScopes: WorkspaceScope[];
+  workspaceScopesLoading: boolean;
+  workspaceScopesError?: string;
+  activeWorkspaceId: string;
+  reloadWorkspaceScopes: () => Promise<void>;
+  selectWorkspace: (workspaceId: string) => void;
   sync: () => Promise<void>;
+  /**
+   * Synchronizes the given scoped workspaces one after another in this
+   * browser tab. Only the active workspace's result replaces visible data.
+   */
+  syncWorkspaces: (workspaceIds: readonly string[]) => Promise<void>;
+  /** Current or most recent batch, in run order. */
+  syncQueue: WorkspaceSyncEntry[];
+  /** Workspace whose run is in progress. */
+  syncWorkspaceId?: string;
   cancelSync: () => void;
   reloadComments: () => Promise<void>;
   addComment: (body: string, itemFabricId?: string) => Promise<void>;
@@ -155,23 +179,36 @@ function historyAfterSync(
   );
 }
 
-const EMPTY_DATA: AtlasData = {
-  workspace: {
-    fabricId: ATLAS_CONFIG.workspaceId,
-    displayName: ATLAS_CONFIG.workspaceName,
-    capacity: "",
-    region: "",
-  },
-  items: [],
-  edges: [],
-  principals: [],
-  grants: [],
-  jobs: [],
-  config: [],
-  comments: [],
-  syncRuns: [],
-  schema: {},
-};
+function emptyData(workspaceId: string, displayName: string): AtlasData {
+  return {
+    workspace: {
+      fabricId: workspaceId,
+      displayName,
+      capacity: "",
+      region: "",
+    },
+    items: [],
+    edges: [],
+    principals: [],
+    grants: [],
+    jobs: [],
+    config: [],
+    comments: [],
+    syncRuns: [],
+    schema: {},
+  };
+}
+
+function initialWorkspaceScope(isPreview: boolean): WorkspaceScope {
+  return {
+    id: isPreview ? SAMPLE_DATA.workspace.fabricId : ATLAS_CONFIG.workspaceId,
+    displayName: isPreview
+      ? SAMPLE_DATA.workspace.displayName
+      : ATLAS_CONFIG.workspaceName,
+    workspaceType: "Workspace",
+    persisted: false,
+  };
+}
 
 const EMPTY_HISTORY = buildAtlasHistory([]);
 const PREVIEW_HISTORY = buildAtlasHistory([
@@ -187,15 +224,20 @@ export function AtlasProvider({
   isPreview?: boolean;
   currentUser?: CurrentUser;
 }) {
+  const initialScope = initialWorkspaceScope(isPreview);
   // Preview shows the sample estate; deployed starts empty and is filled by the
   // first Sync (or by re-reading a previous sync from the database on open).
   const [data, setData] = useState<AtlasData>(() =>
-    isPreview ? clone(SAMPLE_DATA) : clone(EMPTY_DATA),
+    isPreview
+      ? clone(SAMPLE_DATA)
+      : emptyData(initialScope.id, initialScope.displayName),
   );
   const [history, setHistory] = useState<AtlasHistory>(() =>
     isPreview ? PREVIEW_HISTORY : EMPTY_HISTORY,
   );
   const [hydrating, setHydrating] = useState(!isPreview);
+  const [hydrationError, setHydrationError] = useState<string | undefined>();
+  const [hydrationAttempt, setHydrationAttempt] = useState(0);
   const [historyLoading, setHistoryLoading] = useState(!isPreview);
   const [historyError, setHistoryError] = useState<string | undefined>();
   const [historyFailedSnapshotIds, setHistoryFailedSnapshotIds] = useState(
@@ -234,6 +276,11 @@ export function AtlasProvider({
   const [syncProgress, setSyncProgress] = useState(0);
   const [syncStage, setSyncStage] = useState("Ready to sync");
   const [syncStartedAt, setSyncStartedAt] = useState<number | undefined>();
+  const [syncQueue, setSyncQueue] = useState<WorkspaceSyncEntry[]>([]);
+  const [syncWorkspaceId, setSyncWorkspaceId] = useState<
+    string | undefined
+  >();
+  const syncInFlight = useRef(false);
   const [lastSyncedAt, setLastSyncedAt] = useState<string | undefined>(
     isPreview ? SAMPLE_DATA.syncRuns[0]?.finishedAt : undefined,
   );
@@ -248,6 +295,22 @@ export function AtlasProvider({
   const [syncError, setSyncError] = useState<string | undefined>();
   const [commentsLoading, setCommentsLoading] = useState(!isPreview);
   const [commentsError, setCommentsError] = useState<string | undefined>();
+  const [workspaceScopes, setWorkspaceScopes] = useState<WorkspaceScope[]>([
+    initialScope,
+  ]);
+  const [workspaceScopesLoading, setWorkspaceScopesLoading] =
+    useState(!isPreview);
+  const [workspaceScopesError, setWorkspaceScopesError] = useState<
+    string | undefined
+  >();
+  const [activeWorkspaceId, setActiveWorkspaceId] = useState(initialScope.id);
+  const activeWorkspaceName =
+    workspaceScopes.find(
+      (workspace) => workspace.id === activeWorkspaceId,
+    )?.displayName ?? initialScope.displayName;
+  const retryHydration = useCallback(() => {
+    setHydrationAttempt((attempt) => attempt + 1);
+  }, []);
   const progressResetTimer = useRef<number | undefined>(undefined);
   const syncAbortController = useRef<AbortController | undefined>(undefined);
   const operationGeneration = useRef(0);
@@ -295,21 +358,84 @@ export function AtlasProvider({
     governanceExceptionsLoadingRef.current = governanceExceptionsLoading;
   }, [governanceExceptionsLoading]);
 
+  const reloadWorkspaceScopes = useCallback(async () => {
+    setWorkspaceScopesLoading(true);
+    setWorkspaceScopesError(undefined);
+    try {
+      const scopes = await loadWorkspaceScopes(isPreview);
+      setWorkspaceScopes(scopes);
+      setActiveWorkspaceId((current) =>
+        scopes.some((workspace) => workspace.id === current)
+          ? current
+          : (scopes[0]?.id ?? ""),
+      );
+    } catch (error) {
+      setWorkspaceScopesError(
+        error instanceof Error ? error.message : String(error),
+      );
+      throw error;
+    } finally {
+      setWorkspaceScopesLoading(false);
+    }
+  }, [isPreview]);
+
+  const selectWorkspace = useCallback(
+    (workspaceId: string) => {
+      const target = workspaceId.trim().toLowerCase();
+      if (!workspaceScopes.some((workspace) => workspace.id === target)) {
+        setWorkspaceScopesError(
+          "The selected workspace is outside the shared Atlas scope.",
+        );
+        return;
+      }
+      if (syncing) {
+        setSyncError(
+          "Cancel the active synchronization before changing workspace.",
+        );
+        return;
+      }
+      setWorkspaceScopesError(undefined);
+      setSyncError(undefined);
+      setActiveWorkspaceId(target);
+    },
+    [syncing, workspaceScopes],
+  );
+
+  useEffect(() => {
+    let alive = true;
+    window.queueMicrotask(() => {
+      if (alive) void reloadWorkspaceScopes().catch(() => undefined);
+    });
+    return () => {
+      alive = false;
+    };
+  }, [reloadWorkspaceScopes]);
+
   const reloadComments = useCallback(async () => {
     if (isPreview) return;
+    const targetWorkspaceId = activeWorkspaceId;
+    const generation = operationGeneration.current;
     setCommentsLoading(true);
     setCommentsError(undefined);
     try {
-      const comments = await loadCommentsFromDb(false);
-      setData((current) => ({ ...current, comments }));
+      const comments = await loadCommentsFromDb(false, targetWorkspaceId);
+      if (generation !== operationGeneration.current) return;
+      setData((current) =>
+        current.workspace.fabricId === targetWorkspaceId
+          ? { ...current, comments }
+          : current,
+      );
     } catch (error) {
+      if (generation !== operationGeneration.current) return;
       setCommentsError(
         error instanceof Error ? error.message : String(error),
       );
     } finally {
-      setCommentsLoading(false);
+      if (generation === operationGeneration.current) {
+        setCommentsLoading(false);
+      }
     }
-  }, [isPreview]);
+  }, [activeWorkspaceId, isPreview]);
 
   useEffect(
     () => () => {
@@ -493,23 +619,44 @@ export function AtlasProvider({
     };
   }, [currentUser.id, data.workspace.fabricId, isPreview]);
 
-  // On open (deployed): remember the workspace id and re-hydrate from the DB.
+  // Hydrate only the active administrator-selected workspace.
   useEffect(() => {
-    if (isPreview) return;
-    (window as unknown as { __atlasWorkspaceId?: string }).__atlasWorkspaceId =
-      (import.meta.env.VITE_FABRIC_WORKSPACE_ID as string) ?? ATLAS_CONFIG.workspaceId;
+    if (isPreview || !activeWorkspaceId) return;
+
+    const generation = operationGeneration.current + 1;
+    operationGeneration.current = generation;
+    historyLoads.current.clear();
+    historyLoadCount.current = 0;
+    findingAckQueues.current.clear();
     let alive = true;
-    const generation = operationGeneration.current;
-    void loadFromDb(false)
+    window.queueMicrotask(() => {
+      if (!alive || operationGeneration.current !== generation) return;
+      setHydrating(true);
+      setHydrationError(undefined);
+      setHistoryLoading(true);
+      setHistoryError(undefined);
+      setHistoryFailedSnapshotIds(new Set());
+      setHistory(EMPTY_HISTORY);
+      setLastSyncedAt(undefined);
+      setRequiresDeploymentSync(true);
+      setData(emptyData(activeWorkspaceId, activeWorkspaceName));
+      void reloadComments();
+    });
+
+    void loadFromDb(false, activeWorkspaceId)
       .then((db) => {
         if (!alive || operationGeneration.current !== generation) return;
         if (!db) {
           setHistoryLoading(false);
-          void reloadComments();
           return;
         }
-        setData(db);
-        void reloadComments();
+        setData((current) => ({
+          ...db,
+          comments:
+            current.workspace.fabricId === activeWorkspaceId
+              ? current.comments
+              : [],
+        }));
         setLastSyncedAt(
           db.workspace.syncedAt ?? db.syncRuns[0]?.finishedAt,
         );
@@ -522,7 +669,12 @@ export function AtlasProvider({
         setHydrating(false);
         setHistoryLoading(true);
         setHistoryError(undefined);
-        void loadHistoryFromDb(false, db)
+        void loadHistoryFromDb(
+          false,
+          db,
+          ATLAS_CONFIG.snapshotRetentionCount,
+          activeWorkspaceId,
+        )
           .then((loadedHistory) => {
             if (alive && operationGeneration.current === generation) {
               setHistory(loadedHistory);
@@ -541,18 +693,259 @@ export function AtlasProvider({
             }
           });
       })
-      .catch(() => {
+      .catch((error) => {
         if (alive && operationGeneration.current === generation) {
+          setHydrationError(
+            error instanceof Error ? error.message : String(error),
+          );
           setHistoryLoading(false);
         }
       })
       .finally(() => {
-        if (alive) setHydrating(false);
+        if (alive && operationGeneration.current === generation) {
+          setHydrating(false);
+        }
       });
     return () => {
       alive = false;
     };
-  }, [isPreview, reloadComments]);
+  }, [
+    activeWorkspaceId,
+    activeWorkspaceName,
+    hydrationAttempt,
+    isPreview,
+    reloadComments,
+  ]);
+
+  /** Runs one workspace; only the active workspace's result replaces visible data. */
+  const runWorkspaceSync = useCallback(
+    async (
+      targetWorkspaceId: string,
+      abortController: AbortController,
+    ): Promise<{ status: "completed" | "failed" | "cancelled"; error?: string }> => {
+      const appliesToActive = targetWorkspaceId === activeWorkspaceId;
+      const generation = appliesToActive
+        ? operationGeneration.current + 1
+        : operationGeneration.current;
+      if (appliesToActive) {
+        operationGeneration.current = generation;
+        historyLoads.current.clear();
+        historyLoadCount.current = 0;
+        setHistoryFailedSnapshotIds(new Set());
+        setHistoryLoading(false);
+      }
+      setSyncWorkspaceId(targetWorkspaceId);
+      setSyncProgress(3);
+      setSyncStage("Starting workspace sync");
+      const syncStartedAtMs = Date.now();
+      setSyncStartedAt(syncStartedAtMs);
+      const startedAt = new Date(syncStartedAtMs).toISOString();
+      let reportedProgress = 3;
+      try {
+        const fresh = await runFabricSync(
+          isPreview,
+          currentUser,
+          (progress, stage) => {
+            if (
+              operationGeneration.current !== generation ||
+              abortController.signal.aborted
+            ) {
+              return;
+            }
+            reportedProgress = Math.max(reportedProgress, progress);
+            setSyncProgress(reportedProgress);
+            setSyncStage(stage);
+          },
+          abortController.signal,
+          targetWorkspaceId,
+        );
+        if (appliesToActive) {
+          if (operationGeneration.current !== generation) {
+            return { status: "cancelled" };
+          }
+          const previous = dataRef.current;
+          const next = fresh ?? clone(previous);
+          if (fresh) {
+            const comments = new Map(
+              [...fresh.comments, ...previous.comments].map((comment) => [
+                [
+                  comment.itemFabricId ?? "",
+                  comment.authorId,
+                  comment.body,
+                  comment.createdAt,
+                ].join("\u0000"),
+                comment,
+              ]),
+            );
+            next.comments = [...comments.values()];
+          }
+          const finishedAt =
+            next.workspace.syncedAt ?? new Date().toISOString();
+          if (!fresh) {
+            next.syncRuns = [
+              {
+                id: `s-${Date.now()}`,
+                startedAt,
+                finishedAt,
+                status: "completed" as const,
+                itemsSynced: next.items.length,
+                triggeredBy: currentUser.name,
+                summary: `${next.items.length} items · ${next.edges.length} lineage edges · ${next.principals.length} principals · ${next.jobs.length} jobs`,
+              },
+              ...next.syncRuns,
+            ].slice(0, 20);
+          }
+          setData(next);
+          setHydrating(false);
+          setHistory((previousHistory) =>
+            historyAfterSync(previousHistory, next),
+          );
+          setLastSyncedAt(finishedAt);
+          setHistoryError(undefined);
+          setHistoryLoading(true);
+          void loadHistoryFromDb(
+            isPreview,
+            next,
+            ATLAS_CONFIG.snapshotRetentionCount,
+            targetWorkspaceId,
+          )
+            .then((loadedHistory) => {
+              if (operationGeneration.current === generation) {
+                setHistory(loadedHistory);
+              }
+            })
+            .catch((error) => {
+              if (operationGeneration.current === generation) {
+                setHistoryError(
+                  error instanceof Error ? error.message : String(error),
+                );
+              }
+            })
+            .finally(() => {
+              if (operationGeneration.current === generation) {
+                setHistoryLoading(false);
+              }
+            });
+          if (!isPreview) {
+            setRequiresDeploymentSync(false);
+          }
+        }
+        setSyncProgress(100);
+        setSyncStage("Workspace is ready");
+        return { status: "completed" };
+      } catch (err) {
+        if (
+          err instanceof SyncCancelledError ||
+          abortController.signal.aborted
+        ) {
+          return { status: "cancelled" };
+        }
+        const message = err instanceof Error ? err.message : String(err);
+        if (appliesToActive && operationGeneration.current === generation) {
+          setSyncError(message);
+        }
+        return { status: "failed", error: message };
+      }
+    },
+    [activeWorkspaceId, currentUser, isPreview],
+  );
+
+  const syncWorkspaces = useCallback(
+    async (workspaceIds: readonly string[]) => {
+      if (!canSync) {
+        setSyncError(
+          "Only the configured Atlas sync administrator can synchronize this workspace.",
+        );
+        return;
+      }
+      // Browser runs share one progress channel and one Fabric token flow, so
+      // a second request never starts while a batch is in flight.
+      if (syncInFlight.current) return;
+      const targets = [
+        ...new Set(
+          workspaceIds
+            .map((workspaceId) => workspaceId.trim().toLowerCase())
+            .filter(Boolean),
+        ),
+      ];
+      if (
+        targets.length === 0 ||
+        targets.some(
+          (target) =>
+            !workspaceScopes.some((workspace) => workspace.id === target),
+        )
+      ) {
+        setSyncError("A requested workspace is outside the shared Atlas scope.");
+        return;
+      }
+      syncInFlight.current = true;
+      if (progressResetTimer.current != null) {
+        window.clearTimeout(progressResetTimer.current);
+      }
+      const abortController = new AbortController();
+      syncAbortController.current = abortController;
+      setSyncing(true);
+      setSyncError(undefined);
+      setSyncQueue(
+        targets.map((workspaceId) => ({ workspaceId, status: "queued" })),
+      );
+      const settle = (
+        workspaceIdsToSettle: readonly string[],
+        patch: Partial<WorkspaceSyncEntry>,
+      ) =>
+        setSyncQueue((queue) =>
+          queue.map((entry) =>
+            workspaceIdsToSettle.includes(entry.workspaceId)
+              ? { ...entry, ...patch }
+              : entry,
+          ),
+        );
+      let lastStatus: "completed" | "failed" | "cancelled" = "cancelled";
+      try {
+        for (let index = 0; index < targets.length; index += 1) {
+          const target = targets[index];
+          if (abortController.signal.aborted) {
+            settle(targets.slice(index), { status: "cancelled" });
+            break;
+          }
+          settle([target], {
+            status: "running",
+            startedAt: new Date().toISOString(),
+          });
+          const outcome = await runWorkspaceSync(target, abortController);
+          lastStatus = outcome.status;
+          settle([target], {
+            status: outcome.status,
+            error: outcome.error,
+            finishedAt: new Date().toISOString(),
+          });
+          if (outcome.status === "cancelled") {
+            settle(targets.slice(index + 1), { status: "cancelled" });
+            break;
+          }
+        }
+      } finally {
+        syncInFlight.current = false;
+        setSyncing(false);
+        setSyncWorkspaceId(undefined);
+        if (syncAbortController.current === abortController) {
+          syncAbortController.current = undefined;
+        }
+        if (lastStatus === "completed") {
+          progressResetTimer.current = window.setTimeout(() => {
+            setSyncProgress(0);
+            setSyncStage("Ready to sync");
+            setSyncStartedAt(undefined);
+          }, 1200);
+        } else {
+          setSyncProgress(0);
+          setSyncStage(lastStatus === "failed" ? "Sync failed" : "Ready to sync");
+          setSyncStartedAt(undefined);
+        }
+      }
+    },
+    [canSync, runWorkspaceSync, workspaceScopes],
+  );
 
   const sync = useCallback(async () => {
     if (!canSync) {
@@ -561,133 +954,35 @@ export function AtlasProvider({
       );
       return;
     }
-    const generation = operationGeneration.current + 1;
-    operationGeneration.current = generation;
-    historyLoads.current.clear();
-    historyLoadCount.current = 0;
-    setHistoryFailedSnapshotIds(new Set());
-    if (progressResetTimer.current != null) {
-      window.clearTimeout(progressResetTimer.current);
+    if (
+      !activeWorkspaceId ||
+      !workspaceScopes.some((workspace) => workspace.id === activeWorkspaceId)
+    ) {
+      setSyncError("The active workspace is outside the shared Atlas scope.");
+      return;
     }
-    setSyncing(true);
-    setSyncProgress(3);
-    setSyncStage("Starting workspace sync");
-    const syncStartedAtMs = Date.now();
-    setSyncStartedAt(syncStartedAtMs);
-    setSyncError(undefined);
-    setHistoryLoading(false);
-    const abortController = new AbortController();
-    syncAbortController.current = abortController;
-    const startedAt = new Date(syncStartedAtMs).toISOString();
-    let succeeded = false;
-    let reportedProgress = 3;
-    try {
-      const fresh = await runFabricSync(
-        isPreview,
-        currentUser,
-        (progress, stage) => {
-          if (operationGeneration.current !== generation) return;
-          reportedProgress = Math.max(reportedProgress, progress);
-          setSyncProgress(reportedProgress);
-          setSyncStage(stage);
-        },
-        abortController.signal,
-      );
-      if (operationGeneration.current !== generation) return;
-      const previous = dataRef.current;
-      const next = fresh ?? clone(previous);
-      if (fresh) {
-        const comments = new Map(
-          [...fresh.comments, ...previous.comments].map((comment) => [
-            [
-              comment.itemFabricId ?? "",
-              comment.authorId,
-              comment.body,
-              comment.createdAt,
-            ].join("\u0000"),
-            comment,
-          ]),
-        );
-        next.comments = [...comments.values()];
-      }
-      const finishedAt =
-        next.workspace.syncedAt ?? new Date().toISOString();
-      if (!fresh) {
-        next.syncRuns = [
-          {
-            id: `s-${Date.now()}`,
-            startedAt,
-            finishedAt,
-            status: "completed" as const,
-            itemsSynced: next.items.length,
-            triggeredBy: currentUser.name,
-            summary: `${next.items.length} items · ${next.edges.length} lineage edges · ${next.principals.length} principals · ${next.jobs.length} jobs`,
-          },
-          ...next.syncRuns,
-        ].slice(0, 20);
-      }
-      setData(next);
-      setHistory((previousHistory) =>
-        historyAfterSync(previousHistory, next),
-      );
-      setLastSyncedAt(finishedAt);
-      setHistoryError(undefined);
-      setHistoryLoading(true);
-      void loadHistoryFromDb(isPreview, next)
-        .then((loadedHistory) => {
-          if (operationGeneration.current === generation) {
-            setHistory(loadedHistory);
-          }
-        })
-        .catch((error) => {
-          if (operationGeneration.current === generation) {
-            setHistoryError(
-              error instanceof Error ? error.message : String(error),
-            );
-          }
-        })
-        .finally(() => {
-          if (operationGeneration.current === generation) {
-            setHistoryLoading(false);
-          }
-        });
-      setSyncProgress(100);
-      setSyncStage("Workspace is ready");
-      if (!isPreview) {
-        setRequiresDeploymentSync(false);
-      }
-      succeeded = true;
-    } catch (err) {
-      if (operationGeneration.current !== generation) return;
-      setSyncError(err instanceof Error ? err.message : String(err));
-      setSyncProgress(0);
-      setSyncStage("Sync failed");
-      setSyncStartedAt(undefined);
-    } finally {
-      if (operationGeneration.current === generation) {
-        setSyncing(false);
-      }
-      if (syncAbortController.current === abortController) {
-        syncAbortController.current = undefined;
-      }
-      if (succeeded && operationGeneration.current === generation) {
-        progressResetTimer.current = window.setTimeout(() => {
-          setSyncProgress(0);
-          setSyncStage("Ready to sync");
-          setSyncStartedAt(undefined);
-        }, 1200);
-      }
-    }
-  }, [canSync, isPreview, currentUser]);
+    await syncWorkspaces([activeWorkspaceId]);
+  }, [activeWorkspaceId, canSync, syncWorkspaces, workspaceScopes]);
 
   const cancelSync = useCallback(() => {
-    syncAbortController.current?.abort();
+    const controller = syncAbortController.current;
+    if (!controller || controller.signal.aborted) return;
+    controller.abort();
+    setSyncProgress(0);
+    setSyncStage(CANCELLING_STAGE);
   }, []);
 
   const addComment = useCallback(
     async (body: string, itemFabricId?: string) => {
       const text = body.trim();
       if (!text) return;
+      const catalog = dataRef.current;
+      if (!isPreview && catalog.workspace.fabricId !== activeWorkspaceId) {
+        throw new Error("The active workspace is still loading.");
+      }
+      if (itemFabricId && !catalog.items.some((item) => item.fabricId === itemFabricId)) {
+        throw new Error("The selected note target is not in the active workspace.");
+      }
       const comment: Comment = {
         id: `c-${Date.now()}`,
         itemFabricId,
@@ -701,10 +996,11 @@ export function AtlasProvider({
         body: text,
         createdAt: new Date().toISOString(),
       };
-      await persistComment(isPreview, comment);
-      setData((prev) => ({ ...prev, comments: [...prev.comments, comment] }));
+      await persistComment(isPreview, comment, activeWorkspaceId);
+      setData((prev) => prev.workspace.fabricId === catalog.workspace.fabricId
+        ? { ...prev, comments: [...prev.comments, comment] } : prev);
     },
-    [currentUser, isPreview],
+    [activeWorkspaceId, currentUser, isPreview],
   );
 
   const addSavedView = useCallback(
@@ -1071,6 +1367,7 @@ export function AtlasProvider({
         const snapshot = await loadHistoricalSnapshotFromDb(
           isPreview,
           snapshotId,
+          activeWorkspaceId,
         );
         if (generation !== operationGeneration.current) return;
         if (!snapshot) {
@@ -1100,7 +1397,7 @@ export function AtlasProvider({
         }
       }
     },
-    [isPreview],
+    [activeWorkspaceId, isPreview],
   );
 
   const hasData = data.items.length > 0 || !!data.workspace.snapshotId;
@@ -1139,9 +1436,20 @@ export function AtlasProvider({
       canSync,
       hasData,
       requiresDeploymentSync,
+      hydrationError,
+      retryHydration,
       syncError,
       currentUser,
+      workspaceScopes,
+      workspaceScopesLoading,
+      workspaceScopesError,
+      activeWorkspaceId,
+      reloadWorkspaceScopes,
+      selectWorkspace,
       sync,
+      syncWorkspaces,
+      syncQueue,
+      syncWorkspaceId,
       cancelSync,
       reloadComments,
       addComment,
@@ -1157,7 +1465,7 @@ export function AtlasProvider({
       removeGovernanceException: removeSharedGovernanceException,
       loadHistorySnapshot,
     }),
-    [data, history, hydrating, historyLoading, historyError, historyFailedSnapshotIds, savedViews, savedViewsLoading, savedViewsError, findingAcks, findingAcksLoading, findingAcksError, findingAckPendingIds, governancePolicy.targets, governancePolicyLoading, governancePolicyError, governanceExceptions, governanceExceptionsLoading, governanceExceptionsError, governanceExceptionPendingIds, commentsLoading, commentsError, syncing, syncProgress, syncStage, syncStartedAt, lastSyncedAt, isPreview, configured, canSync, hasData, requiresDeploymentSync, syncError, currentUser, sync, cancelSync, reloadComments, addComment, addSavedView, removeSavedView, saveFindingAcknowledgement, removeFindingAcknowledgement, reloadGovernancePolicy, saveGovernanceTargets, resetGovernanceTargets, reloadGovernanceExceptions, saveSharedGovernanceException, removeSharedGovernanceException, loadHistorySnapshot],
+    [data, history, hydrating, historyLoading, historyError, historyFailedSnapshotIds, savedViews, savedViewsLoading, savedViewsError, findingAcks, findingAcksLoading, findingAcksError, findingAckPendingIds, governancePolicy.targets, governancePolicyLoading, governancePolicyError, governanceExceptions, governanceExceptionsLoading, governanceExceptionsError, governanceExceptionPendingIds, commentsLoading, commentsError, syncing, syncProgress, syncStage, syncStartedAt, lastSyncedAt, isPreview, configured, canSync, hasData, requiresDeploymentSync, hydrationError, retryHydration, syncError, currentUser, workspaceScopes, workspaceScopesLoading, workspaceScopesError, activeWorkspaceId, reloadWorkspaceScopes, selectWorkspace, sync, syncWorkspaces, syncQueue, syncWorkspaceId, cancelSync, reloadComments, addComment, addSavedView, removeSavedView, saveFindingAcknowledgement, removeFindingAcknowledgement, reloadGovernancePolicy, saveGovernanceTargets, resetGovernanceTargets, reloadGovernanceExceptions, saveSharedGovernanceException, removeSharedGovernanceException, loadHistorySnapshot],
   );
 
   return <AtlasContext.Provider value={value}>{children}</AtlasContext.Provider>;

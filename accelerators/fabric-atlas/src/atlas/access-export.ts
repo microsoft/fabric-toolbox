@@ -1,5 +1,13 @@
 import type { AccessReviewRow } from "./governance";
 import type { Grant } from "./model";
+import {
+  ACCESS_EVIDENCE_LABEL,
+  GRANT_ONLY_NOTICE,
+  accessLayerSummary,
+  evaluatedAccessLayers,
+  unknownAccessLayerSummary,
+  storedPolicySummary,
+} from "./access-coverage";
 
 const FLAG_LABEL: Record<NonNullable<Grant["flag"]>, string> = {
   external: "External",
@@ -35,11 +43,22 @@ export function accessRowsToCsv(rows: AccessReviewRow[]): string {
     "Item",
     "Item ID",
     "Item type",
-    "Effective permission",
+    "Highest recorded grant",
     "Origin",
     "Flags",
     "Contributing grants",
-    "Effective grants",
+    "Highest-level grants",
+    "Restrictions",
+    "Coverage",
+    "Evaluated layers",
+    "Layer evidence",
+    "Unknown or incomplete layers",
+    "Grant sources",
+    "Workspace ID",
+    "Snapshot ID",
+    "Snapshot observed at",
+    "Assessment limitation",
+    "Stored workspace policy context",
   ];
   const lines = rows.map((row) =>
     [
@@ -54,6 +73,19 @@ export function accessRowsToCsv(rows: AccessReviewRow[]): string {
       flags(row).map((flag) => FLAG_LABEL[flag]).join("; "),
       row.applicableGrants.length,
       row.effectiveGrants.length,
+      "Not evaluated",
+      ACCESS_EVIDENCE_LABEL[row.coverage.state],
+      evaluatedAccessLayers(row.coverage),
+      accessLayerSummary(row.coverage),
+      unknownAccessLayerSummary(row.coverage),
+      row.applicableGrants.map((grant) =>
+        `${grant.itemFabricId ? "Item" : "Workspace"}: ${grant.source}${grant.roleName ? ` (${grant.roleName})` : ""}`,
+      ).join("; "),
+      row.coverage.workspaceId ?? "Not recorded",
+      row.coverage.snapshotId ?? "Not recorded",
+      row.coverage.observedAt ?? "Not recorded",
+      GRANT_ONLY_NOTICE,
+      storedPolicySummary(row.coverage),
     ]
       .map(csvCell)
       .join(","),

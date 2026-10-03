@@ -1,5 +1,6 @@
 # Rayfin template manifest.
-# Marks this directory as a reusable Rayfin template.
+# Marks this repo as a reusable Rayfin template so anyone can scaffold their own
+# copy with:  rayfin init my-atlas -t https://github.com/fredgis/FabricAtlas
 apiVersion: v1
 metadata:
   name: fabric-atlas
@@ -8,7 +9,7 @@ metadata:
     Microsoft Fabric workspace governance explorer — items, lineage, catalog,
     access, jobs, config, sensitivity labels and a shared comment layer, built
     as a Rayfin Data App.
-  version: 1.12.1
+  version: 2.0.0
   tags:
     - fabric
     - governance

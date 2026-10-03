@@ -1,5 +1,5 @@
 import { clsx, type ClassValue } from "clsx";
-import { twMerge } from "tailwind-merge";
+import { extendTailwindMerge } from "tailwind-merge";
 import type { CSSProperties, ReactNode } from "react";
 import {
   typeMeta,
@@ -11,8 +11,29 @@ import {
   type PrincipalKind,
 } from "./model";
 
+// Without the custom type scale, tailwind-merge reads `text-200` as a colour
+// and drops it next to `text-foreground`, so chips fall back to 16px.
+const mergeClasses = extendTailwindMerge({
+  extend: {
+    theme: {
+      text: [
+        "100",
+        "200",
+        "300",
+        "400",
+        "500",
+        "600",
+        "hero-700",
+        "hero-800",
+        "hero-900",
+        "hero-1000",
+      ],
+    },
+  },
+});
+
 export function cn(...inputs: ClassValue[]) {
-  return twMerge(clsx(inputs));
+  return mergeClasses(clsx(inputs));
 }
 
 /** Round user avatar with deterministic colour + initials. */

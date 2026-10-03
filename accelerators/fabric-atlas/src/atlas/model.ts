@@ -55,31 +55,31 @@ export interface TypeMeta {
 }
 
 export const ITEM_TYPES: Record<ItemType, TypeMeta> = {
-  Lakehouse: { label: "Lakehouse", code: "LH", color: "#2f9e6f", icon: "Database" },
-  Warehouse: { label: "Warehouse", code: "DW", color: "#3b82f6", icon: "Warehouse" },
-  Eventhouse: { label: "Eventhouse", code: "EH", color: "#0ea5b7", icon: "Zap" },
-  KQLDatabase: { label: "KQL Database", code: "KQ", color: "#14b8a6", icon: "Table2" },
-  KQLQueryset: { label: "KQL queryset", code: "QS", color: "#0d9488", icon: "Braces" },
-  KQLDashboard: { label: "KQL dashboard", code: "KD", color: "#f59e0b", icon: "LayoutDashboard" },
+  Lakehouse: { label: "Lakehouse", code: "LH", color: "#27845d", icon: "Database" },
+  Warehouse: { label: "Warehouse", code: "DW", color: "#196cf4", icon: "Warehouse" },
+  Eventhouse: { label: "Eventhouse", code: "EH", color: "#0b818f", icon: "Zap" },
+  KQLDatabase: { label: "KQL Database", code: "KQ", color: "#0e8376", icon: "Table2" },
+  KQLQueryset: { label: "KQL queryset", code: "QS", color: "#0b8177", icon: "Braces" },
+  KQLDashboard: { label: "KQL dashboard", code: "KD", color: "#a06707", icon: "LayoutDashboard" },
   SQLEndpoint: { label: "SQL endpoint", code: "SE", color: "#0f6cbd", icon: "Table2" },
-  Notebook: { label: "Notebook", code: "NB", color: "#ef7a45", icon: "NotebookText" },
-  DataPipeline: { label: "Data pipeline", code: "PL", color: "#7c5cff", icon: "Workflow" },
-  Dataflow: { label: "Dataflow Gen2", code: "DF", color: "#d158c4", icon: "Shuffle" },
+  Notebook: { label: "Notebook", code: "NB", color: "#c94b11", icon: "NotebookText" },
+  DataPipeline: { label: "Data pipeline", code: "PL", color: "#7654ff", icon: "Workflow" },
+  Dataflow: { label: "Dataflow Gen2", code: "DF", color: "#c336b4", icon: "Shuffle" },
   Datamart: { label: "Datamart", code: "DM", color: "#0f6cbd", icon: "Database" },
-  SemanticModel: { label: "Semantic model", code: "SM", color: "#d9a520", icon: "Boxes" },
-  Report: { label: "Report", code: "RP", color: "#eab308", icon: "BarChart3" },
-  Dashboard: { label: "Dashboard", code: "DB", color: "#f59e0b", icon: "LayoutDashboard" },
+  SemanticModel: { label: "Semantic model", code: "SM", color: "#926f16", icon: "Boxes" },
+  Report: { label: "Report", code: "RP", color: "#916f05", icon: "BarChart3" },
+  Dashboard: { label: "Dashboard", code: "DB", color: "#a06707", icon: "LayoutDashboard" },
   SQLDatabase: { label: "SQL database", code: "DB", color: "#2563eb", icon: "Database" },
-  Eventstream: { label: "Eventstream", code: "ES", color: "#06b6d4", icon: "Radio" },
-  MirroredDatabase: { label: "Mirrored DB", code: "MD", color: "#8b5cf6", icon: "Copy" },
+  Eventstream: { label: "Eventstream", code: "ES", color: "#047f94", icon: "Radio" },
+  MirroredDatabase: { label: "Mirrored DB", code: "MD", color: "#8452f5", icon: "Copy" },
   Ontology: { label: "Ontology", code: "ON", color: "#0f766e", icon: "Network" },
   GraphModel: { label: "Graph model", code: "GM", color: "#7c3aed", icon: "Waypoints" },
   DataAgent: { label: "Data agent", code: "DA", color: "#4f46e5", icon: "Bot" },
   UserDataFunction: { label: "User data function", code: "Fn", color: "#64748b", icon: "FunctionSquare" },
-  AppBackend: { label: "Fabric app", code: "AP", color: "#0ea5b7", icon: "AppWindow" },
+  AppBackend: { label: "Fabric app", code: "AP", color: "#0b818f", icon: "AppWindow" },
 };
 
-const FALLBACK_META: TypeMeta = { label: "Item", code: "··", color: "#8b95a5", icon: "Box" };
+const FALLBACK_META: TypeMeta = { label: "Item", code: "··", color: "#697587", icon: "Box" };
 
 /** Item-type metadata that never throws — unknown/blank types get a neutral glyph. */
 export function typeMeta(type: string | undefined | null): TypeMeta {
@@ -171,6 +171,8 @@ export interface Job {
   startedAt: string;
   durationSec: number;
   message?: string;
+  /** Fabric job instance ID, when the collector returned one. Not persisted on JobRun. */
+  runId?: string;
 }
 
 export interface ConfigKV {

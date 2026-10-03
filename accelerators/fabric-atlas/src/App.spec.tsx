@@ -12,11 +12,16 @@ import {
     render,
     screen,
     waitFor,
+    within,
 } from "@testing-library/react";
 import App from "@/App";
 import { workspaceDetailLabel } from "@/atlas/workspace-display";
 import { AtlasProvider } from "@/atlas/store";
 import { ThemeContext } from "@/hooks/theme.context";
+
+vi.mock("@/atlas/components/PostureRadar", () => ({
+    PostureRadar: () => <figure aria-label="Governance posture radar" />,
+}));
 
 function renderApp() {
     return render(
@@ -43,7 +48,7 @@ describe("App", () => {
             workspaceDetailLabel({
                 fabricId: "workspace",
                 displayName: "Workspace",
-                capacity: "10000000-0000-4000-8000-000000000099",
+                capacity: "786e0b3d-9718-423d-a4cb-a778cb824a23",
                 region: "West Europe",
             }),
         ).toBe("West Europe");
@@ -60,6 +65,17 @@ describe("App", () => {
     it("mounts content into the document", () => {
         renderApp();
         expect(document.body).not.toBeEmptyDOMElement();
+    });
+
+    it("shows the single scoped workspace name without a selector", async () => {
+        renderApp();
+        await act(async () => undefined);
+        expect(
+            screen.queryByRole("combobox", { name: "Active workspace" }),
+        ).toBeNull();
+        expect(screen.getByRole("banner")).toHaveTextContent(
+            "AlpineRent",
+        );
     });
 
     it("applies and restores the personal display density", () => {
@@ -116,6 +132,45 @@ describe("App", () => {
         ).toHaveAttribute("aria-selected", "true");
         expect(screen.getAllByRole("main")).toHaveLength(1);
         expect(document.title).toBe("Workspace Hub | Fabric Atlas");
+    });
+
+    it("keeps one compact run status in the header on every route during a run", async () => {
+        window.history.replaceState(null, "", "/#workspace");
+        renderApp();
+
+        fireEvent.click(
+            await screen.findByRole("button", { name: "Synchronize now" }),
+        );
+        expect(
+            await screen.findByRole("heading", {
+                name: "Synchronization is running in this browser tab",
+            }),
+        ).toBeInTheDocument();
+        const main = screen.getByRole("main");
+        const header = main.parentElement!.querySelector(
+            ":scope > header",
+        ) as HTMLElement;
+        expect(header).not.toBeNull();
+        const expectCompactLayout = () => {
+            expect(
+                screen.queryByRole("region", {
+                    name: "Workspace synchronization status",
+                }),
+            ).toBeNull();
+            expect(main.previousElementSibling).toBe(header);
+            expect(within(header).getByRole("status").textContent).toMatch(/%|synced/);
+        };
+        expectCompactLayout();
+
+        fireEvent.mouseDown(screen.getByRole("tab", { name: "Configuration" }));
+        await screen.findByRole("tab", { name: "Configuration", selected: true });
+        expectCompactLayout();
+
+        fireEvent.click(screen.getByRole("button", { name: "Overview" }));
+        await waitFor(() =>
+            expect(document.title).toBe("Overview | Fabric Atlas"),
+        );
+        expectCompactLayout();
     });
 
     it("opens Overview signals with shareable filters", async () => {
@@ -185,7 +240,7 @@ describe("App", () => {
             name: /details/,
         });
         await waitFor(() => expect(dialog).toHaveFocus());
-        expect(screen.getByRole("main")).not.toHaveFocus();
+        expect(document.activeElement).toBe(dialog);
     });
 
     it("opens a searched Catalog item without stealing modal focus", async () => {

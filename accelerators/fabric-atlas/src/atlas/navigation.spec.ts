@@ -1,7 +1,10 @@
 import { describe, expect, it } from "vitest";
 import {
+  DEFAULT_WORKSPACE_SECTION,
+  isWorkspaceSection,
   navigationForSavedView,
   navigationForSearch,
+  WORKSPACE_SECTIONS,
 } from "./navigation";
 import type { SearchResult } from "./search";
 
@@ -21,6 +24,19 @@ function result(
 }
 
 describe("Atlas navigation", () => {
+  it("types the four Workspace Hub sections with Synchronization as the landing", () => {
+    expect(WORKSPACE_SECTIONS).toEqual([
+      "workspace",
+      "synchronization",
+      "configuration",
+      "notes",
+    ]);
+    expect(DEFAULT_WORKSPACE_SECTION).toBe("synchronization");
+    expect(WORKSPACE_SECTIONS.every(isWorkspaceSection)).toBe(true);
+    expect(isWorkspaceSection("schedule")).toBe(false);
+    expect(isWorkspaceSection(undefined)).toBe(false);
+  });
+
   it("maps schema search results to the Asset Catalog", () => {
     expect(
       navigationForSearch(

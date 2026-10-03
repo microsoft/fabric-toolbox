@@ -26,6 +26,7 @@
     },
   },
   "include": [
-    "src"
+    "src",
+    "rayfin/functions/src/secrets.generated.ts"
   ]
 }

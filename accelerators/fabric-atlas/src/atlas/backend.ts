@@ -23,6 +23,21 @@ import {
   toItemType,
   type SyncIdentity,
 } from "./live-sync";
+import {
+  ITEM_RELATIONS_EVIDENCE_ENTITY,
+  persistItemRelationsEvidence,
+  type ItemRelationsEvidenceApi,
+} from "./item-relations-evidence-store";
+import {
+  OPERATIONAL_INCIDENT_ENTITY,
+  persistOperationalIncidents,
+  type OperationalIncidentApi,
+} from "./operational-incident-store";
+import {
+  collectBrowserWorkspace,
+  pythonCollectorRollbackEnabled,
+  type ItemRelationsCollection,
+} from "./browser-collector-sync";
 import { normalizeLineageEdges } from "./lineage";
 import { DEPLOYMENT_ID } from "./release";
 import {
@@ -55,6 +70,7 @@ export type SyncProgressReporter = (progress: number, stage: string) => void;
 
 type Row = Record<string, unknown>;
 const SNAPSHOT_WRITE_BATCH_SIZE = 8;
+const SNAPSHOT_WRITE_RETRY_DELAYS_MS = [1_000, 3_000, 8_000];
 const SYNC_RUN_UPDATE_RETRY_DELAYS_MS = [0, 100, 400];
 const PERSISTED_TEXT_LIMITS = {
   reference: {
@@ -105,7 +121,7 @@ const PERSISTED_TEXT_LIMITS = {
   },
   syncRun: {
     triggeredBy: 160,
-    summary: 500,
+    summary: 2000,
   },
 } as const;
 const PERSISTED_TRUNCATION_MARKER = " [truncated]";
@@ -202,6 +218,129 @@ function persistedList(
 function assertSyncActive(signal?: AbortSignal): void {
   if (signal?.aborted) {
     throw new SyncCancelledError("Synchronization cancelled.");
+  }
+}
+
+function snapshotWriteErrorMessage(error: unknown): string {
+  return error instanceof Error ? error.message : String(error);
+}
+
+function isRetryableSnapshotWriteError(error: unknown): boolean {
+  const status = Number(
+    (error as { status?: unknown } | null)?.status,
+  );
+  return (
+    [408, 429, 500, 502, 503, 504].includes(status) ||
+    /GraphQL errors:\s*Internal server error/i.test(
+      snapshotWriteErrorMessage(error),
+    ) ||
+    /Request timed out after \d+ms/i.test(
+      snapshotWriteErrorMessage(error),
+    ) ||
+    /HTTP (?:Error )?(?:408|429|5\d\d)\b/i.test(
+      snapshotWriteErrorMessage(error),
+    )
+  );
+}
+
+async function snapshotWriteDelay(
+  milliseconds: number,
+  signal?: AbortSignal,
+): Promise<void> {
+  if (!milliseconds) return;
+  assertSyncActive(signal);
+  await new Promise<void>((resolve, reject) => {
+    const finish = () => {
+      signal?.removeEventListener("abort", abort);
+      resolve();
+    };
+    const timeout = setTimeout(finish, milliseconds);
+    const abort = () => {
+      clearTimeout(timeout);
+      signal?.removeEventListener("abort", abort);
+      reject(new SyncCancelledError("Synchronization cancelled."));
+    };
+    signal?.addEventListener("abort", abort, { once: true });
+  });
+}
+
+async function snapshotRowExists(
+  api: EntityApi,
+  id: string,
+  signal?: AbortSignal,
+): Promise<boolean> {
+  assertSyncActive(signal);
+  try {
+    const rows = await readWithRetry(api, ["id"], {
+      id: { eq: id },
+    });
+    assertSyncActive(signal);
+    return rows.some(
+      (row) =>
+        String(row.id ?? "").toLowerCase() === id.toLowerCase(),
+    );
+  } catch {
+    assertSyncActive(signal);
+    return false;
+  }
+}
+
+async function recoverSnapshotRow(
+  entity: string,
+  api: EntityApi,
+  row: Row,
+  initialError: unknown,
+  signal?: AbortSignal,
+): Promise<void> {
+  const id = String(row.id ?? "");
+  let lastError = initialError;
+  for (let attempt = 0; attempt < SNAPSHOT_WRITE_RETRY_DELAYS_MS.length; attempt += 1) {
+    assertSyncActive(signal);
+    await snapshotWriteDelay(
+      SNAPSHOT_WRITE_RETRY_DELAYS_MS[attempt],
+      signal,
+    );
+    if (id && (await snapshotRowExists(api, id, signal))) {
+      return;
+    }
+    try {
+      await api.create(row);
+      return;
+    } catch (error) {
+      assertSyncActive(signal);
+      lastError = error;
+      if (id && (await snapshotRowExists(api, id, signal))) return;
+      if (!isRetryableSnapshotWriteError(error)) throw error;
+      if (attempt + 1 < SNAPSHOT_WRITE_RETRY_DELAYS_MS.length) {
+        console.warn(
+          "[atlas] retrying transient snapshot mutation",
+          entity,
+          attempt + 1,
+        );
+      }
+    }
+  }
+  if (id && (await snapshotRowExists(api, id, signal))) return;
+  throw new Error(
+    `${entity} snapshot write failed after retries: ${snapshotWriteErrorMessage(lastError)}`,
+    { cause: lastError },
+  );
+}
+
+async function createSnapshotRow(
+  entity: string,
+  api: EntityApi,
+  row: Row,
+  signal?: AbortSignal,
+): Promise<void> {
+  try {
+    await api.create(row);
+  } catch (error) {
+    assertSyncActive(signal);
+    const id = String(row.id ?? "");
+    if (id && (await snapshotRowExists(api, id, signal))) return;
+    if (!isRetryableSnapshotWriteError(error)) throw error;
+    await recoverSnapshotRow(entity, api, row, error, signal);
   }
 }
 
@@ -374,8 +513,9 @@ async function dataApi(): Promise<Record<string, EntityApi>> {
   return getRayfinClient().data as unknown as Record<string, EntityApi>;
 }
 
-function workspaceId(): string {
+function workspaceId(explicitWorkspaceId?: string): string {
   return (
+    explicitWorkspaceId ??
     (window as unknown as { __atlasWorkspaceId?: string }).__atlasWorkspaceId ??
     ATLAS_CONFIG.workspaceId
   );
@@ -396,6 +536,8 @@ interface SyncAttempt {
   startedAt: Date;
   data: Record<string, EntityApi>;
   user: SyncIdentity;
+  collectorSummary?: string;
+  itemRelationsCollection?: ItemRelationsCollection;
 }
 
 function textOrFallback(value: unknown, fallback: string): string {
@@ -424,12 +566,15 @@ function requireSyncWriter(user: SyncIdentity): string {
   return writerEmail;
 }
 
-async function startSyncAttempt(user: SyncIdentity): Promise<SyncAttempt> {
+async function startSyncAttempt(
+  user: SyncIdentity,
+  targetWorkspaceId?: string,
+): Promise<SyncAttempt> {
   const attempt: SyncAttempt = {
     id: crypto.randomUUID(),
     snapshotId: crypto.randomUUID(),
     workspaceId: requiredExactPersistedText(
-      workspaceId(),
+      workspaceId(targetWorkspaceId),
       PERSISTED_TEXT_LIMITS.reference.fabricId,
       "Workspace ID",
     ),
@@ -505,6 +650,7 @@ async function updateSyncAttempt(
 export async function persistComment(
   isPreview: boolean,
   comment: Comment,
+  targetWorkspaceId?: string,
 ): Promise<void> {
   if (isPreview) return;
   if (
@@ -518,7 +664,7 @@ export async function persistComment(
   }
   const data = await dataApi();
   await data.Comment.create({
-    workspace_id: workspaceId(),
+    workspace_id: workspaceId(targetWorkspaceId),
     itemFabricId: comment.itemFabricId,
     authorId: comment.authorId,
     authorName: comment.authorEmail,
@@ -540,6 +686,7 @@ export async function runFabricSync(
   user: SyncIdentity,
   reportProgress?: SyncProgressReporter,
   signal?: AbortSignal,
+  targetWorkspaceId?: string,
 ): Promise<AtlasData | null> {
   if (isPreview) {
     reportProgress?.(15, "Preparing preview sync");
@@ -550,15 +697,26 @@ export async function runFabricSync(
     return null;
   }
   assertSyncActive(signal);
-  const attempt = await startSyncAttempt(user);
+  const attempt = await startSyncAttempt(user, targetWorkspaceId);
   try {
-    const raw = await invokeSyncAll(
-      attempt.workspaceId,
-      user,
-      reportProgress,
-      signal,
-      attempt.id,
-    );
+    let raw: Awaited<ReturnType<typeof invokeSyncAll>>;
+    if (!pythonCollectorRollbackEnabled()) {
+      const collected = await collectBrowserWorkspace(
+        attempt.workspaceId, user, attempt.id, reportProgress, signal,
+      );
+      raw = collected.raw;
+      attempt.collectorSummary = collected.summary;
+      attempt.itemRelationsCollection = collected.itemRelationsCollection;
+    } else {
+      raw = await invokeSyncAll(
+        attempt.workspaceId,
+        user,
+        reportProgress,
+        signal,
+        attempt.id,
+      );
+      attempt.collectorSummary = "Collectors: explicit Python rollback";
+    }
     reportProgress?.(62, "Workspace metadata complete");
     const atlas = mapSyncToAtlas(raw, WS_FALLBACK);
     reportProgress?.(66, "Building the governance catalog");
@@ -587,6 +745,102 @@ export async function runFabricSync(
   }
 }
 
+/**
+ * Stores Item Relations (Beta) evidence after the snapshot marker is visible.
+ * It never throws: Preview evidence must not fail an authoritative sync.
+ */
+async function persistItemRelationsCollection(
+  attempt: SyncAttempt,
+  atlas: AtlasData,
+): Promise<void> {
+  const collection = attempt.itemRelationsCollection;
+  const api = attempt.data[ITEM_RELATIONS_EVIDENCE_ENTITY] as unknown as
+    | ItemRelationsEvidenceApi
+    | undefined;
+  if (!collection) return;
+  if (!api?.select || !api.create || !api.delete) {
+    console.warn("[atlas] Item Relations evidence entity is not deployed");
+    return;
+  }
+  try {
+    const result = await persistItemRelationsEvidence(
+      {
+        workspaceId: attempt.workspaceId,
+        snapshotId: attempt.snapshotId,
+        correlationId: attempt.id,
+        writerEmail: attempt.writerEmail,
+        collection,
+        snapshot: {
+          items: atlas.items,
+          edges: atlas.edges,
+          workspaceName: atlas.workspace.displayName,
+        },
+      },
+      api,
+    );
+    if (result.status === "skipped") {
+      console.warn("[atlas] Item Relations evidence not stored", result.reason);
+    }
+  } catch (error) {
+    console.warn("[atlas] Item Relations evidence storage failed", {
+      type: error instanceof Error ? error.name : "unknown",
+    });
+  }
+}
+
+/**
+ * Records observed incidents of the snapshot that was just published. It never
+ * throws: incident evidence is derived and optional, so a missing entity or a
+ * failed write must not fail the authoritative synchronization.
+ */
+async function persistSnapshotIncidents(
+  attempt: SyncAttempt,
+  atlas: AtlasData,
+  syncedAt: Date,
+): Promise<void> {
+  const api = attempt.data[OPERATIONAL_INCIDENT_ENTITY] as unknown as
+    | OperationalIncidentApi
+    | undefined;
+  if (!api?.select || !api.create || !api.delete) {
+    console.warn("[atlas] OperationalIncident entity is not deployed");
+    return;
+  }
+  try {
+    const markers = trustedMarkers(
+      await readTrustedWorkspaceMarkers(
+        readerFor(attempt.data),
+        attempt.workspaceId,
+      ),
+      attempt.workspaceId,
+    );
+    const previousSnapshotId = markers
+      .map((marker) => String(marker.snapshotId))
+      .find((snapshotId) => !sameText(snapshotId, attempt.snapshotId));
+    const result = await persistOperationalIncidents(
+      {
+        workspaceId: attempt.workspaceId,
+        snapshotId: attempt.snapshotId,
+        writerEmail: attempt.writerEmail,
+        observedAt: syncedAt.toISOString(),
+        data: atlas,
+        previousSnapshotId,
+      },
+      api,
+    );
+    if (result.skipped || result.truncated || result.retentionWarning) {
+      console.warn("[atlas] operational incidents partially stored", {
+        skipped: result.skipped,
+        truncated: result.truncated,
+        retentionWarning: !!result.retentionWarning,
+      });
+    }
+  } catch (error) {
+    console.warn("[atlas] operational incident storage failed", {
+      type: error instanceof Error ? error.name : "unknown",
+    });
+  }
+}
+
 /** Replace the catalog rows in the Rayfin DB with a freshly synced snapshot. */
 async function persistSync(
   atlas: AtlasData,
@@ -612,20 +866,46 @@ async function persistSync(
       assertSyncActive(signal);
       const payloads = rows
         .slice(offset, offset + SNAPSHOT_WRITE_BATCH_SIZE)
-        .map((row) => ({
-          workspace_id: wid,
-          snapshotId,
-          writerEmail,
-          ...row,
-        }));
+        .map((row) => {
+          const id =
+            typeof row.id === "string" && row.id
+              ? row.id
+              : crypto.randomUUID();
+          return {
+            workspace_id: wid,
+            snapshotId,
+            writerEmail,
+            ...row,
+            id,
+          };
+        });
       const results = await Promise.allSettled(
         payloads.map((row) => data[entity].create(row)),
       );
-      const failure = results.find(
-        (result): result is PromiseRejectedResult =>
-          result.status === "rejected",
-      );
-      if (failure) throw failure.reason;
+      const retryRows: Array<{ row: Row; error: unknown }> = [];
+      for (let index = 0; index < results.length; index += 1) {
+        const result = results[index];
+        if (result.status === "fulfilled") continue;
+        assertSyncActive(signal);
+        const row = payloads[index];
+        const id = String(row.id ?? "");
+        if (id && (await snapshotRowExists(data[entity], id, signal))) {
+          continue;
+        }
+        if (!isRetryableSnapshotWriteError(result.reason)) {
+          throw result.reason;
+        }
+        retryRows.push({ row, error: result.reason });
+      }
+      for (const retry of retryRows) {
+        await recoverSnapshotRow(
+          entity,
+          data[entity],
+          retry.row,
+          retry.error,
+          signal,
+        );
+      }
       assertSyncActive(signal);
     }
   };
@@ -987,16 +1267,36 @@ async function persistSync(
   // marker is written. That final marker is the atomic visibility switch:
   // orphaned rows from a failed attempt are never selected by hydration.
   reportProgress?.(97, "Finalizing the workspace snapshot");
-  const syncSummary = `${atlas.items.length} items · ${atlas.edges.length} lineage edges · ${atlas.principals.length} principals · ${atlas.jobs.length} jobs`;
-  await updateSyncAttempt(
-    attempt,
-    "completed",
-    syncedAt,
-    atlas.items.length,
-    syncSummary,
-  );
+  const syncSummary = [
+    `${atlas.items.length} items · ${atlas.edges.length} lineage edges · ${atlas.principals.length} principals · ${atlas.jobs.length} jobs`,
+    attempt.collectorSummary,
+  ]
+    .filter((value): value is string => !!value)
+    .join(" · ");
   assertSyncActive(signal);
-  await data.Workspace.create(manifest);
+  await createSnapshotRow(
+    "Workspace",
+    data.Workspace,
+    { ...manifest, id: crypto.randomUUID() },
+    signal,
+  );
+  try {
+    await updateSyncAttempt(
+      attempt,
+      "completed",
+      syncedAt,
+      atlas.items.length,
+      syncSummary,
+    );
+  } catch (error) {
+    console.warn("[atlas] published snapshot audit update deferred", error);
+  }
+  if (attempt.itemRelationsCollection) {
+    reportProgress?.(98, "Storing Item Relations evidence");
+    await persistItemRelationsCollection(attempt, atlas);
+  }
+  reportProgress?.(98, "Recording operational incidents");
+  await persistSnapshotIncidents(attempt, atlas, syncedAt);
   reportProgress?.(99, "Applying snapshot retention");
   try {
     await pruneSnapshots(data, wid, snapshotId, writerEmail);
@@ -1887,7 +2187,9 @@ async function cleanupOrphanSnapshots(
     })
     .sort((left, right) => left.timestamp - right.timestamp)
     .map(({ row }) => row);
-  for (const attempt of candidates.slice(0, MAX_SNAPSHOTS_PRUNED_PER_SYNC)) {
+  let cleaned = 0;
+  for (const attempt of candidates) {
+    if (cleaned >= MAX_SNAPSHOTS_PRUNED_PER_SYNC) break;
     const snapshotId = String(attempt.snapshotId);
     const attemptWriter = realText(attempt.writerEmail) ?? writerEmail;
     try {
@@ -1898,6 +2200,16 @@ async function cleanupOrphanSnapshots(
         false,
         attemptWriter,
       );
+      const rowCount =
+        rows.itemRows.length +
+        rows.edgeRows.length +
+        rows.principalRows.length +
+        rows.grantRows.length +
+        rows.jobRows.length +
+        rows.regularConfigRows.length +
+        rows.schemaRows.length +
+        rows.objectEdgeRows.length;
+      if (rowCount === 0) continue;
       await deleteSnapshotContent(
         data,
         rows,
@@ -1905,6 +2217,7 @@ async function cleanupOrphanSnapshots(
         snapshotId,
         attemptWriter,
       );
+      cleaned += 1;
     } catch (error) {
       console.warn("[atlas] orphan snapshot cleanup deferred", error);
     }
@@ -2012,10 +2325,11 @@ function commentsFromRows(rows: Row[], wid: string): Comment[] {
 
 export async function loadCommentsFromDb(
   isPreview: boolean,
+  targetWorkspaceId?: string,
 ): Promise<Comment[]> {
   if (isPreview) return [];
   const data = await dataApi();
-  const wid = workspaceId();
+  const wid = workspaceId(targetWorkspaceId);
   const read = readerFor(data);
   const rows = await read("Comment", { workspace_id: { eq: wid } });
   return commentsFromRows(rows, wid);
@@ -2050,63 +2364,70 @@ function syncRunsFromRows(rows: Row[], fallbackTime: string): AtlasData["syncRun
  * `null` in preview or when nothing has been synced yet (so the caller shows
  * the empty state), and never exposes an incomplete snapshot.
  */
-export async function loadFromDb(isPreview: boolean): Promise<AtlasData | null> {
+export async function loadFromDb(
+  isPreview: boolean,
+  targetWorkspaceId?: string,
+): Promise<AtlasData | null> {
   if (isPreview) return null;
+  const data = await dataApi();
+  const wid = workspaceId(targetWorkspaceId);
+  const read = readerFor(data);
+  const workspaceRows = await readTrustedWorkspaceMarkers(read, wid);
+  let syncRows: Row[] = [];
   try {
-    const data = await dataApi();
-    const wid = workspaceId();
-    const read = readerFor(data);
-    const workspaceRows = await readTrustedWorkspaceMarkers(read, wid);
-    let syncRows: Row[] = [];
-    try {
-      syncRows = await readTrustedSyncRuns(read, wid);
-    } catch (error) {
-      console.warn("[atlas] sync history unavailable", error);
-    }
-
-    for (const marker of trustedMarkers(workspaceRows, wid)) {
-      try {
-        const snapshotId = String(marker.snapshotId);
-        const markerWriter = realText(marker.writerEmail);
-        if (!markerWriter) continue;
-        const rows = await readSnapshotRows(
-          read,
-          wid,
-          snapshotId,
-          false,
-          markerWriter,
-        );
-        const catalog = catalogFromRows(marker, rows);
-        return {
-          ...catalog,
-          comments: [],
-          syncRuns: syncRunsFromRows(
-            syncRows,
-            catalog.workspace.syncedAt ?? new Date(0).toISOString(),
-          ),
-        };
-      } catch (error) {
-        console.warn(
-          "[atlas] ignored incomplete database snapshot",
-          marker.snapshotId,
-          error,
-        );
-      }
-    }
-    return null;
+    syncRows = await readTrustedSyncRuns(read, wid);
   } catch (error) {
-    console.warn("[atlas] loadFromDb failed", error);
-    return null;
+    console.warn("[atlas] sync history unavailable", error);
   }
+
+  const markers = trustedMarkers(workspaceRows, wid);
+  let snapshotError: unknown;
+  for (const marker of markers) {
+    try {
+      const snapshotId = String(marker.snapshotId);
+      const markerWriter = realText(marker.writerEmail);
+      if (!markerWriter) continue;
+      const rows = await readSnapshotRows(
+        read,
+        wid,
+        snapshotId,
+        false,
+        markerWriter,
+      );
+      const catalog = catalogFromRows(marker, rows);
+      return {
+        ...catalog,
+        comments: [],
+        syncRuns: syncRunsFromRows(
+          syncRows,
+          catalog.workspace.syncedAt ?? new Date(0).toISOString(),
+        ),
+      };
+    } catch (error) {
+      snapshotError = error;
+      console.warn(
+        "[atlas] ignored incomplete database snapshot",
+        marker.snapshotId,
+        error,
+      );
+    }
+  }
+  if (markers.length > 0 && snapshotError) {
+    throw new Error("No validated snapshot could be loaded.", {
+      cause: snapshotError,
+    });
+  }
+  return null;
 }
 
 export async function loadHistoricalSnapshotFromDb(
   isPreview: boolean,
   snapshotId: string,
+  targetWorkspaceId?: string,
 ): Promise<HistoricalSnapshot | undefined> {
   if (isPreview || !snapshotId) return undefined;
   const data = await dataApi();
-  const wid = workspaceId();
+  const wid = workspaceId(targetWorkspaceId);
   const read = readerFor(data);
   const workspaceRows = await readTrustedWorkspaceMarkers(
     read,
@@ -2142,6 +2463,7 @@ export async function loadHistoryFromDb(
   isPreview: boolean,
   currentData: AtlasData,
   limit = ATLAS_CONFIG.snapshotRetentionCount,
+  targetWorkspaceId?: string,
 ): Promise<AtlasHistory> {
   const cap = Math.max(0, Math.floor(limit));
   if (cap === 0) return buildAtlasHistory([]);
@@ -2159,7 +2481,7 @@ export async function loadHistoryFromDb(
   }
 
   const data = await dataApi();
-  const wid = workspaceId();
+  const wid = workspaceId(targetWorkspaceId);
   const read = readerFor(data);
   const workspaceRows = await readTrustedWorkspaceMarkers(read, wid);
   const currentTime = Date.parse(current.syncedAt);

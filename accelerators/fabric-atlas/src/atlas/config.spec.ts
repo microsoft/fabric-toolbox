@@ -26,13 +26,13 @@ describe("validateUdfUrl", () => {
     );
   });
 
-  it("rejects a UDF URL for another workspace", () => {
-    expect(() =>
+  it("accepts a trusted deployment UDF for another selected workspace", () => {
+    expect(
       validateUdfUrl(
         validUrl,
         "33333333-3333-4333-8333-333333333333",
       ),
-    ).toThrow(/invalid UDF endpoint/i);
+    ).toBe(validUrl);
   });
 });
 

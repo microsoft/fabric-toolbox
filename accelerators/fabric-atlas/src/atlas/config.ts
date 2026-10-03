@@ -95,7 +95,10 @@ export function getUdfUrl(): string | null {
   );
 }
 
-export function validateUdfUrl(value: string, workspaceId: string): string {
+export function validateUdfUrl(value: string, targetWorkspaceId: string): string {
+  // The trusted UDF is hosted once in the deployment workspace and receives
+  // the selected workspace separately in the validated request body.
+  void targetWorkspaceId;
   let url: URL;
   try {
     url = new URL(value);
@@ -115,8 +118,7 @@ export function validateUdfUrl(value: string, workspaceId: string): string {
     !/^(?:[a-z0-9-]+\.)+userdatafunctions\.fabric\.microsoft\.com$/.test(host) ||
     url.search ||
     url.hash ||
-    !match ||
-    match[1].toLowerCase() !== workspaceId.toLowerCase()
+    !match
   ) {
     throw new Error("Atlas Sync is configured with an invalid UDF endpoint.");
   }

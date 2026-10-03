@@ -10,6 +10,7 @@ import {
   ShieldCheck,
 } from "lucide-react";
 import { useAtlas } from "../store";
+import { PageHeader } from "../components/PageHeader";
 import { Card, TypeGlyph, cn } from "../ui";
 import { typeMeta, type Item } from "../model";
 
@@ -197,17 +198,7 @@ export function SensitivityView({
       )}
     >
       {!embedded && <Card className="overflow-hidden">
-        <div className="border-b border-border bg-secondary/60 p-l">
-          <div className="mb-xs text-200 font-semibold uppercase tracking-wider text-brand-foreground">
-            Information protection
-          </div>
-          <h1 className="text-600 font-bold leading-600">
-            Sensitivity posture
-          </h1>
-          <p className="mt-xs text-300 leading-300 text-muted-foreground">
-            Label coverage, confidential assets and gaps across the workspace.
-          </p>
-        </div>
+        <PageHeader title="Sensitivity posture" purpose="Label coverage and confidential assets." className="border-b border-border" />
 
         <div className="grid divide-y divide-border sm:grid-cols-3 sm:divide-x sm:divide-y-0">
           {summary.map((metric) => {

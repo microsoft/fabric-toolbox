@@ -8,7 +8,7 @@ node_modules
 
 # Build output
 dist
-src/fabric.generated.ts
+dist-mcp
 
 # Added by Rayfin CLI
 yarn-debug.log*
@@ -20,8 +20,14 @@ dist-ssr
 .vite
 coverage
 *.local
+
+# Local tool state
+.playwright/
+.pytest_cache/
+.worktrees/
+__pycache__/
+
 rayfin/.env*
-rayfin/.lockfile.json
 rayfin/.deployments.json
 rayfin/.temp/
 .idea

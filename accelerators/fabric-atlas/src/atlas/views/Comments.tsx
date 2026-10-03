@@ -3,10 +3,10 @@ import {
   AlertCircle,
   Loader2,
   MessageSquare,
-  MessagesSquare,
   Send,
 } from "lucide-react";
 import { useAtlas } from "../store";
+import { PageHeader } from "../components/PageHeader";
 import type { AtlasFocusRequest } from "../navigation";
 import { Avatar, Card, SectionLabel, cn } from "../ui";
 import { relativeTime, type Comment, type Item } from "../model";
@@ -31,7 +31,7 @@ export function CommentsView({
   const { comments, items } = data;
 
   const [text, setText] = useState("");
-  const [target, setTarget] = useState<string>(focus?.itemId ?? "");
+  const [requestedTarget, setTarget] = useState<string>(focus?.itemId ?? "");
   const [posting, setPosting] = useState(false);
   const [postError, setPostError] = useState("");
 
@@ -39,6 +39,7 @@ export function CommentsView({
     () => new Map<string, Item>(items.map((item) => [item.fabricId, item])),
     [items],
   );
+  const target = itemById.has(requestedTarget) ? requestedTarget : "";
 
   const feed = useMemo(
     () =>
@@ -87,22 +88,8 @@ export function CommentsView({
         embedded ? "gap-l" : "atlas-content-frame gap-xl p-xl lg:p-xxl",
       )}
     >
-      {!embedded && <header className="border-l border-primary pl-l">
-        <SectionLabel>Collaboration / workspace notes</SectionLabel>
-        <div className="mt-s flex flex-col gap-s lg:flex-row lg:items-end lg:justify-between">
-          <div>
-            <h1 className="font-heading text-600 leading-600 font-bold">Comments</h1>
-            <p className="mt-xs text-300 leading-300 text-muted-foreground">
-              Persistent operational notes for the workspace and the items your team
-              governs.
-            </p>
-          </div>
-          <div className="flex items-center gap-s text-200 leading-200 text-muted-foreground">
-            <MessagesSquare className="icon-size-200" aria-hidden="true" />
-            {comments.length} team note{comments.length === 1 ? "" : "s"}
-          </div>
-        </div>
-      </header>}
+      {!embedded && <PageHeader title="Comments" purpose="Shared notes for this workspace and its items."
+        actions={<span className="text-200 text-muted-foreground">{comments.length} team note{comments.length === 1 ? "" : "s"}</span>} />}
 
       <div className="grid items-start gap-l lg:grid-cols-3">
         <aside className="lg:sticky lg:top-l" aria-label="Compose a comment">

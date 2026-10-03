@@ -139,7 +139,7 @@ export function GovernanceExceptionControl({
         {statusLabel && (
           <span
             className={cn(
-              "rounded-md border px-s py-xxs text-100 font-semibold",
+              "rounded-md border px-s py-xxs text-200 font-semibold",
               status === "active"
                 ? "border-status-warning/30 bg-status-warning/10 text-status-warning"
                 : status === "expired"
@@ -164,7 +164,7 @@ export function GovernanceExceptionControl({
       <Dialog.Portal>
         <Dialog.Overlay className="fixed inset-0 z-[110] bg-black/55" />
         <div className="pointer-events-none fixed inset-0 z-[111] flex items-center justify-center p-m">
-          <Dialog.Content className="pointer-events-auto w-full max-w-xl rounded-xl border border-border bg-card shadow-fabric-16">
+          <Dialog.Content className="pointer-events-auto w-full max-w-[var(--atlas-dialog-width)] rounded-xl border border-border bg-card shadow-fabric-16">
             <header className="atlas-page-header flex items-start gap-m border-b border-border">
               <span className="flex icon-size-600 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-brand-foreground">
                 <ShieldCheck className="icon-size-200" aria-hidden="true" />

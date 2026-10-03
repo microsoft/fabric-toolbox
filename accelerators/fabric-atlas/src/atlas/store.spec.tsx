@@ -8,6 +8,7 @@ import {
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { ATLAS_CONFIG } from "./config";
 import { buildAtlasHistory, snapshotFromData } from "./history";
+import { SyncCancelledError } from "./live-sync";
 import { SAMPLE_DATA } from "./model";
 import { AtlasProvider, useAtlas } from "./store";
 
@@ -39,6 +40,9 @@ const governanceExceptionBackend = vi.hoisted(() => ({
   saveGovernanceException: vi.fn(),
   deleteGovernanceException: vi.fn(),
 }));
+const workspaceScopeBackend = vi.hoisted(() => ({
+  loadWorkspaceScopes: vi.fn(),
+}));
 const currentUser = {
   id: "user-1",
   name: "admin@example.com",
@@ -50,6 +54,7 @@ vi.mock("./saved-views", () => savedViewBackend);
 vi.mock("./finding-acks", () => findingAckBackend);
 vi.mock("./governance-policy", () => governancePolicyBackend);
 vi.mock("./governance-exceptions", () => governanceExceptionBackend);
+vi.mock("./workspace-scope", () => workspaceScopeBackend);
 
 function Harness() {
   const atlas = useAtlas();
@@ -58,8 +63,41 @@ function Harness() {
       <button type="button" onClick={() => void atlas.sync()}>
         Sync
       </button>
+      <button
+        type="button"
+        onClick={() =>
+          void atlas.syncWorkspaces([
+            ATLAS_CONFIG.workspaceId,
+            "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa",
+          ])
+        }
+      >
+        Sync both
+      </button>
+      <span data-testid="queue">
+        {atlas.syncQueue
+          .map((entry) => `${entry.workspaceId.slice(0, 8)}:${entry.status}`)
+          .join(",")}
+      </span>
+      <span data-testid="queue-error">
+        {atlas.syncQueue.find((entry) => entry.error)?.error ?? ""}
+      </span>
+      <span data-testid="sync-workspace">{atlas.syncWorkspaceId ?? ""}</span>
+      <span data-testid="sync-error">{atlas.syncError ?? ""}</span>
+      <span data-testid="hydration-error">{atlas.hydrationError ?? ""}</span>
+      <button type="button" onClick={atlas.retryHydration}>
+        Retry hydration
+      </button>
       <button type="button" onClick={atlas.cancelSync}>
         Cancel sync
+      </button>
+      <button
+        type="button"
+        onClick={() =>
+          atlas.selectWorkspace("aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa")
+        }
+      >
+        Switch workspace
       </button>
       <button type="button" onClick={() => void atlas.addComment("New note")}>
         Add comment
@@ -161,6 +199,10 @@ function Harness() {
         {atlas.data.comments.at(-1)?.authorName ?? ""}
       </span>
       <span data-testid="workspace-name">{atlas.data.workspace.displayName}</span>
+      <span data-testid="active-workspace">{atlas.activeWorkspaceId}</span>
+      <span data-testid="workspace-scope-count">
+        {atlas.workspaceScopes.length}
+      </span>
       <span data-testid="requires-sync">
         {String(atlas.requiresDeploymentSync)}
       </span>
@@ -177,6 +219,16 @@ describe("AtlasProvider synchronization", () => {
     ATLAS_CONFIG.syncAdminEmail = currentUser.email;
     ATLAS_CONFIG.syncAdminSubject = currentUser.id;
     ATLAS_CONFIG.previousSyncWriters = [];
+    ATLAS_CONFIG.workspaceId = "11111111-1111-4111-8111-111111111111";
+    ATLAS_CONFIG.workspaceName = "Primary workspace";
+    workspaceScopeBackend.loadWorkspaceScopes.mockReset().mockResolvedValue([
+      {
+        id: ATLAS_CONFIG.workspaceId,
+        displayName: ATLAS_CONFIG.workspaceName,
+        workspaceType: "Workspace",
+        persisted: false,
+      },
+    ]);
     backend.loadFromDb.mockReset();
     backend.loadCommentsFromDb.mockReset().mockResolvedValue([]);
     backend.loadHistoryFromDb.mockReset();
@@ -349,6 +401,7 @@ describe("AtlasProvider synchronization", () => {
 
   it("cancels an active synchronization through its abort signal", async () => {
     let aborted = false;
+    let rejectSync: ((error: Error) => void) | undefined;
     backend.runFabricSync.mockImplementation(
       async (
         _isPreview: boolean,
@@ -357,11 +410,11 @@ describe("AtlasProvider synchronization", () => {
         signal: AbortSignal,
       ) =>
         new Promise((_resolve, reject) => {
+          rejectSync = reject;
           signal.addEventListener(
             "abort",
             () => {
               aborted = true;
-              reject(new Error("Synchronization cancelled."));
             },
             { once: true },
           );
@@ -383,11 +436,216 @@ describe("AtlasProvider synchronization", () => {
 
     fireEvent.click(screen.getByRole("button", { name: "Cancel sync" }));
 
+    expect(screen.getByTestId("stage")).toHaveTextContent(
+      "Cancelling synchronization",
+    );
+    expect(screen.getByTestId("syncing")).toHaveTextContent("true");
+    await act(async () => {
+      rejectSync?.(new SyncCancelledError("Synchronization cancelled."));
+    });
     await waitFor(() =>
       expect(screen.getByTestId("syncing")).toHaveTextContent("false"),
     );
     expect(aborted).toBe(true);
-    expect(screen.getByTestId("stage")).toHaveTextContent("Sync failed");
+    expect(screen.getByTestId("stage")).toHaveTextContent("Ready to sync");
+  });
+
+  it("keeps a published result when cancellation arrives after persistence", async () => {
+    let resolveSync: ((value: typeof SAMPLE_DATA) => void) | undefined;
+    backend.runFabricSync.mockImplementation(
+      async () =>
+        new Promise<typeof SAMPLE_DATA>((resolve) => {
+          resolveSync = resolve;
+        }),
+    );
+
+    render(
+      <AtlasProvider isPreview={false} currentUser={currentUser}>
+        <Harness />
+      </AtlasProvider>,
+    );
+    await waitFor(() =>
+      expect(screen.getByTestId("hydrating")).toHaveTextContent("false"),
+    );
+    fireEvent.click(screen.getByRole("button", { name: "Sync" }));
+    await waitFor(() =>
+      expect(screen.getByTestId("syncing")).toHaveTextContent("true"),
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "Cancel sync" }));
+    await act(async () => {
+      resolveSync?.(structuredClone(SAMPLE_DATA));
+    });
+
+    await waitFor(() =>
+      expect(screen.getByTestId("syncing")).toHaveTextContent("false"),
+    );
+    expect(screen.getByTestId("has-data")).toHaveTextContent("true");
+    expect(screen.getByTestId("stage")).toHaveTextContent(
+      "Workspace is ready",
+    );
+  });
+
+  it("exposes hydration failures and retries without presenting first sync", async () => {
+    backend.loadFromDb
+      .mockRejectedValueOnce(new Error("Data API unavailable"))
+      .mockResolvedValueOnce(structuredClone(SAMPLE_DATA));
+
+    render(
+      <AtlasProvider isPreview={false} currentUser={currentUser}>
+        <Harness />
+      </AtlasProvider>,
+    );
+
+    await waitFor(() =>
+      expect(screen.getByTestId("hydration-error")).toHaveTextContent(
+        "Data API unavailable",
+      ),
+    );
+    expect(screen.getByTestId("has-data")).toHaveTextContent("false");
+
+    fireEvent.click(screen.getByRole("button", { name: "Retry hydration" }));
+
+    await waitFor(() =>
+      expect(screen.getByTestId("has-data")).toHaveTextContent("true"),
+    );
+    expect(screen.getByTestId("hydration-error")).toHaveTextContent("");
+    expect(backend.loadFromDb).toHaveBeenCalledTimes(2);
+  });
+
+  describe("multi-workspace queue", () => {
+    const SECOND = "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa";
+
+    beforeEach(() => {
+      workspaceScopeBackend.loadWorkspaceScopes.mockReset().mockResolvedValue([
+        {
+          id: ATLAS_CONFIG.workspaceId,
+          displayName: ATLAS_CONFIG.workspaceName,
+          workspaceType: "Workspace",
+          persisted: true,
+          selectedAt: "2026-10-01T08:00:00.000Z",
+        },
+        {
+          id: SECOND,
+          displayName: "Second workspace",
+          workspaceType: "Workspace",
+          persisted: true,
+          selectedAt: "2026-10-01T08:00:00.000Z",
+        },
+      ]);
+    });
+
+    async function renderReady() {
+      render(
+        <AtlasProvider isPreview={false} currentUser={currentUser}>
+          <Harness />
+        </AtlasProvider>,
+      );
+      await waitFor(() =>
+        expect(screen.getByTestId("workspace-scope-count")).toHaveTextContent("2"),
+      );
+      await waitFor(() =>
+        expect(screen.getByTestId("hydrating")).toHaveTextContent("false"),
+      );
+    }
+
+    it("runs selected workspaces one at a time and keeps going after a failure", async () => {
+      const pending = new Map<string, { resolve: (value: unknown) => void; reject: (error: Error) => void }>();
+      let active = 0;
+      let maxActive = 0;
+      backend.runFabricSync.mockImplementation(
+        (_isPreview: boolean, _user: unknown, _report: unknown, _signal: AbortSignal, target: string) =>
+          new Promise((resolve, reject) => {
+            active += 1;
+            maxActive = Math.max(maxActive, active);
+            pending.set(target, {
+              resolve: (value) => {
+                active -= 1;
+                resolve(value);
+              },
+              reject: (error) => {
+                active -= 1;
+                reject(error);
+              },
+            });
+          }),
+      );
+      await renderReady();
+
+      fireEvent.click(screen.getByRole("button", { name: "Sync both" }));
+      await waitFor(() =>
+        expect(screen.getByTestId("queue")).toHaveTextContent(
+          "11111111:running,aaaaaaaa:queued",
+        ),
+      );
+      fireEvent.click(screen.getByRole("button", { name: "Sync both" }));
+      expect(backend.runFabricSync).toHaveBeenCalledTimes(1);
+      expect(backend.runFabricSync.mock.calls[0][4]).toBe(ATLAS_CONFIG.workspaceId);
+
+      const primary = structuredClone(SAMPLE_DATA);
+      primary.workspace.fabricId = ATLAS_CONFIG.workspaceId;
+      await act(async () => {
+        pending.get(ATLAS_CONFIG.workspaceId)?.resolve(primary);
+      });
+      await waitFor(() =>
+        expect(screen.getByTestId("queue")).toHaveTextContent(
+          "11111111:completed,aaaaaaaa:running",
+        ),
+      );
+      expect(screen.getByTestId("sync-workspace")).toHaveTextContent(SECOND);
+      expect(screen.getByTestId("has-data")).toHaveTextContent("true");
+      expect(backend.runFabricSync.mock.calls[1][4]).toBe(SECOND);
+
+      await act(async () => {
+        pending.get(SECOND)?.reject(new Error("Fabric returned HTTP 403."));
+      });
+      await waitFor(() =>
+        expect(screen.getByTestId("syncing")).toHaveTextContent("false"),
+      );
+      expect(screen.getByTestId("queue")).toHaveTextContent(
+        "11111111:completed,aaaaaaaa:failed",
+      );
+      expect(screen.getByTestId("queue-error")).toHaveTextContent(
+        "Fabric returned HTTP 403.",
+      );
+      expect(screen.getByTestId("sync-error")).toHaveTextContent("");
+      expect(screen.getByTestId("active-workspace")).toHaveTextContent(
+        ATLAS_CONFIG.workspaceId,
+      );
+      expect(screen.getByTestId("item-count")).toHaveTextContent(
+        String(SAMPLE_DATA.items.length),
+      );
+      expect(maxActive).toBe(1);
+    });
+
+    it("cancels the running workspace and every queued workspace", async () => {
+      let rejectRun: ((error: Error) => void) | undefined;
+      backend.runFabricSync.mockImplementation(
+        () =>
+          new Promise((_resolve, reject) => {
+            rejectRun = reject;
+          }),
+      );
+      await renderReady();
+
+      fireEvent.click(screen.getByRole("button", { name: "Sync both" }));
+      await waitFor(() =>
+        expect(screen.getByTestId("syncing")).toHaveTextContent("true"),
+      );
+      fireEvent.click(screen.getByRole("button", { name: "Cancel sync" }));
+      await act(async () => {
+        rejectRun?.(new SyncCancelledError("Synchronization cancelled."));
+      });
+
+      await waitFor(() =>
+        expect(screen.getByTestId("syncing")).toHaveTextContent("false"),
+      );
+      expect(screen.getByTestId("queue")).toHaveTextContent(
+        "11111111:cancelled,aaaaaaaa:cancelled",
+      );
+      expect(backend.runFabricSync).toHaveBeenCalledTimes(1);
+      expect(screen.getByTestId("stage")).toHaveTextContent("Ready to sync");
+    });
   });
 
   it("uses the authenticated email as the persisted comment identity", async () => {
@@ -420,6 +678,7 @@ describe("AtlasProvider synchronization", () => {
         authorName: principal.email,
         authorEmail: principal.email,
       }),
+      SAMPLE_DATA.workspace.fabricId,
     );
   });
 
@@ -445,6 +704,71 @@ describe("AtlasProvider synchronization", () => {
       expect(screen.getByTestId("comments-error")).toHaveTextContent(
         "notes unavailable",
       ),
+    );
+  });
+
+  it("hydrates only the selected shared workspace", async () => {
+    const secondaryId = "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa";
+    workspaceScopeBackend.loadWorkspaceScopes.mockResolvedValue([
+      {
+        id: ATLAS_CONFIG.workspaceId,
+        displayName: "Primary workspace",
+        workspaceType: "Workspace",
+        persisted: true,
+      },
+      {
+        id: secondaryId,
+        displayName: "Secondary workspace",
+        workspaceType: "Workspace",
+        persisted: true,
+      },
+    ]);
+    const primary = structuredClone(SAMPLE_DATA);
+    primary.workspace.fabricId = ATLAS_CONFIG.workspaceId;
+    primary.workspace.displayName = "Primary workspace";
+    const secondary = structuredClone(SAMPLE_DATA);
+    secondary.workspace.fabricId = secondaryId;
+    secondary.workspace.displayName = "Secondary workspace";
+    secondary.items = [];
+    backend.loadFromDb.mockImplementation(
+      async (_isPreview: boolean, targetWorkspaceId: string) =>
+        targetWorkspaceId === secondaryId ? secondary : primary,
+    );
+
+    render(
+      <AtlasProvider isPreview={false} currentUser={currentUser}>
+        <Harness />
+      </AtlasProvider>,
+    );
+
+    await waitFor(() =>
+      expect(screen.getByTestId("workspace-name")).toHaveTextContent(
+        "Primary workspace",
+      ),
+    );
+    fireEvent.click(
+      screen.getByRole("button", { name: "Switch workspace" }),
+    );
+
+    await waitFor(() =>
+      expect(screen.getByTestId("active-workspace")).toHaveTextContent(
+        secondaryId,
+      ),
+    );
+    await waitFor(() =>
+      expect(screen.getByTestId("workspace-name")).toHaveTextContent(
+        "Secondary workspace",
+      ),
+    );
+    expect(backend.loadFromDb).toHaveBeenCalledWith(false, secondaryId);
+    expect(backend.loadCommentsFromDb).toHaveBeenCalledWith(
+      false,
+      secondaryId,
+    );
+    expect(savedViewBackend.loadSavedViews).toHaveBeenCalledWith(
+      false,
+      secondaryId,
+      currentUser.id,
     );
   });
 
@@ -910,6 +1234,7 @@ describe("AtlasProvider synchronization", () => {
       expect(backend.loadHistoricalSnapshotFromDb).toHaveBeenCalledWith(
         false,
         "older-snapshot",
+        ATLAS_CONFIG.workspaceId,
       ),
     );
     await waitFor(() =>

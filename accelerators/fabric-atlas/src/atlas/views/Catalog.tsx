@@ -1,3 +1,4 @@
+import * as Dialog from "@radix-ui/react-dialog";
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
   Activity,
@@ -14,7 +15,7 @@ import {
   Waypoints,
   X,
 } from "lucide-react";
-import { AnimatePresence, motion } from "framer-motion";
+import { motion } from "framer-motion";
 import type { AtlasFocusRequest, AtlasNavigation } from "../navigation";
 import { snapshotCatalogFromData } from "../history";
 import {
@@ -24,6 +25,8 @@ import {
 import { useAtlas } from "../store";
 import { isCatalogLayout, useDisplayPreference } from "../display-preferences";
 import { CatalogTable } from "../components/CatalogTable";
+import { PageHeader } from "../components/PageHeader";
+import { ItemCoveragePanel } from "../components/ItemCoveragePanel";
 import {
   Avatar,
   EndorsementChip,
@@ -210,6 +213,11 @@ export function CatalogView({
   const [detailId, setDetailId] = useState<string | null>(
     focus?.itemId ?? null,
   );
+  const detailTrigger = useRef<HTMLElement | null>(null);
+  const openDetail = (itemId: string) => {
+    detailTrigger.current = document.activeElement as HTMLElement | null;
+    setDetailId(itemId);
+  };
 
   useEffect(() => {
     onStateChange?.({
@@ -229,7 +237,6 @@ export function CatalogView({
     });
   }, [detailId, onStateChange, posturePillar, query, selType]);
   const drawerRef = useRef<HTMLElement>(null);
-  const previousFocus = useRef<HTMLElement | null>(null);
   const detail = items.find((item) => item.fabricId === detailId);
   const dCfgSections = useMemo(() => {
     const rows = config.filter((entry) => entry.itemFabricId === detailId);
@@ -258,6 +265,7 @@ export function CatalogView({
   const drawerSections = detail
     ? [
         { key: "properties", label: "Properties" },
+        { key: "coverage", label: "Coverage" },
         ...(dUp.length || dDown.length
           ? [{ key: "lineage", label: "Lineage" }]
           : []),
@@ -282,79 +290,19 @@ export function CatalogView({
       ?.scrollIntoView({ behavior: "smooth", block: "start" });
   };
 
-  useEffect(() => {
-    if (!detailId) return;
-    previousFocus.current = document.activeElement as HTMLElement | null;
-    const drawer = drawerRef.current;
-    if (!drawer) return;
-    drawer.focus();
-
-    const trapFocus = (event: KeyboardEvent) => {
-      if (event.key === "Escape") {
-        setDetailId(null);
-        return;
-      }
-      if (event.key !== "Tab") return;
-      const focusable = [
-        ...drawer.querySelectorAll<HTMLElement>(
-          'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])',
-        ),
-      ];
-      if (focusable.length === 0) return;
-      const first = focusable[0];
-      const last = focusable[focusable.length - 1];
-      if (event.shiftKey && document.activeElement === first) {
-        event.preventDefault();
-        last.focus();
-      } else if (!event.shiftKey && document.activeElement === last) {
-        event.preventDefault();
-        first.focus();
-      }
-    };
-
-    document.addEventListener("keydown", trapFocus);
-    return () => {
-      document.removeEventListener("keydown", trapFocus);
-      previousFocus.current?.focus();
-    };
-  }, [detailId]);
-
   return (
     <div className="atlas-content-frame p-xxl">
       <header className="mb-l overflow-hidden rounded-xl border border-border bg-card shadow-fabric-2">
-        <div className="atlas-page-header flex flex-col lg:flex-row lg:items-center">
-          <div className="min-w-0 flex-1">
-            <SectionLabel>Workspace inventory</SectionLabel>
-            <div className="mt-xs flex flex-wrap items-baseline gap-s">
-              <h1 className="text-600 font-bold leading-600">Catalog</h1>
-              <span className="text-300 text-muted-foreground">
-                {data.workspace.displayName}
-              </span>
-            </div>
-          </div>
-          <dl className="grid grid-cols-3 divide-x divide-border rounded-xl border border-border bg-secondary">
-            <div className="px-l py-s text-center">
-              <dt className="text-100 font-semibold uppercase tracking-wide text-muted-foreground">
-                Items
-              </dt>
-              <dd className="font-numeric text-400 font-bold">{items.length}</dd>
-            </div>
-            <div className="px-l py-s text-center">
-              <dt className="text-100 font-semibold uppercase tracking-wide text-muted-foreground">
-                Types
-              </dt>
-              <dd className="font-numeric text-400 font-bold">{groups.length}</dd>
-            </div>
-            <div className="px-l py-s text-center">
-              <dt className="text-100 font-semibold uppercase tracking-wide text-muted-foreground">
-                Showing
-              </dt>
-              <dd className="font-numeric text-400 font-bold">
-                {visible.length}
-              </dd>
-            </div>
-          </dl>
-        </div>
+        <PageHeader title="Catalog" purpose="Browse this workspace's items and metadata."
+          actions={<dl className="flex flex-wrap gap-l">
+            {[["Items", items.length], ["Types", groups.length], ["Showing", visible.length]].map(([label, value]) => (
+              <div key={label} className="flex items-baseline gap-s">
+                <dt className="text-200 text-muted-foreground">{label}</dt>
+                <dd className="font-numeric text-300 font-semibold">{value}</dd>
+              </div>
+            ))}
+          </dl>}
+        />
         {hasActiveFilters && <div className="atlas-toolbar flex flex-wrap items-center border-t border-border bg-secondary px-l py-s">
           <Search className="icon-size-200 text-muted-foreground" />
           <span className="text-200 text-muted-foreground">
@@ -502,7 +450,7 @@ export function CatalogView({
                         <button
                           type="button"
                           key={item.fabricId}
-                          onClick={() => setDetailId(item.fabricId)}
+                          onClick={() => openDetail(item.fabricId)}
                           className={cn(
                             "flex w-full items-center gap-s rounded-r-lg px-m py-s text-left text-200 transition-colors",
                             detailId === item.fabricId
@@ -577,7 +525,7 @@ export function CatalogView({
               searching={searching}
               selectedId={detailId}
               onToggle={toggle}
-              onSelect={setDetailId}
+              onSelect={openDetail}
             />
           ) : (
             <div className="grid grid-cols-1 gap-m sm:grid-cols-2 2xl:grid-cols-3">
@@ -589,7 +537,7 @@ export function CatalogView({
                     type="button"
                     aria-haspopup="dialog"
                     aria-label={`Open details for ${item.displayName}`}
-                    onClick={() => setDetailId(item.fabricId)}
+                    onClick={() => openDetail(item.fabricId)}
                     className={cn(
                       "atlas-catalog-card group flex flex-col overflow-hidden rounded-xl border bg-card text-left text-card-foreground shadow-fabric-2 transition-[border-color,box-shadow,background-color] hover:border-primary/50 hover:shadow-fabric-4",
                       selected
@@ -669,37 +617,55 @@ export function CatalogView({
         </section>
       </div>
 
-      <AnimatePresence>
+      <Dialog.Root
+        open={Boolean(detail)}
+        onOpenChange={(open) => {
+          if (!open) setDetailId(null);
+        }}
+      >
         {detail && (
-          <>
-            <motion.div
-              aria-hidden="true"
-              className="fixed inset-0 z-40 bg-muted-foreground/40 backdrop-blur-sm"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              onClick={() => setDetailId(null)}
-            />
-            <motion.aside
-              ref={drawerRef}
-              role="dialog"
-              aria-modal="true"
-              aria-label={`${detail.displayName} details`}
-              tabIndex={-1}
-              className="fixed right-0 top-0 z-50 flex h-screen w-full flex-col overflow-hidden border-l border-border bg-card shadow-fabric-16 sm:w-3/4 lg:w-1/2 xl:w-2/5"
-              initial={{ x: "100%" }}
-              animate={{ x: 0 }}
-              exit={{ x: "100%" }}
-              transition={{ type: "spring", stiffness: 320, damping: 34 }}
+          <Dialog.Portal>
+            <Dialog.Overlay asChild>
+              <motion.div
+                className="fixed inset-0 z-40 bg-muted-foreground/40 backdrop-blur-sm"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+              />
+            </Dialog.Overlay>
+            <Dialog.Content
+              onOpenAutoFocus={(event) => {
+                event.preventDefault();
+                drawerRef.current?.focus();
+              }}
+              onCloseAutoFocus={(event) => {
+                event.preventDefault();
+                detailTrigger.current?.focus();
+              }}
+              asChild
             >
+              <motion.aside
+                ref={drawerRef}
+                className="fixed right-0 top-0 z-50 flex h-screen w-full flex-col overflow-hidden border-l border-border bg-card shadow-fabric-16 sm:w-3/4 lg:w-1/2 xl:w-2/5"
+                initial={{ x: "100%" }}
+                animate={{ x: 0 }}
+                transition={{ type: "spring", stiffness: 320, damping: 34 }}
+              >
               <header className="sticky top-0 z-10 shrink-0 border-b border-border bg-card">
                 <div className="flex items-start gap-m px-l py-l">
                   <TypeGlyph type={detail.itemType} size={44} />
                   <div className="min-w-0 flex-1">
                     <SectionLabel>{typeMeta(detail.itemType).label}</SectionLabel>
-                    <h2 className="mt-xxs text-500 font-bold leading-500">
-                      {detail.displayName}
-                    </h2>
+                    <Dialog.Title asChild>
+                      <h2
+                        aria-label={`${detail.displayName} details`}
+                        className="mt-xxs text-500 font-bold leading-500"
+                      >
+                        {detail.displayName}
+                      </h2>
+                    </Dialog.Title>
+                    <Dialog.Description className="sr-only">
+                      Metadata, lineage, access and recent jobs for this Fabric item.
+                    </Dialog.Description>
                     <div className="mt-s flex flex-wrap items-center gap-s">
                       <HealthBadge health={detail.health} />
                       <EndorsementChip
@@ -714,14 +680,15 @@ export function CatalogView({
                       )}
                     </div>
                   </div>
-                  <button
-                    type="button"
-                    onClick={() => setDetailId(null)}
-                    aria-label="Close item details"
-                    className="rounded-lg border border-transparent p-s text-muted-foreground hover:border-border hover:bg-accent hover:text-foreground"
-                  >
-                    <X className="icon-size-200" />
-                  </button>
+                  <Dialog.Close asChild>
+                    <button
+                      type="button"
+                      aria-label="Close item details"
+                      className="rounded-lg border border-transparent p-s text-muted-foreground hover:border-border hover:bg-accent hover:text-foreground"
+                    >
+                      <X className="icon-size-200" aria-hidden="true" />
+                    </button>
+                  </Dialog.Close>
                 </div>
 
                 <nav
@@ -839,6 +806,8 @@ export function CatalogView({
                   />
                 </DrawerSection>
 
+                <ItemCoveragePanel itemType={detail.itemType} jobs={dJobs} />
+
                 {(dUp.length > 0 || dDown.length > 0) && (
                   <DrawerSection
                     icon={Waypoints}
@@ -948,10 +917,11 @@ export function CatalogView({
                   </DrawerSection>
                 )}
               </div>
-            </motion.aside>
-          </>
+              </motion.aside>
+            </Dialog.Content>
+          </Dialog.Portal>
         )}
-      </AnimatePresence>
+      </Dialog.Root>
     </div>
   );
 }

@@ -65,15 +65,23 @@ interface MsalResult {
   account?: MsalAccount | null;
 }
 
-// Loosely typed to avoid pulling MSAL types into the module graph eagerly.
-let msalApp: {
-  initialize: () => Promise<void>;
+export interface AtlasMsalClient {
   getAllAccounts: () => MsalAccount[];
-  acquireTokenSilent: (r: unknown) => Promise<MsalResult>;
-  ssoSilent: (r: unknown) => Promise<MsalResult>;
-  acquireTokenPopup: (r: unknown) => Promise<MsalResult>;
+  acquireTokenSilent: (request: unknown) => Promise<MsalResult>;
+  ssoSilent: (request: unknown) => Promise<MsalResult>;
+  acquireTokenPopup: (request: unknown) => Promise<MsalResult>;
+}
+
+// Loosely typed to avoid pulling MSAL types into the module graph eagerly.
+let msalApp: AtlasMsalClient & {
+  initialize: () => Promise<void>;
+  handleRedirectPromise: () => Promise<MsalResult | null>;
 } | null = null;
 let msalInitPromise: Promise<void> | null = null;
+const MSAL_INTERACTION_RETRY_ATTEMPTS = 20;
+const MSAL_INTERACTION_RETRY_DELAY_MS = 250;
+const JOB_RUN_ID =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 function normalized(value: unknown): string {
   return typeof value === "string" ? value.trim().toLowerCase() : "";
@@ -136,10 +144,11 @@ function tokenForIdentity(
   result: MsalResult,
   identity: SyncIdentity,
   purpose: string,
+  expectedTenantId = ATLAS_CONFIG.tenantId,
 ): string {
   if (
     !result.account ||
-    !selectMsalAccount([result.account], identity, ATLAS_CONFIG.tenantId)
+    !selectMsalAccount([result.account], identity, expectedTenantId)
   ) {
     throw new Error(
       `The ${purpose} sign-in did not match the current Fabric user. The previous snapshot was preserved.`,
@@ -148,11 +157,121 @@ function tokenForIdentity(
   return result.accessToken;
 }
 
+function msalErrorCode(error: unknown): string | undefined {
+  if (!error || typeof error !== "object") return undefined;
+  const code = (error as { errorCode?: unknown; code?: unknown }).errorCode ??
+    (error as { code?: unknown }).code;
+  return typeof code === "string" ? code : undefined;
+}
+
+function interactionInProgress(error: unknown): boolean {
+  return msalErrorCode(error) === "interaction_in_progress";
+}
+
+async function waitForMsalInteraction(
+  milliseconds: number,
+  signal?: AbortSignal,
+): Promise<void> {
+  if (signal?.aborted) {
+    throw new SyncCancelledError("Synchronization cancelled.");
+  }
+  await new Promise<void>((resolve, reject) => {
+    const finish = () => {
+      signal?.removeEventListener("abort", cancel);
+      resolve();
+    };
+    const timer = window.setTimeout(finish, milliseconds);
+    const cancel = () => {
+      window.clearTimeout(timer);
+      signal?.removeEventListener("abort", cancel);
+      reject(new SyncCancelledError("Synchronization cancelled."));
+    };
+    signal?.addEventListener("abort", cancel, { once: true });
+  });
+}
+
+export async function acquireMsalToken(
+  app: AtlasMsalClient,
+  identity: SyncIdentity,
+  scopes: string[],
+  purpose: string,
+  allowPopup: boolean,
+  expectedTenantId?: string,
+  signal?: AbortSignal,
+  wait: (milliseconds: number, signal?: AbortSignal) => Promise<void> =
+    waitForMsalInteraction,
+): Promise<string> {
+  const acquireSilently = async () => {
+    const account = selectMsalAccount(
+      app.getAllAccounts(),
+      identity,
+      expectedTenantId,
+    );
+    const result = account
+      ? await app.acquireTokenSilent({ scopes, account })
+      : await app.ssoSilent({ scopes, loginHint: identity.email });
+    return tokenForIdentity(
+      result,
+      identity,
+      purpose,
+      expectedTenantId,
+    );
+  };
+  const waitForExistingInteraction = async (initialError: unknown) => {
+    let lastError = initialError;
+    for (
+      let attempt = 0;
+      attempt < MSAL_INTERACTION_RETRY_ATTEMPTS;
+      attempt += 1
+    ) {
+      await wait(MSAL_INTERACTION_RETRY_DELAY_MS, signal);
+      try {
+        return await acquireSilently();
+      } catch (error) {
+        lastError = error;
+        if (!interactionInProgress(error)) throw error;
+      }
+    }
+    throw new Error(
+      "A sign-in interaction is still in progress. Complete it before retrying synchronization.",
+      { cause: lastError },
+    );
+  };
+
+  try {
+    return await acquireSilently();
+  } catch (error) {
+    if (interactionInProgress(error)) {
+      return waitForExistingInteraction(error);
+    }
+    if (!allowPopup) throw error;
+    try {
+      const result = await app.acquireTokenPopup({
+        scopes,
+        loginHint: identity.email,
+        prompt: "select_account",
+      });
+      return tokenForIdentity(
+        result,
+        identity,
+        purpose,
+        expectedTenantId,
+      );
+    } catch (popupError) {
+      if (interactionInProgress(popupError)) {
+        return waitForExistingInteraction(popupError);
+      }
+      throw popupError;
+    }
+  }
+}
+
 async function acquireToken(
   identity: SyncIdentity,
   scopes: string[],
   purpose: string,
   allowPopup: boolean,
+  signal?: AbortSignal,
 ): Promise<string> {
   if (!identity.id && !identity.email) {
     throw new Error(
@@ -172,7 +291,10 @@ async function acquireToken(
         temporaryCacheLocation: "sessionStorage",
       },
     }) as unknown as typeof msalApp;
-    msalInitPromise = msalApp!.initialize();
+    msalInitPromise = (async () => {
+      await msalApp!.initialize();
+      await msalApp!.handleRedirectPromise();
+    })();
   }
   try {
     await msalInitPromise;
@@ -181,27 +303,15 @@ async function acquireToken(
     msalInitPromise = null;
     throw error;
   }
-  const account = selectMsalAccount(
-    msalApp!.getAllAccounts(),
+  return acquireMsalToken(
+    msalApp!,
     identity,
+    scopes,
+    purpose,
+    allowPopup,
     ATLAS_CONFIG.tenantId,
+    signal,
   );
-  try {
-    const res = account
-      ? await msalApp!.acquireTokenSilent({ scopes, account })
-      : await msalApp!.ssoSilent({ scopes, loginHint: identity.email });
-    return tokenForIdentity(res, identity, purpose);
-  } catch (error) {
-    if (!allowPopup) throw error;
-    // Silent SSO can be blocked inside the Fabric iframe (3rd-party cookies);
-    // force an explicit account choice rather than reusing another user's cache.
-    const res = await msalApp!.acquireTokenPopup({
-      scopes,
-      loginHint: identity.email,
-      prompt: "select_account",
-    });
-    return tokenForIdentity(res, identity, purpose);
-  }
 }
 
 const OPTIONAL_METADATA_TOKEN_SCOPES = {
@@ -230,11 +340,11 @@ const FABRIC_DISCOVERY_SCOPES = [
 ];
 
 export interface SyncRequestTokens {
+  collectorPlan?: string;
   fabricToken: string;
   definitionToken?: string;
   kustoToken?: string;
   sqlToken?: string;
-  storageToken?: string;
   deferEnrichment?: string;
   itemIds?: string;
   correlationId?: string;
@@ -256,6 +366,7 @@ async function acquireOptionalMetadataTokens(
   identity: SyncIdentity,
   allowPopup = true,
   signal?: AbortSignal,
+  selected?: ReadonlySet<keyof typeof OPTIONAL_METADATA_TOKEN_SCOPES>,
 ): Promise<Omit<SyncRequestTokens, "fabricToken">> {
   assertSyncActive(signal);
   const tokens: Omit<SyncRequestTokens, "fabricToken"> = {};
@@ -267,6 +378,7 @@ async function acquireOptionalMetadataTokens(
       (typeof OPTIONAL_METADATA_TOKEN_SCOPES)[keyof typeof OPTIONAL_METADATA_TOKEN_SCOPES],
     ]
   >) {
+    if (selected && !selected.has(name)) continue;
     try {
       assertSyncActive(signal);
       tokens[name] = await acquireToken(
@@ -274,6 +386,7 @@ async function acquireOptionalMetadataTokens(
         [request.scope],
         request.purpose,
         allowPopup,
+        signal,
       );
       assertSyncActive(signal);
     } catch (error) {
@@ -299,6 +412,7 @@ async function acquireFabricSyncToken(
       FABRIC_DISCOVERY_SCOPES,
       "Fabric metadata",
       allowPopup,
+      signal,
     );
     assertSyncActive(signal);
     return token;
@@ -313,6 +427,7 @@ async function acquireFabricSyncToken(
       [ATLAS_CONFIG.scope],
       "Power BI",
       allowPopup,
+      signal,
     );
     assertSyncActive(signal);
     return token;
@@ -344,6 +459,7 @@ async function renewSyncTokens(
       [request.scope],
       request.purpose,
       false,
+      signal,
     );
     assertSyncActive(signal);
   }
@@ -354,6 +470,14 @@ async function renewSyncTokens(
 /* ----------------------------- UDF invoke ------------------------------ */
 
 export interface RawSync {
+  compatibilityVersion?: number;
+  compatibilityStage?: "scanner" | "items";
+  compatibilityCollectors?: Record<string, string[]>;
+  compatibilityStatus?: Record<
+    string,
+    Record<string, { status?: "complete" | "unsupported" | "failed"; code?: string }>
+  >;
+  collectorSources?: Record<string, { source: "rayfin" | "python-compatibility" | "python-rollback" | "unsupported"; code?: string }>;
   schemaVersion?: number;
   syncMode?: string;
   correlationId?: string;
@@ -651,6 +775,18 @@ export function mergeSyncEnrichment(
     lineage: uniqueBy(
       [...(current.lineage ?? []), ...(enrichment.lineage ?? [])],
       (edge) => [edge.source, edge.target, edge.relation].join("\u0000"),
+    ),
+    access: uniqueBy(
+      [...(current.access ?? []), ...(enrichment.access ?? [])],
+      (grant) =>
+        [
+          grant.itemId,
+          grant.principalId ?? grant.principalEmail ?? grant.principalName,
+          grant.principalType,
+          grant.userType,
+          grant.tenantWide ?? false,
+          grant.accessRight,
+        ].join("\u0000"),
     ),
     config: uniqueBy(
       [...(current.config ?? []), ...(enrichment.config ?? [])],
@@ -1297,7 +1433,7 @@ export function isUdfTimeoutFailure(status: number, body: string): boolean {
 
 function retargetSyncFunction(url: string, functionName: string): string {
   return url.replace(
-    /\/(ping|sync_all|sync_items)(\/|:|\?|$)/i,
+    /\/(ping|sync_all|sync_items|sync_compatibility)(\/|:|\?|$)/i,
     `/${functionName}$2`,
   );
 }
@@ -1320,7 +1456,7 @@ const MAX_SINGLE_ITEM_SLICE_ATTEMPTS = 6;
 const SYNC_SLICE_TIMEOUT_MS = 195_000;
 const TOKEN_REFRESH_WINDOW_MS = 5 * 60_000;
 
-function assertSyncActive(signal?: AbortSignal): void {
+export function assertSyncActive(signal?: AbortSignal): void {
   if (signal?.aborted) {
     throw new SyncCancelledError("Synchronization cancelled.");
   }
@@ -1385,7 +1521,7 @@ function syncItemTypeLabel(itemType: string): string {
 
 async function invokeSyncFunctionSlice(
   baseUrl: string,
-  functionName: "sync_all" | "sync_items",
+  functionName: "sync_all" | "sync_items" | "sync_compatibility",
   workspaceId: string,
   tokens: SyncRequestTokens,
   parameters: Partial<SyncRequestTokens>,
@@ -1511,6 +1647,58 @@ async function invokeSyncItemSlice(
     { itemIds: JSON.stringify(batch.itemIds) },
     signal,
   );
+}
+
+export type CompatibilityCollector =
+  | "itemDetails" | "lakehouseTables" | "reportPages" | "definitions"
+  | "kqlDataPlane" | "sqlDataPlane" | "jobs";
+
+export interface CompatibilityPlan {
+  version: 1;
+  stage: "scanner" | "items";
+  items: { id: string; type: string; collectors: CompatibilityCollector[] }[];
+  schemaItemIds: string[];
+}
+
+/** Per-run browser credential cache used only by explicitly planned Python gaps. */
+export function createCompatibilityInvoker(
+  workspaceId: string,
+  identity: SyncIdentity,
+  correlationId: string,
+  signal?: AbortSignal,
+): (plan: CompatibilityPlan) => Promise<RawSync> {
+  let tokens: SyncRequestTokens | undefined;
+  return async (plan) => {
+    assertSyncActive(signal);
+    const rawUrl = getUdfUrl();
+    if (!rawUrl) throw new Error("The required Python compatibility endpoint is not configured. The previous snapshot was preserved.");
+    const url = validateUdfUrl(rawUrl, workspaceId);
+    if (!tokens) {
+      tokens = {
+        fabricToken: await acquireFabricSyncToken(identity, true, signal),
+        correlationId,
+      };
+    }
+    const needed = new Set<keyof typeof OPTIONAL_METADATA_TOKEN_SCOPES>();
+    for (const item of plan.items) {
+      if (item.collectors.includes("kqlDataPlane") && !tokens.kustoToken) needed.add("kustoToken");
+    }
+    Object.assign(tokens, await acquireOptionalMetadataTokens(identity, true, signal, needed));
+    for (let attempt = 0; attempt < MAX_BASE_SLICE_ATTEMPTS; attempt++) {
+      assertSyncActive(signal);
+      tokens = await renewSyncTokens(identity, tokens, signal);
+      try {
+        return await invokeSyncFunctionSlice(
+          url, "sync_compatibility", workspaceId, tokens,
+          { collectorPlan: JSON.stringify(plan) }, signal,
+        );
+      } catch (error) {
+        if (!(error instanceof RetryableSyncSliceError) || attempt + 1 >= MAX_BASE_SLICE_ATTEMPTS || error.reason === "response-size") throw error;
+        await abortableDelay(Math.min(8_000, 1_000 * 2 ** attempt), signal);
+      }
+    }
+    throw new Error("The Python compatibility slice could not complete. The previous snapshot was preserved.");
+  };
 }
 
 export async function invokeSyncAll(
@@ -1918,6 +2106,10 @@ export function mapSyncToAtlas(raw: RawSync, fallback: WorkspaceInfo): AtlasData
   const jobs: Job[] = (raw.jobs ?? []).map((j) => {
     const start = normalizeFabricTimestamp(j.startTimeUtc);
     const end = normalizeFabricTimestamp(j.endTimeUtc);
+    const runId =
+      typeof j.id === "string" && JOB_RUN_ID.test(j.id)
+        ? j.id.toLowerCase()
+        : undefined;
     return {
       itemFabricId: String(j.itemId ?? ""),
       itemName: String(j.itemDisplayName ?? j.itemId ?? ""),
@@ -1928,6 +2120,7 @@ export function mapSyncToAtlas(raw: RawSync, fallback: WorkspaceInfo): AtlasData
         start && end
           ? Math.max(0, Math.round((Date.parse(end) - Date.parse(start)) / 1000))
           : 0,
+      ...(runId ? { runId } : {}),
     };
   });
 

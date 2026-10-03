@@ -7,6 +7,7 @@
 
 import { createRoot } from 'react-dom/client';
 import { ErrorBoundary } from "react-error-boundary";
+import { MotionConfig } from "framer-motion";
 import { type ReactNode } from "react";
 
 import App from './App.tsx';
@@ -103,4 +104,8 @@ function Root() {
     );
 }
 
-createRoot(document.getElementById('root')!).render(<Root />)
+createRoot(document.getElementById('root')!).render(
+    <MotionConfig reducedMotion="user">
+        <Root />
+    </MotionConfig>,
+)

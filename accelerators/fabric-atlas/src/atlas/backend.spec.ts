@@ -15,6 +15,10 @@ import {
   snapshotSummaryFromManifest,
 } from "./backend";
 import { ATLAS_CONFIG } from "./config";
+import {
+  createItemRelationsEvidence,
+  recordItemRelationsResponse,
+} from "./item-relations-evidence";
 import { DEPLOYMENT_ID } from "./release";
 
 const mocks = vi.hoisted(() => {
@@ -28,6 +32,8 @@ const mocks = vi.hoisted(() => {
     "ConfigEntry",
     "Comment",
     "SyncRun",
+    "ItemRelationsEvidenceSnapshot",
+    "OperationalIncident",
   ];
   const data = Object.fromEntries(
     names.map((name) => {
@@ -48,6 +54,7 @@ const mocks = vi.hoisted(() => {
     mapSyncToAtlas: vi.fn(),
   };
 });
+const browserCollectors = vi.hoisted(() => ({ collectBrowserWorkspace: vi.fn() }));
 
 vi.mock("@/lib/rayfin-client", () => ({
   getRayfinClient: () => ({ data: mocks.data }),
@@ -61,6 +68,10 @@ vi.mock("./live-sync", async (importOriginal) => {
     mapSyncToAtlas: mocks.mapSyncToAtlas,
   };
 });
+vi.mock("./browser-collector-sync", async (importOriginal) => ({
+  ...await importOriginal<typeof import("./browser-collector-sync")>(),
+  collectBrowserWorkspace: browserCollectors.collectBrowserWorkspace,
+}));
 
 const workspaceId = "11111111-1111-4111-8111-111111111111";
 const identity = {
@@ -136,6 +147,8 @@ function summaryMarker(
 
 describe("Rayfin snapshot persistence", () => {
   beforeEach(() => {
+    vi.stubEnv("VITE_ATLAS_COLLECTOR_ROLLBACK", "true");
+    browserCollectors.collectBrowserWorkspace.mockReset();
     ATLAS_CONFIG.syncAdminEmail = identity.email;
     ATLAS_CONFIG.syncAdminSubject = identity.id;
     ATLAS_CONFIG.snapshotRetentionCount = 12;
@@ -251,7 +264,130 @@ describe("Rayfin snapshot persistence", () => {
     ).toBe(false);
   });
 
+  it("retries transient GraphQL snapshot mutations with a stable row ID", async () => {
+    const atlas = structuredClone(SAMPLE_DATA);
+    atlas.items = [atlas.items[0]];
+    atlas.principals = [];
+    atlas.grants = [];
+    atlas.jobs = [];
+    atlas.edges = [];
+    atlas.config = [];
+    atlas.schema = {};
+    atlas.itemMetadata = {};
+    atlas.objectEdges = [];
+    mocks.mapSyncToAtlas.mockReturnValue(atlas);
+    let firstId: unknown;
+    mocks.data.FabricItem.create.mockImplementation(async (row) => {
+      firstId ??= (row as Record<string, unknown>).id;
+      if (mocks.data.FabricItem.create.mock.calls.length === 1) {
+        throw new Error("GraphQL errors: Internal server error");
+      }
+      expect((row as Record<string, unknown>).id).toBe(firstId);
+      const stored = row as Record<string, unknown>;
+      mocks.data.FabricItem.rows.push(stored);
+      return stored;
+    });
+    vi.useFakeTimers();
+    try {
+      const sync = runFabricSync(false, identity);
+      await vi.runAllTimersAsync();
+      await expect(sync).resolves.toBeTruthy();
+    } finally {
+      vi.useRealTimers();
+    }
+
+    expect(firstId).toMatch(
+      /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i,
+    );
+    expect(mocks.data.FabricItem.create).toHaveBeenCalledTimes(2);
+    expect(mocks.data.Workspace.create).toHaveBeenCalledOnce();
+  });
+
+  it("accepts a timed-out mutation that committed before retry", async () => {
+    const atlas = structuredClone(SAMPLE_DATA);
+    atlas.items = [atlas.items[0]];
+    atlas.principals = [];
+    atlas.grants = [];
+    atlas.jobs = [];
+    atlas.edges = [];
+    atlas.config = [];
+    atlas.schema = {};
+    atlas.itemMetadata = {};
+    atlas.objectEdges = [];
+    mocks.mapSyncToAtlas.mockReturnValue(atlas);
+    mocks.data.FabricItem.create.mockImplementationOnce(async (row) => {
+      const stored = row as Record<string, unknown>;
+      mocks.data.FabricItem.rows.push(stored);
+      throw new Error("Request timed out after 120000ms");
+    });
+    vi.useFakeTimers();
+    try {
+      const sync = runFabricSync(false, identity);
+      await vi.runAllTimersAsync();
+      await expect(sync).resolves.toBeTruthy();
+    } finally {
+      vi.useRealTimers();
+    }
+
+    expect(mocks.data.FabricItem.create).toHaveBeenCalledOnce();
+    expect(mocks.data.FabricItem.rows).toHaveLength(1);
+    expect(mocks.data.Workspace.create).toHaveBeenCalledOnce();
+  });
+
+  it("retries failed rows sequentially after a concurrent fast path", async () => {
+    const atlas = structuredClone(SAMPLE_DATA);
+    atlas.items = Array.from({ length: 8 }, (_, index) => ({
+      ...atlas.items[0],
+      fabricId: `item-${index}`,
+      displayName: `Item ${index}`,
+    }));
+    atlas.principals = [];
+    atlas.grants = [];
+    atlas.jobs = [];
+    atlas.edges = [];
+    atlas.config = [];
+    atlas.schema = {};
+    atlas.itemMetadata = {};
+    atlas.objectEdges = [];
+    mocks.mapSyncToAtlas.mockReturnValue(atlas);
+    const attempts = new Map<string, number>();
+    let activeRetries = 0;
+    let maximumActiveRetries = 0;
+    mocks.data.FabricItem.create.mockImplementation(async (row) => {
+      const id = String((row as Record<string, unknown>).id);
+      const attempt = (attempts.get(id) ?? 0) + 1;
+      attempts.set(id, attempt);
+      await Promise.resolve();
+      if (attempt === 1) {
+        throw new Error("GraphQL errors: Internal server error");
+      }
+      activeRetries += 1;
+      maximumActiveRetries = Math.max(
+        maximumActiveRetries,
+        activeRetries,
+      );
+      await Promise.resolve();
+      activeRetries -= 1;
+      const stored = row as Record<string, unknown>;
+      mocks.data.FabricItem.rows.push(stored);
+      return stored;
+    });
+    vi.useFakeTimers();
+    try {
+      const sync = runFabricSync(false, identity);
+      const assertion = expect(sync).resolves.toBeTruthy();
+      await vi.runAllTimersAsync();
+      await assertion;
+    } finally {
+      vi.useRealTimers();
+    }
+
+    expect(maximumActiveRetries).toBe(1);
+    expect(mocks.data.FabricItem.create).toHaveBeenCalledTimes(16);
+  });
+
   it("persists and reloads the authenticated comment display name", async () => {
+    const targetWorkspaceId = "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa";
     const comment = {
       id: "33333333-3333-4333-8333-333333333333",
       authorId: identity.id,
@@ -261,9 +397,10 @@ describe("Rayfin snapshot persistence", () => {
       createdAt: "2026-08-30T15:00:00.000Z",
     };
 
-    await persistComment(false, comment);
+    await persistComment(false, comment, targetWorkspaceId);
     expect(mocks.data.Comment.create).toHaveBeenCalledWith(
       expect.objectContaining({
+        workspace_id: targetWorkspaceId,
         authorId: identity.id,
         authorName: identity.email,
         authorEmail: identity.email,
@@ -277,7 +414,7 @@ describe("Rayfin snapshot persistence", () => {
       ),
     ]);
 
-    const comments = await loadCommentsFromDb(false);
+    const comments = await loadCommentsFromDb(false, targetWorkspaceId);
     expect(comments).toEqual([
       expect.objectContaining({
         authorName: identity.email,
@@ -302,6 +439,170 @@ describe("Rayfin snapshot persistence", () => {
       }),
     ).rejects.toThrow(/configured Atlas sync administrator/i);
     expect(mocks.invokeSyncAll).not.toHaveBeenCalled();
+  });
+
+  it("stores collected Item Relations evidence only after the snapshot marker", async () => {
+    const lakehouse = SAMPLE_DATA.items.find((item) => item.itemType === "Lakehouse")!;
+    const model = SAMPLE_DATA.items.find((item) => item.itemType === "SemanticModel")!;
+    const collectedAt = "2026-10-02T10:00:00.000Z";
+    const collection = {
+      evidence: createItemRelationsEvidence(workspaceId, collectedAt, [
+        recordItemRelationsResponse(model.fabricId, "upstream", collectedAt, {
+          items: [
+            {
+              id: lakehouse.fabricId,
+              workspaceId,
+              type: "Lakehouse",
+              displayName: lakehouse.displayName,
+            },
+          ],
+          relations: [
+            {
+              itemId: lakehouse.fabricId,
+              dependentOnItemId: model.fabricId,
+              relationType: "Datasource",
+            },
+          ],
+          workspaces: [],
+        }),
+      ]),
+      sampledItemCount: 1,
+      workspaceItemCount: SAMPLE_DATA.items.length,
+      stopReasons: [],
+    };
+    vi.stubEnv("VITE_ATLAS_COLLECTOR_ROLLBACK", "false");
+    browserCollectors.collectBrowserWorkspace.mockResolvedValue({
+      raw: {},
+      summary: "Collectors: Rayfin active",
+      itemRelationsCollection: collection,
+    });
+
+    await runFabricSync(false, identity);
+
+    const evidenceApi = mocks.data.ItemRelationsEvidenceSnapshot;
+    const marker = mocks.data.Workspace.create.mock.calls[0][0];
+    const evidenceRows = evidenceApi.create.mock.calls.map(([row]) => row);
+    expect(evidenceRows.at(-1)).toMatchObject({
+      rowType: "manifest",
+      workspace_id: workspaceId,
+      snapshotId: marker.snapshotId,
+      writerEmail: identity.email,
+      queryCount: 1,
+      conflictCount: 1,
+      sampledItemCount: 1,
+      workspaceItemCount: SAMPLE_DATA.items.length,
+    });
+    expect(Math.min(...evidenceApi.create.mock.invocationCallOrder)).toBeGreaterThan(
+      mocks.data.Workspace.create.mock.invocationCallOrder[0],
+    );
+    expect(mocks.data.LineageEdge.create).toHaveBeenCalledTimes(
+      SAMPLE_DATA.edges.length,
+    );
+    expect(
+      mocks.data.LineageEdge.create.mock.calls.some(
+        ([row]) => row.relation === "Datasource",
+      ),
+    ).toBe(false);
+  });
+
+  it("keeps a published sync successful when evidence storage fails", async () => {
+    vi.stubEnv("VITE_ATLAS_COLLECTOR_ROLLBACK", "false");
+    browserCollectors.collectBrowserWorkspace.mockResolvedValue({
+      raw: {},
+      summary: "Collectors: Rayfin active",
+      itemRelationsCollection: {
+        evidence: createItemRelationsEvidence(
+          workspaceId,
+          "2026-10-02T10:00:00.000Z",
+          [],
+        ),
+        sampledItemCount: 0,
+        workspaceItemCount: 0,
+        stopReasons: [],
+      },
+    });
+    mocks.data.ItemRelationsEvidenceSnapshot.create.mockRejectedValue(
+      new Error("evidence table missing"),
+    );
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => undefined);
+
+    await expect(runFabricSync(false, identity)).resolves.toMatchObject({
+      workspace: { snapshotId: expect.any(String) },
+    });
+    expect(mocks.data.Workspace.create).toHaveBeenCalledTimes(1);
+    expect(warn).toHaveBeenCalledWith(
+      "[atlas] Item Relations evidence storage failed",
+      { type: "Error" },
+    );
+    warn.mockRestore();
+  });
+
+  it("stores no evidence when the collector reports no collection", async () => {
+    vi.stubEnv("VITE_ATLAS_COLLECTOR_ROLLBACK", "false");
+    browserCollectors.collectBrowserWorkspace.mockResolvedValue({
+      raw: {},
+      summary: "Collectors: Rayfin active",
+    });
+    await runFabricSync(false, identity);
+
+    expect(mocks.data.ItemRelationsEvidenceSnapshot.create).not.toHaveBeenCalled();
+  });
+
+  it("records observed incidents after the snapshot marker without free text", async () => {
+    const synced = structuredClone(SAMPLE_DATA);
+    const bronze = synced.jobs[0];
+    synced.jobs.push({
+      ...bronze,
+      status: "failed",
+      startedAt: new Date(Date.now() - 60_000).toISOString(),
+      message: "Spark session terminated for user secret@example.com",
+      runId: "a0a0a0a0-0000-4000-8000-000000000001",
+    });
+    mocks.mapSyncToAtlas.mockReturnValue(synced);
+
+    await runFabricSync(false, identity);
+
+    const marker = mocks.data.Workspace.create.mock.calls[0][0];
+    const incidentApi = mocks.data.OperationalIncident;
+    expect(incidentApi.create).toHaveBeenCalledTimes(1);
+    const [row] = incidentApi.create.mock.calls[0];
+    expect(row).toMatchObject({
+      workspace_id: workspaceId,
+      snapshotId: marker.snapshotId,
+      writerEmail: identity.email,
+      itemFabricId: bronze.itemFabricId,
+      jobType: bronze.jobType,
+      runId: "a0a0a0a0-0000-4000-8000-000000000001",
+      source: "fabric-job-history",
+    });
+    expect(JSON.stringify(row)).not.toMatch(/secret|Spark session/);
+    expect(incidentApi.create.mock.invocationCallOrder[0]).toBeGreaterThan(
+      mocks.data.Workspace.create.mock.invocationCallOrder[0],
+    );
+  });
+
+  it("keeps a published sync successful when incident storage fails", async () => {
+    const synced = structuredClone(SAMPLE_DATA);
+    synced.jobs.push({
+      ...synced.jobs[0],
+      status: "failed",
+      startedAt: new Date(Date.now() - 60_000).toISOString(),
+    });
+    mocks.mapSyncToAtlas.mockReturnValue(synced);
+    mocks.data.OperationalIncident.create.mockRejectedValue(
+      new Error("incident table missing"),
+    );
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => undefined);
+
+    await expect(runFabricSync(false, identity)).resolves.toMatchObject({
+      workspace: { snapshotId: expect.any(String) },
+    });
+    expect(mocks.data.Workspace.create).toHaveBeenCalledTimes(1);
+    expect(warn).toHaveBeenCalledWith(
+      "[atlas] operational incident storage failed",
+      { type: "Error" },
+    );
+    warn.mockRestore();
   });
 
   it("publishes the manifest only after all snapshot rows succeed", async () => {
@@ -348,7 +649,33 @@ describe("Rayfin snapshot persistence", () => {
     expect(mocks.data.SyncRun.delete).not.toHaveBeenCalled();
   });
 
-  it("retries the completed SyncRun update before publishing the manifest", async () => {
+  it("publishes browser-driven Rayfin collection with the unchanged manifest-last writer", async () => {
+    vi.stubEnv("VITE_ATLAS_COLLECTOR_ROLLBACK", "false");
+    browserCollectors.collectBrowserWorkspace.mockResolvedValue({
+      raw: {}, summary: "Collectors: Rayfin active; scanner compatibility",
+    });
+    const persisted = await runFabricSync(false, identity);
+    expect(persisted?.items).toHaveLength(SAMPLE_DATA.items.length);
+    expect(persisted?.items).toEqual(
+      expect.arrayContaining(SAMPLE_DATA.items.map((item) => expect.objectContaining(item))),
+    );
+    expect(browserCollectors.collectBrowserWorkspace).toHaveBeenCalledTimes(1);
+    expect(mocks.invokeSyncAll).not.toHaveBeenCalled();
+    const marker = mocks.data.Workspace.create.mock.invocationCallOrder[0];
+    const content = ["FabricItem", "LineageEdge", "Principal", "AccessGrant", "JobRun", "ConfigEntry", "SyncRun"]
+      .flatMap((name) => mocks.data[name].create.mock.invocationCallOrder as number[]);
+    expect(Math.max(...content)).toBeLessThan(marker);
+  });
+
+  it("preserves the prior snapshot when active Rayfin composition rejects", async () => {
+    vi.stubEnv("VITE_ATLAS_COLLECTOR_ROLLBACK", "false");
+    browserCollectors.collectBrowserWorkspace.mockRejectedValue(new Error("incomplete collector envelope"));
+    await expect(runFabricSync(false, identity)).rejects.toThrow("incomplete collector");
+    expect(mocks.data.Workspace.create).not.toHaveBeenCalled();
+    expect(mocks.invokeSyncAll).not.toHaveBeenCalled();
+  });
+
+  it("retries the completed SyncRun update after publishing the manifest", async () => {
     mocks.data.SyncRun.update.mockRejectedValueOnce(
       new Error("temporary update failure"),
     );
@@ -357,6 +684,11 @@ describe("Rayfin snapshot persistence", () => {
 
     expect(mocks.data.SyncRun.update).toHaveBeenCalledTimes(2);
     expect(mocks.data.Workspace.create).toHaveBeenCalledTimes(1);
+    expect(
+      mocks.data.Workspace.create.mock.invocationCallOrder[0],
+    ).toBeLessThan(
+      Math.min(...mocks.data.SyncRun.update.mock.invocationCallOrder),
+    );
   });
 
   it("does not publish the manifest when synchronization is cancelled during persistence", async () => {
@@ -540,6 +872,45 @@ describe("Rayfin snapshot persistence", () => {
     ).toBe(true);
   });
 
+  it("does not let empty orphan audit rows starve later snapshot cleanup", async () => {
+    for (let index = 0; index < 5; index += 1) {
+      mocks.data.SyncRun.rows.push({
+        id: `empty-attempt-${index}`,
+        workspace_id: workspaceId,
+        snapshotId: `00000000-0000-4000-8000-00000000000${index}`,
+        writerEmail: identity.email,
+        startedAt: new Date(`2026-09-05T0${index}:00:00.000Z`),
+        finishedAt: new Date(`2026-09-05T0${index}:01:00.000Z`),
+        status: "failed",
+      });
+    }
+    const orphanSnapshotId = "99999999-9999-4999-8999-999999999998";
+    mocks.data.SyncRun.rows.push({
+      id: "later-orphan-attempt",
+      workspace_id: workspaceId,
+      snapshotId: orphanSnapshotId,
+      writerEmail: identity.email,
+      startedAt: new Date("2026-09-05T10:00:00.000Z"),
+      finishedAt: new Date("2026-09-05T10:01:00.000Z"),
+      status: "failed",
+    });
+    mocks.data.FabricItem.rows.push({
+      id: "later-orphan-item",
+      workspace_id: workspaceId,
+      snapshotId: orphanSnapshotId,
+      writerEmail: identity.email,
+      fabricId: "later-orphan",
+      displayName: "Later orphan",
+      itemType: "Lakehouse",
+    });
+
+    await runFabricSync(false, identity);
+
+    expect(mocks.data.FabricItem.delete).toHaveBeenCalledWith({
+      id: "later-orphan-item",
+    });
+  });
+
   it("keeps young unpublished attempts inside the orphan grace period", async () => {
     const orphanSnapshotId = "aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee";
     mocks.data.SyncRun.rows.push({
@@ -596,8 +967,7 @@ describe("Rayfin snapshot persistence", () => {
 
     await runFabricSync(false, identity);
 
-    expect(maximumActive).toBeGreaterThan(1);
-    expect(maximumActive).toBeLessThanOrEqual(8);
+    expect(maximumActive).toBe(8);
     expect(mocks.data.FabricItem.create).toHaveBeenCalledTimes(20);
   });
 
@@ -1313,7 +1683,7 @@ describe("Rayfin snapshot persistence", () => {
     });
   });
 
-  it("does not hydrate a snapshot containing a generic ITEM row", async () => {
+  it("reports a malformed snapshot instead of presenting it as unsynchronized", async () => {
     const snapshotId = "66666666-6666-4666-8666-666666666666";
     mocks.data.Workspace.findMany.mockResolvedValue([
       {
@@ -1344,7 +1714,17 @@ describe("Rayfin snapshot persistence", () => {
       },
     ]);
 
-    await expect(loadFromDb(false)).resolves.toBeNull();
+    await expect(loadFromDb(false)).rejects.toThrow(
+      /validated snapshot could be loaded/i,
+    );
+  });
+
+  it("surfaces data API failures during hydration", async () => {
+    mocks.data.Workspace.findMany.mockRejectedValue(
+      new Error("Data API unavailable"),
+    );
+
+    await expect(loadFromDb(false)).rejects.toThrow(/Data API unavailable/);
   });
 
   it("ignores sync audit rows from untrusted writers", async () => {

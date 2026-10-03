@@ -44,5 +44,5 @@ export class SyncRun {
   @text({ max: 80, optional: true }) failureCode?: string;
   @text({ max: 500, optional: true }) failureMessage?: string;
   @text({ max: 160, optional: true }) triggeredBy?: string;
-  @text({ max: 500, optional: true }) summary?: string;
+  @text({ max: 2000, optional: true }) summary?: string;
 }

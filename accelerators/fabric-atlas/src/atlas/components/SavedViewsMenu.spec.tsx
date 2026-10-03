@@ -53,4 +53,33 @@ describe("SavedViewsMenu", () => {
       expect(screen.getByText("Save failed")).toBeInTheDocument(),
     );
   });
+
+  it("closes on Escape and restores focus to the trigger", async () => {
+    render(
+      <SavedViewsMenu
+        views={[]}
+        loading={false}
+        activeSection="governance"
+        currentFilters={{ section: "findings" }}
+        onCreate={async () => undefined}
+        onApply={() => undefined}
+        onDelete={async () => undefined}
+      />,
+    );
+    const trigger = screen.getByRole("button", { name: /Saved views/ });
+
+    fireEvent.click(trigger);
+    expect(screen.getByText("Personal shortcuts for this workspace")).toBeVisible();
+
+    fireEvent.keyDown(document.activeElement ?? document.body, {
+      key: "Escape",
+    });
+
+    await waitFor(() =>
+      expect(
+        screen.queryByText("Personal shortcuts for this workspace"),
+      ).not.toBeInTheDocument(),
+    );
+    expect(trigger).toHaveFocus();
+  });
 });

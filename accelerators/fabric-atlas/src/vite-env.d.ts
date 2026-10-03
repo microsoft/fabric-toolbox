@@ -5,6 +5,8 @@ interface ImportMetaEnv {
   readonly VITE_RAYFIN_API_URL?: string;
   /** Rayfin publishable key (pk-...). */
   readonly VITE_RAYFIN_PUBLISHABLE_KEY?: string;
+  /** Local Rayfin Functions host URL; read only during Vite development. */
+  readonly VITE_RAYFIN_FUNCTIONS_URL?: string;
   /** Fabric workspace ID — maps to FabricAuthOptions.workspaceId. */
   readonly VITE_FABRIC_WORKSPACE_ID?: string;
   /** Fabric/Rayfin item ID — maps to FabricAuthOptions.projectId. */

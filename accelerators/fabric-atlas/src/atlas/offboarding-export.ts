@@ -1,4 +1,5 @@
 import { csvCell } from "./access-export";
+import { markdownText } from "./markdown";
 import type { OffboardingReport } from "./offboarding";
 
 export function offboardingReassignmentToCsv(
@@ -54,7 +55,7 @@ export function offboardingReassignmentToCsv(
 }
 
 function line(value: string): string {
-  return value.replace(/[\r\n]+/g, " ").trim();
+  return markdownText(value);
 }
 
 function coverageSummary(report: OffboardingReport): string {

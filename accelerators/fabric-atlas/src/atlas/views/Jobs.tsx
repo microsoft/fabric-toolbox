@@ -1,9 +1,8 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   Activity,
   Ban,
   CheckCircle2,
-  Clock3,
   Gauge,
   FilterX,
   Loader2,
@@ -12,10 +11,14 @@ import {
   XCircle,
 } from "lucide-react";
 import type { AtlasFocusRequest, AtlasNavigation } from "../navigation";
+import { NativeLink } from "../components/NativeLink";
+import { OperationalSignals } from "../components/OperationalSignals";
+import { fabricPortalContext, monitorHubUrl } from "../observability";
 import { SavedViewsMenu } from "../components/SavedViewsMenu";
 import { searchJobId } from "../search";
 import { useAtlas } from "../store";
-import { Card, SectionLabel, TypeGlyph, cn } from "../ui";
+import { PageHeader } from "../components/PageHeader";
+import { Card, TypeGlyph, cn } from "../ui";
 import { relativeTime, type Item, type Job, type JobStatus } from "../model";
 
 const STATUS: Record<
@@ -89,10 +92,13 @@ function dateGroup(value: string): string {
 export function JobsView({
   focus,
   onStateChange,
+  onNavigate,
 }: {
   focus?: AtlasFocusRequest;
   onStateChange?: (navigation: AtlasNavigation) => void;
+  onNavigate?: (navigation: AtlasNavigation) => void;
 } = {}) {
+  const runHistoryHeading = useRef<HTMLHeadingElement>(null);
   const {
     data,
     savedViews,
@@ -226,50 +232,62 @@ export function JobsView({
 
   return (
     <div className="atlas-content-frame flex flex-col gap-xl p-xl lg:p-xxl">
-      <header className="atlas-page-header">
-        <SectionLabel>Operations / run history</SectionLabel>
-        <div className="mt-s flex flex-col gap-s lg:flex-row lg:items-end lg:justify-between">
-          <div>
-            <h1 className="font-heading text-600 leading-600 font-bold">
-              Jobs &amp; health
-            </h1>
-            <p className="mt-xs text-300 leading-300 text-muted-foreground">
-              Refreshes, pipeline runs and notebook activity across this workspace.
-            </p>
-          </div>
-          <div className="flex items-center gap-s text-200 leading-200 text-muted-foreground">
-            <Clock3 className="icon-size-200" aria-hidden="true" />
-            Ordered by most recent start time
-          </div>
-        </div>
-      </header>
+      <PageHeader title="Jobs & health" purpose="Refreshes, pipeline runs and notebook activity, newest first." />
 
       <section
         aria-label="Job health summary"
-        className="grid grid-cols-1 gap-m sm:grid-cols-2 xl:grid-cols-5"
+        className="flex flex-wrap gap-x-xxl gap-y-s border-y border-border px-l py-m"
       >
-        {metrics.map(({ label, value, icon: Icon, valueClassName }) => (
-          <Card key={label} className="border-t border-t-primary/40 p-l">
-            <div className="flex items-center justify-between gap-s">
-              <SectionLabel>{label}</SectionLabel>
-              <Icon className="icon-size-200 text-muted-foreground" aria-hidden="true" />
-            </div>
+        {metrics.map(({ label, value, valueClassName }) => (
+          <div key={label} className="flex items-baseline gap-s">
+            <span className="text-200 text-muted-foreground">{label}</span>
             <div
-              className={`mt-m font-numeric text-hero-700 leading-hero-700 font-bold tabular-nums ${
+              className={`font-numeric text-300 font-semibold tabular-nums ${
                 valueClassName ?? "text-foreground"
               }`}
             >
               {value}
             </div>
-          </Card>
+          </div>
         ))}
       </section>
+
+      <OperationalSignals
+        onShowRuns={(incident) => {
+          setQuery("");
+          setStatusFilter("all");
+          setFocusedItemId(incident.itemId);
+          setFocusedJobId(incident.id);
+          window.requestAnimationFrame(() => {
+            runHistoryHeading.current?.scrollIntoView?.({ block: "start" });
+            runHistoryHeading.current?.focus();
+          });
+        }}
+        onOpenImpact={
+          onNavigate
+            ? (itemId) =>
+                onNavigate({
+                  tab: "map",
+                  focus: {
+                    requestId: crypto.randomUUID(),
+                    itemId,
+                    filters: { impact: "focused" },
+                  },
+                })
+            : undefined
+        }
+      />
 
       <section aria-labelledby="run-history-title">
         <Card className="overflow-hidden">
           <div className="flex flex-wrap items-center justify-between gap-m border-b border-border px-l py-m">
             <div>
-              <h2 id="run-history-title" className="text-400 leading-400 font-semibold">
+              <h2
+                id="run-history-title"
+                ref={runHistoryHeading}
+                tabIndex={-1}
+                className="rounded-md text-400 leading-400 font-semibold focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+              >
                 Run history
               </h2>
               <p className="mt-xs text-200 leading-200 text-muted-foreground">
@@ -426,6 +444,42 @@ export function JobsView({
   );
 }
 
+// One template for the header and every row, with a fixed status track, so
+// status chips of different widths never shift the other columns.
+const JOB_GRID =
+  "md:grid-cols-[8rem_minmax(0,1.4fr)_minmax(0,1fr)_minmax(0,0.9fr)_6rem_minmax(0,1.2fr)]";
+
+function JobDetail({ job }: { job: Job }) {
+  if (job.message) {
+    return (
+      <>
+        {job.status === "failed" && (
+          <span className="block text-100 font-semibold text-muted-foreground">
+            Fabric job detail
+          </span>
+        )}
+        <span className="line-clamp-3 break-words" title={job.message}>
+          {job.message}
+        </span>
+      </>
+    );
+  }
+  if (job.status === "failed") {
+    return (
+      <>
+        <span className="block font-semibold">Error detail not collected by Atlas</span>
+        <span className="block text-muted-foreground">
+          Atlas stores job status and timing only.
+        </span>
+        <NativeLink href={monitorHubUrl("jobs", fabricPortalContext())}>
+          Job runs in Monitor hub
+        </NativeLink>
+      </>
+    );
+  }
+  return <>No additional detail</>;
+}
+
 function JobTimeline({
   groups,
   itemById,
@@ -437,7 +491,10 @@ function JobTimeline({
     <div>
       <div
         aria-hidden="true"
-        className="hidden grid-cols-[auto_minmax(180px,1.3fr)_minmax(120px,0.8fr)_minmax(150px,0.9fr)_100px_minmax(180px,1fr)] gap-m border-b border-border bg-muted/60 px-l py-m text-200 font-semibold uppercase tracking-wide text-muted-foreground md:grid"
+        className={cn(
+          "hidden gap-m border-b border-border bg-muted/60 px-l py-m text-200 font-semibold uppercase tracking-wide text-muted-foreground md:grid",
+          JOB_GRID,
+        )}
       >
         <span>Status</span>
         <span>Item</span>
@@ -466,7 +523,8 @@ function JobTimeline({
               <li
                 key={`${job.itemFabricId}-${job.jobType}-${job.startedAt}`}
                 className={cn(
-                  "atlas-row atlas-windowed-block relative grid gap-m border-b border-border/60 px-l transition-colors last:border-b-0 hover:bg-accent/50 md:grid-cols-[auto_minmax(180px,1.3fr)_minmax(120px,0.8fr)_minmax(150px,0.9fr)_100px_minmax(180px,1fr)] md:items-center",
+                  "atlas-row atlas-windowed-block relative grid gap-m border-b border-border/60 px-l transition-colors last:border-b-0 hover:bg-accent/50 md:items-center",
+                  JOB_GRID,
                   job.status === "failed" && "bg-status-failing/5",
                 )}
               >
@@ -484,7 +542,7 @@ function JobTimeline({
                   )}
                 />
                 <dl className="contents">
-                  <div className="pl-l md:pl-0">
+                  <div className="min-w-0 pl-l md:pl-0">
                     <dt className="sr-only">Status</dt>
                     <dd>
                       <span
@@ -505,16 +563,21 @@ function JobTimeline({
                     <dt className="sr-only">Item</dt>
                     <dd className="flex min-w-0 items-center gap-s">
                       {item && <TypeGlyph type={item.itemType} />}
-                      <span className="truncate font-semibold text-foreground">
+                      <span
+                        className="min-w-0 truncate font-semibold text-foreground"
+                        title={job.itemName}
+                      >
                         {job.itemName}
                       </span>
                     </dd>
                   </div>
-                  <div className="pl-l text-300 font-semibold md:pl-0">
+                  <div className="min-w-0 pl-l text-300 font-semibold md:pl-0">
                     <dt className="sr-only">Job</dt>
-                    <dd>{job.jobType}</dd>
+                    <dd className="min-w-0 truncate" title={job.jobType}>
+                      {job.jobType}
+                    </dd>
                   </div>
-                  <div className="pl-l text-200 text-muted-foreground md:pl-0">
+                  <div className="min-w-0 pl-l text-200 text-muted-foreground md:pl-0">
                     <dt className="sr-only">Started</dt>
                     <dd>
                       <time dateTime={job.startedAt} title={startedAtLabel}>
@@ -531,13 +594,15 @@ function JobTimeline({
                   </div>
                   <div
                     className={cn(
-                      "ml-l rounded-lg border border-border bg-secondary/55 px-m py-s text-200 text-muted-foreground md:ml-0",
+                      "ml-l min-w-0 rounded-lg border border-border bg-secondary/55 px-m py-s text-200 text-muted-foreground md:ml-0",
                       job.status === "failed" &&
-                        "border-status-failing/25 bg-status-failing/10 text-status-failing",
+                        "border-status-failing/25 bg-status-failing/10 text-foreground",
                     )}
                   >
                     <dt className="sr-only">Detail</dt>
-                    <dd>{job.message ?? "No additional detail"}</dd>
+                    <dd className="min-w-0">
+                      <JobDetail job={job} />
+                    </dd>
                   </div>
                 </dl>
               </li>

@@ -1,8 +1,8 @@
 import {
-  Activity,
   ArrowRight,
   CheckCircle2,
   CheckCheck,
+  ChevronDown,
   Clock3,
   Download,
   FileClock,
@@ -10,7 +10,6 @@ import {
   Gauge,
   GitCompareArrows,
   History,
-  KeyRound,
   Layers3,
   Radar as RadarIcon,
   RotateCcw,
@@ -20,13 +19,17 @@ import {
   VolumeX,
 } from "lucide-react";
 import * as Tabs from "@radix-ui/react-tabs";
-import { motion } from "framer-motion";
-import { useEffect, useMemo, useState } from "react";
+import { lazy, Suspense, useEffect, useId, useMemo, useState } from "react";
 import { SavedViewsMenu } from "../components/SavedViewsMenu";
 import { TrendChart } from "../components/TrendChart";
 import { GovernanceExceptionControl } from "../components/GovernanceExceptionControl";
 import { GovernancePolicyEditor } from "../components/GovernancePolicyEditor";
 import { HistoricalChangeDetails } from "../components/HistoricalChangeDetails";
+import { ItemFamilyCoverageSection } from "../components/ItemFamilyCoverageSection";
+import { RadarSignalTiles } from "../components/RadarSignalTiles";
+import { ScoreMeter } from "../components/ScoreMeter";
+import { scoreBand } from "../components/score-style";
+import { POSTURE_LABELS } from "../components/posture-radar";
 import { ATLAS_CONFIG } from "../config";
 import {
   buildGovernanceFindings,
@@ -50,11 +53,19 @@ import type {
 } from "../navigation";
 import type { SavedView, SavedViewFilters } from "../saved-views";
 import {
+  groupRadarSignals,
+  radarReviewHeadline,
+  type RadarSignalId,
+} from "../radar-signals";
+import {
   buildRadar,
+  radarEntries as buildRadarEntries,
   type FindingDelta,
+  type RadarEntry,
   type RadarResult,
   type RiskyChange,
 } from "../radar";
+import type { IncidentDelta } from "../observability";
 import type { FindingAcknowledgement } from "../finding-acks";
 import type { GovernanceException } from "../governance-exceptions";
 import { radarToMarkdown } from "../radar-markdown";
@@ -66,51 +77,45 @@ import {
 import { useAtlas } from "../store";
 import { Card, SectionLabel, cn } from "../ui";
 import { SensitivityView } from "./Sensitivity";
+import { PoliciesAiSection } from "./PoliciesAi";
+import { buildAiGovernanceInventory } from "../policies-ai";
+import { groupFindingsByRule } from "../finding-groups";
+import { PageHeader } from "../components/PageHeader";
+
+const PostureRadar = lazy(() => import("../components/PostureRadar").then(
+  (module) => ({ default: module.PostureRadar }),
+));
 
 const SEVERITY_META: Record<
   GovernanceSeverity,
-  { label: string; className: string; dot: string }
+  { label: string; className: string }
 > = {
   critical: {
     label: "Critical",
     className:
-      "border-status-failing/35 bg-status-failing/10 text-status-failing",
-    dot: "bg-status-failing",
+      "border-signal-danger-foreground/20 bg-signal-danger-background text-signal-danger-foreground",
   },
   high: {
     label: "High",
     className:
-      "border-status-warning/35 bg-status-warning/10 text-status-warning",
-    dot: "bg-status-warning",
+      "border-signal-warning-foreground/20 bg-signal-warning-background text-signal-warning-foreground",
   },
   medium: {
     label: "Medium",
     className: "border-primary/30 bg-primary/10 text-brand-foreground",
-    dot: "bg-primary",
   },
   low: {
     label: "Low",
-    className:
-      "border-lineage-neutral/30 bg-lineage-neutral/10 text-muted-foreground",
-    dot: "bg-lineage-neutral",
+    className: "border-border bg-muted text-muted-foreground",
   },
 };
-
-interface RadarEntry {
-  id: string;
-  severity: GovernanceSeverity;
-  title: string;
-  detail: string;
-  occurrenceSnapshotId?: string;
-  delta?: FindingDelta;
-  risk?: RiskyChange;
-}
 
 const RADAR_SIGNALS = [
   "Access",
   "Sensitivity",
   "Lineage",
   "Consumed removals",
+  "Job failures",
 ] as const;
 
 function downloadMarkdown(content: string, filename: string): void {
@@ -209,6 +214,10 @@ function focusRequest(
   return { requestId: crypto.randomUUID(), ...values };
 }
 
+function findingPillarFilter(value: unknown): string {
+  return typeof value === "string" && ["access", "lineage", "operations"].includes(value) ? value : "";
+}
+
 function navigationForFinding(finding: GovernanceFinding): AtlasNavigation {
   const target = finding.target;
   if (target?.kind === "principal") {
@@ -253,6 +262,7 @@ export function GovernanceCenterView({
 }) {
   const {
     data,
+    isPreview,
     history,
     historyLoading,
     historyError,
@@ -288,7 +298,7 @@ export function GovernanceCenterView({
     focus?.governanceSection ??
     (typeof focus?.filters?.section === "string"
       ? (focus.filters.section as GovernanceSection)
-      : "findings");
+      : "posture");
   const [section, setSection] = useState<GovernanceSection>(initialSection);
   const [findingSearch, setFindingSearch] = useState(
     typeof focus?.filters?.search === "string" ? focus.filters.search : "",
@@ -304,7 +314,7 @@ export function GovernanceCenterView({
       : "all",
   );
   const [findingPillar, setFindingPillar] = useState(
-    typeof focus?.filters?.pillar === "string" ? focus.filters.pillar : "",
+    initialSection === "findings" ? findingPillarFilter(focus?.filters?.pillar) : "",
   );
   const [changeSearch, setChangeSearch] = useState(
     typeof focus?.filters?.changeSearch === "string"
@@ -322,7 +332,7 @@ export function GovernanceCenterView({
       : "items",
   );
   const [postureMetric, setPostureMetric] = useState<PosturePillar>(
-    typeof focus?.filters?.pillar === "string"
+    initialSection === "posture" && typeof focus?.filters?.pillar === "string"
       ? (focus.filters.pillar as PosturePillar)
       : "documentation",
   );
@@ -452,28 +462,10 @@ export function GovernanceCenterView({
       ),
     [findingAcks],
   );
-  const allRadarEntries = useMemo<RadarEntry[]>(() => {
-    if (radar.state !== "ready") return [];
-    const findingsEntries = radar.deltas
-      .filter((delta) => delta.status === "new")
-      .map((delta) => ({
-        id: delta.finding.id,
-        severity: delta.finding.severity,
-        title: delta.finding.title,
-        detail: delta.finding.detail,
-        occurrenceSnapshotId: delta.sinceSnapshotId,
-        delta,
-      }));
-    const riskEntries = radar.riskyChanges.map((risk) => ({
-      id: risk.id,
-      severity: risk.severity,
-      title: risk.change.label,
-      detail: risk.detail,
-      occurrenceSnapshotId: radar.currentSnapshotId,
-      risk,
-    }));
-    return [...findingsEntries, ...riskEntries];
-  }, [radar]);
+  const allRadarEntries = useMemo<RadarEntry[]>(
+    () => buildRadarEntries(radar),
+    [radar],
+  );
   const radarEntries = useMemo(
     () =>
       allRadarEntries.filter((entry) => {
@@ -583,19 +575,6 @@ export function GovernanceCenterView({
     );
   }, [changeDomain, changeSearch, snapshotChanges]);
 
-  const coverageScore = Math.round(
-    coverage.metrics
-      .filter((metric) => metric.percentage != null)
-      .reduce(
-        (total, metric, _index, values) =>
-          total + (metric.percentage ?? 0) / values.length,
-        0,
-      ),
-  );
-  const priorityFindings = findings.filter(
-    (finding) =>
-      finding.severity === "critical" || finding.severity === "high",
-  ).length;
   const currentChanges =
     history.current == null
       ? 0
@@ -621,6 +600,15 @@ export function GovernanceCenterView({
     count: number;
     icon: typeof ShieldCheck;
   }> = [
+    {
+      id: "posture",
+      label: "Posture",
+      detail: "Targets by governance pillar",
+      count: currentPosture.pillars.filter(
+        (pillar) => pillar.score != null && pillar.score < pillar.target,
+      ).length,
+      icon: Gauge,
+    },
     {
       id: "findings",
       label: "Findings",
@@ -650,14 +638,11 @@ export function GovernanceCenterView({
       icon: Layers3,
     },
     {
-      id: "posture",
-      label: "Posture",
-      detail: "Targets by governance pillar",
-      count: currentPosture.pillars.filter(
-        (pillar) =>
-          pillar.score != null && pillar.score < pillar.target,
-      ).length,
-      icon: Gauge,
+      id: "policies-ai",
+      label: "Policies & AI",
+      detail: "Observed metadata, not an exposure verdict",
+      count: buildAiGovernanceInventory(data).length,
+      icon: ShieldCheck,
     },
   ];
 
@@ -726,7 +711,7 @@ export function GovernanceCenterView({
         : "all",
     );
     setFindingPillar(
-      typeof filters.pillar === "string" ? filters.pillar : "",
+      (filters.section ?? section) === "findings" ? findingPillarFilter(filters.pillar) : "",
     );
     setChangeSearch(
       typeof filters.changeSearch === "string" ? filters.changeSearch : "",
@@ -749,18 +734,12 @@ export function GovernanceCenterView({
     if (typeof filters.metric === "string") {
       setHistoryMetric(filters.metric as HistoryMetric);
     }
-    if (typeof filters.pillar === "string") {
+    if ((filters.section ?? section) === "posture" && typeof filters.pillar === "string") {
       setPostureMetric(filters.pillar as PosturePillar);
     }
   };
 
-  return (
-    <Tabs.Root
-      value={section}
-      onValueChange={(value) => setSection(value as GovernanceSection)}
-      asChild
-    >
-    <div className="atlas-content-frame flex flex-col gap-l p-l sm:p-xxl">
+  const priorityChanges = (
       <RadarPanel
         radar={radar}
         entries={radarEntries}
@@ -809,7 +788,15 @@ export function GovernanceCenterView({
           }
         }}
         onOpen={(entry) => {
-          if (entry.delta) {
+          if (entry.incident) {
+            onNavigate({
+              tab: "jobs",
+              focus: focusRequest({
+                itemId: entry.incident.incident.itemId,
+                jobId: entry.incident.incident.id,
+              }),
+            });
+          } else if (entry.delta) {
             onNavigate(navigationForFinding(entry.delta.finding));
           } else if (entry.risk) {
             const change = entry.risk.change;
@@ -850,31 +837,21 @@ export function GovernanceCenterView({
               riskyChanges: radarEntries
                 .map((entry) => entry.risk)
                 .filter((risk): risk is RiskyChange => !!risk),
+              incidents: radarEntries
+                .map((entry) => entry.incident)
+                .filter((incident): incident is IncidentDelta => !!incident),
             }),
             `fabric-atlas-radar-${currentSummary.syncedAt.slice(0, 10)}.md`,
           );
         }}
       />
-      <Card className="overflow-hidden border-border shadow-fabric-4">
-        <div className="atlas-page-header atlas-fabric-hero relative overflow-hidden">
-          <div className="atlas-row relative flex flex-col gap-m lg:flex-row lg:items-center lg:justify-between">
-            <div className="flex items-start gap-m">
-              <span className="atlas-brand-mark flex icon-size-600 shrink-0 items-center justify-center rounded-xl text-primary-foreground">
-                <ShieldCheck className="icon-size-300" aria-hidden="true" />
-              </span>
-              <div>
-                <SectionLabel>Govern / workspace assurance</SectionLabel>
-                <h1 className="mt-xxs font-heading text-500 font-bold leading-500">
-                  Governance Center
-                </h1>
-                <p className="mt-xxs max-w-3xl text-200 text-muted-foreground">
-                  {hasNewPriorityAlert
-                    ? `${allRadarEntries.length} new priority alert${allRadarEntries.length === 1 ? "" : "s"} require review.`
-                    : "No new priority alert. Governance details remain available below."}
-                </p>
-              </div>
-            </div>
-            <div className="atlas-toolbar flex flex-wrap items-center gap-s">
+  );
+  return (
+    <Tabs.Root value={section} onValueChange={(value) => setSection(value as GovernanceSection)} asChild>
+    <div className="atlas-content-frame flex flex-col gap-l p-l sm:p-xxl">
+      <Card className="min-w-0 overflow-hidden">
+        <PageHeader title="Governance Center" purpose="Posture, findings and changes in this workspace."
+          actions={<>
               <SavedViewsMenu
                 views={savedViews.filter(
                   (view) => view.section === "governance",
@@ -889,101 +866,39 @@ export function GovernanceCenterView({
               />
               <span
                 className={cn(
-                  "rounded-full border px-m py-s text-200 font-semibold",
+                  "rounded-md border px-s py-xs text-200 font-semibold",
                   hasNewPriorityAlert
-                    ? "border-status-warning/30 bg-status-warning/10 text-status-warning"
-                    : "border-status-healthy/30 bg-status-healthy/10 text-status-healthy",
+                    ? "border-signal-warning-foreground/20 bg-signal-warning-background text-signal-warning-foreground"
+                    : "border-border bg-card text-muted-foreground",
                 )}
               >
                 {hasNewPriorityAlert
                   ? `${allRadarEntries.length} new priority alert${allRadarEntries.length === 1 ? "" : "s"}`
                   : "No new priority alert"}
               </span>
-            </div>
-          </div>
-
-          <details className="relative mt-m rounded-lg border border-border bg-background/65">
-            <summary className="cursor-pointer px-m py-s text-200 font-semibold text-primary">
-              Workspace governance summary
-            </summary>
-            <div className="grid grid-cols-2 gap-s border-t border-border p-m lg:grid-cols-4">
-              {[
-                {
-                  label: "Open findings",
-                  value: findings.length,
-                  detail: `${priorityFindings} high priority`,
-                },
-                {
-                  label: "Latest changes",
-                  value: currentChanges,
-                  detail: history.summaries.length > 1 ? "Since previous sync" : "Needs two snapshots",
-                },
-                {
-                  label: "Coverage",
-                  value: `${coverageScore}%`,
-                  detail: "Across available metadata",
-                },
-                {
-                  label: "History",
-                  value: history.summaries.length,
-                  detail: "Validated snapshots",
-                },
-              ].map((metric) => (
-                <div key={metric.label} className="rounded-lg bg-secondary/60 p-m">
-                  <div className="font-numeric text-400 font-bold">
-                    {metric.value}
-                  </div>
-                  <div className="text-200 font-semibold">{metric.label}</div>
-                  <div className="mt-xxs text-100 text-muted-foreground">
-                    {metric.detail}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </details>
-        </div>
+          </>}
+        />
 
         <Tabs.List
           aria-label="Governance Center sections"
-          className="grid gap-s border-t border-border bg-secondary/55 p-s sm:grid-cols-2 xl:grid-cols-5"
+          className="atlas-line-tabs border-t border-border bg-secondary/40"
         >
           {tabs.map(({ id, label, detail, count, icon: Icon }) => (
             <Tabs.Trigger key={id} value={id} asChild>
               <button
                 type="button"
                 onClick={() => setSection(id)}
-                className={cn(
-                  "flex items-center gap-m rounded-xl border px-m py-s text-left transition-colors",
-                  section === id
-                    ? "border-primary/45 bg-primary/10 text-foreground"
-                    : "border-transparent text-muted-foreground hover:border-border hover:bg-card hover:text-foreground",
-                )}
+                title={detail}
+                className="atlas-line-tab grow focus-visible:ring-inset focus-visible:ring-offset-0"
               >
-                <span
-                  className={cn(
-                    "flex icon-size-600 shrink-0 items-center justify-center rounded-xl",
-                    section === id
-                      ? "bg-primary text-primary-foreground"
-                      : "bg-muted text-muted-foreground",
-                  )}
-                >
-                  <Icon className="icon-size-200" aria-hidden="true" />
-                </span>
-                <span className="min-w-0 flex-1">
-                  <span className="flex items-center justify-between gap-s">
-                    <span className="text-300 font-semibold">{label}</span>
-                    <span className="rounded-full bg-card px-s py-xxs font-numeric text-100">
-                      {count}
-                    </span>
-                  </span>
-                  <span className="mt-xxs block truncate text-200">{detail}</span>
-                </span>
+                <Icon className="icon-size-200" aria-hidden="true" />
+                {label}
+                <span className="sr-only"> ({count})</span>
               </button>
             </Tabs.Trigger>
           ))}
         </Tabs.List>
-      </Card>
-
+      <div className="p-m sm:p-l">
       {historyError && radarFailedSnapshotIds.length === 0 && (
         <div
           role="alert"
@@ -994,11 +909,7 @@ export function GovernanceCenterView({
       )}
 
       <Tabs.Content value="findings" asChild>
-        <motion.div
-          initial={{ opacity: 0, y: 8 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.16 }}
-        >
+        <div>
           <FindingsSection
             findings={filteredFindings}
             total={findings.length}
@@ -1040,14 +951,10 @@ export function GovernanceCenterView({
               }
             }}
           />
-        </motion.div>
+        </div>
       </Tabs.Content>
       <Tabs.Content value="changes" asChild>
-        <motion.div
-          initial={{ opacity: 0, y: 8 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.16 }}
-        >
+        <div>
           <ChangesSection
             changes={filteredChanges}
             total={snapshotChanges.length}
@@ -1072,41 +979,30 @@ export function GovernanceCenterView({
             onSearch={setChangeSearch}
             onDomain={setChangeDomain}
           />
-        </motion.div>
+        </div>
       </Tabs.Content>
       <Tabs.Content value="history" asChild>
-        <motion.div
-          initial={{ opacity: 0, y: 8 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.16 }}
-        >
+        <div>
           <HistorySection
             summaries={history.trend}
             metric={historyMetric}
             loading={historyLoading}
             onMetric={setHistoryMetric}
           />
-        </motion.div>
+        </div>
       </Tabs.Content>
       <Tabs.Content value="coverage" asChild>
-        <motion.div
-          initial={{ opacity: 0, y: 8 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.16 }}
-        >
+        <div>
           <CoverageSection
             diagnostics={coverage}
             historyLoading={historyLoading}
             syncSections={data.workspace.syncSections}
+            snapshot={data}
           />
-        </motion.div>
+        </div>
       </Tabs.Content>
       <Tabs.Content value="posture" asChild>
-        <motion.div
-          initial={{ opacity: 0, y: 8 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.16 }}
-        >
+        <div>
           <PostureSection
             current={currentPosture}
             previous={previousPosture}
@@ -1123,8 +1019,36 @@ export function GovernanceCenterView({
             onPillar={setPostureMetric}
             onNavigate={onNavigate}
           />
-        </motion.div>
+        </div>
       </Tabs.Content>
+      <Tabs.Content value="policies-ai" asChild>
+        <div>
+          <PoliciesAiSection
+            data={data}
+            previous={historyIsCurrent ? history.snapshots.find((snapshot) => snapshot.snapshotId === canonicalSnapshotIds[1]) : undefined}
+            current={historyIsCurrent ? history.snapshots.find((snapshot) => snapshot.snapshotId === canonicalSnapshotIds[0]) : undefined}
+            historyLoading={historyLoading}
+            historyError={historyError}
+            isPreview={isPreview}
+            onNavigate={onNavigate}
+            onCompare={(previousId, currentId) => {
+              setPreviousSnapshotId(previousId);
+              setCurrentSnapshotId(currentId);
+              setChangeSearch("");
+              setChangeDomain("schema");
+              setSection("changes");
+            }}
+          />
+        </div>
+      </Tabs.Content>
+      </div>
+      </Card>
+      <details className="rounded-lg border border-border">
+        <summary className="min-h-[var(--atlas-touch-target)] cursor-pointer px-l py-m text-300 font-semibold hover:bg-accent">
+          Latest priority changes{allRadarEntries.length ? ` (${allRadarEntries.length})` : ""}
+        </summary>
+        {priorityChanges}
+      </details>
     </div>
     </Tabs.Root>
   );
@@ -1186,8 +1110,12 @@ export function RadarPanel({
   const ready = radar.state === "ready";
   const firstSnapshotBaseline =
     radar.state === "baseline" && radar.reason === "first-snapshot";
+  const signalGroups = useMemo(() => groupRadarSignals(entries), [entries]);
+  const [openSignal, setOpenSignal] = useState<RadarSignalId>();
+  const detailId = useId();
+  const activeSignal = signalGroups.find((group) => group.id === openSignal);
   return (
-    <Card className="overflow-hidden border-primary/25 shadow-fabric-4">
+    <Card className="overflow-hidden">
       <div className="atlas-page-header atlas-fabric-hero flex flex-col gap-m lg:flex-row lg:items-center">
         <span className="flex icon-size-600 shrink-0 items-center justify-center rounded-xl bg-primary text-primary-foreground">
           <RadarIcon className="icon-size-300" aria-hidden="true" />
@@ -1197,13 +1125,18 @@ export function RadarPanel({
           <h2 className="mt-xxs text-400 font-semibold">
             {firstSnapshotBaseline
               ? "Your governance baseline is ready"
-              : "What became risky since the last sync"}
+              : ready
+                ? radarReviewHeadline(entries.length)
+                : "What became risky since the last sync"}
           </h2>
-          <p className="mt-xxs text-200 text-muted-foreground">
-            {firstSnapshotBaseline
-              ? "The first validated snapshot arms the Radar; the next sync will produce risk deltas."
-              : "New high-priority findings and dangerous access, sensitivity, lineage or removal changes only."}
-          </p>
+          {/* The first-snapshot baseline body already explains what happens next. */}
+          {!firstSnapshotBaseline && (
+            <p className="mt-xxs text-200 text-muted-foreground">
+              {ready && entries.length > 0
+                ? "Detected between the two latest validated snapshots. Review key signals below."
+                : "New high-priority findings and dangerous access, sensitivity, lineage, removal or job failure changes only."}
+            </p>
+          )}
         </div>
         {ready && entries.length > 0 && (
           <button
@@ -1316,76 +1249,92 @@ export function RadarPanel({
             All current high-priority regressions are acknowledged or muted.
           </div>
         ) : (
-          <div className="divide-y divide-border">
-            {entries.map((entry) => (
-              <div
-                key={entry.id}
-                className="atlas-row grid gap-m px-l lg:grid-cols-[minmax(0,1fr)_auto] lg:items-center"
-              >
-                <div className="min-w-0">
-                  <div className="flex flex-wrap items-center gap-s">
-                    <span
-                      className={cn(
-                        "rounded-full px-s py-xxs text-100 font-semibold uppercase",
-                        entry.severity === "critical"
-                          ? "bg-status-failing/10 text-status-failing"
-                          : "bg-status-warning/10 text-status-warning",
-                      )}
-                    >
-                      {entry.severity}
-                    </span>
-                    <span className="truncate text-300 font-semibold">
-                      {entry.title}
-                    </span>
+          <>
+            <RadarSignalTiles
+              groups={signalGroups}
+              openId={activeSignal?.id}
+              controlsId={detailId}
+              onToggle={(id) =>
+                setOpenSignal((current) => (current === id ? undefined : id))
+              }
+            />
+            <div
+              id={detailId}
+              role={activeSignal ? "region" : undefined}
+              aria-label={activeSignal ? `${activeSignal.title} to review` : undefined}
+              hidden={!activeSignal}
+              className="divide-y divide-border border-t border-border"
+            >
+              {activeSignal?.entries.map((entry) => (
+                <div
+                  key={entry.id}
+                  className="atlas-row grid gap-m px-l lg:grid-cols-[minmax(0,1fr)_auto] lg:items-center"
+                >
+                  <div className="min-w-0">
+                    <div className="flex flex-wrap items-center gap-s">
+                      <span
+                        className={cn(
+                          "rounded-full px-s py-xxs text-200 font-semibold capitalize",
+                          entry.severity === "critical"
+                            ? "bg-signal-danger-background text-signal-danger-foreground"
+                            : "bg-signal-warning-background text-signal-warning-foreground",
+                        )}
+                      >
+                        {entry.severity}
+                      </span>
+                      <span className="truncate text-300 font-semibold">
+                        {entry.title}
+                      </span>
+                    </div>
+                    <p className="mt-xs text-200 text-muted-foreground">
+                      {entry.detail}
+                    </p>
                   </div>
-                  <p className="mt-xs text-200 text-muted-foreground">
-                    {entry.detail}
-                  </p>
+                  <div className="flex flex-wrap gap-s">
+                    <GovernanceExceptionControl
+                      findingId={entry.id}
+                      findingTitle={entry.title}
+                      exception={exceptions.get(entry.id)}
+                      canEdit={canManageExceptions}
+                      loading={exceptionsLoading}
+                      pending={exceptionPendingIds.has(entry.id)}
+                      onSave={onSaveException}
+                      onRemove={onRemoveException}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => onOpen(entry)}
+                      className="atlas-control rounded-lg border border-border px-m font-semibold hover:bg-accent"
+                    >
+                      Open evidence
+                    </button>
+                    <button
+                      type="button"
+                      disabled={loading || pendingIds.has(entry.id)}
+                      onClick={() =>
+                        void onAcknowledge(entry).catch(() => undefined)
+                      }
+                      className="atlas-control inline-flex items-center gap-s rounded-lg border border-status-healthy/30 bg-status-healthy/10 px-m font-semibold text-status-healthy disabled:opacity-50"
+                    >
+                      <CheckCheck className="icon-size-100" />
+                      Acknowledge
+                    </button>
+                    <button
+                      type="button"
+                      disabled={loading || pendingIds.has(entry.id)}
+                      onClick={() =>
+                        void onMute(entry).catch(() => undefined)
+                      }
+                      className="atlas-control inline-flex items-center gap-s rounded-lg border border-border px-m font-semibold text-muted-foreground hover:bg-accent disabled:opacity-50"
+                    >
+                      <VolumeX className="icon-size-100" />
+                      Mute
+                    </button>
+                  </div>
                 </div>
-                <div className="flex flex-wrap gap-s">
-                  <GovernanceExceptionControl
-                    findingId={entry.id}
-                    findingTitle={entry.title}
-                    exception={exceptions.get(entry.id)}
-                    canEdit={canManageExceptions}
-                    loading={exceptionsLoading}
-                    pending={exceptionPendingIds.has(entry.id)}
-                    onSave={onSaveException}
-                    onRemove={onRemoveException}
-                  />
-                  <button
-                    type="button"
-                    onClick={() => onOpen(entry)}
-                    className="atlas-control rounded-lg border border-border px-m font-semibold hover:bg-accent"
-                  >
-                    Open evidence
-                  </button>
-                  <button
-                    type="button"
-                    disabled={loading || pendingIds.has(entry.id)}
-                    onClick={() =>
-                      void onAcknowledge(entry).catch(() => undefined)
-                    }
-                    className="atlas-control inline-flex items-center gap-s rounded-lg border border-status-healthy/30 bg-status-healthy/10 px-m font-semibold text-status-healthy disabled:opacity-50"
-                  >
-                    <CheckCheck className="icon-size-100" />
-                    Acknowledge
-                  </button>
-                  <button
-                    type="button"
-                    disabled={loading || pendingIds.has(entry.id)}
-                    onClick={() =>
-                      void onMute(entry).catch(() => undefined)
-                    }
-                    className="atlas-control inline-flex items-center gap-s rounded-lg border border-border px-m font-semibold text-muted-foreground hover:bg-accent disabled:opacity-50"
-                  >
-                    <VolumeX className="icon-size-100" />
-                    Mute
-                  </button>
-                </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          </>
         )}
         {suppressed.length > 0 && (
           <div className="atlas-row flex flex-wrap items-center gap-s border-t border-border bg-secondary/50 px-l">
@@ -1483,15 +1432,6 @@ function RadarTargetState({
   );
 }
 
-const POSTURE_LABELS: Record<PosturePillar, string> = {
-  documentation: "Documentation",
-  ownership: "Ownership",
-  sensitivity: "Sensitivity",
-  access: "Access",
-  lineage: "Lineage",
-  operations: "Operations",
-};
-
 function PostureSection({
   current,
   previous,
@@ -1539,20 +1479,21 @@ function PostureSection({
         ?.pillars.find((pillar) => pillar.pillar === selectedPillar)
         ?.score ?? null,
   }));
+  const targetsAvailable = !policyLoading && !policyError;
 
   return (
     <div className="flex flex-col gap-l">
       <Card className="overflow-hidden">
         <div className="atlas-fabric-hero flex flex-col gap-m border-b border-border p-l sm:flex-row sm:items-end sm:justify-between">
           <div>
-            <SectionLabel>Posture targets</SectionLabel>
-            <h2 className="mt-xs text-500 font-semibold">
-              {atTarget} of {current.pillars.length} pillars at target
+            <h2 className="text-500 font-semibold">
+              {targetsAvailable ? `${atTarget} of ${current.pillars.length} pillars at target` : "Governance posture"}
             </h2>
             <p className="mt-xs text-200 text-muted-foreground">
-              Standard baseline: 70% for each pillar. Non-applicable evidence
-              is never counted as zero.
+              Select a pillar to inspect its score and trend. N/A is not zero or a compliant result.
             </p>
+            {policyLoading && <p role="status" className="mt-s text-200 text-muted-foreground">Loading governance targets...</p>}
+            {policyError && <p role="alert" className="mt-s text-200 text-signal-danger-foreground">{policyError} Targets are unavailable; raw scores remain visible.</p>}
           </div>
           <label>
             <span className="sr-only">Posture trend pillar</span>
@@ -1571,7 +1512,13 @@ function PostureSection({
             </select>
           </label>
         </div>
-        <div className="grid gap-s p-l sm:grid-cols-2 xl:grid-cols-3">
+        <div className="grid lg:grid-cols-2">
+          <Suspense fallback={<div role="status" className="atlas-posture-chart flex items-center justify-center text-200 text-muted-foreground">Loading posture radar...</div>}>
+            <PostureRadar pillars={current.pillars} selectedPillar={selectedPillar}
+              targetsAvailable={targetsAvailable} onSelect={onPillar} />
+          </Suspense>
+          <div className="min-w-0 border-t border-border p-m lg:border-l lg:border-t-0">
+          <div aria-label="Posture pillar selection" className="grid gap-xs sm:grid-cols-2">
           {current.pillars.map((pillar) => {
             const before = previous?.pillars.find(
               (candidate) => candidate.pillar === pillar.pillar,
@@ -1584,56 +1531,24 @@ function PostureSection({
               <button
                 key={pillar.pillar}
                 type="button"
-                onClick={() =>
-                  onNavigate(
-                    pillar.pillar === "documentation" ||
-                      pillar.pillar === "ownership" ||
-                      pillar.pillar === "sensitivity"
-                      ? {
-                          tab: "catalog",
-                          focus: focusRequest({
-                            filters: {
-                              posturePillar: pillar.pillar,
-                            },
-                          }),
-                        }
-                      : {
-                          tab: "governance",
-                          focus: focusRequest({
-                            governanceSection: "findings",
-                            filters: {
-                              section: "findings",
-                              pillar: pillar.pillar,
-                            },
-                          }),
-                        },
-                  )
-                }
-                className="rounded-xl border border-border bg-card p-m text-left transition-colors hover:border-primary/40 hover:bg-primary/5"
+                aria-pressed={selectedPillar === pillar.pillar}
+                onClick={() => onPillar(pillar.pillar)}
+                className={cn("min-h-[var(--atlas-touch-target)] rounded-md border p-m text-left hover:bg-accent",
+                  selectedPillar === pillar.pillar ? "border-brand-foreground/40 bg-primary/5" : "border-transparent")}
               >
                 <div className="flex items-center justify-between gap-s">
                   <span className="text-300 font-semibold">
                     {POSTURE_LABELS[pillar.pillar]}
                   </span>
-                  <span className="font-numeric text-400 font-bold">
+                  <span className="atlas-score font-numeric text-400 font-semibold" data-score-band={scoreBand(pillar.score)}>
                     {pillar.score == null ? "N/A" : `${pillar.score}%`}
                   </span>
                 </div>
-                <div className="mt-m h-s overflow-hidden rounded-full bg-muted">
-                  <div
-                    className={cn(
-                      "h-full rounded-full",
-                      pillar.score == null
-                        ? "bg-lineage-neutral"
-                        : pillar.score >= pillar.target
-                          ? "bg-status-healthy"
-                          : "bg-status-warning",
-                    )}
-                    style={{ width: `${pillar.score ?? 0}%` }}
-                  />
+                <div className="mt-s">
+                  <ScoreMeter label={`${POSTURE_LABELS[pillar.pillar]} score`} value={pillar.score} />
                 </div>
-                <div className="mt-s flex items-center justify-between text-100 text-muted-foreground">
-                  <span>Target {pillar.target}%</span>
+                <div className="mt-xs flex items-center justify-between text-200 text-muted-foreground">
+                  <span>{targetsAvailable ? `Target ${pillar.target}%` : "Target unavailable"}</span>
                   <span>
                     {delta == null
                       ? "No delta"
@@ -1643,9 +1558,29 @@ function PostureSection({
               </button>
             );
           })}
+          </div>
+          <section aria-label={`${POSTURE_LABELS[selectedPillar]} posture details`} className="mt-m border-t border-border p-m">
+            <h3 className="text-300 font-semibold">{POSTURE_LABELS[selectedPillar]} evidence</h3>
+            <p className="mt-xs text-200 leading-300 text-muted-foreground">
+              {selected.score == null ? "No evaluable evidence for this pillar in the current snapshot."
+                : selected.metrics.length ? "Score based on collected metadata coverage."
+                  : `${selected.contributingFindings} findings contribute to this score.`}
+            </p>
+            <button type="button" className="atlas-control mt-s rounded-md px-s text-200 font-semibold text-brand-foreground hover:bg-accent"
+              onClick={() => onNavigate(
+                selectedPillar === "documentation" || selectedPillar === "ownership" || selectedPillar === "sensitivity"
+                  ? { tab: "catalog", focus: focusRequest({ filters: { posturePillar: selectedPillar } }) }
+                  : { tab: "governance", focus: focusRequest({ governanceSection: "findings", filters: { section: "findings", pillar: selectedPillar } }) },
+              )}>
+              Review {POSTURE_LABELS[selectedPillar].toLowerCase()} evidence
+            </button>
+          </section>
+          </div>
         </div>
       </Card>
 
+      <details className="rounded-lg border border-border bg-card">
+        <summary className="cursor-pointer px-l py-m text-300 font-semibold">Configure governance targets</summary>
       <GovernancePolicyEditor
         key={current.pillars
           .map((pillar) => `${pillar.pillar}:${pillar.target}`)
@@ -1660,6 +1595,7 @@ function PostureSection({
         onSave={onSaveTargets}
         onReset={onResetTargets}
       />
+      </details>
 
       <Card className="overflow-hidden">
         <div className="border-b border-border bg-secondary/55 px-l py-m">
@@ -1667,7 +1603,7 @@ function PostureSection({
             {POSTURE_LABELS[selectedPillar]} trend
           </h3>
           <p className="text-200 text-muted-foreground">
-            Fixed 0–100 scale · target {selected.target}%
+            Fixed 0–100 scale · {targetsAvailable ? `target ${selected.target}%` : "target unavailable"}
           </p>
         </div>
         {loading ? (
@@ -1681,7 +1617,7 @@ function PostureSection({
               data={trend}
               valueLabel={(value) => `${value}%`}
               maxValue={100}
-              referenceValue={selected.target}
+              referenceValue={targetsAvailable ? selected.target : undefined}
             />
           </div>
         )}
@@ -1735,31 +1671,51 @@ function FindingsSection({
 }) {
   const activeFilters =
     search || severity !== "all" || category !== "all" || pillar;
+  const activePreset = pillar || severity !== "all"
+    ? undefined
+    : !search && category === "all"
+      ? "all"
+      : search === "external access" && category === "access"
+        ? "external"
+        : !search && category === "metadata"
+          ? "metadata"
+          : search === "failed" && category === "operations"
+            ? "failures"
+            : undefined;
+  const groups = useMemo(() => groupFindingsByRule(findings), [findings]);
+  const [openRules, setOpenRules] = useState<Set<string>>(new Set());
+  const listId = useId();
+  const toggleRule = (rule: string) =>
+    setOpenRules((current) => {
+      const next = new Set(current);
+      if (next.has(rule)) next.delete(rule);
+      else next.add(rule);
+      return next;
+    });
+  const findingActions = (finding: GovernanceFinding) => (
+    <div className="flex flex-wrap items-center gap-s">
+      <button
+        type="button"
+        onClick={() => onNavigate(finding)}
+        className="atlas-control inline-flex items-center gap-s px-s font-semibold text-primary hover:underline"
+      >
+        Open evidence
+        <ArrowRight className="icon-size-100" />
+      </button>
+      <GovernanceExceptionControl
+        findingId={finding.id}
+        findingTitle={finding.title}
+        exception={exceptions.get(finding.id)}
+        canEdit={canManageExceptions}
+        loading={exceptionsLoading}
+        pending={exceptionPendingIds.has(finding.id)}
+        onSave={onSaveException}
+        onRemove={onRemoveException}
+      />
+    </div>
+  );
   return (
     <div className="flex flex-col gap-l">
-      <div className="grid gap-s sm:grid-cols-2 xl:grid-cols-4">
-        {[
-          ["all", "All findings", ShieldCheck],
-          ["external", "External access", KeyRound],
-          ["metadata", "Metadata gaps", Layers3],
-          ["failures", "Failed operations", Activity],
-        ].map(([id, label, Icon]) => (
-          <button
-            key={id as string}
-            type="button"
-            onClick={() =>
-              onPreset(id as "all" | "external" | "metadata" | "failures")
-            }
-            className="flex items-center gap-m rounded-xl border border-border bg-card p-m text-left hover:border-primary/40 hover:bg-primary/5"
-          >
-            <span className="flex icon-size-600 items-center justify-center rounded-xl bg-primary/10 text-brand-foreground">
-              <Icon className="icon-size-200" aria-hidden="true" />
-            </span>
-            <span className="text-300 font-semibold">{label as string}</span>
-          </button>
-        ))}
-      </div>
-
       <Card className="overflow-hidden">
         {pillar && (
           <div className="flex items-center justify-between gap-m border-b border-border bg-primary/5 px-l py-s">
@@ -1776,7 +1732,31 @@ function FindingsSection({
             </button>
           </div>
         )}
-        <div className="atlas-toolbar flex flex-col gap-s border-b border-border bg-secondary/55 p-m lg:flex-row lg:items-center">
+        <div className="atlas-toolbar flex flex-col gap-s border-b border-border bg-secondary/55 p-m">
+          <div role="group" aria-label="Finding presets" className="flex flex-wrap gap-s">
+            {([
+              ["all", "All findings"],
+              ["external", "External access"],
+              ["metadata", "Metadata gaps"],
+              ["failures", "Failed operations"],
+            ] as const).map(([id, label]) => (
+              <button
+                key={id}
+                type="button"
+                aria-pressed={activePreset === id}
+                onClick={() => onPreset(id)}
+                className={cn(
+                  "atlas-control rounded-full border px-m text-200 font-semibold transition-colors",
+                  activePreset === id
+                    ? "border-primary/40 bg-primary/10 text-brand-foreground"
+                    : "border-border bg-card text-muted-foreground hover:bg-accent hover:text-foreground",
+                )}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+          <div className="flex flex-col gap-s lg:flex-row lg:items-center">
           <label className="relative min-w-0 flex-1">
             <span className="sr-only">Search governance findings</span>
             <Search className="icon-size-200 pointer-events-none absolute left-m top-1/2 -translate-y-1/2 text-muted-foreground" />
@@ -1825,12 +1805,14 @@ function FindingsSection({
               Reset
             </button>
           )}
+          </div>
         </div>
         <div className="flex items-center justify-between border-b border-border px-l py-m">
           <div>
             <h2 className="text-400 font-semibold">Action queue</h2>
             <p className="text-200 text-muted-foreground">
-              {findings.length} of {total} findings
+              {findings.length} of {total} findings · {groups.length}{" "}
+              {groups.length === 1 ? "rule" : "rules"}
             </p>
           </div>
         </div>
@@ -1848,65 +1830,86 @@ function FindingsSection({
             </p>
           </div>
         ) : (
-          <div className="grid gap-s p-s xl:grid-cols-2">
-            {findings.map((finding) => {
-              const meta = SEVERITY_META[finding.severity];
+          <ul aria-label="Findings by rule" className="divide-y divide-border">
+            {groups.map((group) => {
+              const meta = SEVERITY_META[group.severity];
+              const single = group.findings.length === 1 ? group.findings[0] : undefined;
+              const open = !single && (Boolean(search) || openRules.has(group.rule));
+              const regionId = `${listId}-${group.rule}`;
               return (
-                <article
-                  key={finding.id}
-                  className="flex flex-col rounded-xl border border-border bg-card p-m"
-                >
-                  <div className="flex items-start gap-m">
-                    <span className={`mt-xs h-2.5 w-2.5 shrink-0 rounded-full ${meta.dot}`} />
-                    <div className="min-w-0 flex-1">
+                <li key={group.rule} className="px-l py-m">
+                  <div className="flex flex-col gap-s lg:flex-row lg:items-start lg:justify-between lg:gap-l">
+                    <div className="min-w-0">
                       <div className="flex flex-wrap items-center gap-s">
                         <span
                           className={cn(
-                            "rounded-md border px-s py-xxs text-100 font-semibold uppercase tracking-wide",
+                            "rounded-md border px-s py-xxs text-200 font-semibold",
                             meta.className,
                           )}
                         >
                           {meta.label}
                         </span>
-                        <span className="text-100 font-semibold uppercase tracking-wide text-muted-foreground">
-                          {CATEGORY_LABEL[finding.category]}
+                        <span className="text-200 text-muted-foreground">
+                          {CATEGORY_LABEL[group.category]}
                         </span>
                       </div>
-                      <h3 className="mt-s text-300 font-semibold">
-                        {finding.title}
+                      <h3 className="mt-xs text-300 font-semibold">
+                        {single ? single.title : `${group.label} · ${group.findings.length} findings`}
                       </h3>
-                      <p className="mt-xs text-200 leading-300 text-muted-foreground">
-                        {finding.detail}
+                      {single && (
+                        <p className="mt-xxs text-200 leading-300 text-muted-foreground">
+                          {single.detail}
+                        </p>
+                      )}
+                      <p className="mt-xxs text-200 leading-300 text-foreground">
+                        {group.recommendation}
                       </p>
                     </div>
+                    {single ? (
+                      findingActions(single)
+                    ) : (
+                      <button
+                        type="button"
+                        aria-expanded={open}
+                        aria-controls={regionId}
+                        disabled={Boolean(search)}
+                        onClick={() => toggleRule(group.rule)}
+                        className="atlas-control inline-flex shrink-0 items-center gap-s self-start rounded-lg border border-border bg-card px-m text-200 font-semibold hover:bg-accent disabled:cursor-default"
+                      >
+                        <ChevronDown
+                          className={cn("icon-size-100 transition-transform motion-reduce:transition-none", !open && "-rotate-90")}
+                          aria-hidden="true"
+                        />
+                        {open ? "Hide findings" : `Show ${group.findings.length} findings`}
+                      </button>
+                    )}
                   </div>
-                  <div className="mt-m rounded-lg bg-secondary px-m py-s text-200 text-muted-foreground">
-                    {finding.recommendation}
-                  </div>
-                  <div className="atlas-row mt-m flex flex-wrap items-center gap-s">
-                    <button
-                      type="button"
-                      onClick={() => onNavigate(finding)}
-                      className="atlas-control inline-flex items-center gap-s px-s font-semibold text-primary hover:underline"
+                  {open && (
+                    <ul
+                      id={regionId}
+                      aria-label={`${group.label} findings`}
+                      className="mt-m divide-y divide-border rounded-lg border border-border"
                     >
-                      Open evidence
-                      <ArrowRight className="icon-size-100" />
-                    </button>
-                    <GovernanceExceptionControl
-                      findingId={finding.id}
-                      findingTitle={finding.title}
-                      exception={exceptions.get(finding.id)}
-                      canEdit={canManageExceptions}
-                      loading={exceptionsLoading}
-                      pending={exceptionPendingIds.has(finding.id)}
-                      onSave={onSaveException}
-                      onRemove={onRemoveException}
-                    />
-                  </div>
-                </article>
+                      {group.findings.map((finding) => (
+                        <li
+                          key={finding.id}
+                          className="flex flex-col gap-s px-m py-s lg:flex-row lg:items-center lg:justify-between"
+                        >
+                          <div className="min-w-0">
+                            <h4 className="text-300 font-semibold">{finding.title}</h4>
+                            <p className="text-200 leading-300 text-muted-foreground">
+                              {finding.detail}
+                            </p>
+                          </div>
+                          {findingActions(finding)}
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </li>
               );
             })}
-          </div>
+          </ul>
         )}
       </Card>
     </div>
@@ -2060,13 +2063,13 @@ function ChangesSection({
               <div className="flex flex-wrap items-start gap-s">
                 <span
                   className={cn(
-                    "rounded-md border px-s py-xxs text-100 font-semibold uppercase tracking-wide",
+                    "rounded-md border px-s py-xxs text-200 font-semibold",
                     changeTone(change),
                   )}
                 >
                   {changeAction(change)}
                 </span>
-                <span className="text-100 font-semibold uppercase tracking-wide text-muted-foreground">
+                <span className="text-200 font-semibold text-muted-foreground">
                   {CHANGE_DOMAIN_LABEL[change.domain]}
                 </span>
               </div>
@@ -2216,18 +2219,39 @@ function CoverageSection({
   diagnostics,
   historyLoading,
   syncSections,
+  snapshot,
 }: {
   diagnostics: ReturnType<typeof getCoverageDiagnostics>;
   historyLoading: boolean;
   syncSections?: NonNullable<
     ReturnType<typeof useAtlas>["data"]["workspace"]["syncSections"]
   >;
+  snapshot: Pick<ReturnType<typeof useAtlas>["data"], "items" | "jobs" | "workspace">;
 }) {
   const sectionEntries = Object.entries(syncSections ?? {}).sort(
     ([left], [right]) => left.localeCompare(right),
   );
+  const [view, setView] = useState<"families" | "quality" | "sensitivity">("families");
+  const missingValues = diagnostics.metrics.some((metric) => metric.state === "no-values");
+  const viewTrigger =
+    "atlas-control rounded-md px-m text-200 font-semibold text-muted-foreground transition-colors hover:text-foreground focus-visible:ring-inset focus-visible:ring-offset-0 data-[state=active]:bg-card data-[state=active]:text-brand-foreground data-[state=active]:shadow-fabric-2";
   return (
-    <div className="flex flex-col gap-l">
+    <Tabs.Root
+      value={view}
+      onValueChange={(value) => setView(value as typeof view)}
+      className="flex flex-col gap-l"
+    >
+      <Tabs.List
+        aria-label="Coverage views"
+        className="inline-flex max-w-full flex-wrap gap-xxs self-start rounded-lg border border-border bg-secondary p-xxs"
+      >
+        <Tabs.Trigger value="families" className={viewTrigger}>Item families</Tabs.Trigger>
+        <Tabs.Trigger value="quality" className={viewTrigger}>Metadata quality</Tabs.Trigger>
+        <Tabs.Trigger value="sensitivity" className={viewTrigger}>Sensitivity</Tabs.Trigger>
+      </Tabs.List>
+
+      <Tabs.Content value="families" className="flex flex-col gap-l">
+      <ItemFamilyCoverageSection data={snapshot} />
       {sectionEntries.length > 0 && (
         <Card className="overflow-hidden">
           <div className="border-b border-border bg-secondary/55 px-l py-m">
@@ -2247,7 +2271,7 @@ function CoverageSection({
                 </span>
                 <span
                   className={cn(
-                    "rounded-full border px-s py-xxs text-100 font-semibold uppercase tracking-wide",
+                    "rounded-full border px-s py-xxs text-200 font-semibold capitalize",
                     section.status === "complete"
                       ? "border-status-healthy/30 bg-status-healthy/10 text-status-healthy"
                       : section.status === "failed"
@@ -2263,7 +2287,15 @@ function CoverageSection({
           </div>
         </Card>
       )}
+      </Tabs.Content>
 
+      <Tabs.Content value="quality" className="flex flex-col gap-m">
+      {missingValues && (
+        <p role="note" className="text-200 leading-300 text-muted-foreground">
+          &ldquo;No value returned&rdquo; may indicate unavailable metadata, not a
+          confirmed governance failure.
+        </p>
+      )}
       <div className="grid gap-m sm:grid-cols-2 xl:grid-cols-3">
         {diagnostics.metrics.map((metric) => {
           const value =
@@ -2277,38 +2309,19 @@ function CoverageSection({
                     {metric.denominator
                       ? `${metric.numerator} of ${metric.denominator}`
                       : "Not applicable to the current inventory"}
+                    {metric.state === "no-values" && " · No value returned"}
                   </p>
                 </div>
                 <span
-                  className={cn(
-                    "rounded-full border px-s py-xxs font-numeric text-200 font-semibold",
-                    metric.state === "complete"
-                      ? "border-status-healthy/30 bg-status-healthy/10 text-status-healthy"
-                      : metric.state === "not-applicable"
-                        ? "border-border bg-muted text-muted-foreground"
-                        : "border-status-warning/30 bg-status-warning/10 text-status-warning",
-                  )}
+                  className="atlas-score rounded-md bg-secondary px-s py-xxs font-numeric text-200 font-semibold"
+                  data-score-band={scoreBand(value)}
                 >
                   {value == null ? "N/A" : `${value}%`}
                 </span>
               </div>
-              <div className="mt-m h-2 overflow-hidden rounded-full bg-muted">
-                <div
-                  className={cn(
-                    "h-full rounded-full",
-                    metric.state === "complete"
-                      ? "bg-status-healthy"
-                      : "bg-primary",
-                  )}
-                  style={{ width: `${value ?? 0}%` }}
-                />
+              <div className="mt-m">
+                <ScoreMeter label={`${metric.label} coverage`} value={value} />
               </div>
-              {metric.state === "no-values" && (
-                <p className="mt-s text-200 text-muted-foreground">
-                  No value was returned. This may indicate unavailable metadata,
-                  not a confirmed governance failure.
-                </p>
-              )}
             </Card>
           );
         })}
@@ -2320,8 +2333,11 @@ function CoverageSection({
           Historical coverage is still loading.
         </div>
       )}
+      </Tabs.Content>
 
-      <SensitivityView embedded />
-    </div>
+      <Tabs.Content value="sensitivity">
+        <SensitivityView embedded />
+      </Tabs.Content>
+    </Tabs.Root>
   );
 }

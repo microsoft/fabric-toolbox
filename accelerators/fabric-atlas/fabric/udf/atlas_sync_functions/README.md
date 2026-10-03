@@ -29,16 +29,14 @@ bounded retries and `Retry-After` sleeps. The remaining 20 seconds are reserved
 for final projection, serialization and platform response handling. Upstream
 and final payloads are capped at 25 MiB. Verified object-lineage relations are
 deduplicated but never truncated by count.
+Fabric list pagination additionally fails closed at 100 pages or 50,000 records
+per list operation. A limit is an error, not a truncated successful inventory.
 
-The browser calls `sync_all` with deferred enrichment to obtain the
-authoritative workspace, scanner, access and base-lineage envelope. It then
-invokes `sync_items` with item IDs grouped by Fabric type. A slice stops before
-starting another item when less than 30 seconds remain and returns both
-`completedItemIds` and `remainingItemIds`. The client continues those IDs in a
-fresh slice, splits a timed-out multi-item request, and isolates a slow single
-item. Repeated no-progress attempts are bounded so a deterministic oversized or
-stalled item cannot leave the browser in an infinite loop. No partial slice
-publishes a Rayfin workspace manifest.
+The normal browser path calls Rayfin Functions first and invokes
+`sync_compatibility` only with the exact unsupported collectors for specific
+items. The returned plan, completed IDs and remaining IDs are validated before
+merge. `sync_all` and `sync_items` remain the explicit Python rollback path.
+No partial slice publishes a Rayfin workspace manifest.
 
 For schema-enabled lakehouses, the lakehouse `/tables` endpoint may return a
 schema wrapper or no usable result. The UDF flattens schema/table responses when
@@ -83,13 +81,49 @@ and [Get Pages In Group](https://learn.microsoft.com/rest/api/power-bi/reports/g
 > returned part, replacing `function_app.py` and the library version in
 > `definition.json` only when those changes are intentional.
 
+## Phase 4 compatibility boundary
+
+Browser Sync is now Rayfin-first. The browser invokes the supported Core,
+definition, Item Relations, KQL, SQL and Power BI definition Functions
+serially, validates their envelopes and publishes through the existing
+manifest-last writer. The Python UDF is no longer the default complete
+collector.
+
+`sync_compatibility` receives an exact, bounded plan and may run only the
+collectors named in that plan. The browser verifies the echoed plan before
+merging results. This keeps Python for gaps that are not yet supported or live
+validated in Rayfin 1.36.2:
+
+| Compatibility path | Why it remains |
+| --- | --- |
+| Power BI admin scanner, access and authoritative item lineage | The optional Secret Store service-principal scanner is disabled until credentials, tenant settings and live parity are approved |
+| Scanner schema fallback for unsupported semantic-model definitions | A missing definition must not silently erase previously available schema |
+| Lakehouse REST object kinds and selected downstream schema merges | SQL catalog structure does not replace every existing Lakehouse object/source boundary |
+| PBIR-Legacy report pages | The supported definition adapter cannot expose every legacy report page contract |
+| Definition fallback | Some item definitions require delegated write scope or are blocked by sensitivity labels |
+| Kusto data-plane schema | Rayfin Functions expose no documented Kusto audience; definition structure remains the supported primary path |
+| SQL data-plane fallback | Retained only when the active Sql-audience collector reports an explicit unsupported or failed capability |
+
+`sync_all` and `sync_items` remain as the explicit
+`VITE_ATLAS_COLLECTOR_ROLLBACK=true` emergency path and for compatibility with
+older deployed clients. They are not the normal collector path. Python remains
+bounded by the same deadlines, pagination, response-size and privacy rules and
+is not a scheduler, lease manager or unattended continuation engine.
+
+The active collection still runs in the synchronizer's browser tab. Scheduled
+refresh remains disabled until Fabric/Rayfin exposes a supported unattended
+trigger and all required identities can execute without a browser token.
+
+The complete platform-gap matrix is in
+[docs/rayfin-platform-gaps.md](../../../docs/rayfin-platform-gaps.md).
 ## Functions
 
 | Function | Params | Returns |
 | --- | --- | --- |
 | `ping` | `name` | smoke test |
-| `sync_all` | `fabricToken, workspaceId, correlationId?, definitionToken?, kustoToken?, sqlToken?, storageToken?, deferEnrichment?` | Schema v2 payload with workspace data, required/optional section status, metadata capabilities and safe errors |
-| `sync_items` | `fabricToken, workspaceId, itemIds, correlationId?, definitionToken?, kustoToken?, sqlToken?, storageToken?` | Resumable deep metadata slice with completed and remaining item IDs |
+| `sync_compatibility` | `fabricToken, workspaceId, collectorPlan, correlationId?, definitionToken?, kustoToken?, sqlToken?` | Exact-gap scanner or item envelope with echoed plan and completed/remaining IDs |
+| `sync_all` | `fabricToken, workspaceId, correlationId?, definitionToken?, kustoToken?, sqlToken?, deferEnrichment?` | Schema v2 payload with workspace data, required/optional section status, metadata capabilities and safe errors |
+| `sync_items` | `fabricToken, workspaceId, itemIds, correlationId?, definitionToken?, kustoToken?, sqlToken?` | Resumable deep metadata slice with completed and remaining item IDs |
 
 Required sections are `workspace`, `items`, `roleAssignments`, `scanner`,
 `schema`, `lineage`, `access` and `config`. Optional sections are `jobs`,

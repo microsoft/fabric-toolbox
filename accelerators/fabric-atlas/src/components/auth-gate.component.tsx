@@ -40,6 +40,6 @@ export function AuthGate({ children }: AuthGateProps) {
             </div>
         );
     };
-
+    
     return <>{children}</>;
 }

@@ -11,5 +11,5 @@
     "moduleResolution": "nodenext"
   },
   "include": ["**/*"],
-  "exclude": [".temp/**/*"]
+  "exclude": [".temp/**/*", "functions/**/*"]
 }

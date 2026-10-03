@@ -13,6 +13,17 @@ import { AccessReviewEvent } from './AccessReviewEvent.js';
 import { FindingAck } from './FindingAck.js';
 import { GovernancePolicy } from './GovernancePolicy.js';
 import { GovernanceException } from './GovernanceException.js';
+import { SyncJob } from './SyncJob.js';
+import { SyncTask } from './SyncTask.js';
+import { SyncCommand } from './SyncCommand.js';
+import { WorkspaceScope } from './WorkspaceScope.js';
+import { SynchronizerAuthority } from './SynchronizerAuthority.js';
+import { SyncRootRun } from './SyncRootRun.js';
+import { SyncPayloadManifest } from './SyncPayloadManifest.js';
+import { SyncPayloadChunk } from './SyncPayloadChunk.js';
+import { ItemRelationsEvidenceSnapshot } from './ItemRelationsEvidenceSnapshot.js';
+import { AccessPolicyEvidence } from './AccessPolicyEvidence.js';
+import { OperationalIncident } from './OperationalIncident.js';
 
 /**
  * Schema type map — enables full type-safety through RayfinClient
@@ -34,6 +45,17 @@ export type AtlasSchema = {
   FindingAck: FindingAck;
   GovernancePolicy: GovernancePolicy;
   GovernanceException: GovernanceException;
+  SyncJob: SyncJob;
+  SyncTask: SyncTask;
+  SyncCommand: SyncCommand;
+  WorkspaceScope: WorkspaceScope;
+  SynchronizerAuthority: SynchronizerAuthority;
+  SyncRootRun: SyncRootRun;
+  SyncPayloadManifest: SyncPayloadManifest;
+  SyncPayloadChunk: SyncPayloadChunk;
+  ItemRelationsEvidenceSnapshot: ItemRelationsEvidenceSnapshot;
+  AccessPolicyEvidence: AccessPolicyEvidence;
+  OperationalIncident: OperationalIncident;
 };
 
 export const schema = [
@@ -52,4 +74,15 @@ export const schema = [
   FindingAck,
   GovernancePolicy,
   GovernanceException,
+  SyncJob,
+  SyncTask,
+  SyncCommand,
+  WorkspaceScope,
+  SynchronizerAuthority,
+  SyncRootRun,
+  SyncPayloadManifest,
+  SyncPayloadChunk,
+  AccessPolicyEvidence,
+  ItemRelationsEvidenceSnapshot,
+  OperationalIncident,
 ];

@@ -63,4 +63,16 @@ describe("extractDaxRefs", () => {
   it("skips malformed references without throwing", () => {
     expect(extractDaxRefs("'Broken[Value] + [Missing")).toEqual([]);
   });
+
+  it("keeps reference offsets aligned after astral Unicode characters", () => {
+    expect(extractDaxRefs(`"😀😀😀" & Sales[Amount]`)).toEqual([
+      { kind: "column", table: "Sales", name: "Amount" },
+    ]);
+    expect(extractDaxRefs(`"😀😀😀"&Tbl[Col]`)).toEqual([
+      { kind: "column", table: "Tbl", name: "Col" },
+    ]);
+    expect(extractDaxRefs(`"🔴🟢" & [Total]`)).toEqual([
+      { kind: "measure", name: "Total" },
+    ]);
+  });
 });

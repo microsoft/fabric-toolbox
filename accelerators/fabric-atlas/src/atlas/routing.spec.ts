@@ -2,6 +2,16 @@ import { describe, expect, it } from "vitest";
 import { parseAtlasLocation, urlForNavigation } from "./routing";
 
 describe("Atlas routing", () => {
+  it("round-trips the Policies & AI local tab without introducing a new app route", () => {
+    const url = urlForNavigation({ pathname: "/", search: "" }, {
+      tab: "governance", focus: { requestId: "ignored", governanceSection: "policies-ai",
+        filters: { section: "policies-ai" } },
+    });
+    expect(url).toBe("/?governance.section=policies-ai#governance");
+    expect(parseAtlasLocation({ hash: "#governance", search: "?governance.section=policies-ai" }))
+      .toMatchObject({ tab: "governance", focus: { governanceSection: "policies-ai" } });
+  });
+
   it("round-trips namespaced governance state", () => {
     const url = urlForNavigation(
       { pathname: "/", search: "?ctid=tenant" },
@@ -57,6 +67,43 @@ describe("Atlas routing", () => {
       tab: "governance",
       focus: { governanceSection: "coverage" },
     });
+  });
+
+  it("round-trips every Workspace Hub section and rejects unknown ones", () => {
+    for (const section of [
+      "workspace",
+      "synchronization",
+      "configuration",
+      "notes",
+    ] as const) {
+      const url = urlForNavigation(
+        { pathname: "/", search: "?ctid=tenant" },
+        {
+          tab: "workspace",
+          focus: { requestId: "ignored", workspaceSection: section },
+        },
+      );
+
+      expect(url).toBe(
+        `/?ctid=tenant&workspace.section=${section}#workspace`,
+      );
+      expect(
+        parseAtlasLocation({
+          hash: "#workspace",
+          search: url.slice(url.indexOf("?"), url.indexOf("#")),
+        }),
+      ).toMatchObject({
+        tab: "workspace",
+        focus: { workspaceSection: section },
+      });
+    }
+
+    expect(
+      parseAtlasLocation({
+        hash: "#workspace",
+        search: "?workspace.section=schedule",
+      }),
+    ).toEqual({ tab: "workspace" });
   });
 
   it("preserves unrelated host parameters and removes stale Atlas state", () => {
@@ -177,5 +224,59 @@ describe("Atlas routing", () => {
         filters: { pillar: "ownership" },
       },
     });
+  });
+
+  it("opens Map & lineage on an item in focused impact mode", () => {
+    const url = urlForNavigation(
+      { pathname: "/", search: "?ctid=tenant&jobs.status=failed&item=stale" },
+      {
+        tab: "map",
+        focus: {
+          requestId: "ignored",
+          itemId: "failed-item",
+          filters: { impact: "focused" },
+        },
+      },
+    );
+
+    expect(url).toBe("/?ctid=tenant&item=failed-item&impact=focused#map");
+    expect(
+      parseAtlasLocation({
+        hash: "#map",
+        search: url.slice(url.indexOf("?"), url.indexOf("#")),
+      }),
+    ).toMatchObject({ tab: "map", focus: { requestId: expect.any(String) } });
+  });
+
+  it("folds legacy map-beta links into the single Map & lineage tab", () => {
+    expect(parseAtlasLocation({ hash: "#map-beta", search: "" })).toMatchObject({
+      tab: "map",
+      focus: { requestId: expect.any(String) },
+    });
+    expect(
+      parseAtlasLocation({
+        hash: "#map",
+        search: "?view=evidence&preview=item-relations",
+      }),
+    ).toMatchObject({ tab: "map", focus: { requestId: expect.any(String) } });
+  });
+
+  it("drops map view and Preview state when navigating elsewhere", () => {
+    expect(
+      urlForNavigation(
+        {
+          pathname: "/",
+          search:
+            "?ctid=tenant&view=evidence&preview=item-relations&item=a&expand=x&tm.from=a&tm.to=b&xray.model=m",
+        },
+        { tab: "catalog" },
+      ),
+    ).toBe("/?ctid=tenant#catalog");
+    expect(
+      parseAtlasLocation({ hash: "#map", search: "?tm.from=a&tm.to=b" }),
+    ).toMatchObject({ tab: "map", focus: { requestId: expect.any(String) } });
+    expect(
+      parseAtlasLocation({ hash: "#map", search: "?xray.object=m" }),
+    ).toMatchObject({ tab: "map", focus: { requestId: expect.any(String) } });
   });
 });

@@ -6,7 +6,7 @@ import globals from "globals";
 import tseslint from "typescript-eslint";
 
 export default defineConfig(
-  { ignores: ["dist", "node_modules"] },
+  { ignores: ["dist", "dist-mcp", "node_modules", "rayfin/functions/dist"] },
   {
     extends: [eslint.configs.recommended, ...tseslint.configs.recommended],
     files: ["**/*.{ts,tsx}"],

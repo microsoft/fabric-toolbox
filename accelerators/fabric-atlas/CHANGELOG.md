@@ -4,6 +4,117 @@ All notable changes to Fabric Atlas are documented in this file.
 
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.0.0] - 2026-10-03
+
+### Added
+
+- Multi-workspace scope with shared selection, independent manifests,
+  active-workspace switching and browser-serialized batch synchronization.
+- Rayfin-first metadata collection for core inventory, definitions, Power BI
+  structure, Item Relations, KQL structure, SQL catalogs, source provenance and
+  access-policy evidence.
+- Exact Python compatibility planning for the Power BI admin scanner,
+  PBIR-Legacy pages, Kusto live metadata and explicit rollback.
+- SQL Database, Warehouse, schema-enabled Lakehouse and Mirrored Database
+  tables, views and columns through read-only SQL endpoint catalogs.
+- OneLake shortcut, mirroring and materialized lake view provenance with
+  metadata-only privacy boundaries.
+- Item Relations Preview as a separate Beta graph source with raw relation
+  labels, cross-workspace identities, collection status and an Evidence desk.
+- Semantic model X-Ray with direct and transitive DAX dependencies, consumer
+  tracing, ambiguity reporting and cycle detection.
+- Focused lineage Impact mode, free node movement and complete Reset behaviour
+  for Atlas and Preview graphs.
+- Item-family Coverage across catalog, objects, lineage, access and operations.
+- Policies & AI evidence for semantic models, Data Agents, configured sources,
+  protection metadata and Fabric Policies context.
+- Read-only Access What-if scenarios that remove recorded grant paths locally
+  without changing Fabric permissions.
+- Operational incidents, downstream impact context and explicit monitoring
+  boundaries in Jobs & health.
+- Optional local read-only Atlas MCP tools for catalog, lineage, access,
+  incidents and snapshot comparison.
+- Global workspace search across items, objects, people, jobs, configuration
+  and notes, plus optional OneLake Catalog Preview discovery.
+
+### Changed
+
+- Upgraded the complete Rayfin package family from 1.34.0 to 1.36.2.
+- Rebuilt Overview around the governance radar, workspace health and priority
+  signals.
+- Reorganized Governance Center into Posture, Findings, Changes, History,
+  Coverage and Policies & AI.
+- Reworked Map & lineage into exclusive Atlas and Preview sources with stable
+  left-to-right layouts, Graph, Evidence, Changes and X-Ray views.
+- Sorted Catalog groups and Asset Catalog items and objects alphabetically.
+- Compacted operational incidents and monitoring sources while retaining
+  keyboard access and full evidence.
+- Kept synchronized catalog reads and team notes shared with the authenticated
+  app audience while personal review state remains user-scoped.
+- Updated README, architecture documentation and the Fabric Atlas whitepaper
+  for the Rayfin-first 2.0 architecture.
+
+### Fixed
+
+- Restored schema-enabled Lakehouse inventory by routing SQL metadata through
+  the Lakehouse SQL analytics endpoint ID.
+- Added Mirrored Database business tables and columns through its SQL endpoint.
+- Prevented cross-workspace drag operations from retaining pointer capture.
+- Ensured Impact mode hides unrelated components and Reset clears focus,
+  selection, drag state and Preview expansion.
+- Kept Preview arrowheads visible outside node borders without hiding the line
+  inside the card.
+- Removed competing Atlas/Preview conflict presentation and the redundant
+  Agreement column.
+- Preserved valid per-item schema when another optional collector fails.
+- Fixed Map test build regressions and retained strict TypeScript validation.
+- Replaced exponential lineage cycle checks with bounded strongly connected
+  component detection and fixed DAX references after astral Unicode text.
+- Kept published snapshots visible when cancellation arrives after the manifest,
+  surfaced hydration failures explicitly and prevented orphan cleanup starvation.
+- Unified compatibility job collection and stopped Python enrichment cleanly
+  when its execution deadline is exhausted.
+- Escaped Markdown exports and selected code fences that cannot be closed by
+  synchronized metadata or DAX expressions.
+- Restored reduced-motion support, accessible saved-view and Catalog overlays,
+  and dark-theme destructive text contrast.
+- Made fresh-clone installation restore typed Functions dependencies and
+  declared the MCP authentication packages used at runtime.
+- Removed superseded collector shadows, definition benchmarks, inactive SQL
+  payload code, the unused storage token and the unused Rayfin storage service.
+
+## [1.12.4] - 2026-09-17
+
+### Fixed
+
+- Snapshot publication restores the eight-request fast path, then retries only
+  failed mutations sequentially with their stable row IDs.
+- The Rayfin request timeout returns to 30 seconds so stalled GraphQL calls do
+  not hold cancellation for two minutes.
+- Cancel immediately reports that synchronization is stopping, aborts retry
+  delays and prevents new retries or progress updates after cancellation.
+
+## [1.12.3] - 2026-09-17
+
+### Fixed
+
+- Transient Rayfin GraphQL internal errors and request timeouts are retried
+  with bounded backoff during snapshot publication.
+- Every snapshot row now receives a stable client-generated UUID before its
+  first mutation. Atlas verifies that UUID before retrying, preventing
+  duplicate rows when a timed-out request completed on the server.
+- Final Workspace manifest creation uses the same idempotent mutation path.
+
+## [1.12.2] - 2026-09-17
+
+### Fixed
+
+- Snapshot publication now limits Rayfin GraphQL writes to two concurrent
+  mutations instead of eight, preventing Fabric Data API Builder saturation
+  during large workspace synchronization.
+- Rayfin data requests allow up to 120 seconds so valid long-running mutations
+  are not abandoned by the previous 30-second client timeout.
+
 ## [1.12.1] - 2026-09-10
 
 ### Fixed
@@ -130,7 +241,7 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 - Data Agent draft/published source inventory and selected table, column, measure, KQL, ontology and graph objects.
 - Verified object lineage for physical source bindings, ontology relationships, Graph Model mappings and Data Agent selections.
 - Object-level impact, filtering, search, deep links and historical comparison for the new metadata types.
-- A cited Fabric metadata coverage audit in `docs/fabric-metadata-coverage-audit.md`.
+- A cited Fabric metadata coverage review.
 
 ### Changed
 

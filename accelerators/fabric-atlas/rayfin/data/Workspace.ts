@@ -19,6 +19,7 @@ import { SYNC_WRITER_SUBJECT } from './sync-policy.js';
 export class Workspace {
   @uuid() id!: string;
   @uuid({ optional: true }) snapshotId?: string;
+  @text({ max: 64, optional: true }) publicationHash?: string;
   @text({ max: 160, optional: true }) writerEmail?: string;
   @text({ max: 200, optional: true }) deploymentId?: string;
   @text({ max: 4000, optional: true }) syncSectionsJson?: string;

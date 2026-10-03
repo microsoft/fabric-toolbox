@@ -243,8 +243,43 @@ function metadataKindForAsset(
   return mapping[kind];
 }
 
+function metadataRefKey(
+  itemId: string,
+  kind: MetadataObjectKind,
+  name: string,
+  tableName?: string,
+): string {
+  return [itemId, kind, tableName ?? "", name].join("\u0000");
+}
+
+function metadataReferenceIndex(
+  objectEdges: AtlasData["objectEdges"],
+): Map<string, MetadataObjectRef> {
+  const index = new Map<string, MetadataObjectRef>();
+  for (const edge of objectEdges ?? []) {
+    for (const reference of [edge.source, edge.target]) {
+      const genericKey = metadataRefKey(
+        reference.itemId,
+        reference.kind,
+        reference.name,
+      );
+      if (!index.has(genericKey)) index.set(genericKey, reference);
+      if (reference.tableName) {
+        const exactKey = metadataRefKey(
+          reference.itemId,
+          reference.kind,
+          reference.name,
+          reference.tableName,
+        );
+        if (!index.has(exactKey)) index.set(exactKey, reference);
+      }
+    }
+  }
+  return index;
+}
+
 function matchingMetadataRef(
-  data: Pick<AtlasData, "objectEdges">,
+  index: ReadonlyMap<string, MetadataObjectRef>,
   itemId: string,
   kind: AssetObjectKind,
   name: string,
@@ -252,16 +287,8 @@ function matchingMetadataRef(
 ): MetadataObjectRef | undefined {
   const metadataKind = metadataKindForAsset(kind);
   if (!metadataKind) return undefined;
-  const references = (data.objectEdges ?? []).flatMap((edge) => [
-    edge.source,
-    edge.target,
-  ]);
-  return references.find(
-    (reference) =>
-      reference.itemId === itemId &&
-      reference.kind === metadataKind &&
-      reference.name === name &&
-      (!tableName || reference.tableName === tableName),
+  return index.get(
+    metadataRefKey(itemId, metadataKind, name, tableName),
   );
 }
 
@@ -325,6 +352,7 @@ export function buildCatalogObjects(
   const result: CatalogObject[] = [];
   const seen = new Set<string>();
   const itemsById = new Map(data.items.map((item) => [item.fabricId, item]));
+  const metadataReferences = metadataReferenceIndex(data.objectEdges);
   const add = (
     item: Item,
     object: Omit<CatalogObject, "id" | "itemFabricId" | "itemName" | "itemType">,
@@ -360,7 +388,7 @@ export function buildCatalogObjects(
       }
       const tableKind = schemaTableKind(item.itemType, table);
       const tableRef = matchingMetadataRef(
-        data,
+        metadataReferences,
         item.fabricId,
         tableKind,
         table.name,
@@ -384,7 +412,7 @@ export function buildCatalogObjects(
           column,
         );
         const columnRef = matchingMetadataRef(
-          data,
+          metadataReferences,
           item.fabricId,
           columnKind,
           column.name,

@@ -1,5 +1,6 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import {
+  acquireMsalToken,
   accountMatchesIdentity,
   buildSyncItemBatches,
   buildSyncRequestBody,
@@ -15,10 +16,25 @@ import {
   validateRawSync,
   validateSyncEnrichment,
   type MsalAccount,
+  type AtlasMsalClient,
   type RawSync,
 } from "./live-sync";
 
 const workspaceId = "11111111-1111-4111-8111-111111111111";
+const syncIdentity = {
+  id: "22222222-2222-4222-8222-222222222222",
+  name: "Admin",
+  email: "admin@example.com",
+};
+const msalAccount: MsalAccount = {
+  localAccountId: syncIdentity.id,
+  tenantId: "33333333-3333-4333-8333-333333333333",
+  username: syncIdentity.email,
+};
+const msalResult = {
+  accessToken: "cached-token",
+  account: msalAccount,
+};
 
 function completeSync(): RawSync {
   return {
@@ -33,6 +49,72 @@ function completeSync(): RawSync {
     errors: [],
   };
 }
+
+describe("MSAL interaction recovery", () => {
+  it("waits for an existing interaction and retries silently without another popup", async () => {
+    const acquireTokenSilent = vi
+      .fn()
+      .mockRejectedValueOnce({ errorCode: "interaction_in_progress" })
+      .mockResolvedValueOnce(msalResult);
+    const acquireTokenPopup = vi.fn();
+    const wait = vi.fn(async () => undefined);
+    const app: AtlasMsalClient = {
+      getAllAccounts: () => [msalAccount],
+      acquireTokenSilent,
+      ssoSilent: vi.fn(),
+      acquireTokenPopup,
+    };
+
+    await expect(
+      acquireMsalToken(
+        app,
+        syncIdentity,
+        ["scope"],
+        "Fabric metadata",
+        true,
+        msalAccount.tenantId,
+        undefined,
+        wait,
+      ),
+    ).resolves.toBe("cached-token");
+    expect(wait).toHaveBeenCalledOnce();
+    expect(acquireTokenPopup).not.toHaveBeenCalled();
+    expect(acquireTokenSilent).toHaveBeenCalledTimes(2);
+  });
+
+  it("recovers when a single popup collides with the Fabric portal interaction", async () => {
+    const getAllAccounts = vi
+      .fn()
+      .mockReturnValueOnce([])
+      .mockReturnValue([msalAccount]);
+    const acquireTokenSilent = vi.fn().mockResolvedValue(msalResult);
+    const ssoSilent = vi.fn().mockRejectedValue({ errorCode: "login_required" });
+    const acquireTokenPopup = vi
+      .fn()
+      .mockRejectedValue({ errorCode: "interaction_in_progress" });
+    const app: AtlasMsalClient = {
+      getAllAccounts,
+      acquireTokenSilent,
+      ssoSilent,
+      acquireTokenPopup,
+    };
+
+    await expect(
+      acquireMsalToken(
+        app,
+        syncIdentity,
+        ["scope"],
+        "Fabric metadata",
+        true,
+        msalAccount.tenantId,
+        undefined,
+        async () => undefined,
+      ),
+    ).resolves.toBe("cached-token");
+    expect(acquireTokenPopup).toHaveBeenCalledOnce();
+    expect(acquireTokenSilent).toHaveBeenCalledOnce();
+  });
+});
 
 describe("validateRawSync", () => {
   it("accepts a complete authoritative result", () => {
@@ -458,6 +540,43 @@ describe("validateRawSync", () => {
     expect(normalizeFabricTimestamp("2026-08-30T10:15:00+02:00")).toBe(
       "2026-08-30T08:15:00.000Z",
     );
+  });
+
+  it("keeps a valid Fabric job instance ID as run identity and drops anything else", () => {
+    const raw = completeSync();
+    raw.items = [{ id: "notebook", type: "Notebook", displayName: "Load" }];
+    raw.jobs = [
+      {
+        id: "A0A0A0A0-0000-4000-8000-000000000001",
+        itemId: "notebook",
+        itemDisplayName: "Load",
+        jobType: "RunNotebook",
+        status: "Failed",
+        startTimeUtc: "2026-10-02T06:00:00Z",
+        endTimeUtc: "2026-10-02T06:01:00Z",
+      },
+      {
+        id: "not-a-run-id",
+        itemId: "notebook",
+        itemDisplayName: "Load",
+        jobType: "RunNotebook",
+        status: "Completed",
+        startTimeUtc: "2026-10-02T07:00:00Z",
+      },
+    ];
+
+    const atlas = mapSyncToAtlas(raw, {
+      fabricId: workspaceId,
+      displayName: "Atlas",
+      capacity: "",
+      region: "",
+    });
+
+    expect(atlas.jobs.map((job) => job.runId)).toEqual([
+      "a0a0a0a0-0000-4000-8000-000000000001",
+      undefined,
+    ]);
+    expect(atlas.jobs.every((job) => job.message === undefined)).toBe(true);
   });
 
   it("does not invent lineage from matching display names", () => {

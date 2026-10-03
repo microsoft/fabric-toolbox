@@ -1,22 +1,40 @@
-id: fabricatlas
-name: FabricAtlas
-version: 1.12.1
+id: fabric-atlas
+name: Fabric Atlas
+version: 2.0.0
+secrets:
+  - name: ATLAS_POWERBI_SCANNER_ENABLED
+    description: Optional scanner adapter switch. Missing or false keeps it disabled.
+  - name: ATLAS_POWERBI_SCANNER_TENANT_ID
+    description: Approved Entra tenant UUID for the optional scanner adapter.
+  - name: ATLAS_POWERBI_SCANNER_CLIENT_ID
+    description: Dedicated approved Power BI scanner service principal application UUID.
+  - name: ATLAS_POWERBI_SCANNER_CLIENT_SECRET
+    description: Scanner service principal credential. Provision only in the deployed Secret Store.
+  - name: ATLAS_POWERBI_SCANNER_WORKSPACE_IDS
+    description: JSON array of approved workspace UUIDs for the optional scanner adapter.
+  - name: ATLAS_POWERBI_SCANNER_SETTINGS_CONFIRMED
+    description: Set true only after reviewing read-only admin API and detailed metadata scanning settings.
 services:
   auth:
     enabled: true
     fabric:
       enabled: true
+      externalEntraExchange: false
     allowedRedirectUris:
       - http://localhost:5173
+      - http://127.0.0.1:5173
   data:
     enabled: true
     dialect: mssql
-  storage:
-    enabled: true
   staticHosting:
     enabled: true
     folder: dist
     buildCommand: npm run build:fabric
     indexDocument: index.html
+    assetAccess: protected
   functions:
-    enabled: false
+    enabled: true
+    path: rayfin/functions
+    buildCommand: npm run build
+    auth:
+      type: application

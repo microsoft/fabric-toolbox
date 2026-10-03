@@ -6,10 +6,10 @@ import {
   ChevronsUpDown,
   FileSearch,
   Search,
-  SlidersHorizontal,
   X,
 } from "lucide-react";
 import { useAtlas } from "../store";
+import { PageHeader } from "../components/PageHeader";
 import type { AtlasFocusRequest } from "../navigation";
 import { Card, EndorsementChip, HealthChip, SectionLabel, TypeGlyph, cn } from "../ui";
 import { typeMeta, type ConfigKV, type Item } from "../model";
@@ -40,9 +40,11 @@ export function ConfigView({
   }, [config]);
 
   const firstWithConfig = items.find((item) => configByItem.has(item.fabricId)) ?? items[0];
-  const [selectedId, setSelectedId] = useState<string>(
+  const [requestedId, setSelectedId] = useState<string>(
     focus?.itemId ?? firstWithConfig?.fabricId ?? "",
   );
+  const selectedId = items.some((item) => item.fabricId === requestedId)
+    ? requestedId : firstWithConfig?.fabricId ?? "";
 
   useEffect(() => {
     if (selectedId) onSelectedItemChange?.(selectedId);
@@ -108,24 +110,8 @@ export function ConfigView({
         embedded ? "gap-l" : "atlas-content-frame gap-xl p-xl lg:p-xxl",
       )}
     >
-      {!embedded && <header className="border-l border-primary pl-l">
-        <SectionLabel>Inventory / configuration</SectionLabel>
-        <div className="mt-s flex flex-col gap-s lg:flex-row lg:items-end lg:justify-between">
-          <div>
-            <h1 className="font-heading text-600 leading-600 font-bold">
-              Configuration explorer
-            </h1>
-            <p className="mt-xs text-300 leading-300 text-muted-foreground">
-              Inspect settings, schedules, schema metadata and bindings without losing
-              item context.
-            </p>
-          </div>
-          <div className="flex items-center gap-s text-200 leading-200 text-muted-foreground">
-            <SlidersHorizontal className="icon-size-200" aria-hidden="true" />
-            {config.length} values across {configByItem.size} configured items
-          </div>
-        </div>
-      </header>}
+      {!embedded && <PageHeader title="Configuration explorer" purpose="Inspect collected settings and bindings."
+        actions={<span className="text-200 text-muted-foreground">{config.length} values across {configByItem.size} items</span>} />}
 
       <div className="grid items-start gap-l lg:grid-cols-3">
         <aside aria-label="Configuration items" className="lg:sticky lg:top-l">

@@ -41,6 +41,28 @@ describe("offboarding exports", () => {
     expect(csv).toContain("\r\n");
   });
 
+  it("escapes item names in Markdown exports", () => {
+    const principal = SAMPLE_DATA.principals.find(
+      (value) => value.kind === "user" && value.email,
+    )!;
+    const value = structuredClone(SAMPLE_DATA);
+    value.items[0].ownerEmail = principal.email;
+    value.items[0].displayName = "[Item](javascript:alert(1))<img>";
+
+    const markdown = offboardingReportToMarkdown(
+      buildOffboardingReport(value, principal.principalId),
+      {
+        workspaceName: "Workspace",
+        generatedAt: "2026-08-30T12:00:00.000Z",
+      },
+    );
+
+    expect(markdown).toContain(
+      "\\[Item\\]\\(javascript:alert\\(1\\)\\)\\<img\\>",
+    );
+    expect(markdown).not.toContain("[Item](javascript:alert(1))<img>");
+  });
+
   it("exports downstream consumers for shared ownership roots", () => {
     const principal = SAMPLE_DATA.principals.find(
       (value) => value.kind === "user" && value.email,

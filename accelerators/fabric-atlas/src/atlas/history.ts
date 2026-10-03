@@ -6,6 +6,11 @@ import type {
   Job,
 } from "./model";
 import {
+  buildPrincipalIndexes,
+  type PrincipalIndexes,
+  uniquePrincipal,
+} from "./principal-resolution";
+import {
   buildCatalogObjects,
   type AssetObjectKind,
 } from "./catalog-objects";
@@ -326,28 +331,6 @@ function schemaObjects(catalog: SnapshotCatalog): SchemaObject[] {
   }));
 }
 
-function principalForReference(
-  catalog: SnapshotCatalog,
-  reference: string,
-): SnapshotCatalog["principals"][number] | undefined {
-  const normalizedReference = normalizedText(reference);
-  const idMatches = catalog.principals.filter(
-    (principal) =>
-      normalizedText(principal.principalId) === normalizedReference,
-  );
-  if (idMatches.length === 1) return idMatches[0];
-  const emailMatches = catalog.principals.filter(
-    (principal) =>
-      normalizedText(principal.email) === normalizedReference,
-  );
-  if (emailMatches.length === 1) return emailMatches[0];
-  const nameMatches = catalog.principals.filter(
-    (principal) =>
-      normalizedText(principal.displayName) === normalizedReference,
-  );
-  return nameMatches.length === 1 ? nameMatches[0] : undefined;
-}
-
 function principalsByEmail(
   catalog: SnapshotCatalog,
 ): Map<string, SnapshotCatalog["principals"]> {
@@ -401,11 +384,11 @@ function principalComparisonKeys(
 }
 
 function grantKey(
-  catalog: SnapshotCatalog,
   grant: Grant,
   comparisonKeys: ReadonlyMap<string, string>,
+  indexes: PrincipalIndexes,
 ): string {
-  const principal = principalForReference(catalog, grant.principalRef);
+  const principal = uniquePrincipal(indexes, grant.principalRef);
   const principalKey = principal
     ? comparisonKeys.get(normalizedText(principal.principalId)) ??
       normalizedText(principal.principalId)
@@ -570,11 +553,17 @@ export function compareSnapshots(
     previous.catalog,
     current.catalog,
   );
+  const previousPrincipalIndexes = buildPrincipalIndexes(
+    previous.catalog.principals,
+  );
+  const currentPrincipalIndexes = buildPrincipalIndexes(
+    current.catalog.principals,
+  );
   const previousGrants = mapBy(previous.catalog.grants, (grant) =>
-    grantKey(previous.catalog, grant, comparisonKeys.previous),
+    grantKey(grant, comparisonKeys.previous, previousPrincipalIndexes),
   );
   const currentGrants = mapBy(current.catalog.grants, (grant) =>
-    grantKey(current.catalog, grant, comparisonKeys.current),
+    grantKey(grant, comparisonKeys.current, currentPrincipalIndexes),
   );
   changes.push(
     ...compareMap(previousGrants, currentGrants, {

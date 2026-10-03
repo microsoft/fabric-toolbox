@@ -1,3 +1,4 @@
+import * as Popover from "@radix-ui/react-popover";
 import {
   Bookmark,
   ChevronDown,
@@ -6,7 +7,7 @@ import {
   Trash2,
   X,
 } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { useState } from "react";
 import type {
   SavedView,
   SavedViewFilters,
@@ -42,16 +43,6 @@ export function SavedViewsMenu({
   const [name, setName] = useState("");
   const [saving, setSaving] = useState(false);
   const [operationError, setOperationError] = useState<string>();
-  const rootRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    if (!open) return;
-    const close = (event: MouseEvent) => {
-      if (!rootRef.current?.contains(event.target as Node)) setOpen(false);
-    };
-    window.addEventListener("mousedown", close);
-    return () => window.removeEventListener("mousedown", close);
-  }, [open]);
 
   const save = async () => {
     if (loading || !name.trim()) return;
@@ -75,28 +66,35 @@ export function SavedViewsMenu({
   };
 
   return (
-    <div ref={rootRef} className="relative">
-      <button
-        type="button"
-        onClick={() => setOpen((value) => !value)}
-        aria-expanded={open}
-        aria-haspopup="menu"
-        className="flex h-[34px] items-center gap-s rounded-lg border border-border bg-card px-m text-200 font-semibold text-muted-foreground hover:bg-accent hover:text-foreground"
-      >
-        <Bookmark className="icon-size-100" aria-hidden="true" />
-        <span className="hidden sm:inline">Saved views</span>
-        {views.length > 0 && (
-          <span className="rounded-full bg-primary/10 px-xs font-numeric text-100 text-brand-foreground">
-            {views.length}
-          </span>
-        )}
-        <ChevronDown className="icon-size-100" aria-hidden="true" />
-      </button>
+    <Popover.Root
+      open={open}
+      onOpenChange={(nextOpen) => {
+        setOpen(nextOpen);
+        if (!nextOpen) setCreating(false);
+      }}
+      modal
+    >
+      <Popover.Trigger asChild>
+        <button
+          type="button"
+          className="flex h-[34px] items-center gap-s rounded-lg border border-border bg-card px-m text-200 font-semibold text-muted-foreground hover:bg-accent hover:text-foreground"
+        >
+          <Bookmark className="icon-size-100" aria-hidden="true" />
+          <span className="hidden sm:inline">Saved views</span>
+          {views.length > 0 && (
+            <span className="rounded-full bg-primary/10 px-xs font-numeric text-100 text-brand-foreground">
+              {views.length}
+            </span>
+          )}
+          <ChevronDown className="icon-size-100" aria-hidden="true" />
+        </button>
+      </Popover.Trigger>
 
-      {open && (
-        <div
-          role="menu"
-          className="absolute right-0 z-50 mt-s w-[min(360px,calc(100vw-24px))] overflow-hidden rounded-xl border border-border bg-popover text-popover-foreground shadow-fabric-8"
+      <Popover.Portal>
+        <Popover.Content
+          align="end"
+          sideOffset={8}
+          className="z-50 w-[min(360px,calc(100vw-24px))] overflow-hidden rounded-xl border border-border bg-popover text-popover-foreground shadow-fabric-8"
         >
           <div className="flex items-center justify-between gap-m border-b border-border px-m py-s">
             <div>
@@ -105,18 +103,19 @@ export function SavedViewsMenu({
                 Personal shortcuts for this workspace
               </div>
             </div>
-            <button
-              type="button"
-              onClick={() => setOpen(false)}
-              aria-label="Close saved views"
-              className="rounded-md p-xs text-muted-foreground hover:bg-accent hover:text-foreground"
-            >
-              <X className="icon-size-100" />
-            </button>
+            <Popover.Close asChild>
+              <button
+                type="button"
+                aria-label="Close saved views"
+                className="rounded-md p-xs text-muted-foreground hover:bg-accent hover:text-foreground"
+              >
+                <X className="icon-size-100" aria-hidden="true" />
+              </button>
+            </Popover.Close>
           </div>
 
           {(operationError || error) && (
-            <div className="border-b border-destructive/30 bg-destructive/10 px-m py-s text-200 text-destructive">
+            <div role="alert" className="border-b border-destructive/30 bg-destructive/10 px-m py-s text-200 text-destructive">
               {operationError ?? error}
             </div>
           )}
@@ -150,7 +149,7 @@ export function SavedViewsMenu({
                   className="rounded-lg bg-primary px-m py-s text-200 font-semibold text-primary-foreground disabled:opacity-50"
                 >
                   {saving ? (
-                    <Loader2 className="icon-size-100 animate-spin" />
+                    <Loader2 className="icon-size-100 animate-spin" aria-hidden="true" />
                   ) : (
                     "Save"
                   )}
@@ -172,7 +171,7 @@ export function SavedViewsMenu({
           <div className="max-h-80 overflow-y-auto p-s">
             {loading ? (
               <div className="flex items-center justify-center gap-s px-m py-xl text-200 text-muted-foreground">
-                <Loader2 className="icon-size-100 animate-spin" />
+                <Loader2 className="icon-size-100 animate-spin" aria-hidden="true" />
                 Loading saved views
               </div>
             ) : views.length === 0 ? (
@@ -190,7 +189,6 @@ export function SavedViewsMenu({
                 >
                   <button
                     type="button"
-                    role="menuitem"
                     onClick={() => {
                       onApply(view);
                       setOpen(false);
@@ -219,14 +217,14 @@ export function SavedViewsMenu({
                     aria-label={`Delete ${view.name}`}
                     className="mr-s rounded-md p-s text-muted-foreground opacity-70 hover:bg-destructive/10 hover:text-destructive group-hover:opacity-100"
                   >
-                    <Trash2 className="icon-size-100" />
+                    <Trash2 className="icon-size-100" aria-hidden="true" />
                   </button>
                 </div>
               ))
             )}
           </div>
-        </div>
-      )}
-    </div>
+        </Popover.Content>
+      </Popover.Portal>
+    </Popover.Root>
   );
 }

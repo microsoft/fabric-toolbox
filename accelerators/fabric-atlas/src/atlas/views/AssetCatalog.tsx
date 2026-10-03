@@ -20,6 +20,7 @@ import {
   X,
 } from "lucide-react";
 import { ImpactReportDialog } from "../components/ImpactReportDialog";
+import { PageHeader } from "../components/PageHeader";
 import { MetadataObjectImpactDialog } from "../components/MetadataObjectImpactDialog";
 import {
   ASSET_OBJECT_KINDS,
@@ -385,11 +386,19 @@ export function AssetCatalogView({
     const itemIdsWithAssets = new Set(
       assets.map((asset) => asset.itemFabricId),
     );
-    return items.filter(
-      (item) =>
-        itemIdsWithAssets.has(item.fabricId) ||
-        SCHEMA_CATALOG_ITEM_TYPES.has(item.itemType),
-    );
+    return items
+      .filter(
+        (item) =>
+          itemIdsWithAssets.has(item.fabricId) ||
+          SCHEMA_CATALOG_ITEM_TYPES.has(item.itemType),
+      )
+      .sort(
+        (left, right) =>
+          left.displayName.localeCompare(right.displayName, undefined, {
+            numeric: true,
+            sensitivity: "base",
+          }) || left.fabricId.localeCompare(right.fabricId),
+      );
   }, [assets, items]);
 
   const groups = useMemo(() => {
@@ -413,7 +422,19 @@ export function AssetCatalogView({
     }
     return inventoryItems.flatMap((item) => {
       const group = grouped.get(item.fabricId);
-      return group ? ([[item.fabricId, group]] as const) : [];
+      return group
+        ? ([[item.fabricId, [...group].sort(
+            (left, right) =>
+              left.name.localeCompare(right.name, undefined, {
+                numeric: true,
+                sensitivity: "base",
+              }) ||
+              assetObjectKindLabel(left.kind).localeCompare(
+                assetObjectKindLabel(right.kind),
+              ) ||
+              left.id.localeCompare(right.id),
+          )]] as const)
+        : [];
     });
   }, [filtered, inventoryItems, kind, query]);
 
@@ -542,17 +563,8 @@ export function AssetCatalogView({
   return (
     <div className="atlas-content-frame flex h-full flex-col gap-l p-xxl">
       <header className="overflow-hidden rounded-xl border border-border bg-card shadow-fabric-2">
-        <div className="atlas-page-header flex flex-col lg:flex-row lg:items-center">
-          <div className="min-w-0 flex-1">
-            <SectionLabel>Schema inventory</SectionLabel>
-            <div className="mt-xs flex flex-wrap items-baseline gap-s">
-              <h1 className="text-600 font-bold leading-600">Asset Catalog</h1>
-              <span className="text-300 text-muted-foreground">
-                Physical, semantic, ontology, graph, KQL and agent objects
-              </span>
-            </div>
-          </div>
-          <dl className="grid grid-cols-3 divide-x divide-border rounded-xl border border-border bg-secondary">
+        <PageHeader title="Asset Catalog" purpose="Browse stored tables, fields and other objects."
+          actions={<dl className="flex flex-wrap gap-l">
             <div className="px-l py-s text-center">
               <dt className="text-100 font-semibold uppercase tracking-wide text-muted-foreground">
                 Assets
@@ -575,8 +587,8 @@ export function AssetCatalogView({
                 {filtered.length}
               </dd>
             </div>
-          </dl>
-        </div>
+          </dl>}
+        />
 
         <div className="atlas-toolbar flex flex-col border-t border-border bg-secondary px-l py-s xl:flex-row xl:items-center">
           <div className="relative min-w-0 flex-1">
@@ -624,7 +636,7 @@ export function AssetCatalogView({
                 {label}
                 <span
                   className={cn(
-                    "rounded-md px-xs py-xxs font-numeric text-100",
+                    "rounded-md px-xs py-xxs font-numeric text-200",
                     kind === key ? "bg-card text-brand-foreground" : "bg-muted",
                   )}
                 >
@@ -1001,7 +1013,7 @@ export function AssetCatalogView({
                                   </span>
                                   <span
                                     className={cn(
-                                      "shrink-0 rounded-full px-s py-xxs text-100 font-semibold",
+                                      "shrink-0 rounded-full px-s py-xxs text-200 font-semibold",
                                       confidence === "verified"
                                         ? "bg-status-healthy/10 text-status-healthy"
                                         : "bg-status-warning/10 text-status-warning",

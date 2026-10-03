@@ -23,7 +23,7 @@ interface AuthProviderProps {
  * - When loaded inside a Fabric iframe (`?fabricEmbedded=true`), calls
  *   `initEmbeddedAuth` to acquire a Rayfin session via postMessage.
  * - When loaded standalone, `initEmbeddedAuth` returns `null` immediately
- *   and the provider settles in an unauthenticated state and `<AuthGate>`
+ *   and the provider settles in an unauthenticated state and `<AuthGate>` 
  *   renders the "not embedded" notice.
  *
  * Consume the session with the `useAuth` hook.

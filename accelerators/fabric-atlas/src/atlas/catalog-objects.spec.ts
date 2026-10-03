@@ -234,6 +234,23 @@ function workspaceData(): AtlasData {
 }
 
 describe("catalog object discovery", () => {
+  it("indexes metadata references once per catalog projection", () => {
+    const data = workspaceData();
+    const objectEdges = data.objectEdges;
+    let reads = 0;
+    Object.defineProperty(data, "objectEdges", {
+      configurable: true,
+      get() {
+        reads += 1;
+        return objectEdges;
+      },
+    });
+
+    buildCatalogObjects(data);
+
+    expect(reads).toBe(1);
+  });
+
   it("classifies full workspace metadata without exposing unselected elements", () => {
     const objects = buildCatalogObjects(workspaceData());
     const kinds = new Set(objects.map((object) => object.kind));

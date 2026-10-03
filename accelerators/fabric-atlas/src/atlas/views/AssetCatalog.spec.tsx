@@ -4,6 +4,53 @@ import { AtlasProvider } from "../store";
 import { AssetCatalogView } from "./AssetCatalog";
 
 describe("AssetCatalogView", () => {
+  it("sorts item groups and their assets alphabetically", () => {
+    const { container } = render(
+      <AtlasProvider isPreview>
+        <AssetCatalogView />
+      </AtlasProvider>,
+    );
+
+    const groupNames = [
+      ...container.querySelectorAll<HTMLButtonElement>(
+        "button[aria-controls^='asset-group-']",
+      ),
+    ].map(
+      (button) =>
+        button.querySelector<HTMLElement>("span.block.truncate")?.textContent ??
+        "",
+    );
+    expect(groupNames).toEqual(
+      [...groupNames].sort((left, right) =>
+        left.localeCompare(right, undefined, {
+          numeric: true,
+          sensitivity: "base",
+        }),
+      ),
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "Expand all" }));
+    for (const article of container.querySelectorAll("article")) {
+      const assetNames = [
+        ...article.querySelectorAll<HTMLButtonElement>(
+          "button[aria-pressed]",
+        ),
+      ].map(
+        (button) =>
+          button.querySelector<HTMLElement>("span.block.truncate")
+            ?.textContent ?? "",
+      );
+      expect(assetNames).toEqual(
+        [...assetNames].sort((left, right) =>
+          left.localeCompare(right, undefined, {
+            numeric: true,
+            sensitivity: "base",
+          }),
+        ),
+      );
+    }
+  });
+
   it("opens matching groups during search and restores collapsed state", () => {
     render(
       <AtlasProvider isPreview>
