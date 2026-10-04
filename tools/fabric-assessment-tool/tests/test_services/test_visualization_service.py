@@ -735,7 +735,7 @@ class TestVisualizationService:
         resources_dir = (
             sample_synapse_assessment_dir / "test-workspace" / "resources" / "sql_pools"
         )
-        resources_dir.mkdir()
+        resources_dir.mkdir(exist_ok=True)
         workload = {
             "collection_status": "collected",
             "description": "Collected",

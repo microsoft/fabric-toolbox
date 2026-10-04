@@ -228,9 +228,6 @@ class AssessmentService:
                 workspace_assessment = client.assess_workspace(
                     workspace,
                     mode,
-                    resources=resources,
-                    output_path=output_path,
-                    download_notebooks=download_notebooks,
                 )
 
                 # Export the assessment data using the structured export service

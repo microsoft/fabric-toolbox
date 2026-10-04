@@ -12,7 +12,7 @@ from ..assessment.common import AssessmentStatus
 from ..assessment.synapse import (
     CodeObjectCount, CodeObjectLines, SqlComplexityAssessment, SynapseAssessment,
     SynapseAssessmentMetadata, SynapseColumnDatabaseStatus, SynapseColumnSummary,
-    SynapseCompatibilityTotals, SynapseDataflow, SynapseDataflows, SynapseDataset,
+    SynapseCompatibilityTotals, SynapseDataTypeSummary, SynapseDataflow, SynapseDataflows, SynapseDataset,
     SynapseDatasets, SynapseDedicatedDatabase, SynapseDedicatedPool, SynapseDedicatedPools,
     SynapseIntegrationRuntime, SynapseIntegrationRuntimes, SynapseLibraries,
     SynapseLibrary, SynapseLinkedService, SynapseLinkedServices,
@@ -1943,7 +1943,9 @@ class SynapseClient:
                 utils_ui.print_extraction_done(
                     f"Creating table statistics DMV in database {database_name}"
                 )
-            elif self.sql_complexity:
+            elif getattr(self, "sql_complexity", False) or getattr(
+                self, "extract_definitions", False
+            ):
                 utils_ui.print_warning(
                     f"Skipping table statistics for '{database_name}' because "
                     "vTableSizes does not exist. SQL complexity collection will continue."

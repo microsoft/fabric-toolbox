@@ -1,5 +1,4 @@
 from dataclasses import asdict, dataclass, field
-from typing import Any, Dict, List, Optional
 from typing import Any, Dict, List, Literal, Optional
 
 from .common import AssessmentStatus
@@ -235,6 +234,11 @@ class SqlCodeObjectDefinition:
     is_encrypted: bool
     created_at: Optional[str]
     modified_at: Optional[str]
+
+    json_response: Any
+
+
+@dataclass
 class SynapseSqlDefinition:
     """Stored SQL module definition and extraction metadata."""
 
@@ -302,6 +306,9 @@ class SqlComplexityAssessment:
 
     summary: SqlComplexitySummary
     objects: List[SqlComplexityObject]
+
+
+@dataclass
 class SynapseSqlDefinitions:
     """Collection of SQL module definitions in a dedicated database."""
 

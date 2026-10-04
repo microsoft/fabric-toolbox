@@ -212,19 +212,16 @@ class JSONExporter(BaseExporter):
                 if workload.get("sql_text_redacted", True):
                     export_pool = self._strip_sql_text(export_pool)
                 pool_file = sql_pools_dir / f"dedicated_pool_{export_pool['name']}.json"
-                pool_file = sql_pools_dir / f"dedicated_pool_{pool['name']}.json"
-                pool_data = dict(pool)
-                if isinstance(pool_data.get("database"), dict):
-                    database_data = dict(pool_data["database"])
+                if isinstance(export_pool.get("database"), dict):
+                    database_data = dict(export_pool["database"])
                     database_data.pop("definitions", None)
                     database_data.pop("definition_summary", None)
-                    pool_data["database"] = database_data
+                    export_pool["database"] = database_data
                 with open(pool_file, "w") as f:
                     json.dump(
                         {
                             "type": "dedicated_pool",
                             "pool_data": export_pool,
-                            "pool_data": pool_data,
                             "exported_at": datetime.now().isoformat(),
                         },
                         f,
@@ -236,15 +233,12 @@ class JSONExporter(BaseExporter):
             # Serverless pool
             serverless_pool = data["sql_pools"].get("serverless_pool")
             if serverless_pool:
-                pool = serverless_pool
-            pool = data["sql_pools"].get("serverless_pool")
-            if pool:
-                pool_file = sql_pools_dir / f"serverless_pool_{pool['name']}.json"
+                pool_file = sql_pools_dir / f"serverless_pool_{serverless_pool['name']}.json"
                 with open(pool_file, "w") as f:
                     json.dump(
                         {
                             "type": "serverless_pool",
-                            "pool_data": pool,
+                            "pool_data": serverless_pool,
                             "exported_at": datetime.now().isoformat(),
                         },
                         f,

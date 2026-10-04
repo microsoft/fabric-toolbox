@@ -5,7 +5,6 @@
     <h1>🏭 Data Warehousing View</h1>
     <p>SQL pools, databases, tables, SQL scripts, and serverless activity</p>
 </div>
-{% set definitions = warehousing.definitions | default({}) %}
 
 <!-- Summary Stats -->
 <div class="row">
@@ -37,12 +36,6 @@
         <div class="stat-card">
             <div class="stat-value" id="stat-size">{{ warehousing.total_size_gb | round(2) }} GB</div>
             <div class="stat-label">Total Size</div>
-        </div>
-    </div>
-    <div class="col">
-        <div class="stat-card">
-            <div class="stat-value" id="stat-columns">{{ warehousing.total_columns | format_number }}</div>
-            <div class="stat-label">Columns</div>
         </div>
     </div>
 </div>
@@ -78,306 +71,9 @@
         <div class="stat-card">
             <div class="stat-value" id="serverless-stat-max">{{ serverless_summary.max_duration_ms | format_number }} ms</div>
             <div class="stat-label">Max Duration</div>
-<!-- Column Analysis -->
-<div class="card mt-2">
-    <div class="card-header">Column Metadata and Fabric Compatibility</div>
-    <div class="card-body">
-        <p>
-            <span class="badge badge-success">Compatible: <span id="dw-compat-compatible">{{ warehousing.compatibility_totals.compatible | format_number }}</span></span>
-            <span class="badge badge-warning">Review: <span id="dw-compat-review">{{ warehousing.compatibility_totals.review | format_number }}</span></span>
-            <span class="badge badge-danger">Unsupported: <span id="dw-compat-unsupported">{{ warehousing.compatibility_totals.unsupported | format_number }}</span></span>
-        </p>
-        <div class="row">
-            <div class="col col-6">
-                <div class="chart-container">
-                    <canvas id="columnTypeChart"></canvas>
-                </div>
-            </div>
-            <div class="col col-6">
-                <div class="table-responsive">
-                    <table class="table">
-                        <thead>
-                            <tr>
-                                <th>Workspace</th>
-                                <th>Data Type</th>
-                                <th>Compatibility</th>
-                                <th class="text-right">Columns</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for entry in warehousing.column_type_distribution %}
-                            <tr data-workspace="{{ entry.workspace }}">
-                                <td>{{ entry.workspace }}</td>
-                                <td>{{ entry.data_type }}</td>
-                                <td><span class="badge {% if entry.compatibility == 'compatible' %}badge-success{% elif entry.compatibility == 'unsupported' %}badge-danger{% else %}badge-warning{% endif %}">{{ entry.compatibility | title }}</span></td>
-                                <td class="text-right">{{ entry.column_count | format_number }}</td>
-                            </tr>
-                            {% else %}
-                            <tr><td colspan="4" class="text-muted">No column metadata is available.</td></tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-{% if definitions.databases_requested | default(0) > 0 %}
-<div class="card mt-2">
-    <div class="card-header">SQL Definition Analysis</div>
-    <div class="card-body">
-        <div class="row">
-            <div class="col">
-                <div class="stat-card">
-                    <div class="stat-value" id="stat-definitions">{{ definitions.total_objects | default(0) | format_number }}</div>
-                    <div class="stat-label">Definitions</div>
-                </div>
-            </div>
-            <div class="col">
-                <div class="stat-card">
-                    <div class="stat-value" id="stat-definition-encrypted">{{ definitions.encrypted_objects | default(0) | format_number }}</div>
-                    <div class="stat-label">Encrypted</div>
-                </div>
-            </div>
-            <div class="col">
-                <div class="stat-card">
-                    <div class="stat-value" id="stat-definition-unavailable">{{ definitions.unavailable_objects | default(0) | format_number }}</div>
-                    <div class="stat-label">Unavailable</div>
-                </div>
-            </div>
-            <div class="col">
-                <div class="stat-card">
-                    <div class="stat-value" id="stat-definition-truncated">{{ definitions.truncated_objects | default(0) | format_number }}</div>
-                    <div class="stat-label">Truncated</div>
-                </div>
-            </div>
-        </div>
-
-        <h3>Collection Status</h3>
-<!-- SQL Complexity -->
-{% if warehousing.complexity_summaries %}
-<div class="card mt-2">
-    <div class="card-header">SQL Migration Readiness</div>
-    <div class="card-body">
-        <div class="row">
-            <div class="col">
-                <div class="stat-card">
-                    <div class="stat-value" id="stat-complexity-readiness">
-                        {% if warehousing.complexity_readiness_percentage is not none %}
-                        {{ warehousing.complexity_readiness_percentage }}%
-                        {% else %}
-                        N/A
-                        {% endif %}
-                    </div>
-                    <div class="stat-label">Ready or Medium Complexity</div>
-                </div>
-            </div>
-            <div class="col">
-                <div class="stat-card">
-                    <div class="stat-value" id="stat-complexity-indicator">{{ warehousing.complexity_readiness_indicator | replace('_', ' ') }}</div>
-                    <div class="stat-label">Readiness Indicator</div>
-                </div>
-            </div>
-            <div class="col">
-                <div class="stat-card">
-                    <div class="stat-value" id="stat-complexity-scored">{{ warehousing.complexity_scored_objects | format_number }}</div>
-                    <div class="stat-label">Scored Objects</div>
-                </div>
-            </div>
-            <div class="col">
-                <div class="stat-card">
-                    <div class="stat-value" id="stat-complexity-unavailable">{{ warehousing.complexity_unavailable_definitions | format_number }}</div>
-                    <div class="stat-label">Unavailable Definitions</div>
-                </div>
-            </div>
-        </div>
-        <div class="row mt-2">
-            <div class="col col-6">
-                <div class="chart-container">
-                    <canvas id="complexityDistributionChart"></canvas>
-        <div class="row mt-2">
-            <div class="col col-6">
-                <div class="chart-container">
-                    <canvas id="definitionTypeChart"></canvas>
-                </div>
-            </div>
-            <div class="col col-6">
-                <div class="chart-container">
-                    <canvas id="complexityByTypeChart"></canvas>
-                </div>
-            </div>
         </div>
     </div>
 </div>
-
-<div class="card">
-    <div class="card-header">Objects Needing Review</div>
-    <div class="card-body">
-        <div class="table-responsive">
-                    <canvas id="definitionAgeChart"></canvas>
-                </div>
-            </div>
-        </div>
-
-        {% if definitions.database_summaries %}
-        <div class="table-responsive mt-2">
-            <table class="table">
-                <thead>
-                    <tr>
-                        <th>Workspace</th>
-                        <th>Status</th>
-                        <th class="text-right">Objects</th>
-                        <th class="text-right">Collected</th>
-                        <th>Cap</th>
-                        <th>Unavailable Databases</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for entry in warehousing.column_collection_statuses %}
-                    <tr data-workspace="{{ entry.workspace }}">
-                        <td>{{ entry.workspace }}</td>
-                        <td>
-                            <span class="badge {% if entry.status == 'completed' %}badge-success{% elif entry.status in ['capped', 'partial'] %}badge-warning{% elif entry.status in ['skipped', 'legacy_no_data'] %}badge-secondary{% else %}badge-danger{% endif %}">
-                                {{ entry.status | replace('_', ' ') | title }}
-                            </span>
-                        </td>
-                        <td class="text-right">{{ entry.objects_considered | default('N/A', true) }}</td>
-                        <td class="text-right">{{ entry.objects_collected | default('N/A', true) }}</td>
-                        <td>{{ entry.configured_cap | default('None', true) }}</td>
-                        <td>{{ entry.unavailable_databases | join(', ') }}</td>
-                    </tr>
-                        <th>Object</th>
-                        <th>Type</th>
-                        <th>Database</th>
-                        <th>Complexity</th>
-                        <th class="text-right">Score</th>
-                        <th>Reason</th>
-                        <th>Workspace</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for obj in warehousing.complexity_objects %}
-                    {% if obj.complexity_level in ['HIGH', 'VERY_HIGH'] or obj.definition_status != 'available' %}
-                    <tr data-workspace="{{ obj.workspace }}">
-                        <td>{{ obj.schema_name }}.{{ obj.object_name }}</td>
-                        <td><span class="badge badge-secondary">{{ obj.object_type | title }}</span></td>
-                        <td>{{ obj.database }}</td>
-                        <td>
-                            {% if obj.complexity_level %}
-                            <span class="badge {% if obj.complexity_level == 'VERY_HIGH' %}badge-primary{% elif obj.complexity_level == 'HIGH' %}badge-warning{% else %}badge-secondary{% endif %}">
-                                {{ obj.complexity_level | replace('_', ' ') }}
-                            </span>
-                            {% else %}
-                            <span class="badge badge-warning">{{ obj.definition_status | replace('_', ' ') | title }}</span>
-                            {% endif %}
-                        </td>
-                        <td class="text-right">{{ obj.score if obj.score is not none else 'N/A' }}</td>
-                        <td>{{ obj.escalation_reasons | join('; ') }}</td>
-                        <td>{{ obj.workspace }}</td>
-                    </tr>
-                    {% endif %}
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
-    </div>
-</div>
-
-{% if warehousing.wide_objects %}
-<div class="card">
-    <div class="card-header">Wide Tables and Views (100+ Columns)</div>
-    <div class="card-body">
-        <div class="table-responsive">
-            <table class="table">
-                <thead>
-                    <tr>
-                        <th>Workspace</th>
-                        <th>Database</th>
-                        <th>Schema</th>
-                        <th>Type</th>
-                        <th>Name</th>
-                        <th class="text-right">Columns</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for item in warehousing.wide_objects %}
-                    <tr data-workspace="{{ item.workspace }}">
-                        <td>{{ item.workspace }}</td>
-                        <td>{{ item.database }}</td>
-                        <td>{{ item.schema }}</td>
-                        <td>{{ item.object_type | title }}</td>
-                        <td>{{ item.name }}</td>
-                        <td class="text-right">{{ item.column_count | format_number }}</td>
-                        <th>Database</th>
-                        <th>Status</th>
-                        <th class="text-right">Objects</th>
-                        <th>Description</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for item in definitions.database_summaries %}
-                    <tr data-workspace="{{ item.workspace }}">
-                        <td>{{ item.workspace }}</td>
-                        <td>{{ item.database }}</td>
-                        <td>
-                            <span class="badge {% if item.extraction_status == 'completed' %}badge-success{% elif item.extraction_status == 'partial' %}badge-warning{% else %}badge-secondary{% endif %}">
-                                {{ item.extraction_status | replace('_', ' ') | title }}
-                            </span>
-                        </td>
-                        <td class="text-right">{{ item.total_objects | default(0) | format_number }}</td>
-                        <td>{{ item.status_description | default('') }}</td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
-        {% endif %}
-    </div>
-</div>
-
-{% if definitions.largest_objects %}
-<div class="card">
-    <div class="card-header">Largest SQL Definitions</div>
-    <div class="card-body">
-        <div class="table-responsive">
-            <table class="table">
-                <thead>
-                    <tr>
-                        <th>Object</th>
-                        <th>Type</th>
-                        <th>Database</th>
-                        <th>Workspace</th>
-                        <th class="text-right">Characters</th>
-                        <th>Status</th>
-                        <th>Last Modified</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for item in definitions.largest_objects %}
-                    <tr data-workspace="{{ item.workspace }}">
-                        <td>{{ item.schema }}.{{ item.name }}</td>
-                        <td><span class="badge badge-secondary">{{ item.object_type | replace('_', ' ') | title }}</span></td>
-                        <td>{{ item.database }}</td>
-                        <td>{{ item.workspace }}</td>
-                        <td class="text-right">{{ item.original_length | default(0) | format_number }}</td>
-                        <td>
-                            {% if item.is_encrypted %}<span class="badge badge-warning">Encrypted</span>{% endif %}
-                            {% if item.is_unavailable %}<span class="badge badge-warning">Unavailable</span>{% endif %}
-                            {% if item.is_truncated %}<span class="badge badge-secondary">Truncated</span>{% endif %}
-                            {% if not item.is_encrypted and not item.is_unavailable and not item.is_truncated %}<span class="badge badge-success">Available</span>{% endif %}
-                        </td>
-                        <td>{{ item.modified_at | default('Unknown', true) }}</td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
-{% else %}
-<div class="card mt-2">
-    <div class="card-header">SQL Migration Readiness</div>
-    <div class="card-body text-muted">
-        SQL complexity scoring was not enabled for this assessment.
-    </div>
-</div>
-{% endif %}
-    </div>
-</div>
-{% endif %}
 {% endif %}
 
 <!-- Dedicated SQL Pools (Synapse) -->
@@ -438,6 +134,8 @@
 {% set workload_id = 'dw-workload-' ~ loop.index %}
 {% include "synapse/_workload_profile.html" %}
 {% endfor %}
+{% endif %}
+
 <!-- Serverless Pools (Synapse) -->
 {% if warehousing.serverless_pools %}
 <div class="card">
@@ -760,13 +458,103 @@
 </div>
 {% endif %}
 
+{% if warehousing.column_collection_statuses %}
+<div class="card mt-2">
+    <div class="card-header">Column Metadata and Fabric Compatibility</div>
+    <div class="card-body">
+        <p>
+            <span class="badge badge-success">Compatible: {{ warehousing.compatibility_totals.compatible | format_number }}</span>
+            <span class="badge badge-warning">Review: {{ warehousing.compatibility_totals.review | format_number }}</span>
+            <span class="badge badge-danger">Unsupported: {{ warehousing.compatibility_totals.unsupported | format_number }}</span>
+        </p>
+        <div class="table-responsive">
+            <table class="table">
+                <thead><tr><th>Workspace</th><th>Data Type</th><th>Compatibility</th><th class="text-right">Columns</th></tr></thead>
+                <tbody>
+                    {% for entry in warehousing.column_type_distribution %}
+                    <tr data-workspace="{{ entry.workspace }}">
+                        <td>{{ entry.workspace }}</td><td>{{ entry.data_type }}</td>
+                        <td>{{ entry.compatibility | title }}</td><td class="text-right">{{ entry.column_count | format_number }}</td>
+                    </tr>
+                    {% else %}
+                    <tr><td colspan="4" class="text-muted">No column metadata is available.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+{% if warehousing.complexity_summaries %}
+<div class="card mt-2">
+    <div class="card-header">SQL Migration Readiness</div>
+    <div class="card-body">
+        <p>
+            <strong>{{ warehousing.complexity_scored_objects | format_number }}</strong> scored objects;
+            readiness: {{ warehousing.complexity_readiness_percentage if warehousing.complexity_readiness_percentage is not none else 'N/A' }}%;
+            <span class="badge badge-secondary">{{ warehousing.complexity_readiness_indicator | replace('_', ' ') }}</span>
+        </p>
+        <div class="table-responsive">
+            <table class="table">
+                <thead><tr><th>Object</th><th>Database</th><th>Complexity</th><th class="text-right">Score</th><th>Reason</th></tr></thead>
+                <tbody>
+                    {% for obj in warehousing.complexity_objects %}
+                    {% if obj.complexity_level in ['HIGH', 'VERY_HIGH'] or obj.definition_status != 'available' %}
+                    <tr data-workspace="{{ obj.workspace }}">
+                        <td>{{ obj.schema_name }}.{{ obj.object_name }}</td><td>{{ obj.database }}</td>
+                        <td>{{ obj.complexity_level | default(obj.definition_status, true) | replace('_', ' ') }}</td>
+                        <td class="text-right">{{ obj.score if obj.score is not none else 'N/A' }}</td>
+                        <td>{{ obj.escalation_reasons | join('; ') }}</td>
+                    </tr>
+                    {% endif %}
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+{% set definitions = warehousing.definitions | default({}) %}
+{% if definitions.databases_requested | default(0) > 0 %}
+<div class="card mt-2">
+    <div class="card-header">SQL Definition Analysis</div>
+    <div class="card-body">
+        <p>
+            Definitions: {{ definitions.total_objects | default(0) | format_number }};
+            encrypted: {{ definitions.encrypted_objects | default(0) | format_number }};
+            unavailable: {{ definitions.unavailable_objects | default(0) | format_number }};
+            truncated: {{ definitions.truncated_objects | default(0) | format_number }}.
+        </p>
+        <h3>Largest SQL Definitions</h3>
+        <div class="table-responsive">
+            <table class="table">
+                <thead><tr><th>Object</th><th>Type</th><th>Database</th><th>Workspace</th><th class="text-right">Characters</th><th>Status</th></tr></thead>
+                <tbody>
+                    {% for item in definitions.largest_objects %}
+                    <tr data-workspace="{{ item.workspace }}">
+                        <td>{{ item.schema }}.{{ item.name }}</td><td>{{ item.object_type | replace('_', ' ') | title }}</td>
+                        <td>{{ item.database }}</td><td>{{ item.workspace }}</td>
+                        <td class="text-right">{{ item.original_length | default(0) | format_number }}</td>
+                        <td>{% if item.is_encrypted %}Encrypted{% elif item.is_unavailable %}Unavailable{% elif item.is_truncated %}Truncated{% else %}Available{% endif %}</td>
+                    </tr>
+                    {% else %}
+                    <tr><td colspan="6" class="text-muted">No SQL definitions are available.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endif %}
+
 <div class="mt-2">
     <a href="{{ base_path }}index.html">← Back to Overview</a>
 </div>
 {% endblock %}
 
 {% block scripts %}
-{% set definitions = warehousing.definitions | default({}) %}
 <script>
 const warehousingData = {
 {% for ws_name, ws in workspaces.items() %}
@@ -775,7 +563,6 @@ const warehousingData = {
 {% set dw_dedicated = dw_counts.get('dedicated', {}) if dw_counts is mapping else {} %}
 {% set dw_serverless = dw_counts.get('serverless', {}) if dw_counts is mapping else {} %}
 {% set dw_serverless_activity = dw_serverless.get('activity', {}) if dw_serverless is mapping else {} %}
-{% set column_summary = ws.column_summary if ws.column_summary is mapping else {} %}
     "{{ ws_name }}": {
         dedicated_pools: {{ dw_dedicated.get('sql_pools', dw.get('dedicated_pools', 0)) if dw_dedicated is mapping else dw.get('dedicated_pools', 0) }},
         serverless_pools: {{ dw_serverless.get('sql_pools', 1 if dw.get('serverless_pool') else 0) if dw_serverless is mapping else (1 if dw.get('serverless_pool') else 0) }},
@@ -786,18 +573,10 @@ const warehousingData = {
         serverless_processed_bytes: {{ dw_serverless_activity.get('processed_bytes', 0) if dw_serverless_activity is mapping else 0 }},
         serverless_average_duration_ms: {{ dw_serverless_activity.get('average_duration_ms', 0) if dw_serverless_activity is mapping else 0 }},
         serverless_queries_last_24h: {{ (dw_serverless.get('queries_last_24h') if dw_serverless is mapping else none) | tojson }}
-        columns: {{ column_summary.get('total_columns', 0) }},
-        compatibility: {{ column_summary.get('compatibility_totals', {}) | tojson }},
-        data_types: {{ column_summary.get('data_types', []) | tojson }}
     }{% if not loop.last %},{% endif %}
 {% endfor %}
 };
 
-const complexityWorkspaceData = {{ warehousing.complexity_by_workspace | tojson }};
-let complexityDistributionChart = null;
-let complexityByTypeChart = null;
-
-// Store the database count from template for initial display
 const totalDatabases = {{ warehousing.databases | length }};
 const serverlessActivityData = {{ warehousing.serverless_activity_by_workspace | tojson }};
 let serverlessDailyUsageChart = null;
@@ -1154,27 +933,9 @@ function renderServerlessActivity(selectedWorkspaces) {
     renderServerlessDailyUsageChart(selectedWorkspaces);
     renderServerlessDatabaseChart(selectedWorkspaces);
 }
-let columnTypeChart = null;
-
-function updateFilteredStats(selectedWorkspaces) {
-    let ded = 0, srv = 0, db = 0, tables = 0, sizeGb = 0, columns = 0;
-    const compatibility = { compatible: 0, review: 0, unsupported: 0 };
-    const dataTypes = {};
-const definitionDataByWorkspace = {{ definitions.by_workspace | default({}) | tojson }};
-let definitionTypeChart = null;
-let definitionAgeChart = null;
 
 function updateFilteredStats(selectedWorkspaces) {
     let ded = 0, srv = 0, db = 0, tables = 0, sizeGb = 0;
-    let definitionTotal = 0, encrypted = 0, unavailable = 0, truncated = 0;
-    const definitionTypes = {stored_procedure: 0, function: 0, view: 0};
-    const definitionAges = {
-        less_than_1_year: 0,
-        "1_to_3_years": 0,
-        "3_to_5_years": 0,
-        more_than_5_years: 0,
-        unknown: 0
-    };
     selectedWorkspaces.forEach(ws => {
         const data = warehousingData[ws];
         if (data) {
@@ -1183,26 +944,6 @@ function updateFilteredStats(selectedWorkspaces) {
             db += data.databases || 0;
             tables += data.tables || 0;
             sizeGb += data.size_gb || 0;
-            columns += data.columns || 0;
-            Object.keys(compatibility).forEach(key => {
-                compatibility[key] += (data.compatibility || {})[key] || 0;
-            });
-            (data.data_types || []).forEach(entry => {
-                dataTypes[entry.data_type] = (dataTypes[entry.data_type] || 0) + (entry.column_count || 0);
-            });
-        }
-        const definitionData = definitionDataByWorkspace[ws];
-        if (definitionData) {
-            definitionTotal += definitionData.total_objects || 0;
-            encrypted += definitionData.encrypted_objects || 0;
-            unavailable += definitionData.unavailable_objects || 0;
-            truncated += definitionData.truncated_objects || 0;
-            Object.keys(definitionTypes).forEach(key => {
-                definitionTypes[key] += (definitionData.counts_by_type || {})[key] || 0;
-            });
-            Object.keys(definitionAges).forEach(key => {
-                definitionAges[key] += (definitionData.age_buckets || {})[key] || 0;
-            });
         }
     });
     document.getElementById('stat-ded').textContent = ded;
@@ -1211,196 +952,7 @@ function updateFilteredStats(selectedWorkspaces) {
     document.getElementById('stat-tables').textContent = tables.toLocaleString();
     document.getElementById('stat-size').textContent = sizeGb.toFixed(2) + ' GB';
     renderServerlessActivity(selectedWorkspaces);
-    document.getElementById('stat-columns').textContent = columns.toLocaleString();
-    document.getElementById('dw-compat-compatible').textContent = compatibility.compatible.toLocaleString();
-    document.getElementById('dw-compat-review').textContent = compatibility.review.toLocaleString();
-    document.getElementById('dw-compat-unsupported').textContent = compatibility.unsupported.toLocaleString();
-    if (columnTypeChart) {
-        const entries = Object.entries(dataTypes).sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]));
-        columnTypeChart.data.labels = entries.map(entry => entry[0]);
-        columnTypeChart.data.datasets[0].data = entries.map(entry => entry[1]);
-        columnTypeChart.update();
-    }
 }
-
-const columnTypeCtx = document.getElementById('columnTypeChart');
-if (columnTypeCtx) {
-    columnTypeChart = new Chart(columnTypeCtx, {
-        type: 'bar',
-        data: {
-            labels: {{ warehousing.column_type_totals | map(attribute='data_type') | list | tojson }},
-            datasets: [{
-                label: 'Columns',
-                data: {{ warehousing.column_type_totals | map(attribute='column_count') | list | tojson }},
-                backgroundColor: '#008272'
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: { legend: { display: false } },
-            scales: { y: { beginAtZero: true } }
-        }
-    });
-
-    const complexityTotals = {
-        scored: 0,
-        unavailable: 0,
-        distribution: {LOW: 0, MEDIUM: 0, HIGH: 0, VERY_HIGH: 0},
-        byType: {}
-    };
-    selectedWorkspaces.forEach(ws => {
-        const data = complexityWorkspaceData[ws];
-        if (!data) return;
-        complexityTotals.scored += data.scored_objects || 0;
-        complexityTotals.unavailable += data.unavailable_definitions || 0;
-        Object.keys(complexityTotals.distribution).forEach(level => {
-            complexityTotals.distribution[level] += (data.distribution || {})[level] || 0;
-        });
-        Object.entries(data.by_type || {}).forEach(([type, counts]) => {
-            complexityTotals.byType[type] = (complexityTotals.byType[type] || 0) + (counts.total || 0);
-        });
-    });
-
-    const readyObjects = complexityTotals.distribution.LOW + complexityTotals.distribution.MEDIUM;
-    const readiness = complexityTotals.scored ? (readyObjects / complexityTotals.scored) * 100 : null;
-    const readinessElement = document.getElementById('stat-complexity-readiness');
-    const indicatorElement = document.getElementById('stat-complexity-indicator');
-    const scoredElement = document.getElementById('stat-complexity-scored');
-    const unavailableElement = document.getElementById('stat-complexity-unavailable');
-    if (readinessElement) readinessElement.textContent = readiness === null ? 'N/A' : readiness.toFixed(1) + '%';
-    if (indicatorElement) {
-        indicatorElement.textContent = readiness === null ? 'UNKNOWN' : readiness >= 80 ? 'READY' : readiness >= 50 ? 'REVIEW' : 'HIGH EFFORT';
-    }
-    if (scoredElement) scoredElement.textContent = complexityTotals.scored.toLocaleString();
-    if (unavailableElement) unavailableElement.textContent = complexityTotals.unavailable.toLocaleString();
-
-    if (complexityDistributionChart) {
-        complexityDistributionChart.data.datasets[0].data = [
-            complexityTotals.distribution.LOW,
-            complexityTotals.distribution.MEDIUM,
-            complexityTotals.distribution.HIGH,
-            complexityTotals.distribution.VERY_HIGH
-        ];
-        complexityDistributionChart.update();
-    }
-    if (complexityByTypeChart) {
-        const typeLabels = Object.keys(complexityTotals.byType).sort();
-        complexityByTypeChart.data.labels = typeLabels;
-        complexityByTypeChart.data.datasets[0].data = typeLabels.map(type => complexityTotals.byType[type]);
-        complexityByTypeChart.update();
-    }
-}
-
-{% if warehousing.complexity_summaries %}
-const complexityDistributionCtx = document.getElementById('complexityDistributionChart');
-if (complexityDistributionCtx) {
-    complexityDistributionChart = new Chart(complexityDistributionCtx, {
-        type: 'doughnut',
-        data: {
-            labels: ['Low', 'Medium', 'High', 'Very High'],
-            datasets: [{
-                data: [
-                    {{ warehousing.complexity_distribution.LOW }},
-                    {{ warehousing.complexity_distribution.MEDIUM }},
-                    {{ warehousing.complexity_distribution.HIGH }},
-                    {{ warehousing.complexity_distribution.VERY_HIGH }}
-                ],
-                backgroundColor: ['#107c10', '#ffb900', '#d83b01', '#a80000']
-    const definitionStat = document.getElementById('stat-definitions');
-    if (definitionStat) {
-        definitionStat.textContent = definitionTotal.toLocaleString();
-        document.getElementById('stat-definition-encrypted').textContent = encrypted.toLocaleString();
-        document.getElementById('stat-definition-unavailable').textContent = unavailable.toLocaleString();
-        document.getElementById('stat-definition-truncated').textContent = truncated.toLocaleString();
-    }
-    if (definitionTypeChart) {
-        definitionTypeChart.data.datasets[0].data = [
-            definitionTypes.stored_procedure,
-            definitionTypes.function,
-            definitionTypes.view
-        ];
-        definitionTypeChart.update();
-    }
-    if (definitionAgeChart) {
-        definitionAgeChart.data.datasets[0].data = [
-            definitionAges.less_than_1_year,
-            definitionAges["1_to_3_years"],
-            definitionAges["3_to_5_years"],
-            definitionAges.more_than_5_years,
-            definitionAges.unknown
-        ];
-        definitionAgeChart.update();
-    }
-}
-
-{% if definitions.databases_requested | default(0) > 0 %}
-const definitionTypeCtx = document.getElementById('definitionTypeChart');
-if (definitionTypeCtx) {
-    definitionTypeChart = new Chart(definitionTypeCtx, {
-        type: 'bar',
-        data: {
-            labels: ['Stored Procedures', 'Functions', 'Views'],
-            datasets: [{
-                label: 'Definitions',
-                data: [
-                    {{ definitions.counts_by_type.get('stored_procedure', 0) }},
-                    {{ definitions.counts_by_type.get('function', 0) }},
-                    {{ definitions.counts_by_type.get('view', 0) }}
-                ],
-                backgroundColor: ['#5c2d91', '#0078d4', '#00a4ef']
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {title: {display: true, text: 'Complexity Distribution'}}
-            plugins: {title: {display: true, text: 'Definitions by Type'}},
-            scales: {y: {beginAtZero: true}}
-        }
-    });
-}
-
-const complexityTypeCtx = document.getElementById('complexityByTypeChart');
-if (complexityTypeCtx) {
-    const typeData = {{ warehousing.complexity_by_type | tojson }};
-    const typeLabels = Object.keys(typeData).sort();
-    complexityByTypeChart = new Chart(complexityTypeCtx, {
-        type: 'bar',
-        data: {
-            labels: typeLabels,
-            datasets: [{
-                label: 'Objects',
-                data: typeLabels.map(type => typeData[type].total || 0),
-                backgroundColor: '#5c2d91'
-const definitionAgeCtx = document.getElementById('definitionAgeChart');
-if (definitionAgeCtx) {
-    definitionAgeChart = new Chart(definitionAgeCtx, {
-        type: 'bar',
-        data: {
-            labels: ['< 1 year', '1-3 years', '3-5 years', '> 5 years', 'Unknown'],
-            datasets: [{
-                label: 'Definitions',
-                data: [
-                    {{ definitions.age_buckets.get('less_than_1_year', 0) }},
-                    {{ definitions.age_buckets.get('1_to_3_years', 0) }},
-                    {{ definitions.age_buckets.get('3_to_5_years', 0) }},
-                    {{ definitions.age_buckets.get('more_than_5_years', 0) }},
-                    {{ definitions.age_buckets.get('unknown', 0) }}
-                ],
-                backgroundColor: '#0078d4'
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {title: {display: true, text: 'Complexity by Object Type'}},
-            plugins: {title: {display: true, text: 'Definitions by Last Modified Age'}},
-            scales: {y: {beginAtZero: true}}
-        }
-    });
-}
-{% endif %}
 
 {% if warehousing.dedicated_pools %}
 const poolCtx = document.getElementById('poolSizeChart');
