@@ -1,0 +1,50 @@
+table 'Health page optional columns (last 24 hours)'
+	isHidden
+	lineageTag: 2cf3ecd8-393e-4efc-885b-e66c18dfc42c
+	sourceLineageTag: af6662f6-e532-45fa-a783-20eef4019d33
+
+	column 'Health page optional columns (last 24 hours)'
+		dataType: string
+		isHidden
+		lineageTag: a150a3f8-86bc-4a95-a9bd-5d4b46f217c5
+		sourceLineageTag: fa1ad145-c7f7-46e3-b217-f76c8889249b
+		dataCategory: Uncategorized
+		summarizeBy: none
+		sourceColumn: Health page optional columns (last 24 hours)
+		sortByColumn: 'Health page optional columns (last 24 hours) Order'
+
+		relatedColumnDetails
+			groupByColumn: 'Health page optional columns (last 24 hours) Fields'
+
+		annotation SummarizationSetBy = User
+
+	column 'Health page optional columns (last 24 hours) Fields'
+		dataType: string
+		isHidden
+		lineageTag: 1addb348-0e36-47b0-b742-d8bd7ddf34c4
+		sourceLineageTag: 0d4049ef-afc7-4888-86e2-95492e5f2e09
+		dataCategory: Uncategorized
+		summarizeBy: none
+		sourceColumn: Health page optional columns (last 24 hours) Fields
+		sortByColumn: 'Health page optional columns (last 24 hours) Order'
+
+		annotation SummarizationSetBy = User
+
+	column 'Health page optional columns (last 24 hours) Order'
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: 69c70d7f-9388-44d6-bde4-26ad7dd0cb34
+		sourceLineageTag: 01213e3c-d65b-4d7e-b7d6-fcbc56d6903a
+		dataCategory: Uncategorized
+		summarizeBy: sum
+		sourceColumn: Health page optional columns (last 24 hours) Order
+
+		annotation SummarizationSetBy = User
+
+	partition 'Health page optional columns (last 24 hours)' = entity
+		mode: directQuery
+		source
+			entityName: Health page optional columns (last 24 hours)
+			expressionSource: 'DirectQuery to AS - Fabric Capacity Metrics'
+

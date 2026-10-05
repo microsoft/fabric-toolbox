@@ -1,0 +1,166 @@
+table 'Item History Summary'
+	lineageTag: ffd439a2-bd14-4c1c-86ca-74a33515b574
+	sourceLineageTag: 5b5e6c7b-2aa0-4cf6-8e19-9a3db8bc0572
+
+	column WindowStartTime
+		dataType: dateTime
+		formatString: General Number
+		lineageTag: 18a19989-c343-4fc9-a69d-7a72323a9124
+		sourceLineageTag: 8800f021-f9b2-4738-8de7-aec9a3231a41
+		dataCategory: Uncategorized
+		summarizeBy: none
+		sourceColumn: WindowStartTime
+
+		annotation SummarizationSetBy = User
+
+	column WindowEndTime
+		dataType: dateTime
+		formatString: General Number
+		lineageTag: b31f2690-3973-4325-bc33-4cfe1e486aff
+		sourceLineageTag: 15d44f39-53a5-4966-b948-edb1e058db6c
+		dataCategory: Uncategorized
+		summarizeBy: none
+		sourceColumn: WindowEndTime
+
+		annotation SummarizationSetBy = User
+
+	column StartOf15min
+		dataType: dateTime
+		formatString: General Number
+		lineageTag: 6d4c018c-b736-410c-a1e3-b7b52109bc6e
+		sourceLineageTag: 6b5a274a-ccbb-4691-888e-64b18f1f81c1
+		dataCategory: Uncategorized
+		summarizeBy: none
+		sourceColumn: StartOf15min
+
+		annotation SummarizationSetBy = User
+
+	column Interactive
+		dataType: double
+		lineageTag: 7e759533-4cf5-4339-ae67-ff54c8a2b956
+		sourceLineageTag: ac2fd716-b416-4ae9-8ad0-0b2661ff26d7
+		dataCategory: Uncategorized
+		summarizeBy: sum
+		sourceColumn: Interactive
+
+		annotation SummarizationSetBy = User
+
+	column Background
+		dataType: double
+		lineageTag: 510255de-8b32-4b1f-87bb-3d2acccfd920
+		sourceLineageTag: aee1c80c-ec89-4f23-9316-02911a561952
+		dataCategory: Uncategorized
+		summarizeBy: sum
+		sourceColumn: Background
+
+		annotation SummarizationSetBy = User
+
+	column InteractivePreview
+		dataType: double
+		lineageTag: 66f02d23-ce39-4a92-87e1-f4a3ee1459a7
+		sourceLineageTag: 11973eb6-4094-4788-9eae-8ef0d22ccf1a
+		dataCategory: Uncategorized
+		summarizeBy: sum
+		sourceColumn: InteractivePreview
+
+		annotation SummarizationSetBy = User
+
+	column BackgroundPreview
+		dataType: double
+		lineageTag: afd7786f-249d-49b2-81a2-a1c248167da0
+		sourceLineageTag: 226f4fd1-1c04-4da3-b1bd-dc1a169244f4
+		dataCategory: Uncategorized
+		summarizeBy: sum
+		sourceColumn: BackgroundPreview
+
+		annotation SummarizationSetBy = User
+
+	column AutoScaleCapacityUnits
+		dataType: int64
+		formatString: 0
+		lineageTag: 44fd2193-8aff-480b-b2f0-2075ccb3d8bf
+		sourceLineageTag: 0a207ef1-f31f-4a8c-b3ff-2e06b9da40e4
+		dataCategory: Uncategorized
+		summarizeBy: sum
+		sourceColumn: AutoScaleCapacityUnits
+
+		annotation SummarizationSetBy = User
+
+	column StartOfHour
+		dataType: dateTime
+		formatString: General Number
+		lineageTag: fb0f3e13-f92c-4e35-b406-6250bbaca008
+		sourceLineageTag: c8e7ba46-6113-4a22-a47c-34baae2288bf
+		dataCategory: Uncategorized
+		summarizeBy: none
+		sourceColumn: StartOfHour
+
+		annotation SummarizationSetBy = User
+
+	column Peak15minInteractive
+		dataType: double
+		lineageTag: 06fc1d49-47d6-4896-ad14-08c7e74de305
+		sourceLineageTag: 073fae10-5c88-410b-9000-ae123623bea8
+		dataCategory: Uncategorized
+		summarizeBy: sum
+		sourceColumn: Peak15minInteractive
+
+		annotation SummarizationSetBy = User
+
+	column Peak15minBackground
+		dataType: double
+		lineageTag: 60d60c77-3dba-434c-9b48-45bb41078caa
+		sourceLineageTag: 7a03deb3-d7c8-4886-9cb2-0e851375d87a
+		dataCategory: Uncategorized
+		summarizeBy: sum
+		sourceColumn: Peak15minBackground
+
+		annotation SummarizationSetBy = User
+
+	column Peak15minInteractivePreview
+		dataType: double
+		lineageTag: b4f99001-b5c3-4b95-b0bb-92509f6048d0
+		sourceLineageTag: e5021c30-4096-4d8b-8575-ede0646a171f
+		dataCategory: Uncategorized
+		summarizeBy: sum
+		sourceColumn: Peak15minInteractivePreview
+
+		annotation SummarizationSetBy = User
+
+	column Peak15minBackgroundPreview
+		dataType: double
+		lineageTag: b63f0c56-b9aa-44dc-b18c-1a69fd0679fc
+		sourceLineageTag: 2b2fafe9-2e54-4d9d-8893-6ca1ab8eae84
+		dataCategory: Uncategorized
+		summarizeBy: sum
+		sourceColumn: Peak15minBackgroundPreview
+
+		annotation SummarizationSetBy = User
+
+	column CpuTimeMs
+		dataType: double
+		lineageTag: 1b3a573e-2338-4109-a4f8-5b2c32643060
+		sourceLineageTag: abb1acc5-4790-44fd-9be0-f6beb9a83a54
+		dataCategory: Uncategorized
+		summarizeBy: sum
+		sourceColumn: CpuTimeMs
+
+		annotation SummarizationSetBy = User
+
+	column BaseCapacityUnits
+		dataType: int64
+		formatString: 0
+		lineageTag: 0a060b08-c695-4de9-b764-59d0b13eced2
+		sourceLineageTag: 17f6ce76-3043-4965-ad1f-f3ef044b436e
+		dataCategory: Uncategorized
+		summarizeBy: sum
+		sourceColumn: BaseCapacityUnits
+
+		annotation SummarizationSetBy = User
+
+	partition 'Item History Summary' = entity
+		mode: directQuery
+		source
+			entityName: Item History Summary
+			expressionSource: 'DirectQuery to AS - Fabric Capacity Metrics'
+

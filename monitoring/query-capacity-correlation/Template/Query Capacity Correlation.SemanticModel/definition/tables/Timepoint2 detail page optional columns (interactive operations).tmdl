@@ -1,0 +1,50 @@
+table 'Timepoint2 detail page optional columns (interactive operations)'
+	isHidden
+	lineageTag: 3b48fde9-1e26-4550-b067-524ee276693d
+	sourceLineageTag: 6a53b9b9-c0fc-4b33-bb8e-55d0938133d1
+
+	column 'Timepoint2 detail page optional columns (interactive operations)'
+		dataType: string
+		isHidden
+		lineageTag: 252e190f-e4c7-440a-8add-1310ab6cad8d
+		sourceLineageTag: 096db62c-d71d-4489-8de5-1c7c2417efd9
+		dataCategory: Uncategorized
+		summarizeBy: none
+		sourceColumn: Timepoint2 detail page optional columns (interactive operations)
+		sortByColumn: 'Timepoint2 detail page optional columns (interactive operations) Order'
+
+		relatedColumnDetails
+			groupByColumn: 'Timepoint2 detail page optional columns (interactive operations) Fields'
+
+		annotation SummarizationSetBy = User
+
+	column 'Timepoint2 detail page optional columns (interactive operations) Fields'
+		dataType: string
+		isHidden
+		lineageTag: 5967ccd0-3b71-4d7c-9a25-d87b2564f3ab
+		sourceLineageTag: 7c652f41-3388-4bc9-b105-d3d06885e8fb
+		dataCategory: Uncategorized
+		summarizeBy: none
+		sourceColumn: Timepoint2 detail page optional columns (interactive operations) Fields
+		sortByColumn: 'Timepoint2 detail page optional columns (interactive operations) Order'
+
+		annotation SummarizationSetBy = User
+
+	column 'Timepoint2 detail page optional columns (interactive operations) Order'
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: a4519094-7b63-4794-8d82-ea86c59c70c7
+		sourceLineageTag: ae93ec9c-4ff2-4eeb-8076-6c58913d44cf
+		dataCategory: Uncategorized
+		summarizeBy: sum
+		sourceColumn: Timepoint2 detail page optional columns (interactive operations) Order
+
+		annotation SummarizationSetBy = User
+
+	partition 'Timepoint2 detail page optional columns (interactive operations)' = entity
+		mode: directQuery
+		source
+			entityName: Timepoint2 detail page optional columns (interactive operations)
+			expressionSource: 'DirectQuery to AS - Fabric Capacity Metrics'
+

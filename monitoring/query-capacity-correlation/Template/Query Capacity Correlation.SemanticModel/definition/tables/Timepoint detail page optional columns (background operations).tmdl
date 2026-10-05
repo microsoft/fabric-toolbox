@@ -1,0 +1,50 @@
+table 'Timepoint detail page optional columns (background operations)'
+	isHidden
+	lineageTag: 51dc2679-bdea-4ac1-8b94-0f8146b523e7
+	sourceLineageTag: a40f69cc-a2f0-4e62-a2c0-6282a4e36fb4
+
+	column DynamicColumnsTimepointBackgroundOperations
+		dataType: string
+		isHidden
+		lineageTag: 9778c462-ed3d-49c8-bfb6-894fa4686d1e
+		sourceLineageTag: 12a0b321-5f75-45e5-b83f-09119f5a7bbe
+		dataCategory: Uncategorized
+		summarizeBy: none
+		sourceColumn: DynamicColumnsTimepointBackgroundOperations
+		sortByColumn: 'DynamicColumnsTimepointBackgroundOperations Order'
+
+		relatedColumnDetails
+			groupByColumn: 'DynamicColumnsTimepointBackgroundOperations Fields'
+
+		annotation SummarizationSetBy = User
+
+	column 'DynamicColumnsTimepointBackgroundOperations Fields'
+		dataType: string
+		isHidden
+		lineageTag: a4e0addb-0cf0-4cf8-80fa-9cb0f61fd6e7
+		sourceLineageTag: b893dbda-a9c9-48f0-a7a8-3d17c3a53632
+		dataCategory: Uncategorized
+		summarizeBy: none
+		sourceColumn: DynamicColumnsTimepointBackgroundOperations Fields
+		sortByColumn: 'DynamicColumnsTimepointBackgroundOperations Order'
+
+		annotation SummarizationSetBy = User
+
+	column 'DynamicColumnsTimepointBackgroundOperations Order'
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: 3b2ac092-f849-45f8-8428-c662b1a2b488
+		sourceLineageTag: 1ed195a7-ea0f-497d-9624-8fed2afb0659
+		dataCategory: Uncategorized
+		summarizeBy: sum
+		sourceColumn: DynamicColumnsTimepointBackgroundOperations Order
+
+		annotation SummarizationSetBy = User
+
+	partition 'Timepoint detail page optional columns (background operations)' = entity
+		mode: directQuery
+		source
+			entityName: Timepoint detail page optional columns (background operations)
+			expressionSource: 'DirectQuery to AS - Fabric Capacity Metrics'
+

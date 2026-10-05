@@ -1,0 +1,165 @@
+table 'Timepoint2 Detail For Workload Autoscale'
+	lineageTag: 91d61704-a6f1-404d-81a1-09a4e04b09aa
+	sourceLineageTag: f53c1640-6ebb-42c2-af93-41f21623a27f
+
+	column 'Item Id'
+		dataType: string
+		lineageTag: 07d7de78-acfe-48fd-b3bc-fd6f495f2800
+		sourceLineageTag: 3769d02f-bf42-4e3d-b1b3-f269819cc412
+		dataCategory: Uncategorized
+		summarizeBy: none
+		sourceColumn: Item Id
+
+		annotation SummarizationSetBy = User
+
+	column 'Workspace Id'
+		dataType: string
+		lineageTag: 05043ead-4f80-4e79-8dcc-458d801b853e
+		sourceLineageTag: c0366578-0fbb-40a7-bf94-5f99cfa8e295
+		dataCategory: Uncategorized
+		summarizeBy: none
+		sourceColumn: Workspace Id
+
+		annotation SummarizationSetBy = User
+
+	column 'Capacity Id'
+		dataType: string
+		lineageTag: 96bb7623-c482-425f-825c-9a42b5687212
+		sourceLineageTag: 906b5309-7242-403b-80c1-b459b3d303dc
+		dataCategory: Uncategorized
+		summarizeBy: none
+		sourceColumn: Capacity Id
+
+		annotation SummarizationSetBy = User
+
+	column Operation
+		dataType: string
+		lineageTag: 9cae9fa8-d083-446f-ac93-5a03a66836eb
+		sourceLineageTag: 93a4423e-2243-4d06-98af-a9617c311c27
+		dataCategory: Uncategorized
+		summarizeBy: none
+		sourceColumn: Operation
+
+		annotation SummarizationSetBy = User
+
+	column 'Operation Id'
+		dataType: string
+		lineageTag: ca9de131-52e6-4c19-85a0-87a7ae33429a
+		sourceLineageTag: 8ebaec13-2444-4c09-9cb4-7d482eab1ff3
+		dataCategory: Uncategorized
+		summarizeBy: none
+		sourceColumn: Operation Id
+
+		annotation SummarizationSetBy = User
+
+	column User
+		dataType: string
+		lineageTag: 1f6b3d4f-3687-4017-8b8e-9c4d0063ec73
+		sourceLineageTag: c51fb413-9287-48f7-8f0c-17b2231e6ad9
+		dataCategory: Uncategorized
+		summarizeBy: none
+		sourceColumn: User
+
+		annotation SummarizationSetBy = User
+
+	column 'Release type'
+		dataType: string
+		lineageTag: 228aa9ec-f515-47f7-bed9-a5c77e28fdf7
+		sourceLineageTag: 1ed7fa57-2387-4c00-b9e2-3b0ff96f692c
+		dataCategory: Uncategorized
+		summarizeBy: none
+		sourceColumn: Release type
+
+		annotation SummarizationSetBy = User
+
+	column 'Operation start time'
+		dataType: dateTime
+		formatString: General Number
+		lineageTag: c0da9702-dc28-44f9-9561-55d687dc1ae3
+		sourceLineageTag: 454285f5-13f8-4c57-8622-dcf99e3bb05e
+		dataCategory: Uncategorized
+		summarizeBy: none
+		sourceColumn: Operation start time
+
+		annotation SummarizationSetBy = User
+
+	column 'Timepoint CU (s)'
+		dataType: double
+		lineageTag: 4c8e68a1-a25a-45ea-b589-dd789eef2e4f
+		sourceLineageTag: a096c7a7-335d-4a17-b323-d1f5d3c71ac5
+		dataCategory: Uncategorized
+		summarizeBy: sum
+		sourceColumn: Timepoint CU (s)
+
+		annotation SummarizationSetBy = User
+
+	column 'Duration (s)'
+		dataType: int64
+		formatString: 0
+		lineageTag: 060538cf-9e6f-4b68-be7d-bdc1efdeb482
+		sourceLineageTag: 61af2445-60cb-4d3b-98f3-31d6020589f3
+		dataCategory: Uncategorized
+		summarizeBy: sum
+		sourceColumn: Duration (s)
+
+		annotation SummarizationSetBy = User
+
+	column Status
+		dataType: string
+		lineageTag: 9793ba51-df04-419d-b166-2769e2876956
+		sourceLineageTag: 5ab442af-2713-4697-9411-b5c8c9b84515
+		dataCategory: Uncategorized
+		summarizeBy: none
+		sourceColumn: Status
+
+		annotation SummarizationSetBy = User
+
+	column 'Workload autoscale capacity units limit'
+		dataType: int64
+		formatString: 0
+		lineageTag: e0c7326a-f022-4c9e-98e6-c6fe3e4f0dc0
+		sourceLineageTag: bb27d287-f760-4711-b3f2-e5b2512fcc3b
+		dataCategory: Uncategorized
+		summarizeBy: sum
+		sourceColumn: Workload autoscale capacity units limit
+
+		annotation SummarizationSetBy = User
+
+	column 'Unique key'
+		dataType: string
+		isHidden
+		lineageTag: 0378e0a6-238c-4de8-b356-bbacc407ebbd
+		sourceLineageTag: e8e95029-5c74-44c8-8319-2d719e06f66e
+		dataCategory: Uncategorized
+		summarizeBy: none
+		sourceColumn: Unique key
+
+		annotation SummarizationSetBy = User
+
+	column 'Operation end time'
+		dataType: dateTime
+		formatString: General Number
+		lineageTag: b1629366-f0e0-4d11-bbd2-aab62e9f7b65
+		sourceLineageTag: 903f58db-c899-4505-b02f-dbddab9f1da8
+		dataCategory: Uncategorized
+		summarizeBy: none
+		sourceColumn: Operation end time
+
+		annotation SummarizationSetBy = User
+
+	column 'Billing type'
+		dataType: string
+		lineageTag: 96f6a39a-4682-4ade-9b92-4dd12fe983a8
+		sourceLineageTag: aec7283a-5d29-4aef-baf6-2dab09170571
+		dataCategory: Uncategorized
+		summarizeBy: none
+		sourceColumn: Billing type
+
+		annotation SummarizationSetBy = User
+
+	partition 'Timepoint2 Detail For Workload Autoscale' = entity
+		mode: directQuery
+		source
+			entityName: Timepoint2 Detail For Workload Autoscale
+			expressionSource: 'DirectQuery to AS - Fabric Capacity Metrics'
+

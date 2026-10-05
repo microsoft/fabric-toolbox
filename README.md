@@ -13,9 +13,11 @@ These assets should be treated as examples that you can use to create the soluti
 - $${\color{yellow}UPDATED!}$$ [Fabric Unified Admin Monitoring (FUAM)](./monitoring/fabric-unified-admin-monitoring)
 - [Fabric Platform Monitoring (Monitor Fabric with RTI and Capacity Events)](./monitoring/fabric-platform-monitoring)
 - [Workspace Monitoring Report Templates](./monitoring/workspace-monitoring-dashboards)
+- [Fabric Data Warehouse Query Capacity Correlation](./monitoring/query-capacity-correlation)
 - [Fabric Spark Monitoring (Monitor Spark with RTI)](./monitoring/fabric-spark-monitoring)
 
 ## Accelerators
+- $${\color{green}NEW!}$$ [pq-adbc-advisor — Power Query ODBC → ADBC migration scanner](./accelerators/pq-adbc-advisor)
 - [BCDR Accelerator](./accelerators/BCDR)
 - [CICD: Git-Based Deployments](./accelerators/CICD/Git-based-deployments)
 - [CICD: Deploy using Fabric deployment pipelines](./accelerators/CICD/Deploy-using-Fabric-deployment-pipelines)
@@ -36,6 +38,7 @@ These assets should be treated as examples that you can use to create the soluti
 - [Notebook: List Dedicated Pool Connections](./samples/notebook-list-dedicated-pool-connections)
 - [Notebook: Create, List, Delete a Data Warehouse](./samples/notebook-create-list-delete-warehouse)
 - [Notebook: Workspace Size](./samples/notebook-workspace-size)
+- [Notebook: Fabric Connection Management](./samples/fabric-connection-management)
 
 ## Scripts
 - $${\color{green}NEW!}$$ [Mirror CCI Tables for Fabric SQL DB](./scripts/sql-Mirror-CCI-tables)

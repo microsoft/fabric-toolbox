@@ -1,0 +1,28 @@
+table 'Item History Experience List'
+	lineageTag: 2e3114b7-806b-432a-a66d-d4c0ac79580b
+	sourceLineageTag: b93fd51e-a7c4-421a-a332-d0e52a85354d
+
+	column Experience
+		dataType: string
+		lineageTag: 621116fd-154e-4560-be9a-d37ddeea3047
+		sourceLineageTag: 6710e487-143e-4f77-92bd-2f30e92e4bfb
+		dataCategory: Uncategorized
+		summarizeBy: none
+		sourceColumn: Experience
+
+		extendedProperty ParameterMetadata =
+				{
+				  "version": 2,
+				  "kind": 1,
+				  "supportsMultipleValues": true,
+				  "selectAllValue": "Default"
+				}
+
+		annotation SummarizationSetBy = User
+
+	partition 'Item History Experience List' = entity
+		mode: directQuery
+		source
+			entityName: Item History Experience List
+			expressionSource: 'DirectQuery to AS - Fabric Capacity Metrics'
+

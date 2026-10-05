@@ -1,0 +1,103 @@
+table 'Timepoint Capacity Overage Detail'
+	lineageTag: c438037c-8517-4ee5-a5f1-fa51724ea907
+	sourceLineageTag: db4cc7fe-3505-40bd-a335-342cf3051b6d
+
+	column 'Window start time'
+		dataType: dateTime
+		formatString: General Number
+		lineageTag: 961170ed-fe59-453b-8009-9b7324eee8b5
+		sourceLineageTag: e2c06b60-c838-44e7-9828-76c1858934ce
+		dataCategory: Uncategorized
+		summarizeBy: none
+		sourceColumn: Window start time
+
+		annotation SummarizationSetBy = User
+
+	column 'Start of 20min'
+		dataType: dateTime
+		formatString: General Number
+		lineageTag: 5e50af05-f3cc-4188-a576-7bd56f77c9f5
+		sourceLineageTag: 5397aa44-5f24-4106-bf05-e1408e451f03
+		dataCategory: Uncategorized
+		summarizeBy: none
+		sourceColumn: Start of 20min
+
+		annotation SummarizationSetBy = User
+
+	column 'Start of hour'
+		dataType: dateTime
+		formatString: General Number
+		lineageTag: cc086540-00b4-4b6e-93e6-0551f35c614a
+		sourceLineageTag: b20758f4-f90a-461e-9301-636bc0d4a205
+		dataCategory: Uncategorized
+		summarizeBy: none
+		sourceColumn: Start of hour
+
+		annotation SummarizationSetBy = User
+
+	column 'Peak 20min overage billing limit'
+		dataType: double
+		lineageTag: 5fc1c9fb-0d5d-471e-af7a-1b073debf90f
+		sourceLineageTag: 8a969808-b2a1-4e08-8d35-1626f81b6fb3
+		dataCategory: Uncategorized
+		summarizeBy: sum
+		sourceColumn: Peak 20min overage billing limit
+
+		annotation SummarizationSetBy = User
+
+	column 'Processed overage over 24hours'
+		dataType: double
+		lineageTag: d14519bc-7666-4b80-9b7c-56d7c0eb1d40
+		sourceLineageTag: b019f25c-5672-4e52-8a70-5f67fb6301f0
+		dataCategory: Uncategorized
+		summarizeBy: sum
+		sourceColumn: Processed overage over 24hours
+
+		annotation SummarizationSetBy = User
+
+	column 'Peak 20min processed overage over 24hours'
+		dataType: double
+		lineageTag: 76236ccf-ce38-4e1e-8dfb-344709bb28d9
+		sourceLineageTag: 045a173f-7776-4687-aee0-caad425f411c
+		dataCategory: Uncategorized
+		summarizeBy: sum
+		sourceColumn: Peak 20min processed overage over 24hours
+
+		annotation SummarizationSetBy = User
+
+	column 'Overage billing limit'
+		dataType: double
+		lineageTag: 4392982d-e1b5-47e5-84fa-b2dbf2c18027
+		sourceLineageTag: bc30efc7-ed39-4733-bc81-a2f7fa7f8a4c
+		dataCategory: Uncategorized
+		summarizeBy: sum
+		sourceColumn: Overage billing limit
+
+		annotation SummarizationSetBy = User
+
+	column 'Processed overage'
+		dataType: double
+		lineageTag: 224e100a-4c23-457d-b6be-32aea55c1eb2
+		sourceLineageTag: 06d80953-3c0c-4450-8ca2-9875ff4b7150
+		dataCategory: Uncategorized
+		summarizeBy: sum
+		sourceColumn: Processed overage
+
+		annotation SummarizationSetBy = User
+
+	column 'Peak 20min processed overage'
+		dataType: double
+		lineageTag: 1401ace6-8b0a-4b8d-8de5-4d3fc2ba632c
+		sourceLineageTag: cd7482d2-51a6-4112-b02f-617672605e1f
+		dataCategory: Uncategorized
+		summarizeBy: sum
+		sourceColumn: Peak 20min processed overage
+
+		annotation SummarizationSetBy = User
+
+	partition 'Timepoint Capacity Overage Detail' = entity
+		mode: directQuery
+		source
+			entityName: Timepoint Capacity Overage Detail
+			expressionSource: 'DirectQuery to AS - Fabric Capacity Metrics'
+

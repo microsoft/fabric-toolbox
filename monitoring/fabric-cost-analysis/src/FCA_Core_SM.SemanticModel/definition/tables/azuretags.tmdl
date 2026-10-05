@@ -1,0 +1,59 @@
+table azuretags
+	lineageTag: de31cf2f-a506-4f8f-8a94-b0a1e3b08cbf
+	sourceLineageTag: [dbo].[azuretags]
+
+	measure 'HierarchySlicer Check' =
+			IF([Number of TagsName selected on slicer] = 0, 1,
+			        IF(DISTINCTCOUNT(azuretags[TagName]) = [Number of TagsName selected on slicer], 1, 0))
+		lineageTag: fd1b38dd-ed71-4943-9f7e-51e10f58fca9
+
+		changedProperty = Name
+
+	measure 'Number of TagsName selected on slicer' = IF(ISFILTERED(azuretags[TagName]), COUNTROWS(ALLSELECTED(azuretags[TagName])), 0)
+		formatString: 0
+		lineageTag: 45d8d4bc-f787-4c20-b37b-0c059a44dd5f
+
+		changedProperty = Name
+
+	column ResourceKey
+		dataType: int64
+		formatString: 0
+		sourceProviderType: bigint
+		lineageTag: 2c4dae4d-63f1-4099-bb17-80502fbab665
+		sourceLineageTag: ResourceKey
+		summarizeBy: none
+		sourceColumn: ResourceKey
+
+		changedProperty = SummarizeBy
+
+		annotation SummarizationSetBy = User
+
+	column TagName
+		dataType: string
+		sourceProviderType: varchar(8000)
+		lineageTag: 196a6c5c-f293-4d46-8dec-55ab6268e8b2
+		sourceLineageTag: TagName
+		summarizeBy: none
+		sourceColumn: TagName
+
+		annotation SummarizationSetBy = Automatic
+
+	column TagValue
+		dataType: string
+		sourceProviderType: varchar(8000)
+		lineageTag: 0d204c3c-3113-4c13-a455-670456048367
+		sourceLineageTag: TagValue
+		summarizeBy: none
+		sourceColumn: TagValue
+
+		annotation SummarizationSetBy = Automatic
+
+	partition azuretags = entity
+		mode: directLake
+		source
+			entityName: azuretags
+			schemaName: dbo
+			expressionSource: DatabaseQuery
+
+	annotation PBI_ResultType = Table
+

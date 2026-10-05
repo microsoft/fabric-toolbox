@@ -1,0 +1,92 @@
+table 'Item History Main'
+	lineageTag: 3d0b3be8-1d4c-478f-ae2e-b8e91b4307f2
+	sourceLineageTag: 1232b003-3e32-4ff1-b985-39ba11f4f762
+
+	column WorkspaceName
+		dataType: string
+		lineageTag: c9a992bc-47b6-44bc-bad4-8ab33b5a7eb5
+		sourceLineageTag: 99c9c160-32d1-4a72-80ed-bb18faf09402
+		dataCategory: Uncategorized
+		summarizeBy: none
+		sourceColumn: WorkspaceName
+
+		annotation SummarizationSetBy = User
+
+	column ArtifactName
+		dataType: string
+		lineageTag: 949e294a-c42c-4a7f-a9a4-e9c79cb9486d
+		sourceLineageTag: e4fe89fe-ea0c-4fee-b1de-322180a21fac
+		dataCategory: Uncategorized
+		summarizeBy: none
+		sourceColumn: ArtifactName
+
+		annotation SummarizationSetBy = User
+
+	column OperationName
+		dataType: string
+		lineageTag: 3159df49-3756-4b73-a38c-03abbb48edb7
+		sourceLineageTag: cafc458a-5c77-42e5-b2f9-d50e1977863c
+		dataCategory: Uncategorized
+		summarizeBy: none
+		sourceColumn: OperationName
+
+		annotation SummarizationSetBy = User
+
+	column UtilizationType
+		dataType: string
+		lineageTag: cff767a1-a7d9-4836-99a2-6353458ad1b6
+		sourceLineageTag: a0a5cf5b-3c15-4d8a-837e-fc6301a7d339
+		dataCategory: Uncategorized
+		summarizeBy: none
+		sourceColumn: UtilizationType
+
+		annotation SummarizationSetBy = User
+
+	column ArtifactKind
+		dataType: string
+		lineageTag: 54aa6ea8-cbbf-4628-a9ed-32de54dd7e7e
+		sourceLineageTag: bbd43321-9cde-4e06-944b-53607f3cda3b
+		dataCategory: Uncategorized
+		summarizeBy: none
+		sourceColumn: ArtifactKind
+
+		annotation SummarizationSetBy = User
+
+	column 'Billing type'
+		dataType: string
+		lineageTag: a3df1cea-75a5-4a24-9c49-1407ee9757ed
+		sourceLineageTag: 6158ab0f-43b1-4094-b86b-feb6739601d2
+		dataCategory: Uncategorized
+		summarizeBy: none
+		sourceColumn: Billing type
+
+		annotation SummarizationSetBy = User
+
+	column Experience
+		dataType: string
+		lineageTag: 18e51e40-d740-4111-af23-b40d9bca5b64
+		sourceLineageTag: cd1f6c2f-b184-4b68-8575-9152b1ea60af
+		dataCategory: Uncategorized
+		summarizeBy: none
+		sourceColumn: Experience
+
+		annotation SummarizationSetBy = User
+
+	column ItemHistoryUniquKey
+		dataType: string
+		isHidden
+		isNullable: false
+		lineageTag: e0051d36-99ee-41ce-b813-ae29a39fcb26
+		sourceLineageTag: 43c77498-fa15-44eb-acf6-ac05610ba726
+		dataCategory: Uncategorized
+		summarizeBy: none
+		sourceColumn: ItemHistoryUniquKey
+
+		annotation SummarizationSetBy = User
+
+	partition 'Item History Main' = entity
+		mode: directQuery
+		source
+			entityName: Item History Main
+			expressionSource: 'DirectQuery to AS - Fabric Capacity Metrics'
+

@@ -1,0 +1,128 @@
+table 'Timepoint Overage Detail'
+	lineageTag: c724bfc8-eedc-4749-9f5f-0368cf0d1b4c
+	sourceLineageTag: 6f54374b-69a2-4ef9-84c0-04307c2252f7
+
+	column 'Window start time'
+		dataType: dateTime
+		formatString: General Number
+		lineageTag: dd652dd2-868f-4de5-bfbf-90ef75e2197d
+		sourceLineageTag: c874ab9a-651c-469f-bac6-270e0ff4181b
+		dataCategory: Uncategorized
+		summarizeBy: none
+		sourceColumn: Window start time
+
+		annotation SummarizationSetBy = User
+
+	column 'Cumulative carry forward'
+		dataType: double
+		isNullable: false
+		lineageTag: ae5cdafe-3467-4ac3-a320-420ba70b32e1
+		sourceLineageTag: c257cb49-edec-402f-88c1-c2fdac41bd3a
+		dataCategory: Uncategorized
+		summarizeBy: sum
+		sourceColumn: Cumulative carry forward
+
+		annotation SummarizationSetBy = User
+
+	column 'Carry forward add'
+		dataType: double
+		isNullable: false
+		lineageTag: fd6129d3-51ae-448a-b426-62be1db8d650
+		sourceLineageTag: e5e41122-06ec-444d-a3dd-ecf71c4d9b46
+		dataCategory: Uncategorized
+		summarizeBy: sum
+		sourceColumn: Carry forward add
+
+		annotation SummarizationSetBy = User
+
+	column 'Carry forward burndown'
+		dataType: double
+		isNullable: false
+		lineageTag: 56a7d3bb-da46-4fa4-8779-43d62a242c73
+		sourceLineageTag: 7d997ea5-bf8f-4023-81c6-74e535ba8434
+		dataCategory: Uncategorized
+		summarizeBy: sum
+		sourceColumn: Carry forward burndown
+
+		annotation SummarizationSetBy = User
+
+	column 'Base capacity units'
+		dataType: int64
+		formatString: 0
+		lineageTag: a7b12541-3bbe-4257-9e68-d8cbed5c4296
+		sourceLineageTag: f0e64040-76cc-4c69-980e-d98de8ba7307
+		dataCategory: Uncategorized
+		summarizeBy: sum
+		sourceColumn: Base capacity units
+
+		annotation SummarizationSetBy = User
+
+	column 'Auto scale capacity units'
+		dataType: int64
+		formatString: 0
+		lineageTag: 5a38e5bd-9b87-4bb0-996b-69bb6439808f
+		sourceLineageTag: 2aedae12-b978-4488-a51f-a1c7dbc414fe
+		dataCategory: Uncategorized
+		summarizeBy: sum
+		sourceColumn: Auto scale capacity units
+
+		annotation SummarizationSetBy = User
+
+	column 'Start of 20min'
+		dataType: dateTime
+		formatString: General Number
+		lineageTag: 2c71d8be-6a2b-4edd-b9e5-f1e688a8a8c6
+		sourceLineageTag: 1dc467bc-91b2-4cd6-bbc5-855b8207aa50
+		dataCategory: Uncategorized
+		summarizeBy: none
+		sourceColumn: Start of 20min
+
+		annotation SummarizationSetBy = User
+
+	column 'Peak 20min cumulative carry forward'
+		dataType: double
+		lineageTag: ec639fcb-6593-482c-9807-ca993f0b060f
+		sourceLineageTag: e65f7e20-0c0a-4c73-b46b-458c873570cb
+		dataCategory: Uncategorized
+		summarizeBy: sum
+		sourceColumn: Peak 20min cumulative carry forward
+
+		annotation SummarizationSetBy = User
+
+	column 'Peak 20min carry forward add'
+		dataType: double
+		lineageTag: 7c55508e-f1fd-4674-9e05-3b44925ab476
+		sourceLineageTag: 39ed0bf8-4944-4a9a-a292-a6513fe8d5b6
+		dataCategory: Uncategorized
+		summarizeBy: sum
+		sourceColumn: Peak 20min carry forward add
+
+		annotation SummarizationSetBy = User
+
+	column 'Peak 20min carry forward burndown'
+		dataType: double
+		lineageTag: 052e1083-aa1b-4001-aaca-f4f3e2562a7a
+		sourceLineageTag: dbef0bc5-a487-421c-bfb5-c60f9f0e0bae
+		dataCategory: Uncategorized
+		summarizeBy: sum
+		sourceColumn: Peak 20min carry forward burndown
+
+		annotation SummarizationSetBy = User
+
+	column 'Start of hour'
+		dataType: dateTime
+		formatString: General Number
+		lineageTag: 9aaa3a54-a324-4a35-9387-ed17280c1b96
+		sourceLineageTag: 46b44e9a-9e95-4ce8-aecb-88754736ff3c
+		dataCategory: Uncategorized
+		summarizeBy: none
+		sourceColumn: Start of hour
+
+		annotation SummarizationSetBy = User
+
+	partition 'Timepoint Overage Detail' = entity
+		mode: directQuery
+		source
+			entityName: Timepoint Overage Detail
+			expressionSource: 'DirectQuery to AS - Fabric Capacity Metrics'
+

@@ -1,0 +1,130 @@
+table Timepoints
+	lineageTag: e3751e59-497e-4f5f-bf22-adf92ca3c42e
+	sourceLineageTag: 21986ada-dd61-4482-8401-d01917ece215
+
+	measure 'Filter 60m' = EXTERNALMEASURE("Filter 60m", INTEGER, "DirectQuery to AS - Fabric Capacity Metrics")
+		formatString: 0
+		lineageTag: d324bd9e-83dd-4480-a472-9d182d883b6c
+		sourceLineageTag: da41540d-3b54-44d0-bfe8-8f6f354cfd6a
+		dataCategory: Uncategorized
+
+	measure 'End Time' = EXTERNALMEASURE("End Time", DATETIME, "DirectQuery to AS - Fabric Capacity Metrics")
+		formatString: General Number
+		lineageTag: 34e992a0-ddb8-4a96-89b0-af182431e9a7
+		sourceLineageTag: c802025a-acce-4dcf-a353-a977080b939d
+		dataCategory: Uncategorized
+
+	measure 'End Time Autoscale' = EXTERNALMEASURE("End Time Autoscale", DATETIME, "DirectQuery to AS - Fabric Capacity Metrics")
+		formatString: General Number
+		lineageTag: 995ba5a9-b9ed-42bb-b352-6f6b2a14d599
+		sourceLineageTag: e2b1b313-2c24-426b-b7e9-7de61cf97d1f
+		dataCategory: Uncategorized
+
+	column Timepoint
+		dataType: dateTime
+		isNullable: false
+		formatString: General Number
+		lineageTag: d906450b-78e1-4d7f-851c-64d23875b3a0
+		sourceLineageTag: ddb4b6d4-2f19-4963-9576-b8d79e7bc4c1
+		dataCategory: Uncategorized
+		summarizeBy: none
+		sourceColumn: Timepoint
+
+		extendedProperty ParameterMetadata =
+				{
+				  "version": 2,
+				  "kind": 1,
+				  "selectAllValue": ""
+				}
+
+		annotation SummarizationSetBy = User
+
+	column Date
+		dataType: dateTime
+		formatString: Long Date
+		lineageTag: ee0b7622-ffab-416b-8f4a-551201bf6330
+		sourceLineageTag: 13e45976-ec44-4455-9f5a-bdb838c77c91
+		dataCategory: Uncategorized
+		summarizeBy: none
+		sourceColumn: Date
+
+		annotation SummarizationSetBy = User
+
+	column 'Start of hour'
+		dataType: dateTime
+		formatString: General Number
+		lineageTag: ef51b7f2-55e4-43ad-9070-3ffbeff25ece
+		sourceLineageTag: 974f8545-3d32-47f8-85e6-e4f728e24b2b
+		dataCategory: Uncategorized
+		summarizeBy: none
+		sourceColumn: Start of hour
+
+		annotation SummarizationSetBy = User
+
+	column Next
+		dataType: string
+		lineageTag: d4505151-b4bd-4228-8f6b-caa17e0146a2
+		sourceLineageTag: 444b03c6-c739-4e74-8c57-027bf1831b36
+		dataCategory: Uncategorized
+		summarizeBy: none
+		sourceColumn: Next
+
+		annotation SummarizationSetBy = User
+
+	column Previous
+		dataType: string
+		lineageTag: 892e44b8-650c-4763-b6bc-7b08dfa94685
+		sourceLineageTag: 5afa3ebb-74a4-4e67-9220-84fc7ba463e2
+		dataCategory: Uncategorized
+		summarizeBy: none
+		sourceColumn: Previous
+
+		annotation SummarizationSetBy = User
+
+	column '15 minute bucket'
+		dataType: string
+		lineageTag: 5e218421-3b65-4686-b153-152426e9dd65
+		sourceLineageTag: 84e0eaa5-2cf4-4b52-b743-ab28349f5881
+		dataCategory: Uncategorized
+		summarizeBy: none
+		sourceColumn: 15 minute bucket
+
+		annotation SummarizationSetBy = User
+
+	column Time-point
+		dataType: dateTime
+		isNullable: false
+		formatString: General Number
+		lineageTag: eda59855-4884-40d3-ab2a-dddd52622b99
+		sourceLineageTag: 12db39de-a15a-4d13-b075-9a39cc8be66d
+		dataCategory: Uncategorized
+		summarizeBy: none
+		sourceColumn: Time-point
+
+		extendedProperty ParameterMetadata =
+				{
+				  "version": 2,
+				  "kind": 1,
+				  "selectAllValue": "__SelectAll__"
+				}
+
+		annotation SummarizationSetBy = User
+
+	column Timepoint2
+		dataType: dateTime
+		isNullable: false
+		formatString: General Number
+		lineageTag: 92b400b2-96b0-4528-baba-9e013f4a5225
+		sourceLineageTag: a12ee60c-aa33-4fc2-8816-eb860814c2ef
+		dataCategory: Uncategorized
+		summarizeBy: none
+		sourceColumn: Timepoint2
+
+		annotation SummarizationSetBy = User
+
+	partition Timepoints = entity
+		mode: directQuery
+		source
+			entityName: Timepoints
+			expressionSource: 'DirectQuery to AS - Fabric Capacity Metrics'
+

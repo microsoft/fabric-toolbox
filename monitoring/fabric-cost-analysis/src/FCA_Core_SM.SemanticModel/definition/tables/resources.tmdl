@@ -90,3 +90,5 @@ table resources
 			schemaName: dbo
 			expressionSource: DatabaseQuery
 
+	annotation PBI_ResultType = Table
+

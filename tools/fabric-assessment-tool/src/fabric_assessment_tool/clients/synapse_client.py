@@ -76,12 +76,15 @@ from ..utils import ui as utils_ui
 from ..utils.workload_profile import build_workload_profile, unavailable_workload_profile
 from .api_client import ApiClient
 from .odbc_client import (
-    EndpointKind, OdbcClient, ServerlessActivityExpectedError, SqlAuthMode,
-    SynapseColumnMetadataObject, SynapseColumnMetadataResult,
+    DefinitionRedactionMode,
+    EndpointKind,
+    OdbcClient,
+    ServerlessActivityExpectedError,
+    SqlAuthMode,
+    SynapseColumnMetadataObject,
+    SynapseColumnMetadataResult,
     get_fabric_type_compatibility,
 )
-from .token_provider import FabricNotebookTokenProvider, TokenProvider, create_token_provider
-from .odbc_client import DefinitionRedactionMode, OdbcClient, SqlAuthMode
 from .token_provider import (
     FabricNotebookTokenProvider,
     TokenProvider,

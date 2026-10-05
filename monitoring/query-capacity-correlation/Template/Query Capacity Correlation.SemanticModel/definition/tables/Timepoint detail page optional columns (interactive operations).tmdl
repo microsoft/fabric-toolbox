@@ -1,0 +1,50 @@
+table 'Timepoint detail page optional columns (interactive operations)'
+	isHidden
+	lineageTag: 538a2456-38c7-4394-b311-b81c25bb83ec
+	sourceLineageTag: ee4cd437-52ea-4b69-8429-37e363cef863
+
+	column 'Interactive Operation optional columns '
+		dataType: string
+		isHidden
+		lineageTag: 1a8933fe-8afa-4791-b89f-db67f8a9d09d
+		sourceLineageTag: 03cc5d8e-0538-441b-ad74-daa34ce6ffc9
+		dataCategory: Uncategorized
+		summarizeBy: none
+		sourceColumn: "Interactive Operation optional columns "
+		sortByColumn: 'Interactive Operation optional columns  Order'
+
+		relatedColumnDetails
+			groupByColumn: 'Interactive Operation optional columns  Fields'
+
+		annotation SummarizationSetBy = User
+
+	column 'Interactive Operation optional columns  Fields'
+		dataType: string
+		isHidden
+		lineageTag: f5c4d879-942c-43c0-8ba4-de7e4683164f
+		sourceLineageTag: 18b243e7-a7ff-45fc-ba67-83d4c85e4c52
+		dataCategory: Uncategorized
+		summarizeBy: none
+		sourceColumn: Interactive Operation optional columns  Fields
+		sortByColumn: 'Interactive Operation optional columns  Order'
+
+		annotation SummarizationSetBy = User
+
+	column 'Interactive Operation optional columns  Order'
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: ec9c258a-4b43-4732-ae64-7375b8aab320
+		sourceLineageTag: 03738436-21da-4a3b-87bc-633ffcc90057
+		dataCategory: Uncategorized
+		summarizeBy: sum
+		sourceColumn: Interactive Operation optional columns  Order
+
+		annotation SummarizationSetBy = User
+
+	partition 'Timepoint detail page optional columns (interactive operations)' = entity
+		mode: directQuery
+		source
+			entityName: Timepoint detail page optional columns (interactive operations)
+			expressionSource: 'DirectQuery to AS - Fabric Capacity Metrics'
+

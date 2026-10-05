@@ -1,0 +1,110 @@
+table 'Usage Summary By Capacities (Last 24 hours)'
+	lineageTag: 45e03d1d-b0fa-4f2f-8ee3-4b6031910c3e
+	sourceLineageTag: 1d177861-e971-40b7-902b-e8a5fa1286d8
+
+	column 'Capacity Id'
+		dataType: string
+		lineageTag: 874d7be6-5dab-4ad2-9e95-ed65eefe590b
+		sourceLineageTag: 264c7f7c-c0ee-40d8-b816-3a1a81ca7eb1
+		dataCategory: Uncategorized
+		summarizeBy: none
+		sourceColumn: Capacity Id
+
+		annotation SummarizationSetBy = User
+
+	column Health
+		dataType: string
+		lineageTag: baf8a0be-9dd8-4b95-a17f-1dc561ec73ac
+		sourceLineageTag: e5b85606-f433-4551-b13d-ddaabb23311a
+		dataCategory: Uncategorized
+		summarizeBy: none
+		sourceColumn: Health
+
+		annotation SummarizationSetBy = User
+
+	column 'Average CU %'
+		dataType: double
+		lineageTag: a66ee100-3933-43ad-af39-df0e52b24610
+		sourceLineageTag: 785f9b0a-405b-41c0-b473-ac083df84fee
+		dataCategory: Uncategorized
+		summarizeBy: sum
+		sourceColumn: Average CU %
+
+		annotation SummarizationSetBy = User
+
+	column 'Overage billing limit'
+		dataType: double
+		lineageTag: 9f2dbd93-dab2-498b-af67-13ef16389ea7
+		sourceLineageTag: 53f6d907-df2b-48f0-bc2f-fd9bb3585ac7
+		dataCategory: Uncategorized
+		summarizeBy: sum
+		sourceColumn: Overage billing limit
+
+		annotation SummarizationSetBy = User
+
+	column 'Processed overage'
+		dataType: double
+		lineageTag: a4e4ff65-fde2-4340-b9a7-c78fdf584a3f
+		sourceLineageTag: f00c1e3a-fbb1-435e-9ce7-7f29a8a0d61c
+		dataCategory: Uncategorized
+		summarizeBy: sum
+		sourceColumn: Processed overage
+
+		annotation SummarizationSetBy = User
+
+	column 'P95 interactive delay'
+		dataType: double
+		lineageTag: 2137a659-e641-4d46-9002-ecdc67773e9b
+		sourceLineageTag: 69a21af7-7b05-4da7-83b5-ac0e0257fba0
+		dataCategory: Uncategorized
+		summarizeBy: sum
+		sourceColumn: P95 interactive delay
+
+		annotation SummarizationSetBy = User
+
+	column 'P95 interactive rejection'
+		dataType: double
+		lineageTag: 55c60418-4fb0-470a-8cea-b8a7639a86ad
+		sourceLineageTag: 688186f8-7789-46a2-a2d0-dbc0b1b0939e
+		dataCategory: Uncategorized
+		summarizeBy: sum
+		sourceColumn: P95 interactive rejection
+
+		annotation SummarizationSetBy = User
+
+	column 'P95 background rejection'
+		dataType: double
+		lineageTag: 2b1d0397-cd18-4c92-bf94-a90fb1e9686e
+		sourceLineageTag: b1feb6d4-94a4-4a5a-a12f-4efb5a48468c
+		dataCategory: Uncategorized
+		summarizeBy: sum
+		sourceColumn: P95 background rejection
+
+		annotation SummarizationSetBy = User
+
+	column 'Usage variance'
+		dataType: double
+		lineageTag: b3461aea-ad84-47b1-83e3-f031b1fdde1f
+		sourceLineageTag: 82a306e4-a321-42c2-a96b-935de901bd8c
+		dataCategory: Uncategorized
+		summarizeBy: sum
+		sourceColumn: Usage variance
+
+		annotation SummarizationSetBy = User
+
+	column 'Average utilization'
+		dataType: double
+		lineageTag: be9e2974-67bb-43de-b965-101e5ca112dc
+		sourceLineageTag: 01f8d34f-168a-4f64-b781-320c13bc916a
+		dataCategory: Uncategorized
+		summarizeBy: sum
+		sourceColumn: Average utilization
+
+		annotation SummarizationSetBy = User
+
+	partition 'Usage Summary By Capacities (Last 24 hours)' = entity
+		mode: directQuery
+		source
+			entityName: Usage Summary By Capacities (Last 24 hours)
+			expressionSource: 'DirectQuery to AS - Fabric Capacity Metrics'
+

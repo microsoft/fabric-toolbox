@@ -1,0 +1,427 @@
+/// Warehouse Query Insights executions from the configured Warehouse for the most recent 30 days. Each row represents one hourly window intersected by a submitted warehouse statement.
+table 'Query Executions'
+	lineageTag: d620ca99-60a5-4b8b-aba6-23d4004db51f
+
+	/// Number of distinct Query Insights executions active in the current filter context.
+	measure '# Queries' =
+			VAR IsUnmatchedWindow =
+			    ISINSCOPE('Hour Windows'[Timestamp])
+			        && ISBLANK(SELECTEDVALUE('Hour Windows'[Timestamp]))
+			VAR SelectedHours = VALUES('Hour Windows'[Timestamp])
+			RETURN
+			    IF(
+			        IsUnmatchedWindow,
+			        BLANK(),
+			        COALESCE(
+			            CALCULATE(
+			                DISTINCTCOUNT('Query Executions'[Execution Key]),
+			                TREATAS(SelectedHours, 'Query Executions'[Query Hour])
+			            ),
+			            0
+			        )
+			    )
+		formatString: #,##0
+		displayFolder: Query Activity
+		lineageTag: 2efaae1d-cfe6-4245-9a30-c6b125ebec58
+
+	/// Number of query executions whose Query Insights status is Failed.
+	measure '# Failed Queries' = COALESCE(CALCULATE([# Queries], KEEPFILTERS('Query Executions'[Query Status] = "Failed")), 0)
+		formatString: #,##0
+		displayFolder: Query Activity
+		lineageTag: c11f2ea1-0e15-4358-8166-f6863bc2b1ea
+
+	/// Share of query executions whose Query Insights status is Failed.
+	measure 'Failure Rate' = COALESCE(DIVIDE([# Failed Queries], [# Queries]), 0)
+		formatString: 0.00%
+		displayFolder: Query Activity
+		lineageTag: 2f14fdd9-c580-4562-a31e-6253a15de818
+
+	/// Total elapsed query duration converted from milliseconds to seconds.
+	measure 'Total Duration (s)' =
+			VAR SelectedHours = VALUES('Hour Windows'[Timestamp])
+			VAR SelectedExecutions =
+			    CALCULATETABLE(
+			        VALUES('Query Executions'[Execution Key]),
+			        TREATAS(SelectedHours, 'Query Executions'[Query Hour])
+			    )
+			RETURN
+			    DIVIDE(
+			        SUMX(
+			            SelectedExecutions,
+			            CALCULATE(MAX('Query Executions'[Duration (ms)]))
+			        ),
+			        1000
+			    )
+		formatString: #,##0.00
+		displayFolder: Performance
+		lineageTag: 2306ae0c-9602-42e9-8744-18af70be6048
+
+	/// Average elapsed query duration converted from milliseconds to seconds.
+	measure 'Average Duration (s)' =
+			VAR SelectedHours = VALUES('Hour Windows'[Timestamp])
+			VAR SelectedExecutions =
+			    CALCULATETABLE(
+			        VALUES('Query Executions'[Execution Key]),
+			        TREATAS(SelectedHours, 'Query Executions'[Query Hour])
+			    )
+			RETURN
+			    COALESCE(
+			        DIVIDE(
+			            AVERAGEX(
+			                SelectedExecutions,
+			                CALCULATE(MAX('Query Executions'[Duration (ms)]))
+			            ),
+			            1000
+			        ),
+			        0
+			    )
+		formatString: #,##0.00
+		displayFolder: Performance
+		lineageTag: b76507f5-27f8-462f-89dd-c992bfe36d9d
+
+	/// 95th percentile of elapsed query duration in seconds.
+	measure 'P95 Duration (s)' =
+			VAR SelectedHours = VALUES('Hour Windows'[Timestamp])
+			VAR SelectedExecutions =
+			    CALCULATETABLE(
+			        VALUES('Query Executions'[Execution Key]),
+			        TREATAS(SelectedHours, 'Query Executions'[Query Hour])
+			    )
+			RETURN
+			    COALESCE(
+			        DIVIDE(
+			            PERCENTILEX.INC(
+			                SelectedExecutions,
+			                CALCULATE(MAX('Query Executions'[Duration (ms)])),
+			                0.95
+			            ),
+			            1000
+			        ),
+			        0
+			    )
+		formatString: #,##0.00
+		displayFolder: Performance
+		lineageTag: 04949451-5188-4d86-9c52-17d90bf28528
+
+	/// Total allocated query CPU time converted from milliseconds to seconds.
+	measure 'Total CPU Time (s)' =
+			VAR SelectedHours = VALUES('Hour Windows'[Timestamp])
+			VAR SelectedExecutions =
+			    CALCULATETABLE(
+			        VALUES('Query Executions'[Execution Key]),
+			        TREATAS(SelectedHours, 'Query Executions'[Query Hour])
+			    )
+			RETURN
+			    DIVIDE(
+			        SUMX(
+			            SelectedExecutions,
+			            CALCULATE(MAX('Query Executions'[CPU Time (ms)]))
+			        ),
+			        1000
+			    )
+		formatString: #,##0.00
+		displayFolder: Performance
+		lineageTag: b38d6096-7359-48f0-9867-c97613067b56
+
+	/// Total megabytes scanned across remote storage, memory, and disk.
+	measure 'Total Data Scanned (MB)' =
+			VAR SelectedHours = VALUES('Hour Windows'[Timestamp])
+			VAR SelectedExecutions =
+			    CALCULATETABLE(
+			        VALUES('Query Executions'[Execution Key]),
+			        TREATAS(SelectedHours, 'Query Executions'[Query Hour])
+			    )
+			RETURN
+			    SUMX(
+			        SelectedExecutions,
+			        CALCULATE(
+			            MAX('Query Executions'[Remote Storage Scanned (MB)])
+			                + MAX('Query Executions'[Memory Scanned (MB)])
+			                + MAX('Query Executions'[Disk Scanned (MB)])
+			        )
+			    )
+		formatString: #,##0.00
+		displayFolder: Performance
+		lineageTag: 7c0bbc8c-68d6-4a43-bbcf-f8e1768721e8
+
+	/// Average Capacity Metrics utilization across the selected hourly range.
+	measure 'Capacity Utilization' =
+			VAR SelectedHours = VALUES('Hour Windows'[Timestamp])
+			RETURN
+			    CALCULATE(
+			        AVERAGE('Capacity Hour'[Average CU %]),
+			        TREATAS(SelectedHours, 'Capacity Hour'[Timestamp])
+			    )
+		formatString: 0.00%
+		displayFolder: Correlation
+		lineageTag: e1ece2a7-ee88-4b81-931d-44b9700587a2
+
+	/// Returns one when the current execution overlaps at least one selected hour.
+	measure 'Is Active In Selected Range' =
+			VAR SelectedHours = VALUES('Hour Windows'[Timestamp])
+			VAR MatchingRows =
+			    CALCULATE(
+			        COUNTROWS('Query Executions'),
+			        TREATAS(SelectedHours, 'Query Executions'[Query Hour])
+			    )
+			RETURN
+			    IF(MatchingRows > 0, 1, 0)
+		formatString: 0
+		isHidden
+		lineageTag: c4e7a456-e04f-488b-ae45-78584d022cb6
+
+	/// Query Insights identifier for an individual distributed statement. This value isn't a Capacity Metrics operation identifier.
+	column 'Distributed Statement ID'
+		dataType: string
+		lineageTag: 0e81d763-b781-474a-be70-b3e01112345f
+		summarizeBy: none
+		sourceColumn: query_insights_statement_id
+
+	/// Stable warehouse-scoped identifier used to count an execution once when it spans multiple hourly capacity windows.
+	column 'Execution Key'
+		dataType: string
+		isHidden
+		lineageTag: bd7b2f78-d39e-4cbe-9353-d146229a1cf7
+		summarizeBy: none
+		sourceColumn: execution_key
+
+	/// Fabric item identifier used to relate a query execution to the Capacity Metrics item dimension.
+	column 'Warehouse Item ID'
+		dataType: string
+		isHidden
+		lineageTag: 2fea8bf0-248b-4718-8002-eb0986b41d2b
+		summarizeBy: none
+		sourceColumn: warehouse_item_id
+
+	/// Warehouse that executed the statement.
+	column Warehouse
+		dataType: string
+		lineageTag: 09354ce5-04e3-491f-94d5-54a541c37150
+		summarizeBy: none
+		sourceColumn: warehouse_name
+
+	/// Database context recorded by Query Insights.
+	column Database
+		dataType: string
+		lineageTag: 35f331da-9805-4749-8709-716a694a93e3
+		summarizeBy: none
+		sourceColumn: database_name
+
+	/// UTC timestamp when the statement was submitted.
+	column 'Submitted At'
+		dataType: dateTime
+		lineageTag: 0278e6d0-1f47-4287-9402-bca43a99dfb3
+		summarizeBy: none
+		sourceColumn: submit_time
+
+	/// UTC timestamp when statement execution started.
+	column 'Started At'
+		dataType: dateTime
+		lineageTag: 6aa4127f-922a-4cc4-9f70-75eaf1112b24
+		summarizeBy: none
+		sourceColumn: start_time
+
+	/// UTC timestamp when statement execution ended.
+	column 'Ended At'
+		dataType: dateTime
+		lineageTag: abd43417-cf64-4c94-9b85-f7934c4bfd7f
+		summarizeBy: none
+		sourceColumn: end_time
+
+	/// Execution start converted to Pacific time and rounded down to a 30-second Capacity Metrics timepoint.
+	column 'Query Timepoint'
+		dataType: dateTime
+		isHidden
+		lineageTag: e1257fa9-1947-4109-bf9b-c335e460caac
+		summarizeBy: none
+		sourceColumn: query_timepoint
+
+	/// configured local calendar date of the hourly capacity window intersected by the statement.
+	column 'Query Date'
+		dataType: dateTime
+		formatString: Long Date
+		lineageTag: 6534aad1-d340-4398-84a0-b6c441d0ded0
+		summarizeBy: none
+		sourceColumn: query_date
+
+		variation Variation
+			isDefault
+			relationship: 423e7ec9-9c85-436f-94fe-8afa32c70e8a
+			defaultHierarchy: LocalDateTable_176e0acf-0035-4a53-a205-272d9dd707ba.'Date Hierarchy'
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	/// Warehouse statement classification recorded by Query Insights.
+	column 'Statement Type'
+		dataType: string
+		lineageTag: 9fa907b3-8430-43b1-815b-66f522b2259f
+		summarizeBy: none
+		sourceColumn: statement_type
+
+	/// Total elapsed execution time in milliseconds.
+	column 'Duration (ms)'
+		dataType: int64
+		isHidden
+		lineageTag: ea4db97c-0cf3-4828-ab71-cf93f2fe1324
+		summarizeBy: sum
+		sourceColumn: total_elapsed_time_ms
+
+		annotation SummarizationSetBy = Automatic
+
+	/// Allocated CPU time in milliseconds.
+	column 'CPU Time (ms)'
+		dataType: int64
+		isHidden
+		lineageTag: 23f6a682-2ecf-47bd-8594-573e5a9afc17
+		summarizeBy: sum
+		sourceColumn: allocated_cpu_time_ms
+
+		annotation SummarizationSetBy = Automatic
+
+	/// User identity that submitted the statement.
+	column User
+		dataType: string
+		lineageTag: e4cc4182-ff7e-41ad-8c91-7be4e0dcf883
+		summarizeBy: none
+		sourceColumn: login_name
+
+	/// Rows affected or returned as recorded by Query Insights.
+	column 'Row Count'
+		dataType: int64
+		isHidden
+		lineageTag: d4c4cba7-9d05-47e4-88fb-29990258b006
+		summarizeBy: sum
+		sourceColumn: row_count
+
+		annotation SummarizationSetBy = Automatic
+
+	/// Execution status recorded by Query Insights.
+	column 'Query Status'
+		dataType: string
+		lineageTag: 53139497-e701-4f59-adc0-c3a7f08f0c3e
+		summarizeBy: none
+		sourceColumn: status
+
+	/// Client application that submitted the statement.
+	column 'Client Program'
+		dataType: string
+		lineageTag: ace952c6-00c4-419c-8d3e-b2c01e207a5b
+		summarizeBy: none
+		sourceColumn: program_name
+
+	/// Stable Query Insights hash used to group equivalent query shapes.
+	column 'Query Hash'
+		dataType: string
+		lineageTag: 7e8dcaef-55a8-439f-8298-e9a0b30b2899
+		summarizeBy: none
+		sourceColumn: query_hash
+
+	/// Optional workload label supplied with the statement.
+	column 'Query Label'
+		dataType: string
+		lineageTag: 1fbbff89-c776-44ef-b73c-659a5bfc37b2
+		summarizeBy: none
+		sourceColumn: label
+
+	/// Indicates whether the result cache served the statement.
+	column 'Result Cache Hit'
+		dataType: int64
+		isHidden
+		lineageTag: 911f677c-b589-436b-b4c3-511779a2f10a
+		summarizeBy: sum
+		sourceColumn: result_cache_hit
+
+		annotation SummarizationSetBy = Automatic
+
+	/// SQL pool name associated with the statement.
+	column 'SQL Pool'
+		dataType: string
+		lineageTag: cc41bbba-eda2-4aa7-a197-214273091fb3
+		summarizeBy: none
+		sourceColumn: sql_pool_name
+
+	/// Warehouse error code when execution fails.
+	column 'Error Code'
+		dataType: int64
+		isHidden
+		lineageTag: 2ec253d9-b44a-4e8a-9d42-f0b7dc09db84
+		summarizeBy: count
+		sourceColumn: error_code
+
+		annotation SummarizationSetBy = Automatic
+
+	/// Warehouse error severity when execution fails.
+	column 'Error Severity'
+		dataType: int64
+		isHidden
+		lineageTag: 5a7fe692-6034-4e1e-ac09-0fb6cd6a390e
+		summarizeBy: sum
+		sourceColumn: error_severity
+
+		annotation SummarizationSetBy = Automatic
+
+	/// Warehouse error state when execution fails.
+	column 'Error State'
+		dataType: int64
+		isHidden
+		lineageTag: f1a8b9ed-ee4f-424b-9904-cbc9bddf8f4a
+		summarizeBy: sum
+		sourceColumn: error_state
+
+		annotation SummarizationSetBy = Automatic
+
+	/// Megabytes scanned from remote storage.
+	column 'Remote Storage Scanned (MB)'
+		dataType: double
+		isHidden
+		lineageTag: 47f7e33f-b7c0-449a-85ca-d896dd92cd3b
+		summarizeBy: sum
+		sourceColumn: data_scanned_remote_storage_mb
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	/// Megabytes scanned from memory.
+	column 'Memory Scanned (MB)'
+		dataType: double
+		isHidden
+		lineageTag: 7c8fde65-a580-42b7-a8d1-f6d555dcf56c
+		summarizeBy: sum
+		sourceColumn: data_scanned_memory_mb
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	/// Megabytes scanned from disk.
+	column 'Disk Scanned (MB)'
+		dataType: double
+		isHidden
+		lineageTag: dad3d729-62e5-4739-8f4b-fa759154e807
+		summarizeBy: sum
+		sourceColumn: data_scanned_disk_mb
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	/// Statement text truncated to 4,000 characters for operational investigation.
+	column Command
+		dataType: string
+		lineageTag: d8023983-547c-4305-8449-ec5ea0ad80e3
+		summarizeBy: none
+		sourceColumn: command
+
+	/// configured local hourly capacity window intersected by the statement execution interval.
+	column 'Query Hour'
+		dataType: dateTime
+		isHidden
+		lineageTag: 8d23aa9c-694f-4c16-a588-1ff86d52e49c
+		summarizeBy: none
+		sourceColumn: query_hour
+
+	partition 'Query Executions' = m
+		mode: import
+		source =
+{{QUERY_EXECUTIONS_M}}

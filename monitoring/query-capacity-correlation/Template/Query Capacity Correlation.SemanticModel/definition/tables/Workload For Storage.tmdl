@@ -1,0 +1,30 @@
+table 'Workload For Storage'
+	lineageTag: 92a5ebda-ec14-4b01-b422-6d4a889b0b49
+	sourceLineageTag: ad6fce1f-6d5c-48b6-b35e-d0f73e663544
+
+	column 'Capacity Id'
+		dataType: string
+		lineageTag: 3329da4c-8e29-4e1d-8c83-eef1ab2b002f
+		sourceLineageTag: 24488cd9-69c1-4c63-a078-3d1d563a34d9
+		dataCategory: Uncategorized
+		summarizeBy: none
+		sourceColumn: Capacity Id
+
+		annotation SummarizationSetBy = User
+
+	column 'Workload kind'
+		dataType: string
+		lineageTag: 5f3ab9d1-0e7c-4208-aafd-061235d893a8
+		sourceLineageTag: d5d8f653-3afd-4093-8ce2-fe721dd903a2
+		dataCategory: Uncategorized
+		summarizeBy: none
+		sourceColumn: Workload kind
+
+		annotation SummarizationSetBy = User
+
+	partition 'Workload For Storage' = entity
+		mode: directQuery
+		source
+			entityName: Workload For Storage
+			expressionSource: 'DirectQuery to AS - Fabric Capacity Metrics'
+

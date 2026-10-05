@@ -1,0 +1,243 @@
+table 'Timepoint Interactive Detail'
+	lineageTag: 7d2b0bd0-b4d1-418e-8c0e-02312ca513dd
+	sourceLineageTag: 06e309bf-40e4-4b9c-86d5-7c9e4a745ea4
+
+	column 'Operation start time'
+		dataType: dateTime
+		formatString: General Number
+		lineageTag: 62925beb-393a-4ac7-ba50-6ec3040445d0
+		sourceLineageTag: abd774e4-c882-4c1b-a3f1-1fc05a2d5127
+		dataCategory: Uncategorized
+		summarizeBy: none
+		sourceColumn: Operation start time
+
+		annotation SummarizationSetBy = User
+
+	column 'Operation end time'
+		dataType: dateTime
+		formatString: General Number
+		lineageTag: ba781404-4d53-420e-976c-9dc7880a2904
+		sourceLineageTag: f56abf5b-8331-4964-8995-ad79815d04d4
+		dataCategory: Uncategorized
+		summarizeBy: none
+		sourceColumn: Operation end time
+
+		annotation SummarizationSetBy = User
+
+	column Status
+		dataType: string
+		lineageTag: 50506fe5-3fce-451d-957d-e8f32828f3fa
+		sourceLineageTag: 063483b0-6ba7-4dad-9fc6-ee906dc814e8
+		dataCategory: Uncategorized
+		summarizeBy: none
+		sourceColumn: Status
+
+		annotation SummarizationSetBy = User
+
+	column Item
+		dataType: string
+		lineageTag: f0e24eaf-ceec-44d2-b782-c11906844b31
+		sourceLineageTag: cc02f25e-8235-413f-9199-f7bad11798dd
+		dataCategory: Uncategorized
+		summarizeBy: none
+		sourceColumn: Item
+
+		annotation SummarizationSetBy = User
+
+	column Operation
+		dataType: string
+		lineageTag: 668160cd-6e51-4f13-8624-edd66d293ba2
+		sourceLineageTag: 915182da-d1cc-4bc4-9f75-f519d2ce383c
+		dataCategory: Uncategorized
+		summarizeBy: none
+		sourceColumn: Operation
+
+		annotation SummarizationSetBy = User
+
+	column 'Operation Id'
+		dataType: string
+		lineageTag: 757d3f1e-2c33-487e-a927-e4653e131469
+		sourceLineageTag: af3661cc-472c-4f0c-b3e4-722556c55b54
+		dataCategory: Uncategorized
+		summarizeBy: none
+		sourceColumn: Operation Id
+
+		annotation SummarizationSetBy = User
+
+	column User
+		dataType: string
+		lineageTag: 7092eee9-d413-4e97-9061-0d4c759774db
+		sourceLineageTag: e6904059-1f83-44f8-9fb4-8d5368933b90
+		dataCategory: Uncategorized
+		summarizeBy: none
+		sourceColumn: User
+
+		annotation SummarizationSetBy = User
+
+	column Start
+		dataType: dateTime
+		formatString: General Number
+		lineageTag: 122c4d41-90cb-4458-b372-93bef34d237b
+		sourceLineageTag: 963f488a-6b4e-4f13-967b-8cfefdf3db3e
+		dataCategory: Uncategorized
+		summarizeBy: none
+		sourceColumn: Start
+
+		annotation SummarizationSetBy = User
+
+	column End
+		dataType: dateTime
+		formatString: General Number
+		lineageTag: 77979ee9-7627-46a7-a0fe-aebb3eef2d84
+		sourceLineageTag: 13fb89e6-6d33-4c78-9276-95033d11f7a0
+		dataCategory: Uncategorized
+		summarizeBy: none
+		sourceColumn: End
+
+		annotation SummarizationSetBy = User
+
+	column 'Duration (s)'
+		dataType: int64
+		formatString: #,0
+		lineageTag: c85b8bf7-d57a-45d7-9323-f4cde3032294
+		sourceLineageTag: 1801608a-f124-41bd-8b92-3f9f4184f0cd
+		dataCategory: Uncategorized
+		summarizeBy: sum
+		sourceColumn: Duration (s)
+
+		annotation SummarizationSetBy = User
+
+	column 'Throttling (s)'
+		dataType: int64
+		formatString: 0
+		lineageTag: 8e31e466-67f7-4557-b59a-9221c6fa293d
+		sourceLineageTag: 2172871b-bced-45f7-abab-37a90f48edb2
+		dataCategory: Uncategorized
+		summarizeBy: sum
+		sourceColumn: Throttling (s)
+
+		annotation SummarizationSetBy = User
+
+	column '% of capacity'
+		dataType: double
+		formatString: 0.00%;-0.00%;0.00%
+		lineageTag: 7b0e63cf-77c4-4ce5-b09f-7ad6751bb21f
+		sourceLineageTag: 80f5a8bf-d831-4b1a-ad09-8151f7c2f77d
+		dataCategory: Uncategorized
+		summarizeBy: sum
+		sourceColumn: % of capacity
+
+		annotation SummarizationSetBy = User
+
+	column 'Total CU (s)'
+		dataType: double
+		formatString: #,0.0000
+		lineageTag: 49d3ef08-bf5e-4df3-a44b-97ab3e02e709
+		sourceLineageTag: 576794bc-d8f2-4fc3-8cd6-c8c6315ac5bb
+		dataCategory: Uncategorized
+		summarizeBy: sum
+		sourceColumn: Total CU (s)
+
+		annotation SummarizationSetBy = User
+
+	column 'Timepoint CU (s)'
+		dataType: double
+		formatString: #,0.0000
+		lineageTag: f38a5ddc-d695-45d0-805b-99cb72352969
+		sourceLineageTag: c9d92633-18f2-40f4-bf89-6a82b7e8bea4
+		dataCategory: Uncategorized
+		summarizeBy: sum
+		sourceColumn: Timepoint CU (s)
+
+		annotation SummarizationSetBy = User
+
+	column 'Capacity CU (s)'
+		dataType: int64
+		formatString: 0
+		lineageTag: 7800bcc7-a9d5-4691-8f3b-c69959a04d3d
+		sourceLineageTag: 6d47cb87-e095-431f-a431-e4f01bc8409c
+		dataCategory: Uncategorized
+		summarizeBy: sum
+		sourceColumn: Capacity CU (s)
+
+		annotation SummarizationSetBy = User
+
+	column 'Base capacity CU (s)'
+		dataType: int64
+		formatString: 0
+		lineageTag: 5eb011fb-78e1-47bc-9e0d-c4a61de62ed3
+		sourceLineageTag: e4be6510-affe-43d4-9a9d-af55d9d8b576
+		dataCategory: Uncategorized
+		summarizeBy: sum
+		sourceColumn: Base capacity CU (s)
+
+		annotation SummarizationSetBy = User
+
+	column '% of base capacity'
+		dataType: double
+		formatString: 0.00%;-0.00%;0.00%
+		lineageTag: 9fd4a431-6a1f-4efc-beb6-933ec21177ea
+		sourceLineageTag: 6fd97a86-513d-480a-9951-81abcac2110b
+		dataCategory: Uncategorized
+		summarizeBy: sum
+		sourceColumn: % of base capacity
+
+		annotation SummarizationSetBy = User
+
+	column 'Billing type'
+		dataType: string
+		lineageTag: 04e037e2-3fa7-43e6-88de-f3490c7d77ea
+		sourceLineageTag: cc1340e5-c1fc-4c2c-b09d-cf8a38a12db7
+		dataCategory: Uncategorized
+		summarizeBy: none
+		sourceColumn: Billing type
+
+		annotation SummarizationSetBy = User
+
+	column 'Capacity activation Id'
+		dataType: string
+		lineageTag: 2068a8a9-3168-41ab-908a-7ee71df161ef
+		sourceLineageTag: 421d18fd-a520-4e2a-a8b1-97628be99bc6
+		dataCategory: Uncategorized
+		summarizeBy: none
+		sourceColumn: Capacity activation Id
+
+		annotation SummarizationSetBy = User
+
+	column 'Workspace Id'
+		dataType: string
+		lineageTag: e98377ce-b62d-40be-915a-7e6bbda48cb4
+		sourceLineageTag: 837882a3-e819-4655-9030-272e5ed89ce6
+		dataCategory: Uncategorized
+		summarizeBy: none
+		sourceColumn: Workspace Id
+
+		annotation SummarizationSetBy = User
+
+	column 'Capacity Id'
+		dataType: string
+		lineageTag: f02a4ffe-87d6-4780-8bef-728d330c003c
+		sourceLineageTag: e45fb178-6021-40f7-9304-317052cd85f9
+		dataCategory: Uncategorized
+		summarizeBy: none
+		sourceColumn: Capacity Id
+
+		annotation SummarizationSetBy = User
+
+	column 'Unique key'
+		dataType: string
+		isHidden
+		lineageTag: 58e3e48f-e37d-4984-a894-c8b7c4b2dd00
+		sourceLineageTag: 0f166f78-c286-4b89-bb61-809783d1d71f
+		dataCategory: Uncategorized
+		summarizeBy: none
+		sourceColumn: Unique key
+
+		annotation SummarizationSetBy = User
+
+	partition 'Timepoint Interactive Detail' = entity
+		mode: directQuery
+		source
+			entityName: Timepoint Interactive Detail
+			expressionSource: 'DirectQuery to AS - Fabric Capacity Metrics'
+

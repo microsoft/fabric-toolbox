@@ -1,0 +1,119 @@
+table Capacities
+	lineageTag: 3c4fc910-a238-49e9-8912-b5b0aef7862c
+	sourceLineageTag: ddc921d8-c4bd-4ade-9768-8d7634702955
+
+	column 'Capacity Id'
+		dataType: string
+		isNullable: false
+		lineageTag: 382859c5-13a9-47de-8593-767994ca8f4d
+		sourceLineageTag: 70d8bb7c-bf55-48d0-82e1-4b46f6ea7477
+		dataCategory: Uncategorized
+		summarizeBy: none
+		sourceColumn: Capacity Id
+
+		extendedProperty ParameterMetadata =
+				{
+				  "version": 2,
+				  "kind": 1,
+				  "supportsMultipleValues": true,
+				  "selectAllValue": ""
+				}
+
+		annotation SummarizationSetBy = User
+
+	column State
+		dataType: string
+		lineageTag: b9dbc27d-9c91-4600-92f1-34eb3c87627c
+		sourceLineageTag: f390616e-dc17-4816-9853-7de5471afc9d
+		dataCategory: Uncategorized
+		summarizeBy: none
+		sourceColumn: State
+
+		annotation SummarizationSetBy = User
+
+	column Source
+		dataType: int64
+		formatString: 0
+		lineageTag: 3c982aa3-c620-4021-9710-23de5aac3680
+		sourceLineageTag: 516f5a59-729a-4187-ae35-80f7bf13a513
+		dataCategory: Uncategorized
+		summarizeBy: sum
+		sourceColumn: Source
+
+		annotation SummarizationSetBy = User
+
+	column 'Region without default'
+		dataType: string
+		lineageTag: e2edb344-f8aa-4f75-89aa-d824f3237d88
+		sourceLineageTag: 5044de4e-9e48-4a49-bb45-b0c6ef2e9889
+		dataCategory: Uncategorized
+		summarizeBy: none
+		sourceColumn: Region without default
+
+		annotation SummarizationSetBy = User
+
+	column 'Capacity name'
+		dataType: string
+		lineageTag: 2122ba86-e150-458d-87c0-711a60cf9239
+		sourceLineageTag: 98a0e305-5864-47b3-98ae-7317087e5302
+		dataCategory: Uncategorized
+		summarizeBy: none
+		sourceColumn: Capacity name
+
+		annotation SummarizationSetBy = User
+
+	column SKU
+		dataType: string
+		lineageTag: aca8d277-4ce2-46da-9b82-a4db377d53d1
+		sourceLineageTag: fd3bda45-53e8-4934-9f16-319b955c483e
+		dataCategory: Uncategorized
+		summarizeBy: none
+		sourceColumn: SKU
+
+		annotation SummarizationSetBy = User
+
+	column Owners
+		dataType: string
+		lineageTag: c1812e88-4b62-4b8c-873b-c8e5f6cbc92d
+		sourceLineageTag: a0380b71-f713-4919-b48d-73a554e866fb
+		dataCategory: Uncategorized
+		summarizeBy: none
+		sourceColumn: Owners
+
+		annotation SummarizationSetBy = User
+
+	column Region
+		dataType: string
+		lineageTag: e7c3542c-12d4-4fb1-8deb-8c92ffca43e5
+		sourceLineageTag: 197e8e2a-d014-4258-a8a7-37311529ce2d
+		dataCategory: Uncategorized
+		summarizeBy: none
+		sourceColumn: Region
+
+		extendedProperty ParameterMetadata =
+				{
+				  "version": 2,
+				  "kind": 1,
+				  "selectAllValue": "__SelectAll__"
+				}
+
+		annotation SummarizationSetBy = User
+
+	column 'Uppercase capacity Id'
+		dataType: string
+		isHidden
+		isNullable: false
+		lineageTag: 80f7edbc-68cf-4d6a-9dfe-7f63465cae32
+		sourceLineageTag: c39c2457-59da-4022-b328-d02570a95d01
+		dataCategory: Uncategorized
+		summarizeBy: none
+		sourceColumn: Uppercase capacity Id
+
+		annotation SummarizationSetBy = User
+
+	partition Capacities = entity
+		mode: directQuery
+		source
+			entityName: Capacities
+			expressionSource: 'DirectQuery to AS - Fabric Capacity Metrics'
+

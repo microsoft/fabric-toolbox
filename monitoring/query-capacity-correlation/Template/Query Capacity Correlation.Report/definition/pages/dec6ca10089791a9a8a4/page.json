@@ -1,0 +1,96 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/page/2.1.0/schema.json",
+  "name": "dec6ca10089791a9a8a4",
+  "displayName": "Capacity and Query Overview",
+  "displayOption": "FitToPage",
+  "height": 1080,
+  "width": 1920,
+  "visualInteractions": [
+    {
+      "source": "f3bb201b546901e39b72",
+      "target": "b3019a58595c63487980",
+      "type": "DataFilter"
+    },
+    {
+      "source": "f3bb201b546901e39b72",
+      "target": "abfe01dcc498a2558cf3",
+      "type": "DataFilter"
+    },
+    {
+      "source": "f3bb201b546901e39b72",
+      "target": "1abce99b25fcb4f37be8",
+      "type": "DataFilter"
+    },
+    {
+      "source": "f3bb201b546901e39b72",
+      "target": "94f7de0ae254fe42a954",
+      "type": "DataFilter"
+    },
+    {
+      "source": "f3bb201b546901e39b72",
+      "target": "965312a632e60aaa168c",
+      "type": "DataFilter"
+    },
+    {
+      "source": "f3bb201b546901e39b72",
+      "target": "02adc3880f93c96229bb",
+      "type": "DataFilter"
+    },
+    {
+      "source": "b3019a58595c63487980",
+      "target": "f3bb201b546901e39b72",
+      "type": "DataFilter"
+    },
+    {
+      "source": "b3019a58595c63487980",
+      "target": "abfe01dcc498a2558cf3",
+      "type": "DataFilter"
+    },
+    {
+      "source": "b3019a58595c63487980",
+      "target": "1abce99b25fcb4f37be8",
+      "type": "DataFilter"
+    },
+    {
+      "source": "b3019a58595c63487980",
+      "target": "94f7de0ae254fe42a954",
+      "type": "DataFilter"
+    },
+    {
+      "source": "b3019a58595c63487980",
+      "target": "965312a632e60aaa168c",
+      "type": "DataFilter"
+    },
+    {
+      "source": "b3019a58595c63487980",
+      "target": "02adc3880f93c96229bb",
+      "type": "DataFilter"
+    }
+  ],
+  "objects": {
+    "background": [
+      {
+        "properties": {
+          "color": {
+            "solid": {
+              "color": {
+                "expr": {
+                  "Literal": {
+                    "Value": "'#FAFAFA'"
+                  }
+                }
+              }
+            }
+          },
+          "transparency": {
+            "expr": {
+              "Literal": {
+                "Value": "0D"
+              }
+            }
+          }
+        }
+      }
+    ]
+  }
+}

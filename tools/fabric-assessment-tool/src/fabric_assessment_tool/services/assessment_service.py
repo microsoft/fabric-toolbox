@@ -36,6 +36,7 @@ class AssessmentService:
         sql_tenant_id: Optional[str] = None,
         resources: Optional[List[str]] = None,
         download_notebooks: bool = False,
+        max_parallel_api_calls: int = 8,
         query_history_days: int = 7,
         query_history_top: int = 1000,
         include_sql_text: bool = False,
@@ -130,6 +131,7 @@ class AssessmentService:
         client_kwargs: Dict[str, Any] = {}
         if source == "databricks":
             client_kwargs["cloud"] = cloud
+            client_kwargs["max_parallel_api_calls"] = max_parallel_api_calls
         if subscription_id:
             client_kwargs["subscription_id"] = subscription_id
         if auth_method:
@@ -228,6 +230,16 @@ class AssessmentService:
                 workspace_assessment = client.assess_workspace(
                     workspace,
                     mode,
+                    **(
+                        {
+                            "resources": resources,
+                            "output_path": output_path,
+                            "download_notebooks": download_notebooks,
+                            "max_parallel_api_calls": max_parallel_api_calls,
+                        }
+                        if source == "databricks"
+                        else {}
+                    ),
                 )
 
                 # Export the assessment data using the structured export service

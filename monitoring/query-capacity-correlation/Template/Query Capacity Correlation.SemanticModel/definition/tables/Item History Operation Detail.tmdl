@@ -1,0 +1,129 @@
+table 'Item History Operation Detail'
+	lineageTag: 72112c0e-fe34-41b4-a4e4-fda8799cb633
+	sourceLineageTag: 0e7107f8-aba8-4cbc-a7ad-ca149733f13a
+
+	column Day
+		dataType: dateTime
+		formatString: General Number
+		lineageTag: 6674d415-cd96-4e06-a084-3793755b12ff
+		sourceLineageTag: a584d27f-f967-4e14-be2a-26ebbecddfe7
+		dataCategory: Uncategorized
+		summarizeBy: none
+		sourceColumn: Day
+
+		annotation SummarizationSetBy = User
+
+	column 'CU (s)'
+		dataType: double
+		lineageTag: 607d5c97-885c-4fe2-a6a8-78b451fe5fb1
+		sourceLineageTag: 72205525-3b2e-42bc-9a92-218e51679619
+		dataCategory: Uncategorized
+		summarizeBy: sum
+		sourceColumn: CU (s)
+
+		annotation SummarizationSetBy = User
+
+	column 'Duration (s)'
+		dataType: int64
+		formatString: 0
+		lineageTag: dc917fc6-ed0d-4478-ad27-1397423ef14a
+		sourceLineageTag: 70097d48-41bf-4a29-8076-7541d4c059d6
+		dataCategory: Uncategorized
+		summarizeBy: sum
+		sourceColumn: Duration (s)
+
+		annotation SummarizationSetBy = User
+
+	column 'Throttling (s)'
+		dataType: int64
+		formatString: 0
+		lineageTag: f4453ac9-4dff-4a6f-940b-53b944c04ced
+		sourceLineageTag: 0fbb9bc8-4474-4527-b234-2519f265fd34
+		dataCategory: Uncategorized
+		summarizeBy: sum
+		sourceColumn: Throttling (s)
+
+		annotation SummarizationSetBy = User
+
+	column WindowStartTime
+		dataType: dateTime
+		formatString: General Number
+		lineageTag: 099ab408-358b-4a2b-b38f-68c59e824764
+		sourceLineageTag: 293442e4-bf7b-43ec-9a39-d8b3678b744c
+		dataCategory: Uncategorized
+		summarizeBy: none
+		sourceColumn: WindowStartTime
+
+		annotation SummarizationSetBy = User
+
+	column WindowEndTime
+		dataType: dateTime
+		formatString: General Number
+		lineageTag: efeb11d8-7971-4586-9de4-9baa437462de
+		sourceLineageTag: f0125e01-1656-4773-b0e8-c56dec00ec67
+		dataCategory: Uncategorized
+		summarizeBy: none
+		sourceColumn: WindowEndTime
+
+		annotation SummarizationSetBy = User
+
+	column OperationStartTime
+		dataType: dateTime
+		formatString: General Number
+		lineageTag: a6904c03-20a0-4796-8e57-5c91919e2bcc
+		sourceLineageTag: dcdd26a4-9c71-4390-b82e-a4d4c307c5a5
+		dataCategory: Uncategorized
+		summarizeBy: none
+		sourceColumn: OperationStartTime
+
+		annotation SummarizationSetBy = User
+
+	column OperationEndTime
+		dataType: dateTime
+		formatString: General Number
+		lineageTag: 50576627-962c-4598-8a33-477f88a8be32
+		sourceLineageTag: 3ff92fa9-612f-4e76-a243-1d85d008e0ee
+		dataCategory: Uncategorized
+		summarizeBy: none
+		sourceColumn: OperationEndTime
+
+		annotation SummarizationSetBy = User
+
+	column Status
+		dataType: string
+		lineageTag: 724709d2-440a-4abd-aad8-55e9e9e5063f
+		sourceLineageTag: 37825396-2cb8-4c81-917f-10ab9cd7ea54
+		dataCategory: Uncategorized
+		summarizeBy: none
+		sourceColumn: Status
+
+		annotation SummarizationSetBy = User
+
+	column ItemHistoryUniquKey
+		dataType: string
+		isHidden
+		lineageTag: eb86a3d4-9c1f-45ba-990a-4dc8a2917d02
+		sourceLineageTag: d15c4992-c1fc-4e13-aa14-a64212e46249
+		dataCategory: Uncategorized
+		summarizeBy: none
+		sourceColumn: ItemHistoryUniquKey
+
+		annotation SummarizationSetBy = User
+
+	column Operations
+		dataType: int64
+		formatString: 0
+		lineageTag: 24efec4e-ed17-4772-9f1c-740cb0045fca
+		sourceLineageTag: 1d6898c7-5280-4cb4-af0c-843459908c72
+		dataCategory: Uncategorized
+		summarizeBy: sum
+		sourceColumn: Operations
+
+		annotation SummarizationSetBy = User
+
+	partition 'Item History Operation Detail' = entity
+		mode: directQuery
+		source
+			entityName: Item History Operation Detail
+			expressionSource: 'DirectQuery to AS - Fabric Capacity Metrics'
+

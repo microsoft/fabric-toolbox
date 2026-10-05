@@ -1,0 +1,86 @@
+table 'Timepoint Interactive Summary'
+	lineageTag: 2c59eb13-4bfb-4baf-ab99-6701d5bef6ba
+	sourceLineageTag: 240c7e51-90c6-4487-8792-bde83ae6b998
+
+	column 'Total CU (s)'
+		dataType: double
+		lineageTag: f1d7fe0b-acb9-4a4c-8cd5-a6c7c87bc257
+		sourceLineageTag: 4c68441e-17a6-4b1e-9006-162d28d75ee4
+		dataCategory: Uncategorized
+		summarizeBy: sum
+		sourceColumn: Total CU (s)
+
+		annotation SummarizationSetBy = User
+
+	column 'Timepoint CU (s)'
+		dataType: double
+		formatString: #,0.0000
+		lineageTag: 4962373f-dc51-4703-b33d-fc2d868ee96a
+		sourceLineageTag: 2587724b-4ee9-42a8-9ee8-111db808d442
+		dataCategory: Uncategorized
+		summarizeBy: sum
+		sourceColumn: Timepoint CU (s)
+
+		annotation SummarizationSetBy = User
+
+	column 'Duration (s)'
+		dataType: double
+		formatString: 0
+		lineageTag: cc6f3e25-8eba-40fa-ac94-30b791f640c4
+		sourceLineageTag: 37044ac2-bd89-40fa-a981-495e321c0a81
+		dataCategory: Uncategorized
+		summarizeBy: sum
+		sourceColumn: Duration (s)
+
+		annotation SummarizationSetBy = User
+
+	column 'Throttling (s)'
+		dataType: double
+		formatString: 0
+		lineageTag: d66c17e1-5efa-41b3-9de3-db9b983ee489
+		sourceLineageTag: bb877ddb-edee-48b1-868f-f4641fbcc912
+		dataCategory: Uncategorized
+		summarizeBy: sum
+		sourceColumn: Throttling (s)
+
+		annotation SummarizationSetBy = User
+
+	column Operations
+		dataType: int64
+		formatString: #,0
+		lineageTag: c1a87538-842b-434d-9f65-8844211a4901
+		sourceLineageTag: aa30eaf9-a75a-49c7-bf7c-baa970bd5f0d
+		dataCategory: Uncategorized
+		summarizeBy: sum
+		sourceColumn: Operations
+
+		annotation SummarizationSetBy = User
+
+	column 'Operation unique key'
+		dataType: string
+		isHidden
+		lineageTag: d9929269-1df9-4b85-8ad4-9bd76e224f98
+		sourceLineageTag: 0c7cdee6-86d7-43c0-a9f7-68e05e435edd
+		dataCategory: Uncategorized
+		summarizeBy: none
+		sourceColumn: Operation unique key
+
+		annotation SummarizationSetBy = User
+
+	column '% of base capacity'
+		dataType: double
+		formatString: 0.00%;-0.00%;0.00%
+		lineageTag: 16e2da8c-de4f-4f5f-bb22-3d2f853d1b16
+		sourceLineageTag: 2f4f40f3-bf1f-4b0e-a34b-7ce299aa5c6e
+		dataCategory: Uncategorized
+		summarizeBy: sum
+		sourceColumn: % of base capacity
+
+		annotation SummarizationSetBy = User
+
+	partition 'Timepoint Interactive Summary' = entity
+		mode: directQuery
+		source
+			entityName: Timepoint Interactive Summary
+			expressionSource: 'DirectQuery to AS - Fabric Capacity Metrics'
+

@@ -1,0 +1,39 @@
+table 'Timepoint Item List'
+	lineageTag: 177438bf-02db-4126-b178-aec9d82abc0a
+	sourceLineageTag: 6681a843-f14d-4524-997a-392867524a61
+
+	column 'Artifact Id'
+		dataType: string
+		isNullable: false
+		lineageTag: 82670e7e-2470-4a02-bd84-0d5c3813088b
+		sourceLineageTag: 5b7e8cc6-c6fb-478e-a7e4-9470c3c5d21e
+		dataCategory: Uncategorized
+		summarizeBy: none
+		sourceColumn: Artifact Id
+
+		extendedProperty ParameterMetadata =
+				{
+				  "version": 2,
+				  "kind": 1,
+				  "supportsMultipleValues": true,
+				  "selectAllValue": "__SelectAll__"
+				}
+
+		annotation SummarizationSetBy = User
+
+	column 'Artifact name'
+		dataType: string
+		lineageTag: 9b3ded6a-a725-41e6-988c-443d9836fdfd
+		sourceLineageTag: 8e08f4af-6b42-4ee9-a7aa-eb1fefc11b07
+		dataCategory: Uncategorized
+		summarizeBy: none
+		sourceColumn: Artifact name
+
+		annotation SummarizationSetBy = User
+
+	partition 'Timepoint Item List' = entity
+		mode: directQuery
+		source
+			entityName: Timepoint Item List
+			expressionSource: 'DirectQuery to AS - Fabric Capacity Metrics'
+

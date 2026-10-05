@@ -1,0 +1,50 @@
+table 'Compute page optional columns'
+	isHidden
+	lineageTag: d8be8ab4-47f7-4487-83e9-2dee7b7fc6cc
+	sourceLineageTag: 0bc0b32c-402e-43ce-9185-204c9b1e06b7
+
+	column 'Compute page optional columns'
+		dataType: string
+		isHidden
+		lineageTag: e969c30c-dfad-4741-b3b6-77304daaeb0d
+		sourceLineageTag: c4f633f8-8cfc-4159-9a05-4a78c6ca9f10
+		dataCategory: Uncategorized
+		summarizeBy: none
+		sourceColumn: Compute page optional columns
+		sortByColumn: 'Compute page optional columns Order'
+
+		relatedColumnDetails
+			groupByColumn: 'Compute page optional columns Fields'
+
+		annotation SummarizationSetBy = User
+
+	column 'Compute page optional columns Fields'
+		dataType: string
+		isHidden
+		lineageTag: 84b2f415-e2ca-4831-a2a5-e3238ec6a8b2
+		sourceLineageTag: 9d03df8f-a257-4440-addd-c4dcb894bb62
+		dataCategory: Uncategorized
+		summarizeBy: none
+		sourceColumn: Compute page optional columns Fields
+		sortByColumn: 'Compute page optional columns Order'
+
+		annotation SummarizationSetBy = User
+
+	column 'Compute page optional columns Order'
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: d30e4dd9-4e2a-42fd-b2ff-f48229028a79
+		sourceLineageTag: 684c1755-8297-4db6-b3b7-f51739bb83f0
+		dataCategory: Uncategorized
+		summarizeBy: sum
+		sourceColumn: Compute page optional columns Order
+
+		annotation SummarizationSetBy = User
+
+	partition 'Compute page optional columns' = entity
+		mode: directQuery
+		source
+			entityName: Compute page optional columns
+			expressionSource: 'DirectQuery to AS - Fabric Capacity Metrics'
+

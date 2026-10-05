@@ -1,0 +1,126 @@
+table 'System Events'
+	lineageTag: 07e4e24f-663c-40f9-b424-f97e8100431c
+	sourceLineageTag: 513c6c82-43ec-43ed-81f9-3b602479edf8
+
+	measure 'Pause Resume Cumulative Carry Over Last Window' = EXTERNALMEASURE("Pause Resume Cumulative Carry Over Last Window", DOUBLE, "DirectQuery to AS - Fabric Capacity Metrics")
+		lineageTag: aceb92d2-287d-4b37-afc7-47bfe926792b
+		sourceLineageTag: ac11c03f-b9e2-414b-98ba-35a95d13db6c
+		dataCategory: Uncategorized
+
+	measure 'Pause Resume Cumulative Carry Over Last Window %' = EXTERNALMEASURE("Pause Resume Cumulative Carry Over Last Window %", DOUBLE, "DirectQuery to AS - Fabric Capacity Metrics")
+		formatString: 0.00%;-0.00%;0.00%
+		lineageTag: 9b435465-cba0-44bd-89f0-e8d1aa42fde1
+		sourceLineageTag: 290f6f3f-484d-4297-b03d-8d65ffe48d6e
+		dataCategory: Uncategorized
+
+	measure 'Pause Resume State Change' = EXTERNALMEASURE("Pause Resume State Change", STRING, "DirectQuery to AS - Fabric Capacity Metrics")
+		lineageTag: 34a55637-7c21-41d9-89e2-bed4a92c4b65
+		sourceLineageTag: b7226156-d2d6-4964-a7dd-0d2f2f2d30c0
+		dataCategory: Uncategorized
+
+	measure 'Pause Resume Cumulative Carry Over Last Window 2' = EXTERNALMEASURE("Pause Resume Cumulative Carry Over Last Window 2", DOUBLE, "DirectQuery to AS - Fabric Capacity Metrics")
+		lineageTag: 2de38c7d-fd61-4450-86ad-9a632e08448a
+		sourceLineageTag: d8c777b6-934f-407f-9d54-0c135e67be54
+		dataCategory: Uncategorized
+
+	measure 'Pause Resume Cumulative Carry Over Last Window 2 %' = EXTERNALMEASURE("Pause Resume Cumulative Carry Over Last Window 2 %", DOUBLE, "DirectQuery to AS - Fabric Capacity Metrics")
+		formatString: 0.00%;-0.00%;0.00%
+		lineageTag: f595cd41-9b0b-47a9-8142-4328928d758a
+		sourceLineageTag: 3e97faad-f6ed-4928-b6ce-55952bcde060
+		dataCategory: Uncategorized
+
+	measure 'Pause Resume State Change 2' = EXTERNALMEASURE("Pause Resume State Change 2", STRING, "DirectQuery to AS - Fabric Capacity Metrics")
+		lineageTag: 04670db8-2358-4031-a25f-2c3e873f8308
+		sourceLineageTag: ed502cd9-1ce7-412b-9c10-cad75eb96e26
+		dataCategory: Uncategorized
+
+	measure TotalRowCount = EXTERNALMEASURE("TotalRowCount", INTEGER, "DirectQuery to AS - Fabric Capacity Metrics")
+		formatString: 0
+		lineageTag: c1340605-e6e4-4529-a98b-c069de6ed81c
+		sourceLineageTag: 349ba802-1ed3-4480-989b-08f28e11e4c5
+		dataCategory: Uncategorized
+
+	measure StateChangeText = EXTERNALMEASURE("StateChangeText", STRING, "DirectQuery to AS - Fabric Capacity Metrics")
+		lineageTag: afcee7fe-b359-4df6-b0fb-7ecf9e7ed8b5
+		sourceLineageTag: f9e7edd8-1c30-49ef-8f70-765a3d04a766
+		dataCategory: Uncategorized
+
+	measure StateChangeTextStartUpCard = EXTERNALMEASURE("StateChangeTextStartUpCard", STRING, "DirectQuery to AS - Fabric Capacity Metrics")
+		lineageTag: b489181c-5cbd-4eb3-978f-03fb3b825b8d
+		sourceLineageTag: 6c51ff48-fb5d-4cdf-a5c7-9405c2c1876c
+		dataCategory: Uncategorized
+
+	measure MeasureSystemEvent = EXTERNALMEASURE("MeasureSystemEvent", BOOLEAN, "DirectQuery to AS - Fabric Capacity Metrics")
+		formatString: """TRUE"";""TRUE"";""FALSE"""
+		lineageTag: 038baa11-7f49-4346-ae7e-ed9f7cfba869
+		sourceLineageTag: 715c89ca-704e-4a1f-88bd-03e46f553897
+		dataCategory: Uncategorized
+
+	column 'Capacity Id'
+		dataType: string
+		lineageTag: 51c43151-6e1a-4a79-b1ee-e83bfe1441a8
+		sourceLineageTag: 106513b8-463d-4150-9453-01bbacace5e2
+		dataCategory: Uncategorized
+		summarizeBy: none
+		sourceColumn: Capacity Id
+
+		annotation SummarizationSetBy = User
+
+	column 'Capacity state'
+		dataType: string
+		lineageTag: f5dcc7d1-9334-48d5-873e-34128c8c23ff
+		sourceLineageTag: 89148e54-81ec-4f93-8e44-68da7faf5bde
+		dataCategory: Uncategorized
+		summarizeBy: none
+		sourceColumn: Capacity state
+
+		annotation SummarizationSetBy = User
+
+	column 'Capacity state change reason'
+		dataType: string
+		lineageTag: 44172827-1392-4b20-947e-58a57302ec2a
+		sourceLineageTag: 4116ee3f-7a61-43cb-9255-497b74559da0
+		dataCategory: Uncategorized
+		summarizeBy: none
+		sourceColumn: Capacity state change reason
+
+		annotation SummarizationSetBy = User
+
+	column 'Capacity activation Id'
+		dataType: string
+		lineageTag: b432a691-730b-451f-a632-35a789d68758
+		sourceLineageTag: 86c10dcf-a18b-4d0f-8c7c-3456c030f779
+		dataCategory: Uncategorized
+		summarizeBy: none
+		sourceColumn: Capacity activation Id
+
+		annotation SummarizationSetBy = User
+
+	column 'Capacity state transition time'
+		dataType: dateTime
+		formatString: General Number
+		lineageTag: ea40b927-990d-4494-84c5-cad15a96effe
+		sourceLineageTag: bd2aa7bc-9162-423e-9a39-284f1ed4201b
+		dataCategory: Uncategorized
+		summarizeBy: none
+		sourceColumn: Capacity state transition time
+
+		annotation SummarizationSetBy = User
+
+	column 'Binned capacity state transition time'
+		dataType: dateTime
+		formatString: General Number
+		lineageTag: 4da71682-d943-4a16-8a6c-78e6d37889c9
+		sourceLineageTag: 0bb51467-e1db-4f9c-8584-02fc5867711f
+		dataCategory: Uncategorized
+		summarizeBy: none
+		sourceColumn: Binned capacity state transition time
+
+		annotation SummarizationSetBy = User
+
+	partition 'System Events' = entity
+		mode: directQuery
+		source
+			entityName: System Events
+			expressionSource: 'DirectQuery to AS - Fabric Capacity Metrics'
+

@@ -1,0 +1,61 @@
+table 'Storage By Workspaces'
+	lineageTag: 158b2079-c651-4ad9-b3c9-57fcc17373e9
+	sourceLineageTag: 70c73c63-3070-4748-a77a-eb00d9d85320
+
+	column 'Workspace Id'
+		dataType: string
+		lineageTag: 1dbce661-8da7-4df9-889b-2f8578f12286
+		sourceLineageTag: 1e19f5d6-6711-4172-a2ec-13d9b6f91401
+		dataCategory: Uncategorized
+		summarizeBy: none
+		sourceColumn: Workspace Id
+
+		annotation SummarizationSetBy = User
+
+	column 'Utilization (GB)'
+		dataType: double
+		lineageTag: 7b6995d7-5bc3-48d1-8ff5-5443e3569362
+		sourceLineageTag: f32cf467-e636-4b16-8b20-edc6262fe686
+		dataCategory: Uncategorized
+		summarizeBy: sum
+		sourceColumn: Utilization (GB)
+
+		annotation SummarizationSetBy = User
+
+	column 'Capacity Id'
+		dataType: string
+		lineageTag: 265a2fc3-d9df-4051-b9ba-e8ae8baf5f9f
+		sourceLineageTag: 8d3a3da5-458c-4a08-9a69-8cb2ee77e394
+		dataCategory: Uncategorized
+		summarizeBy: none
+		sourceColumn: Capacity Id
+
+		annotation SummarizationSetBy = User
+
+	column 'Workspace key'
+		dataType: string
+		isHidden
+		lineageTag: 6f59354c-2f0d-48b6-84e6-0baf5bec4256
+		sourceLineageTag: 81a06095-f3c7-42ed-90fb-de7c06cf0407
+		dataCategory: Uncategorized
+		summarizeBy: none
+		sourceColumn: Workspace key
+
+		annotation SummarizationSetBy = User
+
+	column 'Static storage in GB'
+		dataType: double
+		lineageTag: cc30abd1-0977-4d7b-af91-a75eb80e7b2f
+		sourceLineageTag: 80f0c9b4-7f43-4896-ba96-e810119ae40d
+		dataCategory: Uncategorized
+		summarizeBy: sum
+		sourceColumn: Static storage in GB
+
+		annotation SummarizationSetBy = User
+
+	partition 'Storage By Workspaces' = entity
+		mode: directQuery
+		source
+			entityName: Storage By Workspaces
+			expressionSource: 'DirectQuery to AS - Fabric Capacity Metrics'
+

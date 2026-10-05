@@ -1,0 +1,50 @@
+table 'Item history operation details optional columns'
+	isHidden
+	lineageTag: f7a0faea-0cd8-43d1-a01a-b63d2d6a3fe2
+	sourceLineageTag: aeb960a8-6fb8-4f68-8e72-da65d73c6c9f
+
+	column 'Item history operation details optional columns'
+		dataType: string
+		isHidden
+		lineageTag: 18695f5d-2181-4156-8302-72be098faf11
+		sourceLineageTag: 915f7ad2-e2e4-49c4-9fa3-ec41b20384a1
+		dataCategory: Uncategorized
+		summarizeBy: none
+		sourceColumn: Item history operation details optional columns
+		sortByColumn: 'Item history operation details optional columns Order'
+
+		relatedColumnDetails
+			groupByColumn: 'Item history operation details optional columns Fields'
+
+		annotation SummarizationSetBy = User
+
+	column 'Item history operation details optional columns Fields'
+		dataType: string
+		isHidden
+		lineageTag: db0b3edd-0596-4978-8808-44d90772f1f3
+		sourceLineageTag: e71c84c6-41ca-4471-bf42-b8055caa47bb
+		dataCategory: Uncategorized
+		summarizeBy: none
+		sourceColumn: Item history operation details optional columns Fields
+		sortByColumn: 'Item history operation details optional columns Order'
+
+		annotation SummarizationSetBy = User
+
+	column 'Item history operation details optional columns Order'
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: 06108b5a-2597-4cb1-bacc-bbef13be7238
+		sourceLineageTag: dd0fb5fd-110f-4f16-ac49-25b3cfb16f13
+		dataCategory: Uncategorized
+		summarizeBy: sum
+		sourceColumn: Item history operation details optional columns Order
+
+		annotation SummarizationSetBy = User
+
+	partition 'Item history operation details optional columns' = entity
+		mode: directQuery
+		source
+			entityName: Item history operation details optional columns
+			expressionSource: 'DirectQuery to AS - Fabric Capacity Metrics'
+

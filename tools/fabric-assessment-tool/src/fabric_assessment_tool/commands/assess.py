@@ -1,4 +1,6 @@
 import argparse
+import logging
+from pathlib import Path
 
 from ..utils import ui as utils_ui
 from ..services.assessment_service import AssessmentService
@@ -6,6 +8,25 @@ from .base import BaseCommand
 
 SERVERLESS_HISTORY_DAYS_MAX = 45
 SERVERLESS_TOP_N_MAX = 10000
+LOG_FORMAT = "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+
+
+def _configure_logging(log_file: str | None = None) -> None:
+    root_logger = logging.getLogger()
+    root_logger.handlers.clear()
+    if not log_file:
+        return
+
+    root_logger.setLevel(logging.DEBUG)
+    log_path = Path(log_file)
+    log_path.parent.mkdir(parents=True, exist_ok=True)
+    file_handler = logging.FileHandler(log_path, encoding="utf-8")
+    file_handler.setLevel(logging.DEBUG)
+    file_handler.setFormatter(logging.Formatter(LOG_FORMAT))
+    root_logger.addHandler(file_handler)
+
+
+logger = logging.getLogger(__name__)
 
 
 def _int_range(min_value: int, max_value: int):
@@ -127,18 +148,28 @@ Examples:
                 "cluster_policies, instance_pools"
             ),
         )
-
-        parser.add_argument(
-            "--subscription-id",
-            help="Azure subscription ID (if not provided, will use default credentials)",
-        )
-
         parser.add_argument(
             "--download-notebooks",
             action="store_true",
             default=False,
             help="Download and export full notebook source content (disabled by default). "
             "Stores decoded notebook files in a notebook_sources/ folder.",
+        )
+        parser.add_argument(
+            "--max-parallel-api-calls",
+            type=int,
+            default=8,
+            help="Maximum concurrent Databricks API calls for notebook/job and catalog schema extraction (default: 8).",
+        )
+        parser.add_argument(
+            "--log-file",
+            default=None,
+            help="Optional log file path. When provided, logs are written to this file.",
+        )
+
+        parser.add_argument(
+            "--subscription-id",
+            help="Azure subscription ID (if not provided, will use default credentials)",
         )
 
         parser.add_argument(
@@ -370,6 +401,9 @@ Examples:
 
     def handle(self, args: argparse.Namespace) -> None:
         """Handle the assess command execution."""
+        _configure_logging(getattr(args, "log_file", None))
+        if getattr(args, "log_file", None):
+            logger.info("Logging initialized (log_file=%s)", getattr(args, "log_file"))
         print(f"Starting assessment of {args.source} workspaces...")
 
         # Parse workspace names
@@ -415,6 +449,7 @@ Examples:
                 sql_tenant_id=getattr(args, "sql_tenant_id", None),
                 resources=resources,
                 download_notebooks=getattr(args, "download_notebooks", False),
+                max_parallel_api_calls=getattr(args, "max_parallel_api_calls", 8),
                 query_history_days=getattr(args, "query_history_days", 7),
                 query_history_top=getattr(args, "query_history_top", 1000),
                 include_sql_text=getattr(args, "include_sql_text", False),

@@ -1,0 +1,241 @@
+expression 'DirectQuery to AS - Fabric Capacity Metrics' =
+		let
+		    Source = AnalysisServices.Database("{{CAPACITY_METRICS_ENDPOINT}}", "{{CAPACITY_METRICS_MODEL}}"),
+		    Cubes = Table.Combine(Source[Data]),
+		    Cube = Cubes{[Id="Model", Kind="Cube"]}[Data]
+		in
+		    Cube
+	lineageTag: a142fbd1-5e5f-435b-9db5-1938e9a7c1f3
+
+	annotation PBI_IncludeFutureArtifacts = True
+
+expression TimePoint2 =
+		let
+		    Source = null meta [IsParameterQuery=true, Type="DateTime", IsParameterQueryRequired=true]
+		in
+		    Source
+	lineageTag: 2261689b-bc25-4b93-9fc0-2aa5814f5453
+	remoteParameterName: TimePoint2
+	parameterValuesColumn: TimePoints2.Timepoint
+	expressionSource: 'DirectQuery to AS - Fabric Capacity Metrics'
+
+expression TimePoint4 =
+		let
+		    Source = null meta [IsParameterQuery=true, Type="DateTime", IsParameterQueryRequired=true]
+		in
+		    Source
+	lineageTag: 91332fa7-de29-4d79-af8d-fda3f286c996
+	remoteParameterName: TimePoint4
+	parameterValuesColumn: TimePoints2.Time-point
+	expressionSource: 'DirectQuery to AS - Fabric Capacity Metrics'
+
+expression TimePoint =
+		let
+		    Source = null meta [IsParameterQuery=true, Type="DateTime", IsParameterQueryRequired=true]
+		in
+		    Source
+	lineageTag: f83dc4c3-f1a5-4a96-ac21-1d72364beb5d
+	remoteParameterName: TimePoint
+	parameterValuesColumn: Timepoints.Timepoint
+	expressionSource: 'DirectQuery to AS - Fabric Capacity Metrics'
+
+expression TimePoint3 =
+		let
+		    Source = null meta [IsParameterQuery=true, Type="DateTime", IsParameterQueryRequired=true]
+		in
+		    Source
+	lineageTag: 87f5242d-adfc-4212-9375-0938ac588638
+	remoteParameterName: TimePoint3
+	parameterValuesColumn: Timepoints.Time-point
+	expressionSource: 'DirectQuery to AS - Fabric Capacity Metrics'
+
+expression CapacitiesList =
+		let
+		    Source = null meta [IsParameterQuery=true, Type="Text", IsParameterQueryRequired=true]
+		in
+		    Source
+	lineageTag: 2acad0cf-36ed-445c-9fb4-700fa91ecd43
+	remoteParameterName: CapacitiesList
+	parameterValuesColumn: Capacities.'Capacity Id'
+	expressionSource: 'DirectQuery to AS - Fabric Capacity Metrics'
+
+expression RegionName =
+		let
+		    Source = null meta [IsParameterQuery=true, Type="Text", IsParameterQueryRequired=true]
+		in
+		    Source
+	lineageTag: 9978180f-9fca-4574-86a9-357737ad89f7
+	remoteParameterName: RegionName
+	parameterValuesColumn: Capacities.Region
+	expressionSource: 'DirectQuery to AS - Fabric Capacity Metrics'
+
+expression WorkspaceID =
+		let
+		    Source = null meta [IsParameterQuery=true, Type="Text", IsParameterQueryRequired=true]
+		in
+		    Source
+	lineageTag: 3d8498a2-8d74-4ec2-86ca-60c3efbb7644
+	remoteParameterName: WorkspaceID
+	parameterValuesColumn: 'Timepoint Workspace List'.'Workspace Id'
+	expressionSource: 'DirectQuery to AS - Fabric Capacity Metrics'
+
+expression ItemID =
+		let
+		    Source = null meta [IsParameterQuery=true, Type="Text", IsParameterQueryRequired=true]
+		in
+		    Source
+	lineageTag: 5ab71684-2492-4c39-8db0-abfbf3765b10
+	remoteParameterName: ItemID
+	parameterValuesColumn: 'Timepoint Item List'.'Artifact Id'
+	expressionSource: 'DirectQuery to AS - Fabric Capacity Metrics'
+
+expression OperationName =
+		let
+		    Source = null meta [IsParameterQuery=true, Type="Text", IsParameterQueryRequired=true]
+		in
+		    Source
+	lineageTag: 76881390-de76-44d3-a283-2abb49d7f874
+	remoteParameterName: OperationName
+	parameterValuesColumn: 'Timepoint Operation Name List'.'Operation name'
+	expressionSource: 'DirectQuery to AS - Fabric Capacity Metrics'
+
+expression OperationID =
+		let
+		    Source = null meta [IsParameterQuery=true, Type="Text", IsParameterQueryRequired=true]
+		in
+		    Source
+	lineageTag: b1546fdb-f178-4b84-9a79-678bf866ca41
+	remoteParameterName: OperationID
+	parameterValuesColumn: 'Timepoint Operation Id List'.'Operation Id'
+	expressionSource: 'DirectQuery to AS - Fabric Capacity Metrics'
+
+expression Username =
+		let
+		    Source = null meta [IsParameterQuery=true, Type="Text", IsParameterQueryRequired=true]
+		in
+		    Source
+	lineageTag: b2729f8f-4c6d-46ce-9d48-544ba5ba57d9
+	remoteParameterName: Username
+	parameterValuesColumn: 'Timepoint User List'.User
+	expressionSource: 'DirectQuery to AS - Fabric Capacity Metrics'
+
+expression Status =
+		let
+		    Source = null meta [IsParameterQuery=true, Type="Text", IsParameterQueryRequired=true]
+		in
+		    Source
+	lineageTag: 4333966b-8d3e-4b04-acaf-3a69eb5a3c42
+	remoteParameterName: Status
+	parameterValuesColumn: 'Timepoint Status List'.Status
+	expressionSource: 'DirectQuery to AS - Fabric Capacity Metrics'
+
+expression UniqueKey =
+		let
+		    Source = null meta [IsParameterQuery=true, Type="Text", IsParameterQueryRequired=true]
+		in
+		    Source
+	lineageTag: 5755948e-53a1-42ba-a696-56d0317e9217
+	remoteParameterName: UniqueKey
+	parameterValuesColumn: 'Items Operations'.'Operation unique key'
+	expressionSource: 'DirectQuery to AS - Fabric Capacity Metrics'
+
+expression AggCuThreshold =
+		let
+		    Source = null meta [IsParameterQuery=true, Type="Text", IsParameterQueryRequired=true]
+		in
+		    Source
+	lineageTag: f334d69e-4f5d-4e6e-b193-63536c3ace88
+	remoteParameterName: AggCuThreshold
+	parameterValuesColumn: 'CU Threshold'.'CU threshold'
+	expressionSource: 'DirectQuery to AS - Fabric Capacity Metrics'
+
+expression WorkspaceIDHistory =
+		let
+		    Source = null meta [IsParameterQuery=true, Type="Text", IsParameterQueryRequired=true]
+		in
+		    Source
+	lineageTag: fdb8f4f9-7767-44bc-8c7d-1771c3cd4507
+	remoteParameterName: WorkspaceIDHistory
+	parameterValuesColumn: 'Item History Workspace List'.WorkspaceId
+	expressionSource: 'DirectQuery to AS - Fabric Capacity Metrics'
+
+expression OperationNameHistory =
+		let
+		    Source = null meta [IsParameterQuery=true, Type="Text", IsParameterQueryRequired=true]
+		in
+		    Source
+	lineageTag: feba63d5-3aef-4d2d-a6f6-1023d53e2265
+	remoteParameterName: OperationNameHistory
+	parameterValuesColumn: 'Item History Operation Name List'.OperationName
+	expressionSource: 'DirectQuery to AS - Fabric Capacity Metrics'
+
+expression UsernameHistory =
+		let
+		    Source = null meta [IsParameterQuery=true, Type="Text", IsParameterQueryRequired=true]
+		in
+		    Source
+	lineageTag: 213ddcce-f40b-4f67-95d3-1454ce2424f1
+	remoteParameterName: UsernameHistory
+	parameterValuesColumn: 'Item History User List'.user
+	expressionSource: 'DirectQuery to AS - Fabric Capacity Metrics'
+
+expression ExperienceHistory =
+		let
+		    Source = null meta [IsParameterQuery=true, Type="Text", IsParameterQueryRequired=true]
+		in
+		    Source
+	lineageTag: 7c92f3f6-8c86-452f-ac85-f981d40be5c9
+	remoteParameterName: ExperienceHistory
+	parameterValuesColumn: 'Item History Experience List'.Experience
+	expressionSource: 'DirectQuery to AS - Fabric Capacity Metrics'
+
+expression EndHistory =
+		let
+		    Source = null meta [IsParameterQuery=true, Type="DateTime", IsParameterQueryRequired=true]
+		in
+		    Source
+	lineageTag: 26c56a59-ae49-4cd7-986e-109ba79470d1
+	remoteParameterName: EndHistory
+	parameterValuesColumn: 'Date End'.Date
+	expressionSource: 'DirectQuery to AS - Fabric Capacity Metrics'
+
+expression StartHistory =
+		let
+		    Source = null meta [IsParameterQuery=true, Type="DateTime", IsParameterQueryRequired=true]
+		in
+		    Source
+	lineageTag: 67582e7d-3d65-45c9-82eb-c6dbc352aaac
+	remoteParameterName: StartHistory
+	parameterValuesColumn: 'Date Start'.Date
+	expressionSource: 'DirectQuery to AS - Fabric Capacity Metrics'
+
+expression StartDate =
+		let
+		    Source = null meta [IsParameterQuery=true, Type="DateTime", IsParameterQueryRequired=true]
+		in
+		    Source
+	lineageTag: e9ddc458-4d07-4021-a6cf-201f95a28718
+	remoteParameterName: StartDate
+	parameterValuesColumn: Start.BucketStartTime
+	expressionSource: 'DirectQuery to AS - Fabric Capacity Metrics'
+
+expression EndDate =
+		let
+		    Source = null meta [IsParameterQuery=true, Type="DateTime", IsParameterQueryRequired=true]
+		in
+		    Source
+	lineageTag: 83c6e9d7-9eb6-47e1-bd55-e8402c455272
+	remoteParameterName: EndDate
+	parameterValuesColumn: End.BucketEndTime
+	expressionSource: 'DirectQuery to AS - Fabric Capacity Metrics'
+
+expression WorkspaceIDV2 =
+		let
+		    Source = null meta [IsParameterQuery=true, Type="Text", IsParameterQueryRequired=true]
+		in
+		    Source
+	lineageTag: f75e3914-1e9a-4b5e-b6d3-6a8274de05f7
+	remoteParameterName: WorkspaceIDV2
+	parameterValuesColumn: 'Surge Protection Blocked Workspaces Detail'.'Workspace Id'
+	expressionSource: 'DirectQuery to AS - Fabric Capacity Metrics'
+

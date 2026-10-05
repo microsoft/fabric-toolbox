@@ -1,0 +1,374 @@
+relationship 6b273d7e-c425-48a7-ab74-1aa4c7538af0
+	fromColumn: Timepoints.'Start of hour'
+	toColumn: Datetime.'Hour Start'
+
+relationship a3b21e53-05de-4db6-ad39-383a8556e9ef
+	fromColumn: 'Timepoint CU Detail'.'Window start time'
+	toColumn: TimePoints2.Timepoint
+
+relationship 86b27830-e1a3-42db-9bdd-6b63a7b610c4
+	fromColumn: 'Timepoint Interactive Detail'.'Unique key'
+	toColumn: Items.'Unique key'
+
+relationship c02a0d4e-5e08-4c72-842f-803e75d6de5e
+	fromColumn: 'Timepoint Background Detail'.'Unique key'
+	toColumn: Items.'Unique key'
+
+relationship c57c5534-7f4f-437d-86ac-037fa7448f33
+	fromColumn: Items.'Capacity Id'
+	toColumn: Capacities.'Uppercase capacity Id'
+
+relationship 24834adf-62b3-4005-ae87-f407d1369991
+	fromColumn: Datetime.Date
+	toColumn: Dates.Date
+
+relationship 6cbca5bd-5e79-446c-b3fd-7f0e47563d9c
+	fromColumn: 'Metrics By Item And Day'.Date
+	toColumn: Dates.Date
+
+relationship eca7b424-229a-42ff-9ebe-68f1c69cb6d1
+	fromColumn: 'Metrics By Item And Day'.'Unique key'
+	toColumn: Items.'Unique key'
+
+relationship ecb61896-cd80-462a-ba01-9437f6026c0c
+	fromColumn: 'Metrics By Item And Hour'.Datetime
+	toColumn: Datetime.'Hour Start'
+
+relationship 99281abd-cdd5-4686-80af-8e84bc731715
+	fromColumn: 'Metrics By Item And Hour'.'Unique key'
+	toColumn: Items.'Unique key'
+
+relationship 76c72a0b-b3e7-46e2-8eda-2095c380330d
+	fromColumn: 'Metrics By Item Operation And Hour'.'Operation name'
+	toColumn: 'Operation Names'.'Operation name'
+
+relationship d4b39a7d-f576-4f7a-be59-701db6d5bdaf
+	fromColumn: 'Metrics By Item Operation And Hour'.Datetime
+	toColumn: Datetime.'Hour Start'
+
+relationship d0f5afc9-01d5-4bf9-9556-9bdd14a4233e
+	fromColumn: 'Metrics By Item Operation And Hour'.'Unique key'
+	toColumn: Items.'Unique key'
+
+relationship c8498d99-2653-4603-83bb-4b2eec86a803
+	fromColumn: 'Performance Delta Snapshot'.'Unique key'
+	toColumn: Items.'Unique key'
+
+relationship 187c7bf6-7642-4935-923d-d3ced7656f41
+	fromColumn: 'Timepoint2 Interactive Detail'.'Unique key'
+	toColumn: Items.'Unique key'
+
+relationship 195d32ab-e22d-4282-b079-f1e6d526ab01
+	fromColumn: 'Timepoint2 Background Detail'.'Unique key'
+	toColumn: Items.'Unique key'
+
+relationship 5f840e54-9879-48b3-9f08-c0b494618481
+	fromColumn: 'Metrics By Item Operation And Day'.'Operation name'
+	toColumn: 'Operation Names'.'Operation name'
+
+relationship 827f9acc-ace3-4a9f-9ca9-0c15321a2e9e
+	fromColumn: 'Metrics By Item Operation And Day'.Date
+	toColumn: Dates.Date
+
+relationship ba884e22-20cf-4b38-a2e2-c784a7bb083a
+	fromColumn: 'Metrics By Item Operation And Day'.'Unique key'
+	toColumn: Items.'Unique key'
+
+relationship 95046627-8dca-4cc0-b816-289971043740
+	toCardinality: many
+	fromColumn: 'Max Memory By Item'.'Item key'
+	toColumn: Items.'Item key'
+
+relationship d1387704-7759-426f-af67-d60122d02623
+	fromColumn: 'Metrics By Item'.'Unique key'
+	toColumn: Items.'Unique key'
+
+relationship cf9a3ce8-811b-42cb-a89f-3a5f57c04d68
+	fromColumn: 'Metrics By Item And Operation'.'Operation name'
+	toColumn: 'Operation Names'.'Operation name'
+
+relationship 67e7e5d8-d3b8-43aa-bfd6-86216bf82f87
+	fromColumn: 'Metrics By Item And Operation'.'Unique key'
+	toColumn: Items.'Unique key'
+
+relationship 9d3fe4b5-c51a-4366-a8fe-95c201a3d885
+	crossFilteringBehavior: bothDirections
+	toCardinality: many
+	fromColumn: 'Item Kind'.'Item kind'
+	toColumn: Items.'Item Type'
+
+relationship 4f0d3ec4-ec6e-46a4-9424-e31f7f2a68d2
+	fromColumn: 'Storage By Workspaces'.'Workspace key'
+	toColumn: Workspaces.'Workspace key'
+
+relationship 05331dac-d815-4fbf-91a2-30efac63a938
+	fromColumn: 'Storage By Workspaces And Day'.WorkspaceKey
+	toColumn: Workspaces.'Workspace key'
+
+relationship 2d743d22-3e2d-4162-b182-6285c74eea0d
+	fromColumn: 'Storage By Workspaces And Day'.Date
+	toColumn: Dates.Date
+
+relationship 325c13fc-9e4b-42b2-994c-612109ec38d3
+	fromColumn: 'Storage By Workspaces And Day'.'Workload kind'
+	toColumn: Workloads.'Workload kind'
+
+relationship 42c44b7a-3d0b-4fc3-a983-8a884d5c0dfe
+	fromColumn: 'Storage By Workspaces And Day'.'Operation name'
+	toColumn: 'Operation For Storage'.'Operation name'
+
+relationship e5e7b14e-3e28-42cf-8d2b-d02caf60c52e
+	fromColumn: 'Storage By Workspaces And Day'.'Billing type'
+	toColumn: 'Billing Type'.'Billing type'
+
+relationship 9ab336f1-6be6-4c59-a182-94d00ef62b03
+	fromColumn: 'Storage By Workspaces And Hour'.'Workspace key'
+	toColumn: Workspaces.'Workspace key'
+
+relationship a89e9c41-055e-42dd-adbe-3420ba8d5e97
+	fromColumn: 'Storage By Workspaces And Hour'.Datetime
+	toColumn: Datetime.'Hour Start'
+
+relationship 0342656c-8807-484d-9f5e-4d1f48bdc05f
+	fromColumn: 'Storage By Workspaces And Hour'.'Workload kind'
+	toColumn: Workloads.'Workload kind'
+
+relationship d2b66197-7e35-43a8-ae4b-15593384973d
+	fromColumn: 'Storage By Workspaces And Hour'.'Operation name'
+	toColumn: 'Operation For Storage'.'Operation name'
+
+relationship 8945696d-3955-4b01-8df9-cf90c5315749
+	fromColumn: 'Storage By Workspaces And Hour'.'Billing type'
+	toColumn: 'Billing Type'.'Billing type'
+
+relationship d08f88c2-9e2e-4ca0-891e-10fea88d302a
+	fromColumn: Workspaces.'Capacity Id'
+	toColumn: Capacities.'Uppercase capacity Id'
+
+relationship aa640299-6bf4-4e33-ba8d-84fdaaa6ea09
+	fromColumn: 'CU Detail'.'Window start time'
+	toColumn: Timepoints.Timepoint
+
+relationship 0b251110-e59b-4c74-9842-738fb2f1dfd8
+	fromColumn: 'CU Detail'.'Window start time'
+	toColumn: TimePoints2.Timepoint
+
+relationship cb72d419-db02-4dc7-9b4e-1ad073b9e9ca
+	fromColumn: 'Timepoint Overage Detail'.'Window start time'
+	toColumn: Timepoints.Timepoint
+
+relationship e970c98f-415f-4549-b947-8122a721e71b
+	fromColumn: 'Timepoint Overages By Workloads'.'Window start time'
+	toColumn: TimePoints2.Timepoint
+
+relationship b24e5b59-31ee-429e-9c3e-b3a6f20d35df
+	fromColumn: 'Timepoint2 Overages By Workloads'.'Window Start time'
+	toColumn: Timepoints.Timepoint
+
+relationship 80240b46-2599-4997-aad1-c33e9a77e4a4
+	fromColumn: 'System Events'.'Binned capacity state transition time'
+	toColumn: Timepoints.Timepoint
+
+relationship 9031ef51-f0fc-4568-9b61-6beaacd53745
+	fromColumn: 'System Events'.'Binned capacity state transition time'
+	toColumn: TimePoints2.Timepoint
+
+relationship a709f32a-080d-431c-9d67-1b5966b60055
+	fromColumn: 'Timepoint2 CU Detail'.'Window start time'
+	toColumn: Timepoints.Timepoint
+
+relationship a1a80eb9-5077-4645-a5aa-101bb12aacdb
+	toCardinality: many
+	fromColumn: 'Max Memory By Item And Hour'.'Item key'
+	toColumn: Items.'Item key'
+
+relationship 118ba91e-b465-41e5-8dea-09a71c760116
+	fromColumn: 'Max Memory By Item And Hour'.Timestamp
+	toColumn: Datetime.'Hour Start'
+
+relationship 4da876e9-dd09-4b62-b5aa-1feb89912810
+	fromColumn: 'CU Detail For Workload Autoscale'.'Window start time'
+	toColumn: Timepoints.Time-point
+
+relationship 71814c5a-38b3-4142-a94b-452ded80f46b
+	fromColumn: 'Timepoint Detail For Workload Autoscale'.'Unique key'
+	toColumn: Items.'Unique key'
+
+relationship b1ce6934-7a74-4337-8672-1643a8927d7a
+	fromColumn: 'Metrics By Item And Day For Workload Autoscale'.Date
+	toColumn: Dates.Date
+
+relationship 3f83d6ec-69c7-46b8-86d1-d6be07662ed0
+	fromColumn: 'Metrics By Item And Day For Workload Autoscale'.'Unique key'
+	toColumn: Items.'Unique key'
+
+relationship 25ab98a7-7729-4cf7-bd9d-335a04b0bb4a
+	fromColumn: 'Metrics By Item And Hour For Workload Autoscale'.Datetime
+	toColumn: Datetime.'Hour Start'
+
+relationship 9490f6ec-2236-42f2-ba3c-204c0d22d6f2
+	fromColumn: 'Metrics By Item And Hour For Workload Autoscale'.'Unique key'
+	toColumn: Items.'Unique key'
+
+relationship c52b2f21-f2c7-4c5e-8c32-cd01b5d75f6f
+	fromColumn: 'Metrics By Item And Operation And Hour For Workload Autoscale'.Datetime
+	toColumn: Datetime.'Hour Start'
+
+relationship 568e5e2f-8d32-4402-b2e1-7f6b19eedc80
+	fromColumn: 'Metrics By Item And Operation And Hour For Workload Autoscale'.'Unique key'
+	toColumn: Items.'Unique key'
+
+relationship 113b83b1-5d4f-4125-8227-fd852ec7931a
+	fromColumn: 'Metrics By Item And Operation And Hour For Workload Autoscale'.'Operation name'
+	toColumn: 'Operation Names'.'Operation name'
+
+relationship 7f3b9b4f-a445-4b4d-a692-956b3306529b
+	fromColumn: 'Metrics By Item And Operation And Day For Workload Autoscale'.Date
+	toColumn: Dates.Date
+
+relationship 75708d7a-827e-4aba-9bf4-093d59cb9233
+	fromColumn: 'Metrics By Item And Operation And Day For Workload Autoscale'.'Unique key'
+	toColumn: Items.'Unique key'
+
+relationship 7b038505-1c22-434d-a1c1-a18f6489ffb2
+	fromColumn: 'Metrics By Item And Operation And Day For Workload Autoscale'.'Operation name'
+	toColumn: 'Operation Names'.'Operation name'
+
+relationship 284cacef-4c68-4223-9b0b-a47d164c1285
+	fromColumn: 'Metrics By Item For Workload Autoscale'.'Unique key'
+	toColumn: Items.'Unique key'
+
+relationship 1191960f-50f9-4d11-8e71-4fc2ab66fdab
+	fromColumn: 'Metrics By Item And Operation For Workload Autoscale'.'Unique key'
+	toColumn: Items.'Unique key'
+
+relationship 1f1ccdae-d019-4f99-8f37-a1ac83eb360b
+	fromColumn: 'Metrics By Item And Operation For Workload Autoscale'.'Operation name'
+	toColumn: 'Operation Names'.'Operation name'
+
+relationship e530e9f5-68af-40ba-9f51-24bfe302ead9
+	fromColumn: 'Timepoint CU Detail For Workload Autoscale'.'Window start time'
+	toColumn: TimePoints2.Time-point
+
+relationship 58417957-fcb4-4599-b261-60ed1d77df53
+	fromColumn: 'Timepoint2 CU Detail For Workload Autoscale'.'Window start time'
+	toColumn: Timepoints.Time-point
+
+relationship 8bd04ee9-5aa6-4f9f-9881-b40b0b2d6ec5
+	fromColumn: 'Timepoint2 Detail For Workload Autoscale'.'Unique key'
+	toColumn: Items.'Unique key'
+
+relationship dc442896-ffe6-4221-bf44-3330f1403b56
+	fromColumn: 'Timepoint Interactive Summary'.'Operation unique key'
+	toColumn: 'Items Operations'.'Operation unique key'
+
+relationship cced8231-6458-4a9d-a3f9-e949c146b3b3
+	fromColumn: 'Timepoint Background Summary'.'Operation unique key'
+	toColumn: 'Items Operations'.'Operation unique key'
+
+relationship 7bb0a78e-8bc6-4d68-9a8e-5b9e7acbd7b9
+	fromColumn: 'Item History Operation Detail'.ItemHistoryUniquKey
+	toColumn: 'Item History Main'.ItemHistoryUniquKey
+
+relationship 4097ebcf-73b9-4b93-987a-4b173fcad115
+	fromColumn: 'Item History Operation Detail'.Day
+	toColumn: Datetime.'Hour Start'
+
+relationship ae06e6cd-1b8f-4924-b7fe-4a00a6685f0d
+	fromColumn: 'Item History Operation'.ItemHistoryUniquKey
+	toColumn: 'Item History Main'.ItemHistoryUniquKey
+
+relationship ce0e8f5b-5e9d-4853-afc1-6a6823d6be86
+	fromColumn: 'Item History Operation'.Day
+	toColumn: Datetime.'Hour Start'
+
+relationship 1b078ef2-8c38-4970-8c7e-9d0bb1c010d6
+	fromColumn: 'Item History Summary'.WindowStartTime
+	toColumn: Timepoints.Timepoint2
+
+relationship c422324e-481c-4a59-80d8-e6ee74535ef8
+	fromColumn: 'Usage Operation (Last 1 hour)'.'Capacity Id'
+	toColumn: Capacities.'Uppercase capacity Id'
+
+relationship 190d5289-f034-4457-83f0-bd0b98543327
+	fromColumn: 'Usage Summary (Last 1 hour)'.'Capacity Id'
+	toColumn: Capacities.'Uppercase capacity Id'
+
+relationship f437f3d4-4e5f-4465-aca7-e4e7968d089e
+	fromColumn: 'Usage Operation (Last 24 hours)'.'Capacity Id'
+	toColumn: Capacities.'Uppercase capacity Id'
+
+relationship e80e8196-863d-4a16-bae2-a0f55db4a9a2
+	fromColumn: 'Usage Summary (Last 24 hours)'.'Capacity Id'
+	toColumn: Capacities.'Uppercase capacity Id'
+
+relationship ee9eec9c-fec1-4ed8-a361-007ae1a30496
+	fromColumn: 'Usage Operation (Last 7 days)'.'Capacity Id'
+	toColumn: Capacities.'Uppercase capacity Id'
+
+relationship 2e4b014e-5009-4b24-b420-d95a274e7c41
+	fromColumn: 'Usage Summary (Last 7 days)'.'Capacity Id'
+	toColumn: Capacities.'Uppercase capacity Id'
+
+relationship cdf8fd2e-9a04-4a87-9624-59480a8a221b
+	fromColumn: 'Surge Protection By Day'.'Capacity Id'
+	toColumn: Capacities.'Uppercase capacity Id'
+
+relationship c81bd472-e980-4728-99cb-ed14708af9b5
+	fromColumn: 'Surge Protection By Hour'.'Capacity Id'
+	toColumn: Capacities.'Uppercase capacity Id'
+
+relationship f2183ad2-dd61-4852-b086-576e2eb26b27
+	fromColumn: 'Surge Protection Blocked Workspaces Detail'.'Timepoint start'
+	toColumn: Timepoints.Timepoint
+
+relationship 550d9e3b-ced3-4a1a-877a-87e411ccd46d
+	fromColumn: 'Usage Summary By Capacities (Last 7 days)'.'Capacity Id'
+	toColumn: Capacities.'Uppercase capacity Id'
+
+relationship 13403604-7657-4e67-b3f8-9ad6748a2464
+	fromColumn: 'Timepoint Capacity Overage Detail'.'Window start time'
+	toColumn: Timepoints.Timepoint
+
+relationship c5f85afc-1170-4213-a822-dbd31dc23438
+	fromColumn: 'Usage Summary By Capacities (Last 1 hour)'.'Capacity Id'
+	toColumn: Capacities.'Uppercase capacity Id'
+
+relationship db61f065-fefc-40ec-8322-e9ab789e9d24
+	fromColumn: 'Usage Summary By Capacities (Last 24 hours)'.'Capacity Id'
+	toColumn: Capacities.'Uppercase capacity Id'
+
+relationship 81f7a2fa-9db2-421e-a3bb-7281916806f7
+	fromColumn: 'Operations (Last 1 hour)'.'Capacity Id'
+	toColumn: Capacities.'Uppercase capacity Id'
+
+relationship 41c1c919-49f6-431d-a641-e3a8b83f45e8
+	fromColumn: 'Operations (Last 24 hours)'.'Capacity Id'
+	toColumn: Capacities.'Uppercase capacity Id'
+
+relationship 'Query Executions to Items'
+	securityFilteringBehavior: none
+	toCardinality: many
+	fromColumn: 'Query Executions'.'Warehouse Item ID'
+	toColumn: Items.'Item Id'
+
+relationship 'Query Executions to Hour Windows'
+	fromCardinality: many
+	toCardinality: one
+	crossFilteringBehavior: bothDirections
+	securityFilteringBehavior: none
+	fromColumn: 'Query Executions'.'Query Hour'
+	toColumn: 'Hour Windows'.Timestamp
+
+relationship 'Capacity Hour to Hour Windows'
+	fromCardinality: many
+	toCardinality: one
+	crossFilteringBehavior: bothDirections
+	securityFilteringBehavior: none
+	fromColumn: 'Capacity Hour'.Timestamp
+	toColumn: 'Hour Windows'.Timestamp
+
+relationship 423e7ec9-9c85-436f-94fe-8afa32c70e8a
+	joinOnDateBehavior: datePartOnly
+	fromColumn: 'Query Executions'.'Query Date'
+	toColumn: LocalDateTable_176e0acf-0035-4a53-a205-272d9dd707ba.Date

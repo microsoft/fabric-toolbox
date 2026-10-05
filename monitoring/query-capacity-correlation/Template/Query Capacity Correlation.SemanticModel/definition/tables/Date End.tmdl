@@ -1,0 +1,28 @@
+table 'Date End'
+	lineageTag: 1e974fb5-b6cb-461b-a61e-81cd5e1ff758
+	sourceLineageTag: 4f42fe64-19db-4d8a-afe4-bd3a9f08ac50
+
+	column Date
+		dataType: dateTime
+		formatString: General Number
+		lineageTag: dfdb35a4-bc1a-4c9e-a310-15d1312d4769
+		sourceLineageTag: f1de65f1-9688-4e1b-93a8-83d8ae5cbac5
+		dataCategory: Uncategorized
+		summarizeBy: none
+		sourceColumn: Date
+
+		extendedProperty ParameterMetadata =
+				{
+				  "version": 2,
+				  "kind": 1,
+				  "selectAllValue": "__SelectAll__"
+				}
+
+		annotation SummarizationSetBy = User
+
+	partition 'Date End' = entity
+		mode: directQuery
+		source
+			entityName: Date End
+			expressionSource: 'DirectQuery to AS - Fabric Capacity Metrics'
+

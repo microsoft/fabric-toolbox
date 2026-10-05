@@ -71,6 +71,8 @@ Real-Time Intelligence - Event Listener & Alert,Represents Event Listener and Al
 Real-Time Intelligence - Event Listener & Alert Capacity Usage CU,Represents Event Listener and Alerts for Real-Time Intelligence on your capacity,GA,FALSE,TRUE,RTI
 Real-Time Intelligence - Event Operations,Represents Event Operations for Real-Time Intelligence on your capacity,GA,FALSE,TRUE,RTI
 Real-Time Intelligence - Event Operations Capacity Usage CU,Real-Time Intelligence - Event Operations Capacity Usage CU,GA,FALSE,TRUE,RTI
+RTI Event Listener and Alert Capacity Usage CU,Represents Event Listener and Alerts for Real-Time Intelligence on your capacity,GA,FALSE,TRUE,RTI
+RTI Event Operations Capacity Usage CU,Represents Event Operations for Real-Time Intelligence on your capacity,GA,FALSE,TRUE,RTI
 Spark Memory Optimized Capacity Usage CU,Represents the Spark usage on your capacity,GA,FALSE,TRUE,Spark
 SQL Backup Storage Data Stored,SQL Backup Storage Data Stored,GA,FALSE,FALSE,OneLake
 SQL database in Microsoft Fabric,Represents SQL database in Microsoft Fabric on your capacity,GA,FALSE,TRUE,SQL
@@ -123,3 +125,29 @@ OneLake Storage Cold Data Stored,OneLake Storage Cold Data Stored,GA,FALSE,FALSE
 OneLake Storage Cool Data Stored,OneLake Storage Cool Data Stored,GA,FALSE,FALSE,OneLake
 Onelake BCDR Storage Cold Data Stored,Onelake BCDR Storage Cold Data Stored,GA,FALSE,FALSE,BCDR
 Onelake BCDR Storage Cool Data Stored,Onelake BCDR Storage Cool Data Stored,GA,FALSE,FALSE,BCDR
+OneLake Iterative Read Operations Cold Capacity Usage CU,OneLake Iterative Read Operations Cold Capacity Usage CU,GA,FALSE,TRUE,OneLake
+OneLake Iterative Read Operations Cool Capacity Usage CU,OneLake Iterative Read Operations Cool Capacity Usage CU,GA,FALSE,TRUE,OneLake
+OneLake Iterative Write Operations Cold Capacity Usage CU,OneLake Iterative Write Operations Cold Capacity Usage CU,GA,FALSE,TRUE,OneLake
+OneLake Iterative Write Operations Cool Capacity Usage CU,OneLake Iterative Write Operations Cool Capacity Usage CU,GA,FALSE,TRUE,OneLake
+OneLake Read Operations Cold Capacity Usage CU,OneLake Read Operations Cold Capacity Usage CU,GA,FALSE,TRUE,OneLake
+OneLake Read Operations Cool Capacity Usage CU,OneLake Read Operations Cool Capacity Usage CU,GA,FALSE,TRUE,OneLake
+OneLake Write Operations Cold Capacity Usage CU,OneLake Write Operations Cold Capacity Usage CU,GA,FALSE,TRUE,OneLake
+OneLake Write Operations Cool Capacity Usage CU,OneLake Write Operations Cool Capacity Usage CU,GA,FALSE,TRUE,OneLake
+OneLake Other Operations Cold Capacity Usage CU,OneLake Other Operations Cold Capacity Usage CU,GA,FALSE,TRUE,OneLake
+OneLake Other Operations Cool Capacity Usage CU,OneLake Other Operations Cool Capacity Usage CU,GA,FALSE,TRUE,OneLake
+OneLake BCDR Iterative Read Operations Cold Capacity Usage CU,OneLake BCDR Iterative Read Operations Cold Capacity Usage CU,GA,FALSE,TRUE,BCDR
+OneLake BCDR Iterative Read Operations Cool Capacity Usage CU,OneLake BCDR Iterative Read Operations Cool Capacity Usage CU,GA,FALSE,TRUE,BCDR
+OneLake BCDR Iterative Write Operations Cold Capacity Usage CU,OneLake BCDR Iterative Write Operations Cold Capacity Usage CU,GA,FALSE,TRUE,BCDR
+OneLake BCDR Iterative Write Operations Cool Capacity Usage CU,OneLake BCDR Iterative Write Operations Cool Capacity Usage CU,GA,FALSE,TRUE,BCDR
+OneLake BCDR Read Operations Cold Capacity Usage CU,OneLake BCDR Read Operations Cold Capacity Usage CU,GA,FALSE,TRUE,BCDR
+OneLake BCDR Read Operations Cool Capacity Usage CU,OneLake BCDR Read Operations Cool Capacity Usage CU,GA,FALSE,TRUE,BCDR
+OneLake BCDR Write Operations Cold Capacity Usage CU,OneLake BCDR Write Operations Cold Capacity Usage CU,GA,FALSE,TRUE,BCDR
+OneLake BCDR Write Operations Cool Capacity Usage CU,OneLake BCDR Write Operations Cool Capacity Usage CU,GA,FALSE,TRUE,BCDR
+OneLake BCDR Other Operations Cold Capacity Usage CU,OneLake BCDR Other Operations Cold Capacity Usage CU,GA,FALSE,TRUE,BCDR
+OneLake BCDR Other Operations Cool Capacity Usage CU,OneLake BCDR Other Operations Cool Capacity Usage CU,GA,FALSE,TRUE,BCDR
+OneLake Table Read via API Capacity Usage CU,OneLake Table Read via API Capacity Usage CU,GA,FALSE,TRUE,OneLake
+autoscale for Data Warehouse Capacity Usage CU,Represents autoscale for Data Warehouse on your capacity,GA,FALSE,FALSE,Data Warehouse
+Data Warehouse (Accelerated) Capacity Usage CU,Data Warehouse (Accelerated) Capacity Usage CU,Preview,FALSE,TRUE,Data Warehouse
+High Scale Dataflow Compute - Spark Capacity Usage CU,High Scale Dataflow Compute - Spark Capacity Usage CU,Preview,FALSE,TRUE,Dataflows
+Spark GPU Optimized Capacity Usage CU,Represents the Spark GPU usage on your capacity,Preview,FALSE,TRUE,Spark
+SQL DB in Microsoft Fabric LR Capacity Usage CU,SQL DB in Microsoft Fabric LR Capacity Usage CU,GA,FALSE,TRUE,SQL

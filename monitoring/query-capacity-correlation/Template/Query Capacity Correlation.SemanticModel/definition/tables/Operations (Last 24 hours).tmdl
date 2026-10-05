@@ -1,0 +1,149 @@
+table 'Operations (Last 24 hours)'
+	lineageTag: 3d540398-c6f9-45f7-8292-8d3f1b015a78
+	sourceLineageTag: 83aeca10-005a-41fe-b55b-6b8538f9877a
+
+	column 'Capacity Id'
+		dataType: string
+		lineageTag: 8cd6f638-8fe9-4c40-afef-0bd34df7c6c8
+		sourceLineageTag: 382406e2-141c-45b0-bbf2-da9b34094089
+		dataCategory: Uncategorized
+		summarizeBy: none
+		sourceColumn: Capacity Id
+
+		annotation SummarizationSetBy = User
+
+	column 'Throttling (s)'
+		dataType: double
+		lineageTag: bce6e0e5-6535-4fc5-b422-a489b9c60c14
+		sourceLineageTag: efac7145-42ef-4180-9faa-3822937bb066
+		dataCategory: Uncategorized
+		summarizeBy: sum
+		sourceColumn: Throttling (s)
+
+		annotation SummarizationSetBy = User
+
+	column Users
+		dataType: int64
+		formatString: 0
+		lineageTag: 6d7d661b-eb30-457a-beac-2ff1456f971f
+		sourceLineageTag: dea5145f-9441-479b-9fdc-afff1655196c
+		dataCategory: Uncategorized
+		summarizeBy: sum
+		sourceColumn: Users
+
+		annotation SummarizationSetBy = User
+
+	column TIMESTAMP
+		dataType: dateTime
+		formatString: General Number
+		lineageTag: 557edd9a-6fbf-4c7a-8680-45c6e0d17be0
+		sourceLineageTag: ad111209-ee7b-4b70-89a2-0d949f07fc7e
+		dataCategory: Uncategorized
+		summarizeBy: none
+		sourceColumn: TIMESTAMP
+
+		annotation SummarizationSetBy = User
+
+	column Region
+		dataType: string
+		lineageTag: dc1b8b0a-17ab-462a-be3e-6fb871d4449a
+		sourceLineageTag: 75575142-990e-4d29-a8e8-83f1b4bfd5a6
+		dataCategory: Uncategorized
+		summarizeBy: none
+		sourceColumn: Region
+
+		annotation SummarizationSetBy = User
+
+	column SKU
+		dataType: string
+		lineageTag: 7d023d44-0d0b-4fd0-8635-98e7b98c1513
+		sourceLineageTag: 8abe8821-0fe7-4650-97a6-4f42351a1bfe
+		dataCategory: Uncategorized
+		summarizeBy: none
+		sourceColumn: SKU
+
+		annotation SummarizationSetBy = User
+
+	column 'Failure operations'
+		dataType: int64
+		formatString: 0
+		lineageTag: 24e5e7fb-8498-4c51-b708-cb5e257e9af1
+		sourceLineageTag: 35175d8f-a390-489e-9133-03b6a9139120
+		dataCategory: Uncategorized
+		summarizeBy: sum
+		sourceColumn: Failure operations
+
+		annotation SummarizationSetBy = User
+
+	column 'Rejected operations'
+		dataType: int64
+		formatString: 0
+		lineageTag: a800b468-d9c0-44cb-96be-01f97ccd9cb4
+		sourceLineageTag: b9473548-0e9f-4f18-8761-c832ef782c9c
+		dataCategory: Uncategorized
+		summarizeBy: sum
+		sourceColumn: Rejected operations
+
+		annotation SummarizationSetBy = User
+
+	column 'Successful operations'
+		dataType: int64
+		formatString: 0
+		lineageTag: d05c8a5d-c528-4926-bfd8-9a7cc0030130
+		sourceLineageTag: 7cf44778-4a2f-4c3d-9464-3dd2736818e9
+		dataCategory: Uncategorized
+		summarizeBy: sum
+		sourceColumn: Successful operations
+
+		annotation SummarizationSetBy = User
+
+	column 'Inprogress operations'
+		dataType: int64
+		formatString: 0
+		lineageTag: ee63a84d-a393-47b1-88ee-8d6a7d18ab7f
+		sourceLineageTag: cdd2792d-317f-4941-aee4-253336841d62
+		dataCategory: Uncategorized
+		summarizeBy: sum
+		sourceColumn: Inprogress operations
+
+		annotation SummarizationSetBy = User
+
+	column 'Cancelled operations'
+		dataType: int64
+		formatString: 0
+		lineageTag: ca26d97b-f931-409e-a44f-ecd2a2f00a10
+		sourceLineageTag: 091db940-06b6-42c6-bca8-a8375f283b5b
+		dataCategory: Uncategorized
+		summarizeBy: sum
+		sourceColumn: Cancelled operations
+
+		annotation SummarizationSetBy = User
+
+	column 'Invalid operations'
+		dataType: int64
+		formatString: 0
+		lineageTag: 062474ab-d7f9-4f44-bc45-f64e83186afc
+		sourceLineageTag: 044b6cc2-cbdc-460a-9415-9fdcd124d933
+		dataCategory: Uncategorized
+		summarizeBy: sum
+		sourceColumn: Invalid operations
+
+		annotation SummarizationSetBy = User
+
+	column 'Stopped operations'
+		dataType: int64
+		formatString: 0
+		lineageTag: f2f03540-f83b-4ad2-8a35-2b0cd1018bf4
+		sourceLineageTag: 6d23754f-4e0d-4a1a-a952-23898f601015
+		dataCategory: Uncategorized
+		summarizeBy: sum
+		sourceColumn: Stopped operations
+
+		annotation SummarizationSetBy = User
+
+	partition 'Operations (Last 24 hours)' = entity
+		mode: directQuery
+		source
+			entityName: Operations (Last 24 hours)
+			expressionSource: 'DirectQuery to AS - Fabric Capacity Metrics'
+

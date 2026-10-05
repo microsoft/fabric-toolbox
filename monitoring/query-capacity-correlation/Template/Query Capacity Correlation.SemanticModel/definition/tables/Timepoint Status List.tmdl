@@ -1,0 +1,28 @@
+table 'Timepoint Status List'
+	lineageTag: d714fd16-0387-4b21-a226-7ac7b4df4aa0
+	sourceLineageTag: d8311642-19eb-48fb-90c8-76a7350971a5
+
+	column Status
+		dataType: string
+		lineageTag: 01ecfb5c-b394-43f7-adf6-dfb0d617a072
+		sourceLineageTag: ac49d7cb-d274-46ed-b07a-7f1b3d1f7a7f
+		dataCategory: Uncategorized
+		summarizeBy: none
+		sourceColumn: Status
+
+		extendedProperty ParameterMetadata =
+				{
+				  "version": 2,
+				  "kind": 1,
+				  "supportsMultipleValues": true,
+				  "selectAllValue": "__SelectAll__"
+				}
+
+		annotation SummarizationSetBy = User
+
+	partition 'Timepoint Status List' = entity
+		mode: directQuery
+		source
+			entityName: Timepoint Status List
+			expressionSource: 'DirectQuery to AS - Fabric Capacity Metrics'
+

@@ -1,0 +1,31 @@
+table Metrics
+	lineageTag: 8f286807-65a5-4331-9ff8-8702cda677ee
+	sourceLineageTag: 1fa0ac3e-2193-4eb1-ac68-77d81563e86c
+
+	column Metric
+		dataType: string
+		lineageTag: 1b74a3c4-d7cb-4d81-9dc0-001035e1b997
+		sourceLineageTag: b93fc691-3c3d-4a1e-8069-56eec00ef1b6
+		dataCategory: Uncategorized
+		summarizeBy: none
+		sourceColumn: Metric
+
+		annotation SummarizationSetBy = User
+
+	column 'Sort Id'
+		dataType: int64
+		formatString: 0
+		lineageTag: 3beb588e-d886-41cf-9ddb-1ba0ea968305
+		sourceLineageTag: ebf8d624-6845-4dee-a4af-fb72ff125438
+		dataCategory: Uncategorized
+		summarizeBy: count
+		sourceColumn: Sort Id
+
+		annotation SummarizationSetBy = User
+
+	partition Metrics = entity
+		mode: directQuery
+		source
+			entityName: Metrics
+			expressionSource: 'DirectQuery to AS - Fabric Capacity Metrics'
+

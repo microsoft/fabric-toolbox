@@ -1,0 +1,2025 @@
+table 'All Measures'
+	lineageTag: ef359445-5dd3-4a5f-828f-8423a7e8c6ec
+	sourceLineageTag: 284cf299-bd71-4fb7-bb78-413a2447a0ea
+
+	measure 'Count of background operations preview' = EXTERNALMEASURE("Count of background operations preview", INTEGER, "DirectQuery to AS - Fabric Capacity Metrics")
+		formatString: 0
+		lineageTag: 3a74cb61-7739-4dc7-8dbb-e35a7b4c625d
+		sourceLineageTag: 8f3e480e-64c6-474d-9f72-32b8c3eb939b
+		dataCategory: Uncategorized
+
+	measure 'Count of interactive operations preview' = EXTERNALMEASURE("Count of interactive operations preview", INTEGER, "DirectQuery to AS - Fabric Capacity Metrics")
+		formatString: 0
+		lineageTag: 64aee3ba-26e6-4abb-9247-93437e6992dc
+		sourceLineageTag: 2633eb43-e467-4b82-b271-33e520e88504
+		dataCategory: Uncategorized
+
+	measure 'SKU CU by timepoint short % preview' = EXTERNALMEASURE("SKU CU by timepoint short % preview", DOUBLE, "DirectQuery to AS - Fabric Capacity Metrics")
+		formatString: 0.00%;-0.00%;0.00%
+		lineageTag: fa95fd9c-4a55-48ab-bce2-8a21728a8b9c
+		sourceLineageTag: 927407b8-a274-4569-ba3c-53e746a999b5
+		dataCategory: Uncategorized
+
+	measure 'SKU CU by timepoint short preview' = EXTERNALMEASURE("SKU CU by timepoint short preview", INTEGER, "DirectQuery to AS - Fabric Capacity Metrics")
+		formatString: 0
+		lineageTag: fd8f31ff-3951-41d9-ac1e-bb567050561b
+		sourceLineageTag: 3620a102-529a-44cc-b3ba-828a08cb163f
+		dataCategory: Uncategorized
+
+	measure 'Sum of timepoint detail CU % preview' = EXTERNALMEASURE("Sum of timepoint detail CU % preview", DOUBLE, "DirectQuery to AS - Fabric Capacity Metrics")
+		formatString: #,0.00%;-#,0.00%;#,0.00%
+		lineageTag: 4ed1f682-a61d-4bf0-8a6b-f04fb8ac9472
+		sourceLineageTag: 926f3610-cf6b-499c-803a-3145edd0d31a
+		dataCategory: Uncategorized
+
+	measure 'Cumulative CU usage % preview' = EXTERNALMEASURE("Cumulative CU usage % preview", DOUBLE, "DirectQuery to AS - Fabric Capacity Metrics")
+		formatString: 0.00%;-0.00%;0.00%
+		lineageTag: a678fc35-10f1-48c2-b0bd-db7548a2ba63
+		sourceLineageTag: 76c1f206-e436-4b3c-8d77-52feb69b6383
+		dataCategory: Uncategorized
+
+	measure 'Dynamic M1 CU preview' = EXTERNALMEASURE("Dynamic M1 CU preview", DOUBLE, "DirectQuery to AS - Fabric Capacity Metrics")
+		formatString: #,0.0000
+		lineageTag: 53b49411-abe2-4e2d-8c7c-d7ef981f1427
+		sourceLineageTag: 72fc696e-f7df-4baf-8563-21702e18209b
+		dataCategory: Uncategorized
+
+	measure 'Dynamic M1 duration preview' = EXTERNALMEASURE("Dynamic M1 duration preview", DOUBLE, "DirectQuery to AS - Fabric Capacity Metrics")
+		formatString: #,0.0000
+		lineageTag: 6a7ef55c-a4e1-4959-a375-267ee8305342
+		sourceLineageTag: 4156b12c-d2ba-4cfc-81b3-104bd6777d80
+		dataCategory: Uncategorized
+
+	measure 'Dynamic M1 memory preview' = EXTERNALMEASURE("Dynamic M1 memory preview", DOUBLE, "DirectQuery to AS - Fabric Capacity Metrics")
+		formatString: 0.0000
+		lineageTag: 597c41d9-7fd6-492c-93b6-390e3769ce2a
+		sourceLineageTag: 51f1fd8c-7a75-412a-9067-68c98da8a8e6
+		dataCategory: Uncategorized
+
+	measure 'Dynamic M1 perf preview' = EXTERNALMEASURE("Dynamic M1 perf preview", DOUBLE, "DirectQuery to AS - Fabric Capacity Metrics")
+		formatString: 0
+		lineageTag: 0fb9d7b5-ed4a-4a72-bb2f-3ee3b9fc591a
+		sourceLineageTag: 46780fe2-73ce-48bb-91bf-49c1b9e05dc8
+		dataCategory: Uncategorized
+
+	measure 'Dynamic M1 users preview' = EXTERNALMEASURE("Dynamic M1 users preview", INTEGER, "DirectQuery to AS - Fabric Capacity Metrics")
+		formatString: #,0
+		lineageTag: cad1396b-63e8-4773-ac40-248cde315b57
+		sourceLineageTag: e5e14288-d69e-4686-80a9-f0d77b36658a
+		dataCategory: Uncategorized
+
+	measure 'Dynamic metric item 1 preview' = EXTERNALMEASURE("Dynamic metric item 1 preview", DOUBLE, "DirectQuery to AS - Fabric Capacity Metrics")
+		formatString: 0.0000
+		lineageTag: 22bf4e8a-8c2e-49d1-8af5-eb84654c7a89
+		sourceLineageTag: 9bcdeb28-8ecf-4453-81c1-c01dbb094918
+		dataCategory: Uncategorized
+
+	measure 'Dynamic text for matrix title' = EXTERNALMEASURE("Dynamic text for matrix title", STRING, "DirectQuery to AS - Fabric Capacity Metrics")
+		lineageTag: 0e4b94a6-790d-4702-b324-7648a14aab41
+		sourceLineageTag: 857ccbbb-d410-423e-af73-1beed4ff12b4
+		dataCategory: Uncategorized
+
+	measure 'Metric description preview' = EXTERNALMEASURE("Metric description preview", STRING, "DirectQuery to AS - Fabric Capacity Metrics")
+		lineageTag: 42df769b-5327-48f5-b18f-a0771f007d2e
+		sourceLineageTag: 6f15cc6c-6dc9-448c-98fb-239c790b49d3
+		dataCategory: Uncategorized
+
+	measure 'SKU CU by timepoint' = EXTERNALMEASURE("SKU CU by timepoint", INTEGER, "DirectQuery to AS - Fabric Capacity Metrics")
+		formatString: 0
+		lineageTag: 3ce30fee-d265-44ee-989e-9278f1669e53
+		sourceLineageTag: fb95fe80-2178-4d9c-9855-da2e7186ce22
+		dataCategory: Uncategorized
+
+	measure 'SKU CU by timepoint %' = EXTERNALMEASURE("SKU CU by timepoint %", DOUBLE, "DirectQuery to AS - Fabric Capacity Metrics")
+		formatString: 0.00%;-0.00%;0.00%
+		lineageTag: 8904681d-0a44-4f30-9ce2-8aea177fee82
+		sourceLineageTag: 9256c3c1-d0a6-4499-b28a-8cda7c750958
+		dataCategory: Uncategorized
+
+	measure 'SKU CU by timepoint basecore only' = EXTERNALMEASURE("SKU CU by timepoint basecore only", INTEGER, "DirectQuery to AS - Fabric Capacity Metrics")
+		formatString: 0
+		lineageTag: d044a693-8128-4652-8ac2-1f737f0b21ee
+		sourceLineageTag: 1575235a-bc3a-4790-9f93-8b77a9fd8f1a
+		dataCategory: Uncategorized
+
+	measure 'SKU CU by timepoint basecore only preview' = EXTERNALMEASURE("SKU CU by timepoint basecore only preview", INTEGER, "DirectQuery to AS - Fabric Capacity Metrics")
+		formatString: 0
+		lineageTag: 735c7d2a-095e-407e-86eb-6a42fb65a52f
+		sourceLineageTag: da727a9b-fc82-45d0-bbb5-491612e676a5
+		dataCategory: Uncategorized
+
+	measure 'SKU CU by timepoint card preview' = EXTERNALMEASURE("SKU CU by timepoint card preview", INTEGER, "DirectQuery to AS - Fabric Capacity Metrics")
+		formatString: 0
+		lineageTag: 5338e7f8-43d6-4b80-a269-c0498b933a81
+		sourceLineageTag: 80bb4ef2-cd22-4f26-a953-27546bc4cb15
+		dataCategory: Uncategorized
+
+	measure 'Background billable CU %' = EXTERNALMEASURE("Background billable CU %", DOUBLE, "DirectQuery to AS - Fabric Capacity Metrics")
+		formatString: 0.00%;-0.00%;0.00%
+		lineageTag: 9f7ed011-b163-4a76-8455-d596801ac433
+		sourceLineageTag: 2c0bd329-0929-4d58-9bee-fb18e66d8b59
+		dataCategory: Uncategorized
+
+	measure 'Background non billable CU %' = EXTERNALMEASURE("Background non billable CU %", DOUBLE, "DirectQuery to AS - Fabric Capacity Metrics")
+		formatString: 0.00%;-0.00%;0.00%
+		lineageTag: cf6aef84-fbfd-478d-9200-9a41d93c8307
+		sourceLineageTag: b3e2eb12-2719-4629-a228-16bd6b707f6c
+		dataCategory: Uncategorized
+
+	measure 'Interactive billable CU %' = EXTERNALMEASURE("Interactive billable CU %", DOUBLE, "DirectQuery to AS - Fabric Capacity Metrics")
+		formatString: 0.00%;-0.00%;0.00%
+		lineageTag: 8fac972e-7360-4f15-b2c8-daa5abc80068
+		sourceLineageTag: 71bec6ee-5996-4276-b418-e087cefa2176
+		dataCategory: Uncategorized
+
+	measure 'Interactive non billable CU %' = EXTERNALMEASURE("Interactive non billable CU %", DOUBLE, "DirectQuery to AS - Fabric Capacity Metrics")
+		formatString: 0.00%;-0.00%;0.00%
+		lineageTag: b3b8d40f-daf1-4804-8638-f1ab1400ec3a
+		sourceLineageTag: fdb93ef1-38db-4063-8ba8-60b07f1d44c4
+		dataCategory: Uncategorized
+
+	measure 'SKU CU by timepoint short preview (2)' = EXTERNALMEASURE("SKU CU by timepoint short preview (2)", INTEGER, "DirectQuery to AS - Fabric Capacity Metrics")
+		formatString: 0
+		lineageTag: b2785bdb-2b6c-48bd-9edb-4f168b1d5171
+		sourceLineageTag: c72b0a3a-a5b3-4352-b656-98654b3cf41e
+		dataCategory: Uncategorized
+
+	measure 'SKU CU by timepoint short % preview (2)' = EXTERNALMEASURE("SKU CU by timepoint short % preview (2)", DOUBLE, "DirectQuery to AS - Fabric Capacity Metrics")
+		formatString: 0.00%;-0.00%;0.00%
+		lineageTag: c85e71d5-90c3-4a1d-a0c7-58c58a75355b
+		sourceLineageTag: d53b3857-60cf-4980-acab-631322d4edb0
+		dataCategory: Uncategorized
+
+	measure 'Sum of timepoint detail CU % preview (2)' = EXTERNALMEASURE("Sum of timepoint detail CU % preview (2)", DOUBLE, "DirectQuery to AS - Fabric Capacity Metrics")
+		formatString: 0.00%;-0.00%;0.00%
+		lineageTag: 173fd2ea-906a-422e-8b96-46163ed0fee7
+		sourceLineageTag: 6d20e5cc-78d5-4deb-ad1d-888f5bf7dab4
+		dataCategory: Uncategorized
+
+	measure 'Count of interactive operations preview 2' = EXTERNALMEASURE("Count of interactive operations preview 2", INTEGER, "DirectQuery to AS - Fabric Capacity Metrics")
+		formatString: 0
+		lineageTag: 5c2c0b4b-138e-4dc6-b7c2-81ce9a68f503
+		sourceLineageTag: 79716b51-129a-43b9-83c2-313004990200
+		dataCategory: Uncategorized
+
+	measure 'Count of background operations preview 2' = EXTERNALMEASURE("Count of background operations preview 2", INTEGER, "DirectQuery to AS - Fabric Capacity Metrics")
+		formatString: 0
+		lineageTag: ca547a6d-770b-4a10-b514-a7e86adc85aa
+		sourceLineageTag: 7ad73b2a-c14e-4bd7-83a6-a5faaf3944bf
+		dataCategory: Uncategorized
+
+	measure 'Timepoint CU (s)' = EXTERNALMEASURE("Timepoint CU (s)", DOUBLE, "DirectQuery to AS - Fabric Capacity Metrics")
+		lineageTag: 9f110bb5-7ee9-4233-9830-2a8f18aef1c5
+		sourceLineageTag: 9a2e490c-6197-435c-8ee7-d8f4a673d4c6
+		dataCategory: Uncategorized
+
+	measure 'Timepoint 2 CU (s)' = EXTERNALMEASURE("Timepoint 2 CU (s)", DOUBLE, "DirectQuery to AS - Fabric Capacity Metrics")
+		lineageTag: 24fc2ec0-078f-47be-b5e5-cd1edb9b4a91
+		sourceLineageTag: 5a236c6c-fe29-46ee-8d7b-ce95e6c71d76
+		dataCategory: Uncategorized
+
+	measure 'Cumulative CU usage (s)' = EXTERNALMEASURE("Cumulative CU usage (s)", DOUBLE, "DirectQuery to AS - Fabric Capacity Metrics")
+		lineageTag: 28113687-3c74-47c6-b2ca-c28b5917a196
+		sourceLineageTag: 5a9be63f-26ca-45d7-96d9-28f03040c7b3
+		dataCategory: Uncategorized
+
+	measure 'CU limit' = EXTERNALMEASURE("CU limit", INTEGER, "DirectQuery to AS - Fabric Capacity Metrics")
+		formatString: 0.00%;-0.00%;0.00%
+		lineageTag: c3d99e67-395c-435a-8f2c-496baa316820
+		sourceLineageTag: 4dfa2fe0-a5ed-4922-b66f-cbbeb5e6fee5
+		dataCategory: Uncategorized
+
+	measure 'Dynamic preview status' = EXTERNALMEASURE("Dynamic preview status", STRING, "DirectQuery to AS - Fabric Capacity Metrics")
+		lineageTag: 7c1f3af8-b7cb-47b4-b7d7-5e1571e14abc
+		sourceLineageTag: 981c1df5-2b96-4a14-9f8a-377c78f03908
+		dataCategory: Uncategorized
+
+	measure 'SKU CU by timepoint autoscale only' = EXTERNALMEASURE("SKU CU by timepoint autoscale only", INTEGER, "DirectQuery to AS - Fabric Capacity Metrics")
+		formatString: 0
+		lineageTag: b9970854-98e4-4903-9262-b7d7e071509a
+		sourceLineageTag: addcad5e-af25-4972-8b73-0600bf9a3b41
+		dataCategory: Uncategorized
+
+	measure 'SKU CU by timepoint basecore' = EXTERNALMEASURE("SKU CU by timepoint basecore", INTEGER, "DirectQuery to AS - Fabric Capacity Metrics")
+		formatString: 0
+		lineageTag: d7cab343-cdb7-4dbe-a0dd-258c01238d24
+		sourceLineageTag: a4c9f6be-8658-433b-9bca-56b4e318dec4
+		dataCategory: Uncategorized
+
+	measure 'Dynamic M1 utilization (GB)' = EXTERNALMEASURE("Dynamic M1 utilization (GB)", DOUBLE, "DirectQuery to AS - Fabric Capacity Metrics")
+		displayFolder: Onelake Measures
+		lineageTag: 29555339-2888-4721-9396-97f660792caf
+		sourceLineageTag: 9dd9287d-a81d-4ab7-82b8-07c20d7e7f20
+		dataCategory: Uncategorized
+
+	measure 'Onelake rank workspace visual' = EXTERNALMEASURE("Onelake rank workspace visual", INTEGER, "DirectQuery to AS - Fabric Capacity Metrics")
+		formatString: 0
+		displayFolder: Onelake Measures
+		lineageTag: d498c4f7-bff1-4478-9f61-a34f6333aa6c
+		sourceLineageTag: bc0c40cc-443b-4067-ab19-5139af1bb29d
+		dataCategory: Uncategorized
+
+	measure 'Last carry over burdown' = EXTERNALMEASURE("Last carry over burdown", DOUBLE, "DirectQuery to AS - Fabric Capacity Metrics")
+		lineageTag: a4d22ed2-c223-48f0-a02f-b833d4930c62
+		sourceLineageTag: 66c55378-bb5e-4009-8018-a81eea907fca
+		dataCategory: Uncategorized
+
+	measure 'Utilization (GB) % workspace 1' = EXTERNALMEASURE("Utilization (GB) % workspace 1", DOUBLE, "DirectQuery to AS - Fabric Capacity Metrics")
+		formatString: 0.00%;-0.00%;0.00%
+		lineageTag: 05737896-0213-46a4-97bf-83c11a4f77de
+		sourceLineageTag: 3f1e2b4c-e1d7-4a2c-8d1c-17b2a4b761db
+		dataCategory: Uncategorized
+
+	measure 'Dynamic text for workspaces title' = EXTERNALMEASURE("Dynamic text for workspaces title", STRING, "DirectQuery to AS - Fabric Capacity Metrics")
+		displayFolder: Onelake Measures
+		lineageTag: 53876b4e-9c43-4060-a694-cc2aa9f41832
+		sourceLineageTag: 3a226742-0a35-48dc-805e-e358bd66a2d4
+		dataCategory: Uncategorized
+
+	measure 'Total cumulative storage in (GB)' = EXTERNALMEASURE("Total cumulative storage in (GB)", DOUBLE, "DirectQuery to AS - Fabric Capacity Metrics")
+		displayFolder: Onelake Measures
+		lineageTag: 40db4b72-f2b9-4599-aaea-a6f4c72cc61f
+		sourceLineageTag: 4e3e8f41-9e9c-4ca0-a814-e286404b39ee
+		dataCategory: Uncategorized
+
+	measure 'SKU CU carry over' = EXTERNALMEASURE("SKU CU carry over", INTEGER, "DirectQuery to AS - Fabric Capacity Metrics")
+		formatString: 0
+		lineageTag: d78e21de-489f-472c-a410-e86b484bb1a9
+		sourceLineageTag: 696f1881-9243-4f5d-8ecf-e18da6ff7d9f
+		dataCategory: Uncategorized
+
+	measure 'Carry over add' = EXTERNALMEASURE("Carry over add", DOUBLE, "DirectQuery to AS - Fabric Capacity Metrics")
+		lineageTag: 74580a2a-1b27-4c08-873d-d064661b68f9
+		sourceLineageTag: c649dcb4-daff-4463-8e1e-c973c990f0c3
+		dataCategory: Uncategorized
+
+	measure 'Carry over burndown' = EXTERNALMEASURE("Carry over burndown", DOUBLE, "DirectQuery to AS - Fabric Capacity Metrics")
+		lineageTag: 46ed82c3-670f-49cb-b1ef-f8f40134025e
+		sourceLineageTag: 15ba9789-652b-40a8-bca0-9c04601f6c40
+		dataCategory: Uncategorized
+
+	measure 'Expected burndown in minutes' = EXTERNALMEASURE("Expected burndown in minutes", DOUBLE, "DirectQuery to AS - Fabric Capacity Metrics")
+		formatString: 0.00
+		lineageTag: a2cc7967-20ad-4651-a826-b76ab61b814e
+		sourceLineageTag: c240aa8f-0a49-49c7-94a6-1e2c681d03a0
+		dataCategory: Uncategorized
+
+	measure 'Carry over add %' = EXTERNALMEASURE("Carry over add %", DOUBLE, "DirectQuery to AS - Fabric Capacity Metrics")
+		formatString: 0.00%;-0.00%;0.00%
+		lineageTag: 3c19ec06-be56-44c4-9372-eb5424fe7996
+		sourceLineageTag: 8a957c99-5eee-4e0a-8b17-77cee6a1df7e
+		dataCategory: Uncategorized
+
+	measure 'Carry over burndown %' = EXTERNALMEASURE("Carry over burndown %", DOUBLE, "DirectQuery to AS - Fabric Capacity Metrics")
+		formatString: 0.00%;-0.00%;0.00%
+		lineageTag: cf52ab3b-90ce-4992-be54-260275f8b106
+		sourceLineageTag: 37085625-a7e5-44bc-aa42-edb4e82375bf
+		dataCategory: Uncategorized
+
+	measure 'Cumulative carry over %' = EXTERNALMEASURE("Cumulative carry over %", DOUBLE, "DirectQuery to AS - Fabric Capacity Metrics")
+		formatString: 0.00%;-0.00%;0.00%
+		lineageTag: 513dd321-7253-49e1-983c-a2230ea603af
+		sourceLineageTag: beccb2e3-620a-47c2-bc14-7e9d48d5bb3d
+		dataCategory: Uncategorized
+
+	measure 'Timepoint SKU CU carry over' = EXTERNALMEASURE("Timepoint SKU CU carry over", INTEGER, "DirectQuery to AS - Fabric Capacity Metrics")
+		formatString: 0
+		lineageTag: b8231bb4-b243-4e78-9045-2ca2b9a8416d
+		sourceLineageTag: 19fd3636-8b7f-4b62-9d45-9800f7f9e0e4
+		dataCategory: Uncategorized
+
+	measure 'Last cumulative carry over' = EXTERNALMEASURE("Last cumulative carry over", DOUBLE, "DirectQuery to AS - Fabric Capacity Metrics")
+		lineageTag: 6b8b01c1-4b6a-4154-8340-4140f582bf58
+		sourceLineageTag: 0c8585ec-a326-4f23-b6c9-a41b96d924d5
+		dataCategory: Uncategorized
+
+	measure 'Last cumulative carry over %' = EXTERNALMEASURE("Last cumulative carry over %", DOUBLE, "DirectQuery to AS - Fabric Capacity Metrics")
+		formatString: #,0.00%;-#,0.00%;#,0.00%
+		lineageTag: f89eb49b-0bf9-45a4-a643-1e1e73c9d0a3
+		sourceLineageTag: 603921dd-a2f3-4f9c-b945-0396c58b45db
+		dataCategory: Uncategorized
+
+	measure 'Carry forward add % (last 24 hrs)' = EXTERNALMEASURE("Carry forward add % (last 24 hrs)", DOUBLE, "DirectQuery to AS - Fabric Capacity Metrics")
+		formatString: #,0.00%;-#,0.00%;#,0.00%
+		lineageTag: 4ad9c9e8-c1db-4857-8cef-c2b58f5c998b
+		sourceLineageTag: 7f16e186-2a56-4145-bcd8-042369f696d8
+		dataCategory: Uncategorized
+
+	measure 'Carry forward burndown % (last 24 hrs)' = EXTERNALMEASURE("Carry forward burndown % (last 24 hrs)", DOUBLE, "DirectQuery to AS - Fabric Capacity Metrics")
+		formatString: #,0.00%;-#,0.00%;#,0.00%
+		lineageTag: 5c228d4b-f52a-4b1d-8ead-9fa74c8a556e
+		sourceLineageTag: 159561c2-98cd-4422-9148-d93a6eb9dbf0
+		dataCategory: Uncategorized
+
+	measure 'Cumulative carry forward % (last 24 hrs)' = EXTERNALMEASURE("Cumulative carry forward % (last 24 hrs)", DOUBLE, "DirectQuery to AS - Fabric Capacity Metrics")
+		formatString: #,0.00%;-#,0.00%;#,0.00%
+		lineageTag: 5c32a19f-5994-4665-aae9-1fc8be3a5f32
+		sourceLineageTag: 48af8ccc-75ad-4660-8c93-216968d57830
+		dataCategory: Uncategorized
+
+	measure 'Cumulative carry forward (last 60 minutes)' = EXTERNALMEASURE("Cumulative carry forward (last 60 minutes)", DOUBLE, "DirectQuery to AS - Fabric Capacity Metrics")
+		lineageTag: cf1e7823-9004-4774-9bc5-32adc62f83ca
+		sourceLineageTag: e75ed7ff-0b82-42de-b6b1-58a7bd61e940
+		dataCategory: Uncategorized
+
+	measure 'Cumulative carry forward % (last 60 minutes)' = EXTERNALMEASURE("Cumulative carry forward % (last 60 minutes)", DOUBLE, "DirectQuery to AS - Fabric Capacity Metrics")
+		formatString: #,0.00%;-#,0.00%;#,0.00%
+		lineageTag: f16d43bd-906c-46e8-a36c-2d6861f0ccef
+		sourceLineageTag: 1962c148-67ae-4efe-b26f-486aa32e016b
+		dataCategory: Uncategorized
+
+	measure 'Carry forward add (last 60 minutes)' = EXTERNALMEASURE("Carry forward add (last 60 minutes)", DOUBLE, "DirectQuery to AS - Fabric Capacity Metrics")
+		lineageTag: f2c78ddf-73f0-4202-a3dd-314c613f0a9d
+		sourceLineageTag: 6e54576a-dbf8-4f79-bba3-45ed33bdc773
+		dataCategory: Uncategorized
+
+	measure 'Carry forward add % (last 60 minutes)' = EXTERNALMEASURE("Carry forward add % (last 60 minutes)", DOUBLE, "DirectQuery to AS - Fabric Capacity Metrics")
+		formatString: #,0.00%;-#,0.00%;#,0.00%
+		lineageTag: f1eba6b5-cc44-4cfe-bd77-3feeae641e19
+		sourceLineageTag: 74c68228-694e-454a-8f29-1a355b702819
+		dataCategory: Uncategorized
+
+	measure 'Carry forward burndown (last 60 minutes )' = EXTERNALMEASURE("Carry forward burndown (last 60 minutes )", DOUBLE, "DirectQuery to AS - Fabric Capacity Metrics")
+		lineageTag: 51eb7d1a-ddb3-499e-88c9-b018ebe21302
+		sourceLineageTag: 01c722a7-9c3f-49d1-9da3-0995c14ca6f9
+		dataCategory: Uncategorized
+
+	measure 'Carry forward burndown % (last 60 minutes)' = EXTERNALMEASURE("Carry forward burndown % (last 60 minutes)", DOUBLE, "DirectQuery to AS - Fabric Capacity Metrics")
+		formatString: #,0.00%;-#,0.00%;#,0.00%
+		lineageTag: 11751a4f-a640-4477-b555-a94e3a504a18
+		sourceLineageTag: c756da28-c333-4f24-8950-b7191e212a4a
+		dataCategory: Uncategorized
+
+	measure 'Cumulative carry forward (last 10 minutes)' = EXTERNALMEASURE("Cumulative carry forward (last 10 minutes)", DOUBLE, "DirectQuery to AS - Fabric Capacity Metrics")
+		lineageTag: 21e0e3de-0622-41ca-94db-d3dd2167c37c
+		sourceLineageTag: 903b2e3a-c9b3-4c98-a0e7-0fea745c3291
+		dataCategory: Uncategorized
+
+	measure 'Cumulative carry forward % (last 10 minutes)' = EXTERNALMEASURE("Cumulative carry forward % (last 10 minutes)", DOUBLE, "DirectQuery to AS - Fabric Capacity Metrics")
+		formatString: #,0.00%;-#,0.00%;#,0.00%
+		lineageTag: cf01310b-355c-41eb-80f1-452fc7516a14
+		sourceLineageTag: 02dc992e-5ec5-4d87-a822-3b628c640c27
+		dataCategory: Uncategorized
+
+	measure 'Carry forward add (last 10 minutes)' = EXTERNALMEASURE("Carry forward add (last 10 minutes)", DOUBLE, "DirectQuery to AS - Fabric Capacity Metrics")
+		lineageTag: e9749513-1197-43ab-b1ee-a20e71ea072c
+		sourceLineageTag: ab0afb4a-d6c9-43a9-8147-768cdc9d82eb
+		dataCategory: Uncategorized
+
+	measure 'Carry forward add % (last 10 minutes)' = EXTERNALMEASURE("Carry forward add % (last 10 minutes)", DOUBLE, "DirectQuery to AS - Fabric Capacity Metrics")
+		formatString: #,0.00%;-#,0.00%;#,0.00%
+		lineageTag: 82aaa9e8-5c91-4520-8c16-d85ab47e2224
+		sourceLineageTag: a2c00431-4371-487f-b25b-bbc03d5fb0f9
+		dataCategory: Uncategorized
+
+	measure 'Carry forward burndown (last 10 minutes)' = EXTERNALMEASURE("Carry forward burndown (last 10 minutes)", DOUBLE, "DirectQuery to AS - Fabric Capacity Metrics")
+		lineageTag: 291ee892-5eee-4c87-99cf-bc9f6bae32a7
+		sourceLineageTag: 6493f95e-5f19-473c-88ea-0d10779a03f7
+		dataCategory: Uncategorized
+
+	measure 'Carry forward burndown % (last 10 minutes)' = EXTERNALMEASURE("Carry forward burndown % (last 10 minutes)", DOUBLE, "DirectQuery to AS - Fabric Capacity Metrics")
+		formatString: #,0.00%;-#,0.00%;#,0.00%
+		lineageTag: 49f37f88-b842-404f-87fe-69e99c5d806e
+		sourceLineageTag: daf94c32-7944-4504-b185-e77b161dc088
+		dataCategory: Uncategorized
+
+	measure 'Last cumulative carry over t2' = EXTERNALMEASURE("Last cumulative carry over t2", DOUBLE, "DirectQuery to AS - Fabric Capacity Metrics")
+		formatString: 0.00%;-0.00%;0.00%
+		lineageTag: 222b2806-d843-4552-a2de-0da2cfe0df5d
+		sourceLineageTag: 3e2947ca-da73-44cd-9343-694337e804a5
+		dataCategory: Uncategorized
+
+	measure 'Timepoint SKU CU carry over t2' = EXTERNALMEASURE("Timepoint SKU CU carry over t2", INTEGER, "DirectQuery to AS - Fabric Capacity Metrics")
+		formatString: 0
+		lineageTag: b39b68a3-5953-44fd-94b4-32f816d2032e
+		sourceLineageTag: 27899a0c-2ca3-4838-803b-a1f021f8995f
+		dataCategory: Uncategorized
+
+	measure 'Last cumulative carry over t2 %' = EXTERNALMEASURE("Last cumulative carry over t2 %", DOUBLE, "DirectQuery to AS - Fabric Capacity Metrics")
+		formatString: #,0.00%;-#,0.00%;#,0.00%
+		lineageTag: 44809f06-39f3-4486-b253-2b6f2b4fa703
+		sourceLineageTag: 1ac04082-84f9-4d57-ab21-7a3083cb7bdf
+		dataCategory: Uncategorized
+
+	measure 'Cumulative carry forward % t2 (last 24 hrs)' = EXTERNALMEASURE("Cumulative carry forward % t2 (last 24 hrs)", DOUBLE, "DirectQuery to AS - Fabric Capacity Metrics")
+		formatString: #,0.00%;-#,0.00%;#,0.00%
+		lineageTag: d2801491-0fee-467b-a6fe-b04f1fd757b0
+		sourceLineageTag: 47b9a8b1-92db-4829-bd06-b94b711033dc
+		dataCategory: Uncategorized
+
+	measure 'Carry forward burndown % t2 (last 24 hrs)' = EXTERNALMEASURE("Carry forward burndown % t2 (last 24 hrs)", DOUBLE, "DirectQuery to AS - Fabric Capacity Metrics")
+		formatString: #,0.00%;-#,0.00%;#,0.00%
+		lineageTag: 02715386-8e9e-42e9-aebf-bc9ce6261f4e
+		sourceLineageTag: 8d5fdf86-c85d-473e-8515-eba477d54978
+		dataCategory: Uncategorized
+
+	measure 'Carry forward add % t2 (last 24 hrs)' = EXTERNALMEASURE("Carry forward add % t2 (last 24 hrs)", DOUBLE, "DirectQuery to AS - Fabric Capacity Metrics")
+		formatString: #,0.00%;-#,0.00%;#,0.00%
+		lineageTag: 0796dedc-4b99-4fb2-b0f2-664691b67eb9
+		sourceLineageTag: 0a694486-3ac3-4b06-bddc-4529f89d3b9d
+		dataCategory: Uncategorized
+
+	measure 'Carry forward add % t2 (last 10 minutes)' = EXTERNALMEASURE("Carry forward add % t2 (last 10 minutes)", DOUBLE, "DirectQuery to AS - Fabric Capacity Metrics")
+		formatString: #,0.00%;-#,0.00%;#,0.00%
+		lineageTag: 5324f358-e1ce-4b2f-8418-b8d1b8ef21bc
+		sourceLineageTag: f74dfe32-0173-4aac-a377-de61b01ff334
+		dataCategory: Uncategorized
+
+	measure 'Carry forward burndown % t2 (last 10 minutes)' = EXTERNALMEASURE("Carry forward burndown % t2 (last 10 minutes)", DOUBLE, "DirectQuery to AS - Fabric Capacity Metrics")
+		formatString: #,0.00%;-#,0.00%;#,0.00%
+		lineageTag: 6e823847-bcb8-4285-9a49-95ef98901dd5
+		sourceLineageTag: ca537e9a-1294-4296-bfaf-12275a2ebddc
+		dataCategory: Uncategorized
+
+	measure 'Cumulative carry forward % t2 (last 10 minutes)' = EXTERNALMEASURE("Cumulative carry forward % t2 (last 10 minutes)", DOUBLE, "DirectQuery to AS - Fabric Capacity Metrics")
+		formatString: #,0.00%;-#,0.00%;#,0.00%
+		lineageTag: f0e4a298-94c2-402b-9fc1-8df23b943e9e
+		sourceLineageTag: fac645cf-b001-41ef-beb9-df00e4d4e674
+		dataCategory: Uncategorized
+
+	measure 'Carry forward burndown % t2 (last 60 minutes)' = EXTERNALMEASURE("Carry forward burndown % t2 (last 60 minutes)", DOUBLE, "DirectQuery to AS - Fabric Capacity Metrics")
+		formatString: #,0.00%;-#,0.00%;#,0.00%
+		lineageTag: 3411773d-7f22-47b2-a415-a38c826f2cc6
+		sourceLineageTag: bc0fa778-ba03-4680-b6c2-e519f31ed4f6
+		dataCategory: Uncategorized
+
+	measure 'Carry forward  add % t2 (last 60 minutes)' = EXTERNALMEASURE("Carry forward  add % t2 (last 60 minutes)", DOUBLE, "DirectQuery to AS - Fabric Capacity Metrics")
+		formatString: #,0.00%;-#,0.00%;#,0.00%
+		lineageTag: 40c53bac-2847-4761-ab73-01b1116df36f
+		sourceLineageTag: 101b5cb3-5c9d-46af-aea1-24d9cc34c89a
+		dataCategory: Uncategorized
+
+	measure 'Cumulative carry forward % t2 (last 60 minutes)' = EXTERNALMEASURE("Cumulative carry forward % t2 (last 60 minutes)", DOUBLE, "DirectQuery to AS - Fabric Capacity Metrics")
+		formatString: #,0.00%;-#,0.00%;#,0.00%
+		lineageTag: 952c824a-d6fe-46da-a4e3-c540fef8c234
+		sourceLineageTag: cef0a9b9-f809-43db-b058-0e701439b6da
+		dataCategory: Uncategorized
+
+	measure 'Total number of workspaces' = EXTERNALMEASURE("Total number of workspaces", INTEGER, "DirectQuery to AS - Fabric Capacity Metrics")
+		formatString: #,0
+		displayFolder: Onelake Measures
+		lineageTag: 9f12aba8-6d51-493d-8b64-e804b77977b9
+		sourceLineageTag: 28157cf4-3fc0-4627-95fe-17d1dff0506a
+		dataCategory: Uncategorized
+
+	measure 'Current storage in (GB)' = EXTERNALMEASURE("Current storage in (GB)", DOUBLE, "DirectQuery to AS - Fabric Capacity Metrics")
+		displayFolder: Onelake Measures
+		lineageTag: 662b2586-a7bf-48e9-955d-c3533e4c9531
+		sourceLineageTag: 42a2696a-7de4-4db6-bdf5-cf3cdb16f9d2
+		dataCategory: Uncategorized
+
+	measure 'Dynamic M1 cumulative utilization (GB) by workspace' = EXTERNALMEASURE("Dynamic M1 cumulative utilization (GB) by workspace", DOUBLE, "DirectQuery to AS - Fabric Capacity Metrics")
+		displayFolder: Onelake Measures
+		lineageTag: 625cf4d4-615e-4848-b8ef-98c5a036e9e3
+		sourceLineageTag: ddb76496-080a-45ea-b12b-a6b29d3d9a56
+		dataCategory: Uncategorized
+
+	measure 'Cumulative utilization (GB) % by workspace' = EXTERNALMEASURE("Cumulative utilization (GB) % by workspace", DOUBLE, "DirectQuery to AS - Fabric Capacity Metrics")
+		formatString: 0.00%;-0.00%;0.00%
+		displayFolder: Onelake Measures
+		lineageTag: 985d7568-f7c8-4c02-8b23-30c5336226a1
+		sourceLineageTag: 52d1c963-18d7-46d2-8020-9313be189177
+		dataCategory: Uncategorized
+
+	measure 'Avg cumulative static storage daily' = EXTERNALMEASURE("Avg cumulative static storage daily", DOUBLE, "DirectQuery to AS - Fabric Capacity Metrics")
+		displayFolder: Onelake Measures
+		lineageTag: 12d25fc5-cd55-4b49-b010-bd81a49e59d7
+		sourceLineageTag: c6e55cdf-a97b-4dfb-9386-e954fe5befb1
+		dataCategory: Uncategorized
+
+	measure 'Avg cumulative static storage hourly' = EXTERNALMEASURE("Avg cumulative static storage hourly", DOUBLE, "DirectQuery to AS - Fabric Capacity Metrics")
+		displayFolder: Onelake Measures
+		lineageTag: 7d49ba37-b40a-4ad6-b881-e356f66ea693
+		sourceLineageTag: 3268cc06-3dc2-47f2-8905-ed41a68b5fdb
+		dataCategory: Uncategorized
+
+	measure 'Billed (GB)' = EXTERNALMEASURE("Billed (GB)", DOUBLE, "DirectQuery to AS - Fabric Capacity Metrics")
+		displayFolder: Onelake Measures
+		lineageTag: 2f5c1086-d5b9-4758-8c84-27d680435ac8
+		sourceLineageTag: 85984014-a38c-4809-8a9e-7d923e6c5b24
+		dataCategory: Uncategorized
+
+	measure 'Billed (GB) %' = EXTERNALMEASURE("Billed (GB) %", DOUBLE, "DirectQuery to AS - Fabric Capacity Metrics")
+		formatString: #,0.00%;-#,0.00%;#,0.00%
+		displayFolder: Onelake Measures
+		lineageTag: 1b546a57-6cca-44ec-85a0-b9efb5211bd6
+		sourceLineageTag: a0c822c7-c951-40ad-bf07-a69047d3b41f
+		dataCategory: Uncategorized
+
+	measure 'Dynamic M1 cumulative utilization (GB) by date' = EXTERNALMEASURE("Dynamic M1 cumulative utilization (GB) by date", DOUBLE, "DirectQuery to AS - Fabric Capacity Metrics")
+		displayFolder: Onelake Measures
+		lineageTag: 31064d62-1094-461c-83c2-667a47f7b5b7
+		sourceLineageTag: 3fd927c3-d06f-476c-801f-c0554211ac51
+		dataCategory: Uncategorized
+
+	measure 'Dynamic text for onelake' = EXTERNALMEASURE("Dynamic text for onelake", STRING, "DirectQuery to AS - Fabric Capacity Metrics")
+		displayFolder: Onelake Measures
+		lineageTag: 51d9e419-d3a3-40aa-9a1d-612c043d4344
+		sourceLineageTag: e8dec9f8-380d-4a74-bc8d-b4ab52e98d4c
+		dataCategory: Uncategorized
+
+	measure 'SKU check' = EXTERNALMEASURE("SKU check", BOOLEAN, "DirectQuery to AS - Fabric Capacity Metrics")
+		formatString: """TRUE"";""TRUE"";""FALSE"""
+		displayFolder: Onelake Measures
+		lineageTag: baebbdf8-b6fd-4532-a7c2-9e69ad0c2f5e
+		sourceLineageTag: aac5ac3d-24de-4e35-96ce-6c11d605b595
+		dataCategory: Uncategorized
+
+	measure 'Dynamic M1 throttling (min)' = EXTERNALMEASURE("Dynamic M1 throttling (min)", DOUBLE, "DirectQuery to AS - Fabric Capacity Metrics")
+		formatString: 0.0000
+		lineageTag: 6a914a72-3e52-462a-a932-3cd5c537a89a
+		sourceLineageTag: 6feb1f3d-630a-4df3-a8c5-249b956bec5f
+		dataCategory: Uncategorized
+
+	measure 'Last carry over add' = EXTERNALMEASURE("Last carry over add", DOUBLE, "DirectQuery to AS - Fabric Capacity Metrics")
+		lineageTag: d37aee51-5226-43ab-a1dd-60c73ac26e63
+		sourceLineageTag: 3eba0d27-3224-42a3-9f97-6ab9efa02c66
+		dataCategory: Uncategorized
+
+	measure 'Last carry over add %' = EXTERNALMEASURE("Last carry over add %", DOUBLE, "DirectQuery to AS - Fabric Capacity Metrics")
+		formatString: 0.00%;-0.00%;0.00%
+		lineageTag: 289e9700-faa1-4d64-b14f-24aa46683c9d
+		sourceLineageTag: 7cab5876-15fb-4a5c-b567-fd5d1da14f53
+		dataCategory: Uncategorized
+
+	measure 'Last carry over burndown %' = EXTERNALMEASURE("Last carry over burndown %", DOUBLE, "DirectQuery to AS - Fabric Capacity Metrics")
+		formatString: 0.00%;-0.00%;0.00%
+		lineageTag: 78346eab-f902-4c7a-887d-2c5fe04370a7
+		sourceLineageTag: fb17866a-15b0-4a85-b8d5-fbd52505fd79
+		dataCategory: Uncategorized
+
+	measure 'Last carry over add t2' = EXTERNALMEASURE("Last carry over add t2", DOUBLE, "DirectQuery to AS - Fabric Capacity Metrics")
+		lineageTag: e81ea32c-7c50-4445-b88f-fc95ddf7df6c
+		sourceLineageTag: 4e5c05e4-fb1f-43a1-be1e-3fd34777451d
+		dataCategory: Uncategorized
+
+	measure 'Last carry over add t2 %' = EXTERNALMEASURE("Last carry over add t2 %", DOUBLE, "DirectQuery to AS - Fabric Capacity Metrics")
+		formatString: 0.00%;-0.00%;0.00%
+		lineageTag: 5000856c-90fc-4b4d-833d-dc7cae8281bf
+		sourceLineageTag: ced8822e-a3ac-41cc-b69f-6f987de4a635
+		dataCategory: Uncategorized
+
+	measure 'Last carry over burdown t2' = EXTERNALMEASURE("Last carry over burdown t2", DOUBLE, "DirectQuery to AS - Fabric Capacity Metrics")
+		lineageTag: 66bbe207-5f57-42bb-a416-4eb8f2a2035a
+		sourceLineageTag: a0bd3491-1c03-428c-93d5-da920ba33f52
+		dataCategory: Uncategorized
+
+	measure 'Last carry over burndown t2 %' = EXTERNALMEASURE("Last carry over burndown t2 %", DOUBLE, "DirectQuery to AS - Fabric Capacity Metrics")
+		formatString: 0.00%;-0.00%;0.00%
+		lineageTag: 11084968-b50b-4c71-bf28-9faa7e656c9d
+		sourceLineageTag: 21c370b8-0793-488e-8517-c49e65935bee
+		dataCategory: Uncategorized
+
+	measure 'Is workload in capacity' = EXTERNALMEASURE("Is workload in capacity", INTEGER, "DirectQuery to AS - Fabric Capacity Metrics")
+		formatString: 0
+		lineageTag: 94d361c6-802f-420c-85d5-949a11ebf35a
+		sourceLineageTag: 86d58fe3-08cf-4a56-acb1-699a3ceb1e11
+		dataCategory: Uncategorized
+
+	measure 'Is workload in workspace' = EXTERNALMEASURE("Is workload in workspace", INTEGER, "DirectQuery to AS - Fabric Capacity Metrics")
+		formatString: 0
+		lineageTag: 71e7a6e0-852c-40a8-bf16-77ebbf0e67b6
+		sourceLineageTag: fe0e4656-02bc-41e1-ba10-a6acf90dd172
+		dataCategory: Uncategorized
+
+	measure 'Is operation name in capacity' = EXTERNALMEASURE("Is operation name in capacity", INTEGER, "DirectQuery to AS - Fabric Capacity Metrics")
+		formatString: 0
+		lineageTag: 3ab28ec8-153e-422b-a33c-766491e3dce9
+		sourceLineageTag: fa78de54-5b2d-4cd4-bf0e-52690f5ecf1d
+		dataCategory: Uncategorized
+
+	measure 'Dynamic text for default capacity' = EXTERNALMEASURE("Dynamic text for default capacity", STRING, "DirectQuery to AS - Fabric Capacity Metrics")
+		lineageTag: ea25fecb-a977-4664-99de-4f15cb922fef
+		sourceLineageTag: 3fa0c0a4-215d-4bf2-b6fa-2944b2fd4783
+		dataCategory: Uncategorized
+
+	measure 'Background colour' = EXTERNALMEASURE("Background colour", STRING, "DirectQuery to AS - Fabric Capacity Metrics")
+		lineageTag: 75798f97-6620-4589-8838-ad390b334226
+		sourceLineageTag: bb5e1d15-3aa1-4e58-9819-01244617100f
+		dataCategory: Uncategorized
+
+	measure 'Dynamic text for default capacity 2' = EXTERNALMEASURE("Dynamic text for default capacity 2", STRING, "DirectQuery to AS - Fabric Capacity Metrics")
+		lineageTag: c457125f-b09c-4806-a0ba-0d4f4c4fc740
+		sourceLineageTag: be68a5fc-c094-4981-81b6-907ffae295d5
+		dataCategory: Uncategorized
+
+	measure 'Dynamic visual border' = EXTERNALMEASURE("Dynamic visual border", STRING, "DirectQuery to AS - Fabric Capacity Metrics")
+		lineageTag: 336ced5a-5089-41b8-adf0-0a8993878220
+		sourceLineageTag: 10853e9e-bc65-42c7-94de-702555676e4e
+		dataCategory: Uncategorized
+
+	measure 'Dynamic text for default capacity 3' = EXTERNALMEASURE("Dynamic text for default capacity 3", STRING, "DirectQuery to AS - Fabric Capacity Metrics")
+		lineageTag: 47ef7b7e-f646-415a-a22d-c93f8ce8a061
+		sourceLineageTag: 732933d7-3db8-4f7a-9111-de9162cd413c
+		dataCategory: Uncategorized
+
+	measure 'Dynamic text for default capacity 4' = EXTERNALMEASURE("Dynamic text for default capacity 4", STRING, "DirectQuery to AS - Fabric Capacity Metrics")
+		lineageTag: 5edb43b0-7d29-4434-b5d7-28f2de185ced
+		sourceLineageTag: 19e3d98d-1570-48b4-bcc5-7f4a689b00af
+		dataCategory: Uncategorized
+
+	measure 'Last expected burndown in minutes' = EXTERNALMEASURE("Last expected burndown in minutes", DOUBLE, "DirectQuery to AS - Fabric Capacity Metrics")
+		lineageTag: 5365834b-c58e-434b-897f-c5b4ec8b7009
+		sourceLineageTag: b9d27256-3b1f-4b73-9d77-b83b7a388f42
+		dataCategory: Uncategorized
+
+	measure 'Last expected burndown in minutes t2' = EXTERNALMEASURE("Last expected burndown in minutes t2", DOUBLE, "DirectQuery to AS - Fabric Capacity Metrics")
+		lineageTag: 35e026ef-7714-4924-bee2-03a6e3d3abd6
+		sourceLineageTag: 9d0a06d6-dba0-46b9-87e7-f5c2d9623493
+		dataCategory: Uncategorized
+
+	measure 'Expected burndown in minutes (last 10 minutes)' = EXTERNALMEASURE("Expected burndown in minutes (last 10 minutes)", DOUBLE, "DirectQuery to AS - Fabric Capacity Metrics")
+		lineageTag: b1cc85ca-bcda-4e67-94fd-15c5b8f01cd8
+		sourceLineageTag: 929ad531-53f6-4717-9ebe-d2e1f14f7781
+		dataCategory: Uncategorized
+
+	measure 'Expected burndown in minutes t2 (last 10 minutes)' = EXTERNALMEASURE("Expected burndown in minutes t2 (last 10 minutes)", DOUBLE, "DirectQuery to AS - Fabric Capacity Metrics")
+		lineageTag: 50084a3c-cbdc-4571-ab83-1222df4a3e73
+		sourceLineageTag: 8b16db40-1fe2-4469-87e9-e7c2668a0ec3
+		dataCategory: Uncategorized
+
+	measure 'Expected burndown in minutes (last 24 hrs)' = EXTERNALMEASURE("Expected burndown in minutes (last 24 hrs)", DOUBLE, "DirectQuery to AS - Fabric Capacity Metrics")
+		lineageTag: 31f19412-ce62-4ece-af3f-7114b9e97710
+		sourceLineageTag: 5bdf70dd-515d-4adf-ae44-7d5613423192
+		dataCategory: Uncategorized
+
+	measure 'Expected burndown in minutes (last 60 minutes)' = EXTERNALMEASURE("Expected burndown in minutes (last 60 minutes)", DOUBLE, "DirectQuery to AS - Fabric Capacity Metrics")
+		lineageTag: 91dbf29e-94f9-4b04-a68c-8e9fce4e5208
+		sourceLineageTag: 9348bb9b-ff41-40ad-9326-3ef45d7c67ab
+		dataCategory: Uncategorized
+
+	measure 'Expected burndown in minutes t2 (last 60 minutes)' = EXTERNALMEASURE("Expected burndown in minutes t2 (last 60 minutes)", DOUBLE, "DirectQuery to AS - Fabric Capacity Metrics")
+		lineageTag: 2bdeb5f0-e635-4d9f-ac16-f5fd3bd47c4d
+		sourceLineageTag: 7be18633-a71e-4703-a91d-0d6aab471a12
+		dataCategory: Uncategorized
+
+	measure 'Expected burndown in minutes t2 (Last 24 hrs)' = EXTERNALMEASURE("Expected burndown in minutes t2 (Last 24 hrs)", DOUBLE, "DirectQuery to AS - Fabric Capacity Metrics")
+		lineageTag: 912a91e1-267d-46e7-8a37-e0eb579be095
+		sourceLineageTag: 7e43788f-0c21-4f5a-ac38-27b1633fdc14
+		dataCategory: Uncategorized
+
+	measure 'Dynamic M1 failed operation count' = EXTERNALMEASURE("Dynamic M1 failed operation count", INTEGER, "DirectQuery to AS - Fabric Capacity Metrics")
+		formatString: 0
+		lineageTag: c97f3b50-4c22-43b9-b101-92cf47a13586
+		sourceLineageTag: 920f0d30-96cd-4393-8cae-ce05e72bb139
+		dataCategory: Uncategorized
+
+	measure 'Dynamic M1 inprogress operation count' = EXTERNALMEASURE("Dynamic M1 inprogress operation count", INTEGER, "DirectQuery to AS - Fabric Capacity Metrics")
+		formatString: 0
+		lineageTag: f11c06c6-75cf-4451-b52f-6ffd402d0023
+		sourceLineageTag: 295c4903-456d-4e19-9460-7af2c3b93d8c
+		dataCategory: Uncategorized
+
+	measure 'Dynamic M1 invalid operation count' = EXTERNALMEASURE("Dynamic M1 invalid operation count", INTEGER, "DirectQuery to AS - Fabric Capacity Metrics")
+		formatString: 0
+		lineageTag: 449292e8-ee36-443d-b895-36f7617f3ef6
+		sourceLineageTag: bfe75924-3bea-49b3-aabd-c97669f98bc9
+		dataCategory: Uncategorized
+
+	measure 'Dynamic M1 rejected operation count' = EXTERNALMEASURE("Dynamic M1 rejected operation count", INTEGER, "DirectQuery to AS - Fabric Capacity Metrics")
+		formatString: 0
+		lineageTag: 8a198a69-d6bf-4d17-85ba-86ae828f7611
+		sourceLineageTag: 645ebe0c-787d-4ac3-8f54-537ff7a52cb8
+		dataCategory: Uncategorized
+
+	measure 'Dynamic M1 successful operation count workload autoscale' = EXTERNALMEASURE("Dynamic M1 successful operation count workload autoscale", INTEGER, "DirectQuery to AS - Fabric Capacity Metrics")
+		formatString: 0
+		lineageTag: 2c84a031-a1f2-4fe9-9006-8b2d4bfb13c4
+		sourceLineageTag: e87fa7a6-daa9-4b59-b800-6c8da8f6d8f5
+		dataCategory: Uncategorized
+
+	measure 'Item virtualization status' = EXTERNALMEASURE("Item virtualization status", STRING, "DirectQuery to AS - Fabric Capacity Metrics")
+		lineageTag: 525c5522-65b5-4f11-adf3-80d2018714e4
+		sourceLineageTag: 17517434-bf34-4acd-b5ae-8b0c1b7672b6
+		dataCategory: Uncategorized
+
+	measure 'Cumulative carry over' = EXTERNALMEASURE("Cumulative carry over", DOUBLE, "DirectQuery to AS - Fabric Capacity Metrics")
+		lineageTag: f4c92a10-1eb0-4d2d-b1cf-d1d0347b7f50
+		sourceLineageTag: 9a13b38a-4104-49f0-981d-3cb545fac934
+		dataCategory: Uncategorized
+
+	measure 'Background billable CU' = EXTERNALMEASURE("Background billable CU", DOUBLE, "DirectQuery to AS - Fabric Capacity Metrics")
+		lineageTag: f23502d9-79c1-419a-889c-26c0966275e4
+		sourceLineageTag: 3ef94806-0aca-4e6b-a8d2-4ec47deea78a
+		dataCategory: Uncategorized
+
+	measure 'Background non billable CU' = EXTERNALMEASURE("Background non billable CU", DOUBLE, "DirectQuery to AS - Fabric Capacity Metrics")
+		lineageTag: 9b622699-0007-451c-8ee9-e98334af6b7a
+		sourceLineageTag: 9db2ae8b-8272-4856-9736-5c270144525c
+		dataCategory: Uncategorized
+
+	measure 'Interactive billable CU' = EXTERNALMEASURE("Interactive billable CU", DOUBLE, "DirectQuery to AS - Fabric Capacity Metrics")
+		formatString: 0.00
+		lineageTag: 3a870d3c-62fa-468d-be3a-f56280f7a9d5
+		sourceLineageTag: f5655d13-dc08-486b-a121-375b256f54bb
+		dataCategory: Uncategorized
+
+	measure 'Interactive non billable CU' = EXTERNALMEASURE("Interactive non billable CU", DOUBLE, "DirectQuery to AS - Fabric Capacity Metrics")
+		lineageTag: 1a335af6-3452-494d-a248-7511f6510cc2
+		sourceLineageTag: 5246528e-7d7b-4057-80c7-ee3811d2ce39
+		dataCategory: Uncategorized
+
+	measure 'SKU CU by timepoint card preview 2' = EXTERNALMEASURE("SKU CU by timepoint card preview 2", INTEGER, "DirectQuery to AS - Fabric Capacity Metrics")
+		formatString: 0
+		lineageTag: ed1a1a18-3482-482d-a7fc-6dabdc9320db
+		sourceLineageTag: 99d399df-ebb4-4834-9adb-13bb46364e52
+		dataCategory: Uncategorized
+
+	measure 'Workspace virtualization status' = EXTERNALMEASURE("Workspace virtualization status", STRING, "DirectQuery to AS - Fabric Capacity Metrics")
+		lineageTag: 509bcf26-1cff-4443-a8e3-55ea0eb84ec2
+		sourceLineageTag: ed217d8f-bfeb-4889-9751-58163c0ac72d
+		dataCategory: Uncategorized
+
+	measure 'Dynamic interactive delay %' = EXTERNALMEASURE("Dynamic interactive delay %", DOUBLE, "DirectQuery to AS - Fabric Capacity Metrics")
+		formatString: 0.00%;-0.00%;0.00%
+		lineageTag: bcac3c13-6de9-4ba8-bbb6-7dab25e31272
+		sourceLineageTag: 5c584a9e-b943-463a-bbca-cdba45537483
+		dataCategory: Uncategorized
+
+	measure 'Dynamic interactive rejection %' = EXTERNALMEASURE("Dynamic interactive rejection %", DOUBLE, "DirectQuery to AS - Fabric Capacity Metrics")
+		formatString: 0.00%;-0.00%;0.00%
+		lineageTag: 5bcc5997-7d5a-419b-b919-3381f6e92fb8
+		sourceLineageTag: e90eafaa-25ed-4be9-a88d-5a295dd37078
+		dataCategory: Uncategorized
+
+	measure 'Dynamic background rejection %' = EXTERNALMEASURE("Dynamic background rejection %", DOUBLE, "DirectQuery to AS - Fabric Capacity Metrics")
+		formatString: 0.00%;-0.00%;0.00%
+		lineageTag: c990dabf-9150-4983-add4-2e58f5e9341f
+		sourceLineageTag: f0cda2b1-2e2c-4581-b56e-4b42a1fdc56c
+		dataCategory: Uncategorized
+
+	measure 'Interactive delay threshold' = EXTERNALMEASURE("Interactive delay threshold", INTEGER, "DirectQuery to AS - Fabric Capacity Metrics")
+		formatString: 0.00%;-0.00%;0.00%
+		lineageTag: 1f8ac831-f813-485d-8dcc-b1f786523454
+		sourceLineageTag: c83b1a81-81bf-4171-9695-a31690ed343e
+		dataCategory: Uncategorized
+
+	measure 'Interactive rejection threshold' = EXTERNALMEASURE("Interactive rejection threshold", INTEGER, "DirectQuery to AS - Fabric Capacity Metrics")
+		formatString: 0.00%;-0.00%;0.00%
+		lineageTag: b6aaedea-d1a1-42a7-a85f-8baceb0689be
+		sourceLineageTag: fff46afd-3280-47a8-8676-cb3f6dacb995
+		dataCategory: Uncategorized
+
+	measure 'Background rejection threshold' = EXTERNALMEASURE("Background rejection threshold", INTEGER, "DirectQuery to AS - Fabric Capacity Metrics")
+		formatString: 0.00%;-0.00%;0.00%
+		lineageTag: 82e3c4ec-4003-44ee-bb70-a2e3f2808a8f
+		sourceLineageTag: 4d70a655-6700-4a0d-85fb-35264fd8acbb
+		dataCategory: Uncategorized
+
+	measure 'Overage reference line' = EXTERNALMEASURE("Overage reference line", INTEGER, "DirectQuery to AS - Fabric Capacity Metrics")
+		formatString: 0.00%;-0.00%;0.00%
+		lineageTag: 42949a12-f059-4cf1-97a6-7abfa49d0d05
+		sourceLineageTag: 6be42b39-2e8d-4a00-8e5e-014893996cd8
+		dataCategory: Uncategorized
+
+	measure 'Top N selector text' = EXTERNALMEASURE("Top N selector text", STRING, "DirectQuery to AS - Fabric Capacity Metrics")
+		lineageTag: e548cb0a-fc2c-4146-832c-02c74bd1f953
+		sourceLineageTag: 8168161a-24c5-48da-aafd-1a7496f89406
+		dataCategory: Uncategorized
+
+	measure 'Dynamic metric item 2 autoscale' = EXTERNALMEASURE("Dynamic metric item 2 autoscale", DOUBLE, "DirectQuery to AS - Fabric Capacity Metrics")
+		lineageTag: 34ebb738-8144-4700-8a7d-c50507564f79
+		sourceLineageTag: bf53128c-3dd9-4b9d-a024-1f64c94b2b3e
+		dataCategory: Uncategorized
+
+	measure 'Dynamic M1 rejected operation count workload autoscale' = EXTERNALMEASURE("Dynamic M1 rejected operation count workload autoscale", INTEGER, "DirectQuery to AS - Fabric Capacity Metrics")
+		formatString: 0
+		lineageTag: e0bde917-f42b-4091-9bda-1c3d933d4855
+		sourceLineageTag: bab493ef-4633-40e0-994d-d637741fcef4
+		dataCategory: Uncategorized
+
+	measure 'Dynamic M1 successful operation count' = EXTERNALMEASURE("Dynamic M1 successful operation count", INTEGER, "DirectQuery to AS - Fabric Capacity Metrics")
+		formatString: 0
+		lineageTag: 165f64da-0b5f-43a7-a622-4939819bc7d6
+		sourceLineageTag: 7094f71a-dcb2-40d7-933c-ffedbdb1cc2d
+		dataCategory: Uncategorized
+
+	measure 'Dynamic M1 failed operation count workload autoscale' = EXTERNALMEASURE("Dynamic M1 failed operation count workload autoscale", INTEGER, "DirectQuery to AS - Fabric Capacity Metrics")
+		formatString: 0
+		lineageTag: d0b453e0-b759-4d47-9a8c-3c51d5daae32
+		sourceLineageTag: 53793ad4-d9b6-4d90-b242-a029d48b8143
+		dataCategory: Uncategorized
+
+	measure 'Autoscale CU usage' = EXTERNALMEASURE("Autoscale CU usage", DOUBLE, "DirectQuery to AS - Fabric Capacity Metrics")
+		lineageTag: 06c76785-84bb-4c12-8cab-9d099cb03a4b
+		sourceLineageTag: 28b57c7d-38f9-47fa-aad1-7b3c2b93ef2b
+		dataCategory: Uncategorized
+
+	measure 'Dynamic M1 CU autoscale' = EXTERNALMEASURE("Dynamic M1 CU autoscale", DOUBLE, "DirectQuery to AS - Fabric Capacity Metrics")
+		lineageTag: 0dd2e342-dac3-4535-a993-cc672638d0fa
+		sourceLineageTag: ca5a2a1c-35ff-4672-ad49-6580dbdf2e88
+		dataCategory: Uncategorized
+
+	measure 'Dynamic M1 duration autoscale' = EXTERNALMEASURE("Dynamic M1 duration autoscale", DOUBLE, "DirectQuery to AS - Fabric Capacity Metrics")
+		lineageTag: dce4a2bf-a6d6-4ea4-8713-6bc7825c8051
+		sourceLineageTag: 3b5275fb-4608-4039-a526-723ca3036790
+		dataCategory: Uncategorized
+
+	measure 'Dynamic M1 user autoscale' = EXTERNALMEASURE("Dynamic M1 user autoscale", INTEGER, "DirectQuery to AS - Fabric Capacity Metrics")
+		formatString: 0
+		lineageTag: f36c692c-8725-4ef9-a95a-d457bfb584fd
+		sourceLineageTag: cb59de13-16fe-4f76-b2dd-ecf0972ae646
+		dataCategory: Uncategorized
+
+	measure 'Dynamic M1 invalid operation count workload autoscale' = EXTERNALMEASURE("Dynamic M1 invalid operation count workload autoscale", INTEGER, "DirectQuery to AS - Fabric Capacity Metrics")
+		formatString: 0
+		lineageTag: 0713e20e-77c9-4464-9645-d6d6e89b2d31
+		sourceLineageTag: fc157b1c-2072-47ff-914d-052663120c55
+		dataCategory: Uncategorized
+
+	measure 'Dynamic text for autoscale capacity 1' = EXTERNALMEASURE("Dynamic text for autoscale capacity 1", STRING, "DirectQuery to AS - Fabric Capacity Metrics")
+		lineageTag: 4a48e9c3-1576-47bd-9a5b-cd1d278d871b
+		sourceLineageTag: a7d8603e-c510-49ee-bc3f-2470f4b7bc22
+		dataCategory: Uncategorized
+
+	measure 'Dynamic text for autoscale timepoint page title' = EXTERNALMEASURE("Dynamic text for autoscale timepoint page title", STRING, "DirectQuery to AS - Fabric Capacity Metrics")
+		lineageTag: 1b81d30c-db40-4939-8a3e-4711665cd33d
+		sourceLineageTag: 38fd7cb1-5a43-4b9a-bef9-34125e98831b
+		dataCategory: Uncategorized
+
+	measure 'Dynamic text for autoscale timepoint-page title' = EXTERNALMEASURE("Dynamic text for autoscale timepoint-page title", STRING, "DirectQuery to AS - Fabric Capacity Metrics")
+		lineageTag: f66802a4-f5a3-4e9a-8498-d0900114b982
+		sourceLineageTag: 90b8b3a6-3693-4a22-91f3-7a8dd8584f1c
+		dataCategory: Uncategorized
+
+	measure 'Max CU limit 1 minute' = EXTERNALMEASURE("Max CU limit 1 minute", INTEGER, "DirectQuery to AS - Fabric Capacity Metrics")
+		formatString: 0
+		lineageTag: 6112fa6b-09f9-4f1d-8d40-4c3d8e4436fb
+		sourceLineageTag: 99659505-67f6-42f4-a04f-1f80e61d07a9
+		dataCategory: Uncategorized
+
+	measure 'Timepoint workload autoscale limit' = EXTERNALMEASURE("Timepoint workload autoscale limit", INTEGER, "DirectQuery to AS - Fabric Capacity Metrics")
+		formatString: 0
+		lineageTag: 95484720-2b13-47da-8bab-1aaa0bbba968
+		sourceLineageTag: 7215fac8-0f24-4ba6-bf7e-1cc6e2752122
+		dataCategory: Uncategorized
+
+	measure 'Timepoint2 workload autoscale limit' = EXTERNALMEASURE("Timepoint2 workload autoscale limit", INTEGER, "DirectQuery to AS - Fabric Capacity Metrics")
+		formatString: 0
+		lineageTag: 15ddd574-195f-4ded-9227-d780fc25857c
+		sourceLineageTag: 93ad3333-42e2-4e3a-87cc-03b544910778
+		dataCategory: Uncategorized
+
+	measure 'Autoscale CU usage %' = EXTERNALMEASURE("Autoscale CU usage %", DOUBLE, "DirectQuery to AS - Fabric Capacity Metrics")
+		formatString: 0.00%;-0.00%;0.00%
+		lineageTag: a3cffc84-3a75-4600-a7c6-b2fd39179c8e
+		sourceLineageTag: 79268b3a-c8ee-4d74-a3fe-6587c4d244ae
+		dataCategory: Uncategorized
+
+	measure 'Max CU or autoscale limit' = EXTERNALMEASURE("Max CU or autoscale limit", DOUBLE, "DirectQuery to AS - Fabric Capacity Metrics")
+		lineageTag: 9e0653fe-8475-4279-9fb7-6ee44275f64d
+		sourceLineageTag: 694191e4-bfa6-40e4-b7a0-b41e9cad2b7a
+		dataCategory: Uncategorized
+
+	measure 'Max CU limit' = EXTERNALMEASURE("Max CU limit", INTEGER, "DirectQuery to AS - Fabric Capacity Metrics")
+		formatString: 0
+		lineageTag: 58a73b0d-7990-4786-ad3a-699b4e8f7bc5
+		sourceLineageTag: c939e11f-bc7f-4a6c-b9e5-2e68ff261967
+		dataCategory: Uncategorized
+
+	measure 'Is item kind has autoscale' = EXTERNALMEASURE("Is item kind has autoscale", INTEGER, "DirectQuery to AS - Fabric Capacity Metrics")
+		formatString: 0
+		lineageTag: b16b6d92-11c0-437e-9397-72ec398235b7
+		sourceLineageTag: 705bcdc1-d50a-475d-816c-044d9fcb808c
+		dataCategory: Uncategorized
+
+	measure 'Dynamic M1 % of base capacity' = EXTERNALMEASURE("Dynamic M1 % of base capacity", DOUBLE, "DirectQuery to AS - Fabric Capacity Metrics")
+		formatString: 0.00%;-0.00%;0.00%
+		lineageTag: 623265ad-b354-46af-82aa-e5fc3ac28f2a
+		sourceLineageTag: 0f31cd17-f6fb-4f6d-bbc9-5a088a9141ca
+		dataCategory: Uncategorized
+
+	measure 'Dynamic interactive % of base capacity' = EXTERNALMEASURE("Dynamic interactive % of base capacity", DOUBLE, "DirectQuery to AS - Fabric Capacity Metrics")
+		formatString: 0.00%;-0.00%;0.00%
+		lineageTag: b485e86e-71e7-43e9-9781-6f772f59168a
+		sourceLineageTag: 25cf66df-8e89-42c8-91ff-b952c7050da6
+		dataCategory: Uncategorized
+
+	measure 'Dynamic background % of base capacity' = EXTERNALMEASURE("Dynamic background % of base capacity", DOUBLE, "DirectQuery to AS - Fabric Capacity Metrics")
+		formatString: 0.00%;-0.00%;0.00%
+		lineageTag: 1446235a-127e-4ddd-a14b-431cd037b0a2
+		sourceLineageTag: 5524d424-f984-4fc4-8e1d-df0af9facbba
+		dataCategory: Uncategorized
+
+	measure 'Check Interactive Summary' = EXTERNALMEASURE("Check Interactive Summary", STRING, "DirectQuery to AS - Fabric Capacity Metrics")
+		lineageTag: 7f2741c0-9c53-4347-86b3-fe6ae174e5d5
+		sourceLineageTag: b5242fb7-03af-483d-835d-e657ba6e8593
+		dataCategory: Uncategorized
+
+	measure 'Check background summary' = EXTERNALMEASURE("Check background summary", STRING, "DirectQuery to AS - Fabric Capacity Metrics")
+		lineageTag: 99101cb2-004a-4672-bb81-94e3c34373c9
+		sourceLineageTag: dcf65b3d-f568-4790-8c08-09a80dad71d4
+		dataCategory: Uncategorized
+
+	measure 'Dynamic page name timepoint detail' = EXTERNALMEASURE("Dynamic page name timepoint detail", STRING, "DirectQuery to AS - Fabric Capacity Metrics")
+		lineageTag: 12fd938b-5e12-4fe6-891b-64b8aa600802
+		sourceLineageTag: d07f8aba-ce49-4d3c-af5e-4e9075fbcb70
+		dataCategory: Uncategorized
+
+	measure 'Background table dynamic title' = EXTERNALMEASURE("Background table dynamic title", STRING, "DirectQuery to AS - Fabric Capacity Metrics")
+		lineageTag: 4a75f4d3-a973-461d-8c87-dcde4bceb968
+		sourceLineageTag: 85ce7e5b-ed47-44c7-86d4-a81ff55f2930
+		dataCategory: Uncategorized
+
+	measure 'Background detail count' = EXTERNALMEASURE("Background detail count", INTEGER, "DirectQuery to AS - Fabric Capacity Metrics")
+		formatString: 0
+		lineageTag: e641df8d-9ed4-4d86-a14a-a10de6c43705
+		sourceLineageTag: c7c86ec5-b270-4ecf-9240-a81faa934194
+		dataCategory: Uncategorized
+
+	measure 'Background row count' = EXTERNALMEASURE("Background row count", INTEGER, "DirectQuery to AS - Fabric Capacity Metrics")
+		formatString: 0
+		lineageTag: d3b5494d-1e9c-4f66-8e4e-9864f83255e1
+		sourceLineageTag: 0d128254-7898-468d-ae59-6c532700990f
+		dataCategory: Uncategorized
+
+	measure 'Check background detail' = EXTERNALMEASURE("Check background detail", STRING, "DirectQuery to AS - Fabric Capacity Metrics")
+		lineageTag: d30de77d-7f79-4520-a3b0-90b13ba93c5d
+		sourceLineageTag: 5d12aa1e-23e1-4130-91af-2b37c8b57df8
+		dataCategory: Uncategorized
+
+	measure 'Check interactive detail' = EXTERNALMEASURE("Check interactive detail", STRING, "DirectQuery to AS - Fabric Capacity Metrics")
+		lineageTag: 6aae4f6f-014c-4470-9435-a6695c2964bb
+		sourceLineageTag: fb0e1f45-ae39-43af-bff7-8d548f15daad
+		dataCategory: Uncategorized
+
+	measure 'Interactive row count' = EXTERNALMEASURE("Interactive row count", INTEGER, "DirectQuery to AS - Fabric Capacity Metrics")
+		formatString: 0
+		lineageTag: 3cec2907-59c1-4573-a253-0fce965fef57
+		sourceLineageTag: 58065d4d-3ed7-41d0-9881-9ca1129c4163
+		dataCategory: Uncategorized
+
+	measure 'Avg utilization %' = EXTERNALMEASURE("Avg utilization %", CURRENCY, "DirectQuery to AS - Fabric Capacity Metrics")
+		formatString: #,0.00%;-#,0.00%;#,0.00%
+		lineageTag: 58361787-171a-481a-bfa3-a0e10746ba78
+		sourceLineageTag: e8c91a2e-bd6c-4502-b165-b8b3aa6344a6
+		dataCategory: Uncategorized
+
+	measure 'Peak utilization %' = EXTERNALMEASURE("Peak utilization %", CURRENCY, "DirectQuery to AS - Fabric Capacity Metrics")
+		formatString: 0.00%;-0.00%;0.00%
+		lineageTag: 528ddb6f-8f03-406e-a496-2012d6f834b6
+		sourceLineageTag: dae6527f-ebb9-4e25-9a4f-01ef61703ca6
+		dataCategory: Uncategorized
+
+	measure 'Interactive detail count' = EXTERNALMEASURE("Interactive detail count", INTEGER, "DirectQuery to AS - Fabric Capacity Metrics")
+		formatString: 0
+		lineageTag: 3e101793-3c61-4ac8-95d8-80f22b696a0e
+		sourceLineageTag: e87f025c-47f1-4637-a66b-fb0c113cc2f9
+		dataCategory: Uncategorized
+
+	measure 'Timepoint summary background table dynamic title' = EXTERNALMEASURE("Timepoint summary background table dynamic title", STRING, "DirectQuery to AS - Fabric Capacity Metrics")
+		lineageTag: 764b64f9-98af-445d-95b6-bce4a1fcedd9
+		sourceLineageTag: fe3ccfb9-d37c-43bc-99ce-8a699f2dfa9a
+		dataCategory: Uncategorized
+
+	measure 'Timepoint summary interactive table dynamic title' = EXTERNALMEASURE("Timepoint summary interactive table dynamic title", STRING, "DirectQuery to AS - Fabric Capacity Metrics")
+		lineageTag: d450f520-8655-49e1-9ac2-5fdb31188f6c
+		sourceLineageTag: 44274755-4387-47f1-8a78-14613aab953c
+		dataCategory: Uncategorized
+
+	measure 'Interactive table dynamic title (Timepoint detail page)' = EXTERNALMEASURE("Interactive table dynamic title (Timepoint detail page)", STRING, "DirectQuery to AS - Fabric Capacity Metrics")
+		lineageTag: d9e9de9c-7223-41f4-80bf-873c94f58b64
+		sourceLineageTag: 313fe36e-dea4-4331-a255-60a9e1ac2c9b
+		dataCategory: Uncategorized
+
+	measure 'Status %' = EXTERNALMEASURE("Status %", DOUBLE, "DirectQuery to AS - Fabric Capacity Metrics")
+		formatString: 0.00%;-0.00%;0.00%
+		displayFolder: Item History
+		lineageTag: 0d1fe96b-d6c5-4e56-a961-d05ff9f3b785
+		sourceLineageTag: 16405fe9-72f0-401d-8207-00eb39cafae5
+		dataCategory: Uncategorized
+
+	measure 'Total operation counts' = EXTERNALMEASURE("Total operation counts", INTEGER, "DirectQuery to AS - Fabric Capacity Metrics")
+		formatString: 0
+		displayFolder: Item History
+		lineageTag: 29c68d98-b9d4-435e-9504-1a6284a4ed37
+		sourceLineageTag: 814b3da1-fd62-407d-82ec-1ec8c5236afb
+		dataCategory: Uncategorized
+
+	measure 'xBackground item history' = EXTERNALMEASURE("xBackground item history", DOUBLE, "DirectQuery to AS - Fabric Capacity Metrics")
+		displayFolder: Item History
+		lineageTag: 09727077-fa2d-4170-b6b0-e03dabab6051
+		sourceLineageTag: 7186f86a-82ce-4a38-9a42-dbe1f7f17a6c
+		dataCategory: Uncategorized
+
+	measure 'xInteractive item history' = EXTERNALMEASURE("xInteractive item history", DOUBLE, "DirectQuery to AS - Fabric Capacity Metrics")
+		displayFolder: Item History
+		lineageTag: 6f88111b-5df5-43b1-bcbc-c354b8d8645e
+		sourceLineageTag: bbadbca5-cc0e-4d8d-8db0-cbe3ebf5308b
+		dataCategory: Uncategorized
+
+	measure 'SKU CU by timepoint basecore item history' = EXTERNALMEASURE("SKU CU by timepoint basecore item history", INTEGER, "DirectQuery to AS - Fabric Capacity Metrics")
+		formatString: 0
+		displayFolder: Item History
+		lineageTag: 61f9d8cb-0d48-4658-9115-01a0983e24b4
+		sourceLineageTag: cf340e2d-aefa-4479-9c14-ae96227b829b
+		dataCategory: Uncategorized
+
+	measure 'Background % (Item history page)' = EXTERNALMEASURE("Background % (Item history page)", DOUBLE, "DirectQuery to AS - Fabric Capacity Metrics")
+		formatString: 0.00%;-0.00%;0.00%
+		displayFolder: Item History
+		lineageTag: 226b9ff8-735f-4ab8-87d7-809f953f715c
+		sourceLineageTag: 89b95725-f77a-472a-b308-bb4d4e75a1c4
+		dataCategory: Uncategorized
+
+	measure 'Interactive % (Item history page)' = EXTERNALMEASURE("Interactive % (Item history page)", DOUBLE, "DirectQuery to AS - Fabric Capacity Metrics")
+		formatString: 0.00%;-0.00%;0.00%
+		displayFolder: Item History
+		lineageTag: 0a936c82-5765-48c8-bfc2-faaec492070e
+		sourceLineageTag: 801fccca-8acf-4fab-87e3-1cfce4624cdb
+		dataCategory: Uncategorized
+
+	measure 'CU limit item history' = EXTERNALMEASURE("CU limit item history", INTEGER, "DirectQuery to AS - Fabric Capacity Metrics")
+		formatString: 0%;-0%;0%
+		displayFolder: Item History
+		lineageTag: 55924832-d433-45e3-895f-210b1852de2d
+		sourceLineageTag: b0d3ec31-35c4-4e64-98d6-4676dd773cbb
+		dataCategory: Uncategorized
+
+	measure 'Pass rate' = EXTERNALMEASURE("Pass rate", DOUBLE, "DirectQuery to AS - Fabric Capacity Metrics")
+		formatString: 0.00%;-0.00%;0.00%
+		displayFolder: Item History
+		lineageTag: f7b38d4b-3543-42fc-8b38-507064417cda
+		sourceLineageTag: 8c37b95e-d9ab-413b-80c5-585f7783b107
+		dataCategory: Uncategorized
+
+	measure 'Total CU (s) operation' = EXTERNALMEASURE("Total CU (s) operation", DOUBLE, "DirectQuery to AS - Fabric Capacity Metrics")
+		displayFolder: Item History
+		lineageTag: b4e5b82a-c03c-418f-a876-6221e0c9cbe5
+		sourceLineageTag: 918e46e4-bb09-40d2-96e6-0effea9a1086
+		dataCategory: Uncategorized
+
+	measure 'Total CU (s) operation detail' = EXTERNALMEASURE("Total CU (s) operation detail", DOUBLE, "DirectQuery to AS - Fabric Capacity Metrics")
+		displayFolder: Item History
+		lineageTag: 3eb5dadf-0eb3-4cd1-af9d-b7b03415959b
+		sourceLineageTag: 64f01ae8-f825-469d-bea0-86afa5726abb
+		dataCategory: Uncategorized
+
+	measure '% compute operation' = EXTERNALMEASURE("% compute operation", DOUBLE, "DirectQuery to AS - Fabric Capacity Metrics")
+		formatString: 0.00%;-0.00%;0.00%
+		displayFolder: Item History
+		lineageTag: c04e6c11-b6c0-4dd9-aa6c-442b37be2a85
+		sourceLineageTag: ecec0ea8-20b0-4e94-aca9-341d851c5d6e
+		dataCategory: Uncategorized
+
+	measure '% compute operation detail' = EXTERNALMEASURE("% compute operation detail", DOUBLE, "DirectQuery to AS - Fabric Capacity Metrics")
+		formatString: 0.00%;-0.00%;0.00%
+		displayFolder: Item History
+		lineageTag: 958cdb01-d4a6-4c78-a76f-abadce2572db
+		sourceLineageTag: 3a9e7dfe-3720-491a-97fa-555d6e25af07
+		dataCategory: Uncategorized
+
+	measure 'Interactive table dynamic title (Timepoint-detail page)' = EXTERNALMEASURE("Interactive table dynamic title (Timepoint-detail page)", STRING, "DirectQuery to AS - Fabric Capacity Metrics")
+		lineageTag: 88e68948-ee86-4023-bd87-caa5b308d7c8
+		sourceLineageTag: 925025bb-ee50-4795-93e9-b876c01d553a
+		dataCategory: Uncategorized
+
+	measure 'Background table dynamic title (Timepoint detail page)' = EXTERNALMEASURE("Background table dynamic title (Timepoint detail page)", STRING, "DirectQuery to AS - Fabric Capacity Metrics")
+		lineageTag: 13bbe0f2-a9e0-4634-af0f-24e3571a8e8f
+		sourceLineageTag: 6e941d96-84c3-4c63-831a-d9f3261f1b9b
+		dataCategory: Uncategorized
+
+	measure 'Background table dynamic title (Timepoint-detail page)' = EXTERNALMEASURE("Background table dynamic title (Timepoint-detail page)", STRING, "DirectQuery to AS - Fabric Capacity Metrics")
+		lineageTag: 194e21ef-9e75-4d96-b1d7-d32c8a95219e
+		sourceLineageTag: 38947986-30c8-4d53-aca6-35928bc3db94
+		dataCategory: Uncategorized
+
+	measure 'Interactive summary row count' = EXTERNALMEASURE("Interactive summary row count", INTEGER, "DirectQuery to AS - Fabric Capacity Metrics")
+		formatString: 0
+		lineageTag: 0c4f09b2-1493-48ea-b78f-23da8cbe93c4
+		sourceLineageTag: 6893a282-9eda-4090-884c-352fa5fd4196
+		dataCategory: Uncategorized
+
+	measure 'Background summary row count' = EXTERNALMEASURE("Background summary row count", INTEGER, "DirectQuery to AS - Fabric Capacity Metrics")
+		formatString: 0
+		lineageTag: 74681b65-c6ed-4374-bbdf-1b3afb222084
+		sourceLineageTag: e30987b3-223c-49c6-9bc0-964f6463f0b5
+		dataCategory: Uncategorized
+
+	measure 'Interactive item detail count' = EXTERNALMEASURE("Interactive item detail count", INTEGER, "DirectQuery to AS - Fabric Capacity Metrics")
+		formatString: 0
+		lineageTag: 54822f6b-7154-4c7a-a810-9a53bc4bf2d9
+		sourceLineageTag: cf55535b-668c-4d5e-886e-13ff881eb3da
+		dataCategory: Uncategorized
+
+	measure 'Interactive item detail table dynamic title' = EXTERNALMEASURE("Interactive item detail table dynamic title", STRING, "DirectQuery to AS - Fabric Capacity Metrics")
+		lineageTag: 19bc4fcf-fc7a-496e-9170-a5047ee9d518
+		sourceLineageTag: ece86aad-df41-4ed2-b0cd-96a55a87ff18
+		dataCategory: Uncategorized
+
+	measure 'Background item detail count' = EXTERNALMEASURE("Background item detail count", INTEGER, "DirectQuery to AS - Fabric Capacity Metrics")
+		formatString: 0
+		lineageTag: 1719e0e6-a631-474a-a352-35bfdefbab10
+		sourceLineageTag: e6202f2c-1d95-4bf7-b376-061878e9f806
+		dataCategory: Uncategorized
+
+	measure 'Latest SKU' = EXTERNALMEASURE("Latest SKU", STRING, "DirectQuery to AS - Fabric Capacity Metrics")
+		lineageTag: d899158c-be91-43a5-841e-9e67f8dc4936
+		sourceLineageTag: ab4968e2-3de2-4098-b214-607b71525906
+		dataCategory: Uncategorized
+
+	measure 'Item history operation detail count' = EXTERNALMEASURE("Item history operation detail count", INTEGER, "DirectQuery to AS - Fabric Capacity Metrics")
+		formatString: 0
+		lineageTag: ddfa632f-11aa-4406-8b1c-9dad924a6272
+		sourceLineageTag: f0636f24-7614-45f6-a49b-d710406d94a9
+		dataCategory: Uncategorized
+
+	measure 'Dynamic breakdown of status title (Item history page)' = EXTERNALMEASURE("Dynamic breakdown of status title (Item history page)", STRING, "DirectQuery to AS - Fabric Capacity Metrics")
+		isHidden
+		displayFolder: Item History
+		lineageTag: 9e8b868f-2aa3-4fac-9a94-4d123233c498
+		sourceLineageTag: fa16484a-987c-489d-b2d6-a71154765eac
+		dataCategory: Uncategorized
+
+	measure 'Dynamic status trends vs throttling title (Item history page)' = EXTERNALMEASURE("Dynamic status trends vs throttling title (Item history page)", STRING, "DirectQuery to AS - Fabric Capacity Metrics")
+		isHidden
+		displayFolder: Item History
+		lineageTag: 34947454-273a-4776-984a-01196322ff91
+		sourceLineageTag: 27c872d1-652c-4596-87eb-6a50b92a8ff8
+		dataCategory: Uncategorized
+
+	measure 'Dynamic item details title (Item history page)' = EXTERNALMEASURE("Dynamic item details title (Item history page)", STRING, "DirectQuery to AS - Fabric Capacity Metrics")
+		isHidden
+		displayFolder: Item History
+		lineageTag: e10966f2-1def-4e26-8734-f783b9dff540
+		sourceLineageTag: 667351f9-acdc-44dc-81a7-711b58301a7d
+		dataCategory: Uncategorized
+
+	measure 'Dynamic workspace details title (Item history page)' = EXTERNALMEASURE("Dynamic workspace details title (Item history page)", STRING, "DirectQuery to AS - Fabric Capacity Metrics")
+		isHidden
+		displayFolder: Item History
+		lineageTag: e9dd828b-11e3-4192-86c0-8e76cd0e13c6
+		sourceLineageTag: fc933cf8-d6cd-4a37-93d5-ae23380ab6a4
+		dataCategory: Uncategorized
+
+	measure 'Dynamic CU by date title (Item history page)' = EXTERNALMEASURE("Dynamic CU by date title (Item history page)", STRING, "DirectQuery to AS - Fabric Capacity Metrics")
+		isHidden
+		displayFolder: Item History
+		lineageTag: c7fbf073-8e6d-4633-9e75-0ade5736c467
+		sourceLineageTag: 3344b967-ef7d-4ece-8b48-69ca4a4f1229
+		dataCategory: Uncategorized
+
+	measure 'Dynamic duration by date title (Item history page)' = EXTERNALMEASURE("Dynamic duration by date title (Item history page)", STRING, "DirectQuery to AS - Fabric Capacity Metrics")
+		isHidden
+		displayFolder: Item History
+		lineageTag: bc648d91-3bfd-4c1c-b12e-be51499479a6
+		sourceLineageTag: 0dcc7128-bd7c-4314-abd4-721296e13d1d
+		dataCategory: Uncategorized
+
+	measure 'Dynamic CU by item kind and date title (Item history page)' = EXTERNALMEASURE("Dynamic CU by item kind and date title (Item history page)", STRING, "DirectQuery to AS - Fabric Capacity Metrics")
+		isHidden
+		displayFolder: Item History
+		lineageTag: ca098b97-cdb9-414d-b302-93ae98a13a57
+		sourceLineageTag: bd7726da-d4d4-4fd6-9a11-7a98d2cf6db5
+		dataCategory: Uncategorized
+
+	measure 'Dynamic CU by operation and date title (Item history page)' = EXTERNALMEASURE("Dynamic CU by operation and date title (Item history page)", STRING, "DirectQuery to AS - Fabric Capacity Metrics")
+		isHidden
+		displayFolder: Item History
+		lineageTag: c49caff2-2bc9-4a97-854d-11217bef8f91
+		sourceLineageTag: d894456f-1bc4-4770-a4cd-72f963081008
+		dataCategory: Uncategorized
+
+	measure 'Dynamic CU by experience and date title (Item history page)' = EXTERNALMEASURE("Dynamic CU by experience and date title (Item history page)", STRING, "DirectQuery to AS - Fabric Capacity Metrics")
+		isHidden
+		displayFolder: Item History
+		lineageTag: b788de53-cf2a-4aa0-be21-d515f9759771
+		sourceLineageTag: cdec0f4b-8a74-4504-bd58-28cd0f48f1f6
+		dataCategory: Uncategorized
+
+	measure 'Dynamic CU by workspace title (Item history page)' = EXTERNALMEASURE("Dynamic CU by workspace title (Item history page)", STRING, "DirectQuery to AS - Fabric Capacity Metrics")
+		isHidden
+		displayFolder: Item History
+		lineageTag: f28e9e0c-9b87-4c2a-8f8d-658d3a2e78a6
+		sourceLineageTag: e06b071f-992e-4135-85fb-0c41e7bd0db0
+		dataCategory: Uncategorized
+
+	measure 'Dynamic CU by item title (Item history page)' = EXTERNALMEASURE("Dynamic CU by item title (Item history page)", STRING, "DirectQuery to AS - Fabric Capacity Metrics")
+		isHidden
+		displayFolder: Item History
+		lineageTag: cb401bfb-79cc-4d38-9cd1-5b4f4145fc1f
+		sourceLineageTag: ee5b1fd9-cbd9-4321-8885-6a8a8fbccc71
+		dataCategory: Uncategorized
+
+	measure 'Background non billable (Item history page)' = EXTERNALMEASURE("Background non billable (Item history page)", DOUBLE, "DirectQuery to AS - Fabric Capacity Metrics")
+		displayFolder: Item History
+		lineageTag: 9068e699-f1a1-4026-8b05-e0c3c5057e50
+		sourceLineageTag: 0409a985-c0b8-4561-892a-daa307a67987
+		dataCategory: Uncategorized
+
+	measure 'Background non billable % (Item history page)' = EXTERNALMEASURE("Background non billable % (Item history page)", DOUBLE, "DirectQuery to AS - Fabric Capacity Metrics")
+		formatString: 0.00%;-0.00%;0.00%
+		displayFolder: Item History
+		lineageTag: 8bce94ab-5ad7-479b-bc46-80dd585fa3d3
+		sourceLineageTag: eca5a178-37b5-4fb4-9a75-f5a02a0f744f
+		dataCategory: Uncategorized
+
+	measure 'Interactive non billable (Item history page)' = EXTERNALMEASURE("Interactive non billable (Item history page)", DOUBLE, "DirectQuery to AS - Fabric Capacity Metrics")
+		displayFolder: Item History
+		lineageTag: de81d157-234c-4263-9901-b3357aebfa19
+		sourceLineageTag: 85df941e-c563-403c-bb5a-c85e2dde3094
+		dataCategory: Uncategorized
+
+	measure 'Interactive non billable % (Item history page)' = EXTERNALMEASURE("Interactive non billable % (Item history page)", DOUBLE, "DirectQuery to AS - Fabric Capacity Metrics")
+		displayFolder: Item History
+		lineageTag: d0df1581-b51f-4859-ba7f-1658303c3eec
+		sourceLineageTag: 33cf0d17-5054-4a76-b264-a6c1e57ef371
+		dataCategory: Uncategorized
+
+	measure 'Timepoint SKU base capacity units' = EXTERNALMEASURE("Timepoint SKU base capacity units", INTEGER, "DirectQuery to AS - Fabric Capacity Metrics")
+		formatString: 0
+		lineageTag: 96380b34-0e27-4baf-8718-7b8f925551d4
+		sourceLineageTag: a6739551-33e1-4d39-91bd-c134a85a1bff
+		dataCategory: Uncategorized
+
+	measure 'Timepoint2 SKU base capacity units' = EXTERNALMEASURE("Timepoint2 SKU base capacity units", INTEGER, "DirectQuery to AS - Fabric Capacity Metrics")
+		formatString: 0
+		lineageTag: eca44ea5-c310-4f2c-a551-56ec7c903c94
+		sourceLineageTag: cc493ed7-b8f7-4829-ab91-13dd50979838
+		dataCategory: Uncategorized
+
+	measure 'Timepoint SKU autoscale capacity units' = EXTERNALMEASURE("Timepoint SKU autoscale capacity units", INTEGER, "DirectQuery to AS - Fabric Capacity Metrics")
+		formatString: 0
+		lineageTag: fe7982d1-f01c-428e-8562-7d39237057dd
+		sourceLineageTag: e23a082c-d4f4-4c92-911a-7ba78b6301a1
+		dataCategory: Uncategorized
+
+	measure 'Timepoint2 SKU auto scale capacity units' = EXTERNALMEASURE("Timepoint2 SKU auto scale capacity units", INTEGER, "DirectQuery to AS - Fabric Capacity Metrics")
+		formatString: 0
+		lineageTag: 4573d8e4-737e-4420-9442-ea4d3f97f64a
+		sourceLineageTag: f61b7ff8-23cd-4510-b370-2efd2a279429
+		dataCategory: Uncategorized
+
+	measure 'Timepoint SKU' = EXTERNALMEASURE("Timepoint SKU", STRING, "DirectQuery to AS - Fabric Capacity Metrics")
+		lineageTag: 75be7055-009e-469c-9de3-292f097eea02
+		sourceLineageTag: de4dbccc-4750-4a42-b00d-61cef8df60b5
+		dataCategory: Uncategorized
+
+	measure 'Timepoint2 SKU' = EXTERNALMEASURE("Timepoint2 SKU", STRING, "DirectQuery to AS - Fabric Capacity Metrics")
+		lineageTag: 99e0740b-94a6-4343-9644-fcfafa426fa7
+		sourceLineageTag: 113ea34e-5643-4cc7-89a0-750688e87487
+		dataCategory: Uncategorized
+
+	measure 'Dynamic scheduling frequency title (Item history page)' = EXTERNALMEASURE("Dynamic scheduling frequency title (Item history page)", STRING, "DirectQuery to AS - Fabric Capacity Metrics")
+		isHidden
+		displayFolder: Item History
+		lineageTag: 052b0d44-9411-4b34-bced-85f05ccf9c24
+		sourceLineageTag: 2a9a64b3-3363-40b5-accf-60cb8f98a81e
+		dataCategory: Uncategorized
+
+	measure 'Average utilization (last 1 hour)' = EXTERNALMEASURE("Average utilization (last 1 hour)", DOUBLE, "DirectQuery to AS - Fabric Capacity Metrics")
+		displayFolder: Health
+		lineageTag: 95a14785-f63f-4be6-8e95-33cd1a0e45a3
+		sourceLineageTag: 2b4e8f48-687b-42c2-83bc-546aa5446141
+		dataCategory: Uncategorized
+
+	measure 'Average utilization (last 24 hours)' = EXTERNALMEASURE("Average utilization (last 24 hours)", DOUBLE, "DirectQuery to AS - Fabric Capacity Metrics")
+		displayFolder: Health
+		lineageTag: f7974d0d-65f2-447f-a311-ad6be11ccc40
+		sourceLineageTag: 0ef63a63-31cb-43b9-9161-52f22129c8e2
+		dataCategory: Uncategorized
+
+	measure 'Background rejected capacities optimized (last 24 hours)' = EXTERNALMEASURE("Background rejected capacities optimized (last 24 hours)", INTEGER, "DirectQuery to AS - Fabric Capacity Metrics")
+		formatString: 0
+		displayFolder: Health
+		lineageTag: a4807993-4e73-4bfa-8c3b-8a9f62d8a69f
+		sourceLineageTag: cff6cd86-bfbf-4307-bd2c-e6d983852105
+		dataCategory: Uncategorized
+
+	measure 'Background rejected capacities optimized (last 7 days)' = EXTERNALMEASURE("Background rejected capacities optimized (last 7 days)", INTEGER, "DirectQuery to AS - Fabric Capacity Metrics")
+		formatString: 0
+		displayFolder: Health
+		lineageTag: b685e951-a1b1-4ddd-8339-8e11ac9a90cd
+		sourceLineageTag: 6917067b-bf6d-4f17-823c-93562c86645a
+		dataCategory: Uncategorized
+
+	measure 'Background rejected capacities optimized (last hour)' = EXTERNALMEASURE("Background rejected capacities optimized (last hour)", INTEGER, "DirectQuery to AS - Fabric Capacity Metrics")
+		formatString: 0
+		displayFolder: Health
+		lineageTag: 161879cf-a3e7-4bef-81f3-93a84074c0e5
+		sourceLineageTag: e80812e3-8abc-458f-b862-a4904ba701aa
+		dataCategory: Uncategorized
+
+	measure 'Background rejection color indicator' = EXTERNALMEASURE("Background rejection color indicator", STRING, "DirectQuery to AS - Fabric Capacity Metrics")
+		displayFolder: Health
+		lineageTag: 40e872bd-6263-4568-9d9d-e95405fc9aeb
+		sourceLineageTag: aaee55a6-cb49-41d9-84f0-3a6f1edd45a6
+		dataCategory: Uncategorized
+
+	measure 'Cancelled operations (last 1 hour)' = EXTERNALMEASURE("Cancelled operations (last 1 hour)", INTEGER, "DirectQuery to AS - Fabric Capacity Metrics")
+		formatString: #,0
+		displayFolder: Health
+		lineageTag: 16bb372e-acdc-4617-a13a-5a8868f53451
+		sourceLineageTag: d1cedd81-84a2-44b5-8468-69fd506ad9f2
+		dataCategory: Uncategorized
+
+	measure 'Cancelled operations (last 24 hours)' = EXTERNALMEASURE("Cancelled operations (last 24 hours)", INTEGER, "DirectQuery to AS - Fabric Capacity Metrics")
+		formatString: #,0
+		displayFolder: Health
+		lineageTag: a02bfb2f-a96b-4df9-aa83-e32a2e94c71a
+		sourceLineageTag: bc3c6a55-5fed-4cb6-89b9-82ea2d4845b0
+		dataCategory: Uncategorized
+
+	measure 'Capacity state' = EXTERNALMEASURE("Capacity state", STRING, "DirectQuery to AS - Fabric Capacity Metrics")
+		displayFolder: Health
+		lineageTag: d2e80939-eb31-41f0-8fe9-205df23eb194
+		sourceLineageTag: 1c3f7af1-a943-4e44-8669-32662d974694
+		dataCategory: Uncategorized
+
+	measure 'Failed operations (last 1 hour)' = EXTERNALMEASURE("Failed operations (last 1 hour)", INTEGER, "DirectQuery to AS - Fabric Capacity Metrics")
+		formatString: #,0
+		displayFolder: Health
+		lineageTag: a2f475bb-dbe5-494a-adfa-a26b22bb1357
+		sourceLineageTag: 4a1bb756-d6f7-4b7e-9e11-a78217ba6608
+		dataCategory: Uncategorized
+
+	measure 'Failed operations (last 24 hours)' = EXTERNALMEASURE("Failed operations (last 24 hours)", INTEGER, "DirectQuery to AS - Fabric Capacity Metrics")
+		formatString: #,0
+		displayFolder: Health
+		lineageTag: cad387d1-8d0d-4bf0-a9ba-c7ec4ecb5fd7
+		sourceLineageTag: 4c55f4b4-c8b7-4637-8a0c-fd01d8b2811c
+		dataCategory: Uncategorized
+
+	measure 'Inprogress operations (last 24 hours)' = EXTERNALMEASURE("Inprogress operations (last 24 hours)", INTEGER, "DirectQuery to AS - Fabric Capacity Metrics")
+		formatString: #,0
+		displayFolder: Health
+		lineageTag: 8da103d3-a3f7-42a5-a67a-babb3925ede5
+		sourceLineageTag: 4f83dab5-15de-467e-a0ee-777fec4d3839
+		dataCategory: Uncategorized
+
+	measure 'Interactive delay color indicator' = EXTERNALMEASURE("Interactive delay color indicator", STRING, "DirectQuery to AS - Fabric Capacity Metrics")
+		displayFolder: Health
+		lineageTag: ef7c5e47-ab6f-49de-b08e-ec11cab46491
+		sourceLineageTag: 2627a32e-b733-4044-a4e8-ba34d094221f
+		dataCategory: Uncategorized
+
+	measure 'Interactive delayed capacities optimized (last 24 hours)' = EXTERNALMEASURE("Interactive delayed capacities optimized (last 24 hours)", INTEGER, "DirectQuery to AS - Fabric Capacity Metrics")
+		formatString: 0
+		displayFolder: Health
+		lineageTag: 33e3a734-f5b5-41cc-bc64-9c4f46bb06fc
+		sourceLineageTag: 26d3f08a-32cf-43fe-a61e-40dd432465bf
+		dataCategory: Uncategorized
+
+	measure 'Interactive delayed capacities optimized (last 7 days)' = EXTERNALMEASURE("Interactive delayed capacities optimized (last 7 days)", INTEGER, "DirectQuery to AS - Fabric Capacity Metrics")
+		formatString: 0
+		displayFolder: Health
+		lineageTag: 54d50019-c460-42e9-b442-dd375548daf4
+		sourceLineageTag: 6a4fcf33-1361-48cc-8df1-c84e54a5b7fb
+		dataCategory: Uncategorized
+
+	measure 'Interactive delayed capacities optimized (last hour)' = EXTERNALMEASURE("Interactive delayed capacities optimized (last hour)", INTEGER, "DirectQuery to AS - Fabric Capacity Metrics")
+		formatString: 0
+		displayFolder: Health
+		lineageTag: 802a34bd-7102-4187-aacc-264235248b04
+		sourceLineageTag: 8f3a3ff1-a032-4c08-83e2-ae3f424b3ff8
+		dataCategory: Uncategorized
+
+	measure 'Interactive rejected capacities optimized (last 24 hours)' = EXTERNALMEASURE("Interactive rejected capacities optimized (last 24 hours)", INTEGER, "DirectQuery to AS - Fabric Capacity Metrics")
+		formatString: 0
+		displayFolder: Health
+		lineageTag: 3a07d7a4-8ca4-4f4e-879e-6daafa567f1d
+		sourceLineageTag: fe4fb727-84c2-4db4-a72c-12e765273f7d
+		dataCategory: Uncategorized
+
+	measure 'Interactive rejected capacities optimized (last 7 days)' = EXTERNALMEASURE("Interactive rejected capacities optimized (last 7 days)", INTEGER, "DirectQuery to AS - Fabric Capacity Metrics")
+		formatString: 0
+		displayFolder: Health
+		lineageTag: 25b897dd-f230-4dd2-b1f5-b6c538278edb
+		sourceLineageTag: b9ad8528-3229-43e9-ac66-6dd2ec804615
+		dataCategory: Uncategorized
+
+	measure 'Interactive rejected capacities optimized (last hour)' = EXTERNALMEASURE("Interactive rejected capacities optimized (last hour)", INTEGER, "DirectQuery to AS - Fabric Capacity Metrics")
+		formatString: 0
+		displayFolder: Health
+		lineageTag: c8e1b03f-a0a1-40ae-81a6-c63d888f5bb2
+		sourceLineageTag: 55980230-165c-4436-a012-112ce29af183
+		dataCategory: Uncategorized
+
+	measure 'Interactive rejection color indicator' = EXTERNALMEASURE("Interactive rejection color indicator", STRING, "DirectQuery to AS - Fabric Capacity Metrics")
+		displayFolder: Health
+		lineageTag: b2437ba6-cf50-4a51-afd9-967dad58b4be
+		sourceLineageTag: 72555b66-69b4-40d0-8fe8-f51be1405a2d
+		dataCategory: Uncategorized
+
+	measure 'Invalid operations (last 1 hour)' = EXTERNALMEASURE("Invalid operations (last 1 hour)", INTEGER, "DirectQuery to AS - Fabric Capacity Metrics")
+		formatString: #,0
+		displayFolder: Health
+		lineageTag: 7ef71061-9d18-402c-8389-6c81cbb1cbd6
+		sourceLineageTag: d3335af7-7b02-49bc-aed7-06369b7e2588
+		dataCategory: Uncategorized
+
+	measure 'Invalid operations (last 24 hours)' = EXTERNALMEASURE("Invalid operations (last 24 hours)", INTEGER, "DirectQuery to AS - Fabric Capacity Metrics")
+		formatString: #,0
+		displayFolder: Health
+		lineageTag: 647ade62-6285-4477-8a02-cc32fd8d7fe9
+		sourceLineageTag: 933dd06c-6fff-43c9-902f-deddc97e9dcc
+		dataCategory: Uncategorized
+
+	measure 'Max SKU by SKU name' = EXTERNALMEASURE("Max SKU by SKU name", STRING, "DirectQuery to AS - Fabric Capacity Metrics")
+		displayFolder: Health
+		lineageTag: 7a43d69d-2751-446b-b92f-89b52a2eb17f
+		sourceLineageTag: 060ca974-9a08-4763-84ef-6412189be8c7
+		dataCategory: Uncategorized
+
+	measure 'P95 background rejection (last 1 hour)' = EXTERNALMEASURE("P95 background rejection (last 1 hour)", DOUBLE, "DirectQuery to AS - Fabric Capacity Metrics")
+		displayFolder: Health
+		lineageTag: bd4c70d8-ab50-4b87-84f9-ff33924784bf
+		sourceLineageTag: b2e69656-5a6c-49ee-a5ee-e2bcc852c75a
+		dataCategory: Uncategorized
+
+	measure 'P95 background rejection (last 24 hours)' = EXTERNALMEASURE("P95 background rejection (last 24 hours)", DOUBLE, "DirectQuery to AS - Fabric Capacity Metrics")
+		displayFolder: Health
+		lineageTag: 17c50bdb-581d-4e17-aca4-fcfa223df205
+		sourceLineageTag: 09525793-7ec8-4986-bcff-f4ed4b42f481
+		dataCategory: Uncategorized
+
+	measure 'P95 interactive delay (last 1 hour)' = EXTERNALMEASURE("P95 interactive delay (last 1 hour)", DOUBLE, "DirectQuery to AS - Fabric Capacity Metrics")
+		displayFolder: Health
+		lineageTag: cbf83105-4810-4839-acca-3f6e2a24970c
+		sourceLineageTag: 4668e729-413c-4810-a985-9bee60acb603
+		dataCategory: Uncategorized
+
+	measure 'P95 interactive delay (last 24 hours)' = EXTERNALMEASURE("P95 interactive delay (last 24 hours)", DOUBLE, "DirectQuery to AS - Fabric Capacity Metrics")
+		displayFolder: Health
+		lineageTag: 668863bd-3692-47d9-9c70-d492e4830f3e
+		sourceLineageTag: a6b05068-21ee-4adb-9214-44651435f22e
+		dataCategory: Uncategorized
+
+	measure 'P95 interactive rejection (last 1 hour)' = EXTERNALMEASURE("P95 interactive rejection (last 1 hour)", DOUBLE, "DirectQuery to AS - Fabric Capacity Metrics")
+		displayFolder: Health
+		lineageTag: 4ff1d4cf-a2bf-41f2-bb28-5696744e9c07
+		sourceLineageTag: 4f63409e-4b74-4e85-9b2b-fc9302a000c2
+		dataCategory: Uncategorized
+
+	measure 'P95 interactive rejection (last 24 hours)' = EXTERNALMEASURE("P95 interactive rejection (last 24 hours)", DOUBLE, "DirectQuery to AS - Fabric Capacity Metrics")
+		displayFolder: Health
+		lineageTag: 1b7efcfc-ba5d-4ec5-aeaa-d146a8a951ac
+		sourceLineageTag: 064d6edf-f251-4e8a-bc6c-7db3406300e4
+		dataCategory: Uncategorized
+
+	measure 'Rejected operations (last 24 hours)' = EXTERNALMEASURE("Rejected operations (last 24 hours)", INTEGER, "DirectQuery to AS - Fabric Capacity Metrics")
+		formatString: #,0
+		displayFolder: Health
+		lineageTag: 95505807-355f-4f16-88c6-dda13d730f68
+		sourceLineageTag: d457d2f4-7f2c-4249-b176-9886ad2fa6fb
+		dataCategory: Uncategorized
+
+	measure 'Risk status (last 1 hour)' = EXTERNALMEASURE("Risk status (last 1 hour)", STRING, "DirectQuery to AS - Fabric Capacity Metrics")
+		displayFolder: Health
+		lineageTag: 1493f2ef-9f21-482d-bf4f-140dfcf49a06
+		sourceLineageTag: fb7735db-8e4b-4b74-8490-51248657b0a5
+		dataCategory: Uncategorized
+
+	measure 'Risk status (last 24 hours)' = EXTERNALMEASURE("Risk status (last 24 hours)", STRING, "DirectQuery to AS - Fabric Capacity Metrics")
+		displayFolder: Health
+		lineageTag: a119a0fd-9b74-411f-acfa-42de61b2391e
+		sourceLineageTag: ee73943a-a1c4-4857-a0cd-cbbd1b83a89b
+		dataCategory: Uncategorized
+
+	measure 'Successful operations (last 1 hour)' = EXTERNALMEASURE("Successful operations (last 1 hour)", INTEGER, "DirectQuery to AS - Fabric Capacity Metrics")
+		formatString: #,0
+		displayFolder: Health
+		lineageTag: 0032e18e-63a4-4d2c-940c-80cd85747211
+		sourceLineageTag: eff92190-c037-4930-97b5-b667b7a1b1bf
+		dataCategory: Uncategorized
+
+	measure 'Successful operations (last 24 hours)' = EXTERNALMEASURE("Successful operations (last 24 hours)", INTEGER, "DirectQuery to AS - Fabric Capacity Metrics")
+		formatString: #,0
+		displayFolder: Health
+		lineageTag: 0124ee79-16a0-4359-bf68-bd7806e2946f
+		sourceLineageTag: 1a7a3a5c-c8d4-4692-983f-23515466bfeb
+		dataCategory: Uncategorized
+
+	measure 'Throttling(s) (last 1 hour)' = EXTERNALMEASURE("Throttling(s) (last 1 hour)", DOUBLE, "DirectQuery to AS - Fabric Capacity Metrics")
+		displayFolder: Health
+		lineageTag: f0c9cce9-be56-45c7-8e5e-4506e9f4a00f
+		sourceLineageTag: 0c0b1165-2d7d-4e89-91b7-c95ccf48f75c
+		dataCategory: Uncategorized
+
+	measure 'Throttling(s) (last 24 hours)' = EXTERNALMEASURE("Throttling(s) (last 24 hours)", DOUBLE, "DirectQuery to AS - Fabric Capacity Metrics")
+		displayFolder: Health
+		lineageTag: 6f37e411-8ebe-4196-acac-5c60f352fdd2
+		sourceLineageTag: 74e34bb7-75d1-4068-90f7-b5231ff9530d
+		dataCategory: Uncategorized
+
+	measure 'Usage variance (last 24 hours)' = EXTERNALMEASURE("Usage variance (last 24 hours)", DOUBLE, "DirectQuery to AS - Fabric Capacity Metrics")
+		displayFolder: Health
+		lineageTag: 053729b2-c294-416a-8d01-284a7aa6030f
+		sourceLineageTag: 657a7c21-9064-42d4-afb0-795fa2564163
+		dataCategory: Uncategorized
+
+	measure 'Users (last 1 hour)' = EXTERNALMEASURE("Users (last 1 hour)", INTEGER, "DirectQuery to AS - Fabric Capacity Metrics")
+		formatString: 0
+		displayFolder: Health
+		lineageTag: 2905ee84-97dc-44d8-8f87-8ea599bea140
+		sourceLineageTag: c7071361-ebac-44a6-9683-a6082f65b55d
+		dataCategory: Uncategorized
+
+	measure 'Users (last 24 hours)' = EXTERNALMEASURE("Users (last 24 hours)", INTEGER, "DirectQuery to AS - Fabric Capacity Metrics")
+		formatString: 0
+		displayFolder: Health
+		lineageTag: cecd1933-0ac7-444b-9db5-2ae30d8459e5
+		sourceLineageTag: e55346c6-64d4-4a3e-889c-4da5a70cf18f
+		dataCategory: Uncategorized
+
+	measure 'Rejected operations (last 1 hour)' = EXTERNALMEASURE("Rejected operations (last 1 hour)", INTEGER, "DirectQuery to AS - Fabric Capacity Metrics")
+		formatString: #,0
+		displayFolder: Health
+		lineageTag: 6f03c245-89fc-4963-9ec4-660afa229e5b
+		sourceLineageTag: 696a58c7-0081-4e36-99b4-beddc174fcc7
+		dataCategory: Uncategorized
+
+	measure 'Average utilization (last 7 days)' = EXTERNALMEASURE("Average utilization (last 7 days)", DOUBLE, "DirectQuery to AS - Fabric Capacity Metrics")
+		lineageTag: bc9fc6d6-aa79-440d-b590-9010aadc788a
+		sourceLineageTag: 475b7c97-5d44-46e4-a74a-fd1e21b7de64
+		dataCategory: Uncategorized
+
+	measure 'Inprogress operations (last 1 hour)' = EXTERNALMEASURE("Inprogress operations (last 1 hour)", INTEGER, "DirectQuery to AS - Fabric Capacity Metrics")
+		formatString: #,0
+		displayFolder: Health
+		lineageTag: 302976c7-5668-417b-b6a8-b2a147978fc8
+		sourceLineageTag: 600fb571-08d9-43ee-bbd9-45988b3104e0
+		dataCategory: Uncategorized
+
+	measure 'Missing timepoint in previous of following window' = EXTERNALMEASURE("Missing timepoint in previous of following window", STRING, "DirectQuery to AS - Fabric Capacity Metrics")
+		isHidden
+		lineageTag: a7126a20-d642-4755-8226-0d18c3573573
+		sourceLineageTag: db811e37-5f5b-4b0e-9416-30c246d6c02e
+		dataCategory: Uncategorized
+
+	measure 'Background Colour Missing timepoint in previous or following window' = EXTERNALMEASURE("Background Colour Missing timepoint in previous or following window", STRING, "DirectQuery to AS - Fabric Capacity Metrics")
+		isHidden
+		lineageTag: 4960471c-41e3-44ec-9b9d-d80b6ad01984
+		sourceLineageTag: 7a3c629a-ed65-4b72-8cd0-3f09902f4233
+		dataCategory: Uncategorized
+
+	measure 'Info icon text (Timepoint detail page)' = EXTERNALMEASURE("Info icon text (Timepoint detail page)", STRING, "DirectQuery to AS - Fabric Capacity Metrics")
+		lineageTag: ab344b15-b058-4d60-bcbb-92827543282f
+		sourceLineageTag: 105a2227-5372-40c0-b996-2d68e418515c
+		dataCategory: Uncategorized
+
+	measure 'Info icon text (Timepoint summary page)' = EXTERNALMEASURE("Info icon text (Timepoint summary page)", STRING, "DirectQuery to AS - Fabric Capacity Metrics")
+		lineageTag: 9b456a17-b697-4f86-895d-438a1f5261e9
+		sourceLineageTag: e195201a-5060-4389-a8bb-72db1c05ab66
+		dataCategory: Uncategorized
+
+	measure 'Dynamic text for default capacity (Drill-through Compute)' = EXTERNALMEASURE("Dynamic text for default capacity (Drill-through Compute)", STRING, "DirectQuery to AS - Fabric Capacity Metrics")
+		lineageTag: 2d574969-31f0-42c8-99f6-cfa8466d577e
+		sourceLineageTag: 19380c5d-e3bb-438d-92fa-fb0b40239d7c
+		dataCategory: Uncategorized
+
+	measure 'Dynamic text for default capacity (Item History)' = EXTERNALMEASURE("Dynamic text for default capacity (Item History)", STRING, "DirectQuery to AS - Fabric Capacity Metrics")
+		lineageTag: a2ec7045-18ca-4a33-8486-eaab936320fb
+		sourceLineageTag: 818c5b5a-3bda-4370-9289-6d0855652139
+		dataCategory: Uncategorized
+
+	measure 'Count of capacities' = EXTERNALMEASURE("Count of capacities", INTEGER, "DirectQuery to AS - Fabric Capacity Metrics")
+		formatString: 0
+		lineageTag: aa6b0c76-87bd-4fb2-93ea-244041879800
+		sourceLineageTag: b11f682e-3aa2-4ac0-a702-22ed9823d81b
+		dataCategory: Uncategorized
+
+	measure 'Dynamic text for Health page' = EXTERNALMEASURE("Dynamic text for Health page", INTEGER, "DirectQuery to AS - Fabric Capacity Metrics")
+		lineageTag: eac231bd-7179-481e-8656-bf691ee06255
+		sourceLineageTag: b83d6036-847d-43bd-8910-d415811c4323
+		dataCategory: Uncategorized
+
+	measure 'Capacity name (drill through pages)' = EXTERNALMEASURE("Capacity name (drill through pages)", STRING, "DirectQuery to AS - Fabric Capacity Metrics")
+		isHidden
+		lineageTag: 94294cb4-5d76-49c7-a182-8bfd69e24374
+		sourceLineageTag: c2b9760c-7de5-4fdc-b5c3-b32b0334e07f
+		dataCategory: Uncategorized
+
+	measure 'Blocked workspaces (details)' = EXTERNALMEASURE("Blocked workspaces (details)", INTEGER, "DirectQuery to AS - Fabric Capacity Metrics")
+		formatString: 0
+		lineageTag: 7922c05f-ebad-44c0-9c96-5e8a73fcf0b8
+		sourceLineageTag: 50a6ea1f-cd66-4594-96f0-e39a1c5300cb
+		dataCategory: Uncategorized
+
+	measure 'Blocked end' = EXTERNALMEASURE("Blocked end", DATETIME, "DirectQuery to AS - Fabric Capacity Metrics")
+		formatString: General Number
+		lineageTag: 346bcea1-b9b0-4b4a-aa9a-8feac45a9da9
+		sourceLineageTag: 9f4466c4-9a54-4d4f-aff9-317ceb6cf8d0
+		dataCategory: Uncategorized
+
+	measure 'Blocked date' = EXTERNALMEASURE("Blocked date", DATETIME, "DirectQuery to AS - Fabric Capacity Metrics")
+		formatString: General Number
+		lineageTag: 083d06fd-e9a5-485b-b129-efb3fce64c21
+		sourceLineageTag: a370db04-7efc-409c-8a80-9a23e1c18f41
+		dataCategory: Uncategorized
+
+	measure 'Affected requests' = EXTERNALMEASURE("Affected requests", INTEGER, "DirectQuery to AS - Fabric Capacity Metrics")
+		formatString: 0
+		lineageTag: 81b71498-1965-4b8e-a6b1-46121874042c
+		sourceLineageTag: 8488c686-076f-49f7-925f-9312069813a2
+		dataCategory: Uncategorized
+
+	measure 'Workspace Name' = EXTERNALMEASURE("Workspace Name", STRING, "DirectQuery to AS - Fabric Capacity Metrics")
+		isHidden
+		lineageTag: 146de60f-891e-4e33-bcfc-3d02a23a5a7d
+		sourceLineageTag: d2a1c6c6-b483-46ef-b084-2a0e3409ddbf
+		dataCategory: Uncategorized
+
+	measure 'Blocked workspaces (Day)' = EXTERNALMEASURE("Blocked workspaces (Day)", INTEGER, "DirectQuery to AS - Fabric Capacity Metrics")
+		formatString: #,0
+		displayFolder: Health
+		lineageTag: 0839d9c8-5c5d-4ec2-b218-0a8e7ad7e781
+		sourceLineageTag: 65ad6fed-f6db-47f9-a3d2-af059319aca5
+		dataCategory: Uncategorized
+
+	measure 'Blocked workspaces (hour)' = EXTERNALMEASURE("Blocked workspaces (hour)", INTEGER, "DirectQuery to AS - Fabric Capacity Metrics")
+		formatString: 0
+		displayFolder: Health
+		lineageTag: f423f5a4-70f4-420e-966d-d7997adaa8e4
+		sourceLineageTag: af460db7-b3cf-4d10-893a-c746bc30db26
+		dataCategory: Uncategorized
+
+	measure 'Stopped operations (last 1 hour)' = EXTERNALMEASURE("Stopped operations (last 1 hour)", INTEGER, "DirectQuery to AS - Fabric Capacity Metrics")
+		formatString: 0
+		displayFolder: Health
+		lineageTag: 6242f8b2-47d8-42de-af3c-062fc0a87c79
+		sourceLineageTag: 2bd0145d-fef6-46b1-a6b4-f4dc698abe37
+		dataCategory: Uncategorized
+
+	measure 'Stopped operations (last 24 hours)' = EXTERNALMEASURE("Stopped operations (last 24 hours)", INTEGER, "DirectQuery to AS - Fabric Capacity Metrics")
+		formatString: 0
+		displayFolder: Health
+		lineageTag: d554ced1-c981-4a8f-ae5e-2d753aee6f28
+		sourceLineageTag: 30ce20e0-f4c2-4859-b89b-389ed046b287
+		dataCategory: Uncategorized
+
+	measure 'Dynamic M1 stopped operation count' = EXTERNALMEASURE("Dynamic M1 stopped operation count", INTEGER, "DirectQuery to AS - Fabric Capacity Metrics")
+		formatString: 0
+		lineageTag: a623c9fa-295c-46af-bd71-a0eef86c3438
+		sourceLineageTag: e966c904-98f1-41f3-bb20-4ee8ac01817b
+		dataCategory: Uncategorized
+
+	measure 'Dynamic M1 stopped operation count workload autoscale' = EXTERNALMEASURE("Dynamic M1 stopped operation count workload autoscale", INTEGER, "DirectQuery to AS - Fabric Capacity Metrics")
+		formatString: 0
+		lineageTag: ad14a7bd-37db-415b-a625-17affc8fdcd6
+		sourceLineageTag: 82fbbece-ff2c-4225-9978-2cecd54feab6
+		dataCategory: Uncategorized
+
+	measure 'Background rejection color format' = EXTERNALMEASURE("Background rejection color format", INTEGER, "DirectQuery to AS - Fabric Capacity Metrics")
+		formatString: 0
+		isHidden
+		displayFolder: Throttling color format
+		lineageTag: c4ec61c8-b71e-4247-b614-1b0f64eb154d
+		sourceLineageTag: 72e794cb-0660-4c5c-83c1-7daacbf8cb7f
+		dataCategory: Uncategorized
+
+	measure 'Interactive delay color format' = EXTERNALMEASURE("Interactive delay color format", INTEGER, "DirectQuery to AS - Fabric Capacity Metrics")
+		formatString: 0
+		isHidden
+		displayFolder: Throttling color format
+		lineageTag: fbcbec44-17d0-45fe-8628-0328556be61d
+		sourceLineageTag: 347550ec-fb0e-4da2-9d8a-597546e8ab2f
+		dataCategory: Uncategorized
+
+	measure 'Interactive rejection color format' = EXTERNALMEASURE("Interactive rejection color format", INTEGER, "DirectQuery to AS - Fabric Capacity Metrics")
+		formatString: 0
+		isHidden
+		displayFolder: Throttling color format
+		lineageTag: 32a58f1e-e0ec-41a0-b114-7b9b7b49a0bd
+		sourceLineageTag: 69493c2b-0fa7-4aa8-aca1-fd92a6f24a94
+		dataCategory: Uncategorized
+
+	measure 'Processed overage peak 20min' = EXTERNALMEASURE("Processed overage peak 20min", DOUBLE, "DirectQuery to AS - Fabric Capacity Metrics")
+		lineageTag: abf56600-1957-4e90-ac5f-8ce15b46b71f
+		sourceLineageTag: 02a0cc8c-aeaf-4a6c-a278-81e173cc3694
+		dataCategory: Uncategorized
+
+	measure 'Processed overage over 24hours peak 20min CUhr' = EXTERNALMEASURE("Processed overage over 24hours peak 20min CUhr", DOUBLE, "DirectQuery to AS - Fabric Capacity Metrics")
+		lineageTag: 3ee42b7b-7536-44d7-9068-2a459f23fd03
+		sourceLineageTag: c90953f4-a8fd-49f8-b866-862ea39435c3
+		dataCategory: Uncategorized
+
+	measure 'Overage billing limit peak 20min CUhr' = EXTERNALMEASURE("Overage billing limit peak 20min CUhr", DOUBLE, "DirectQuery to AS - Fabric Capacity Metrics")
+		lineageTag: 47f2952b-7bfa-4bae-9858-024526fec33c
+		sourceLineageTag: 225f7b59-b634-4423-b2ad-7c52b0366390
+		dataCategory: Uncategorized
+
+	measure 'Processed overage' = EXTERNALMEASURE("Processed overage", DOUBLE, "DirectQuery to AS - Fabric Capacity Metrics")
+		lineageTag: 98f38684-4ff9-4356-8356-14edaf256b40
+		sourceLineageTag: 8c128230-c3ad-453c-99df-4622f2326839
+		dataCategory: Uncategorized
+
+	measure 'Overage billing limit CUhr' = EXTERNALMEASURE("Overage billing limit CUhr", DOUBLE, "DirectQuery to AS - Fabric Capacity Metrics")
+		lineageTag: 2d724eda-b428-44c8-9159-cb22ccadc11d
+		sourceLineageTag: 79ed7914-64f3-4d16-b372-2f5bc6d0fd56
+		dataCategory: Uncategorized
+
+	measure 'Processed overage over 24hours CUhr' = EXTERNALMEASURE("Processed overage over 24hours CUhr", DOUBLE, "DirectQuery to AS - Fabric Capacity Metrics")
+		lineageTag: e7f9f08a-5d4b-4a18-abda-f9ddef081e06
+		sourceLineageTag: a9ac8ea4-0770-4e32-815b-7bbdad2fe023
+		dataCategory: Uncategorized
+
+	measure 'Risk status by capacity (last 24 hours)' = EXTERNALMEASURE("Risk status by capacity (last 24 hours)", STRING, "DirectQuery to AS - Fabric Capacity Metrics")
+		displayFolder: Health
+		lineageTag: af44caed-d41a-44fc-8bc4-042ff49b75e1
+		sourceLineageTag: 2a93de5c-e0c1-47f2-b93e-e1885be1ae00
+		dataCategory: Uncategorized
+
+	measure 'Risk status by capacity (last 1 hour)' = EXTERNALMEASURE("Risk status by capacity (last 1 hour)", STRING, "DirectQuery to AS - Fabric Capacity Metrics")
+		displayFolder: Health
+		lineageTag: 2e3d0cf5-5559-40c1-9f13-08e64fa61be6
+		sourceLineageTag: 9a5566bc-231a-4d76-a61b-8e18c48cf073
+		dataCategory: Uncategorized
+
+	measure 'Risk status dynamic (last 24 hours)' = EXTERNALMEASURE("Risk status dynamic (last 24 hours)", STRING, "DirectQuery to AS - Fabric Capacity Metrics")
+		displayFolder: Health
+		lineageTag: 8f3bb046-40e6-4016-9602-0112e3ee1caf
+		sourceLineageTag: 02012d7c-75a7-4076-b420-e42c94466264
+		dataCategory: Uncategorized
+
+	measure 'Risk status dynamic (last 1 hour)' = EXTERNALMEASURE("Risk status dynamic (last 1 hour)", STRING, "DirectQuery to AS - Fabric Capacity Metrics")
+		displayFolder: Health
+		lineageTag: 0cdcd10c-e8b0-4f21-ab6e-86779e2d2e31
+		sourceLineageTag: c7c7174e-c1c9-40c0-8597-5f49ddb04bba
+		dataCategory: Uncategorized
+
+	measure 'Usage variance (last 1 hour)' = EXTERNALMEASURE("Usage variance (last 1 hour)", DOUBLE, "DirectQuery to AS - Fabric Capacity Metrics")
+		displayFolder: Health
+		lineageTag: 700ca783-1baf-40d5-92eb-8a9b240f521b
+		sourceLineageTag: 534a4c91-aef2-4ff4-9cb2-f428ea7c1d95
+		dataCategory: Uncategorized
+
+	measure 'P95 background rejection by capacity (last 1 hour)' = EXTERNALMEASURE("P95 background rejection by capacity (last 1 hour)", DOUBLE, "DirectQuery to AS - Fabric Capacity Metrics")
+		displayFolder: Health
+		lineageTag: bced71dc-dd4b-4931-92bd-b67e0ec2ae15
+		sourceLineageTag: f034205d-c2ec-4fea-90e0-c2c827fc9ecf
+		dataCategory: Uncategorized
+
+	measure 'P95 background rejection by capacity (last 24 hours)' = EXTERNALMEASURE("P95 background rejection by capacity (last 24 hours)", DOUBLE, "DirectQuery to AS - Fabric Capacity Metrics")
+		displayFolder: Health
+		lineageTag: c1fc0e38-4b74-4d9a-b6f1-6b55ad7b35ef
+		sourceLineageTag: 53559ec7-e6f5-4e3b-8b9b-0ed9d5a6a2e0
+		dataCategory: Uncategorized
+
+	measure 'P95 interactive delay by capacity (last 1 hour)' = EXTERNALMEASURE("P95 interactive delay by capacity (last 1 hour)", DOUBLE, "DirectQuery to AS - Fabric Capacity Metrics")
+		displayFolder: Health
+		lineageTag: 0db3ca55-e8bc-423a-b192-af8ca290b115
+		sourceLineageTag: fcb0696e-77b0-4b74-a133-a9e42d4a376e
+		dataCategory: Uncategorized
+
+	measure 'P95 interactive delay by capacity (last 24 hours)' = EXTERNALMEASURE("P95 interactive delay by capacity (last 24 hours)", DOUBLE, "DirectQuery to AS - Fabric Capacity Metrics")
+		displayFolder: Health
+		lineageTag: f6a24c71-e935-42b4-8672-173b5a80f90e
+		sourceLineageTag: 3db381de-8af0-444c-9b4b-4d3cefe6974c
+		dataCategory: Uncategorized
+
+	measure 'P95 interactive rejection by capacity (last 1 hour)' = EXTERNALMEASURE("P95 interactive rejection by capacity (last 1 hour)", DOUBLE, "DirectQuery to AS - Fabric Capacity Metrics")
+		displayFolder: Health
+		lineageTag: 0bacbd8c-17fb-4253-b9e2-5ade15c63c99
+		sourceLineageTag: d5f2c1c3-e97a-4c11-bee8-130a8c003a66
+		dataCategory: Uncategorized
+
+	measure 'P95 interactive rejection by capacity (last 24 hours)' = EXTERNALMEASURE("P95 interactive rejection by capacity (last 24 hours)", DOUBLE, "DirectQuery to AS - Fabric Capacity Metrics")
+		displayFolder: Health
+		lineageTag: 5c3f2b07-cefb-4252-8e29-cea9d05ee458
+		sourceLineageTag: 28b1b4ab-0266-4c34-85cd-6cb3a493a1e1
+		dataCategory: Uncategorized
+
+	measure 'Usage variance by capacity (last 24 hours)' = EXTERNALMEASURE("Usage variance by capacity (last 24 hours)", DOUBLE, "DirectQuery to AS - Fabric Capacity Metrics")
+		displayFolder: Health
+		lineageTag: e974f475-da7e-4c4a-924c-a126b0226607
+		sourceLineageTag: afe406b2-2f8c-4189-8021-f3290cc43a67
+		dataCategory: Uncategorized
+
+	measure 'Usage variance by capacity (last 1 hour)' = EXTERNALMEASURE("Usage variance by capacity (last 1 hour)", DOUBLE, "DirectQuery to AS - Fabric Capacity Metrics")
+		displayFolder: Health
+		lineageTag: b9358ff4-b6c4-4a20-928e-1ba62e30f31e
+		sourceLineageTag: 5eb74722-dbb7-49ce-ba9c-3b47841f3c42
+		dataCategory: Uncategorized
+
+	measure 'Cancelled operations by capacity (last 24 hours)' = EXTERNALMEASURE("Cancelled operations by capacity (last 24 hours)", INTEGER, "DirectQuery to AS - Fabric Capacity Metrics")
+		formatString: #,0
+		displayFolder: Health
+		lineageTag: 95a69796-188d-4367-bdc7-db0042125045
+		sourceLineageTag: 1b7345a2-2297-45ad-8cf9-10d417bf48f9
+		dataCategory: Uncategorized
+
+	measure 'Failed operations by capacity (last 24 hours)' = EXTERNALMEASURE("Failed operations by capacity (last 24 hours)", INTEGER, "DirectQuery to AS - Fabric Capacity Metrics")
+		formatString: #,0
+		displayFolder: Health
+		lineageTag: ad3ed300-1216-4630-8485-ad9cbc55869c
+		sourceLineageTag: 401866a5-c0b3-454c-b413-c89381a66883
+		dataCategory: Uncategorized
+
+	measure 'Inprogress operations by capacity (last 24 hours)' = EXTERNALMEASURE("Inprogress operations by capacity (last 24 hours)", INTEGER, "DirectQuery to AS - Fabric Capacity Metrics")
+		formatString: #,0
+		displayFolder: Health
+		lineageTag: 75c326bc-5e81-4f52-9f6a-1af16702c206
+		sourceLineageTag: 03c894eb-9ffb-4acf-9ed5-373bf53366d9
+		dataCategory: Uncategorized
+
+	measure 'Invalid operations by capacity (last 24 hours)' = EXTERNALMEASURE("Invalid operations by capacity (last 24 hours)", INTEGER, "DirectQuery to AS - Fabric Capacity Metrics")
+		formatString: #,0
+		displayFolder: Health
+		lineageTag: 3643c3c2-aa8a-459a-8e53-c6ee90d4d98d
+		sourceLineageTag: 97bcd2e7-5b97-41da-8d9e-9438a6b7e316
+		dataCategory: Uncategorized
+
+	measure 'Stopped operations by capacity (last 24 hours)' = EXTERNALMEASURE("Stopped operations by capacity (last 24 hours)", INTEGER, "DirectQuery to AS - Fabric Capacity Metrics")
+		formatString: 0
+		displayFolder: Health
+		lineageTag: 2bb44e46-3eb2-4eac-854d-28f7e278a32f
+		sourceLineageTag: 1cbe9a73-3490-4de8-9377-8491eebd3740
+		dataCategory: Uncategorized
+
+	measure 'Successful operations by capacity (last 24 hours)' = EXTERNALMEASURE("Successful operations by capacity (last 24 hours)", INTEGER, "DirectQuery to AS - Fabric Capacity Metrics")
+		formatString: #,0
+		displayFolder: Health
+		lineageTag: db54d0c8-8674-46db-be68-4bebf06a7f6d
+		sourceLineageTag: 0bdb6ec3-a97f-43da-ab96-19e5b143b93c
+		dataCategory: Uncategorized
+
+	measure 'Throttling(s) by capacity (last 24 hours)' = EXTERNALMEASURE("Throttling(s) by capacity (last 24 hours)", DOUBLE, "DirectQuery to AS - Fabric Capacity Metrics")
+		displayFolder: Health
+		lineageTag: fa5ae480-f123-4820-bc07-db105d4dbc95
+		sourceLineageTag: 2d281bde-76c8-4531-a717-0255985e3d3f
+		dataCategory: Uncategorized
+
+	measure 'Users by capacity (last 24 hours)' = EXTERNALMEASURE("Users by capacity (last 24 hours)", INTEGER, "DirectQuery to AS - Fabric Capacity Metrics")
+		formatString: 0
+		displayFolder: Health
+		lineageTag: a4fa4550-466e-44b8-a8bc-019ee5c970f7
+		sourceLineageTag: b2fe876f-2556-4e5e-8958-e07a0cc18942
+		dataCategory: Uncategorized
+
+	measure 'Rejected operations by capacity (last 24 hours)' = EXTERNALMEASURE("Rejected operations by capacity (last 24 hours)", INTEGER, "DirectQuery to AS - Fabric Capacity Metrics")
+		formatString: #,0
+		displayFolder: Health
+		lineageTag: 79b3be1c-1d2b-4f5c-8bd6-944e4b37d15e
+		sourceLineageTag: dd24b2b4-7d61-4e74-a77b-974e8ebb9327
+		dataCategory: Uncategorized
+
+	measure 'Cancelled operations by capacity (last 1 hour)' = EXTERNALMEASURE("Cancelled operations by capacity (last 1 hour)", INTEGER, "DirectQuery to AS - Fabric Capacity Metrics")
+		formatString: #,0
+		displayFolder: Health
+		lineageTag: f4cf06a1-e7f6-4a76-8b85-4887384b6bcf
+		sourceLineageTag: 88c5497f-a41a-4c2f-9a52-06e9237a590c
+		dataCategory: Uncategorized
+
+	measure 'Failed operations by capacity (last 1 hour)' = EXTERNALMEASURE("Failed operations by capacity (last 1 hour)", INTEGER, "DirectQuery to AS - Fabric Capacity Metrics")
+		formatString: #,0
+		displayFolder: Health
+		lineageTag: 28949690-56ae-4d9e-a4a2-945632c5354c
+		sourceLineageTag: f544d7e7-31d8-4206-b8a8-d4761612915b
+		dataCategory: Uncategorized
+
+	measure 'Inprogress operations by capacity (last 1 hour)' = EXTERNALMEASURE("Inprogress operations by capacity (last 1 hour)", INTEGER, "DirectQuery to AS - Fabric Capacity Metrics")
+		formatString: #,0
+		displayFolder: Health
+		lineageTag: 3376cfc1-a32e-479c-9b49-e77101ad3b26
+		sourceLineageTag: 594f6b69-dde6-4550-89dd-92c487a6a52a
+		dataCategory: Uncategorized
+
+	measure 'Invalid operations by capacity (last 1 hour)' = EXTERNALMEASURE("Invalid operations by capacity (last 1 hour)", INTEGER, "DirectQuery to AS - Fabric Capacity Metrics")
+		formatString: #,0
+		displayFolder: Health
+		lineageTag: 71259f86-7c9d-4e89-8fb1-968377f81c5e
+		sourceLineageTag: 61969484-ab2b-4b92-b7c2-bfb3223acb6b
+		dataCategory: Uncategorized
+
+	measure 'Stopped operations by capacity (last 1 hour)' = EXTERNALMEASURE("Stopped operations by capacity (last 1 hour)", INTEGER, "DirectQuery to AS - Fabric Capacity Metrics")
+		formatString: 0
+		displayFolder: Health
+		lineageTag: 423e986d-b312-46e4-bac6-a542ad77b39e
+		sourceLineageTag: 94242631-d1ce-4c27-9632-08d4a438989e
+		dataCategory: Uncategorized
+
+	measure 'Successful operations by capacity (last 1 hour)' = EXTERNALMEASURE("Successful operations by capacity (last 1 hour)", INTEGER, "DirectQuery to AS - Fabric Capacity Metrics")
+		formatString: #,0
+		displayFolder: Health
+		lineageTag: f85fb018-9ca6-48c7-b55e-0e69e66b34cd
+		sourceLineageTag: dd8d26a3-98e4-43e9-842d-c43466093079
+		dataCategory: Uncategorized
+
+	measure 'Throttling(s) by capacity (last 1 hour)' = EXTERNALMEASURE("Throttling(s) by capacity (last 1 hour)", DOUBLE, "DirectQuery to AS - Fabric Capacity Metrics")
+		displayFolder: Health
+		lineageTag: 4354dc77-4a94-47d2-a2b4-2da0eaf75806
+		sourceLineageTag: 89caafb3-376e-411e-a319-04c0085b50c5
+		dataCategory: Uncategorized
+
+	measure 'Users by capacity (last 1 hour)' = EXTERNALMEASURE("Users by capacity (last 1 hour)", INTEGER, "DirectQuery to AS - Fabric Capacity Metrics")
+		formatString: 0
+		displayFolder: Health
+		lineageTag: 716c92e8-4d76-40c2-bd3b-ac9e53b2b8d9
+		sourceLineageTag: 1fe259a4-1d74-49b8-b710-6f3366c25ab1
+		dataCategory: Uncategorized
+
+	measure 'Rejected operations by capacity (last 1 hour)' = EXTERNALMEASURE("Rejected operations by capacity (last 1 hour)", INTEGER, "DirectQuery to AS - Fabric Capacity Metrics")
+		formatString: #,0
+		displayFolder: Health
+		lineageTag: 04ef69c2-6ea4-4a6d-bc75-50f6bc87e28d
+		sourceLineageTag: 6320cda2-23f0-4c96-a251-3581934aee4c
+		dataCategory: Uncategorized
+
+	measure 'Average utilization by capacity (last 1 hour)' = EXTERNALMEASURE("Average utilization by capacity (last 1 hour)", DOUBLE, "DirectQuery to AS - Fabric Capacity Metrics")
+		displayFolder: Health
+		lineageTag: 6f511b84-e05c-48bf-9dde-9baa322ab9f6
+		sourceLineageTag: 0ebf5a6d-090b-45d0-9360-8f2b6cd13ee0
+		dataCategory: Uncategorized
+
+	measure 'Average utilization by capacity (last 24 hours)' = EXTERNALMEASURE("Average utilization by capacity (last 24 hours)", DOUBLE, "DirectQuery to AS - Fabric Capacity Metrics")
+		displayFolder: Health
+		lineageTag: ac25b82f-05a4-4f7e-a720-74be3e313e40
+		sourceLineageTag: 45599477-9aaa-47d3-a4ed-f2ce6b8bc296
+		dataCategory: Uncategorized
+
+	measure 'Average utilization by capacity (last 7 days)' = EXTERNALMEASURE("Average utilization by capacity (last 7 days)", DOUBLE, "DirectQuery to AS - Fabric Capacity Metrics")
+		lineageTag: ba89322c-9fde-4f25-bd1b-3947851cedf9
+		sourceLineageTag: 0b7225cd-38f1-44e9-b5c4-c04af1a1610a
+		dataCategory: Uncategorized
+
+	measure 'Interactive rejected capacities (last 24 hours)' = EXTERNALMEASURE("Interactive rejected capacities (last 24 hours)", INTEGER, "DirectQuery to AS - Fabric Capacity Metrics")
+		formatString: 0
+		displayFolder: Health
+		lineageTag: aa05e1ca-633f-423d-8fc3-842376575f2a
+		sourceLineageTag: 789927b9-1bc3-4ca3-abe6-86df464f0737
+		dataCategory: Uncategorized
+
+	measure 'Interactive rejected capacities (last 7 days)' = EXTERNALMEASURE("Interactive rejected capacities (last 7 days)", INTEGER, "DirectQuery to AS - Fabric Capacity Metrics")
+		formatString: 0
+		displayFolder: Health
+		lineageTag: 52153a5d-f739-41af-9fb5-0394ae94b55b
+		sourceLineageTag: 6c8f346d-d4a7-4345-a692-d3af54bf9101
+		dataCategory: Uncategorized
+
+	measure 'Interactive rejected capacities (last hour)' = EXTERNALMEASURE("Interactive rejected capacities (last hour)", INTEGER, "DirectQuery to AS - Fabric Capacity Metrics")
+		formatString: 0
+		displayFolder: Health
+		lineageTag: 77e03a65-1b91-47e6-97bd-ed75b533648f
+		sourceLineageTag: 0995d19f-3dd7-4571-8163-eef1e18bfb9d
+		dataCategory: Uncategorized
+
+	measure 'Background rejected capacities (last 24 hours)' = EXTERNALMEASURE("Background rejected capacities (last 24 hours)", INTEGER, "DirectQuery to AS - Fabric Capacity Metrics")
+		formatString: 0
+		displayFolder: Health
+		lineageTag: f25b6ad5-426e-4057-a1b2-de136a004dde
+		sourceLineageTag: 390ade77-3337-44c1-b1c6-4db170f68809
+		dataCategory: Uncategorized
+
+	measure 'Background rejected capacities (last 7 days)' = EXTERNALMEASURE("Background rejected capacities (last 7 days)", INTEGER, "DirectQuery to AS - Fabric Capacity Metrics")
+		formatString: 0
+		displayFolder: Health
+		lineageTag: 73265bd4-82a3-42f7-82b2-0a6320364cd6
+		sourceLineageTag: 41977d59-1c7a-4a5c-a530-de7a7d535626
+		dataCategory: Uncategorized
+
+	measure 'Background rejected capacities (last hour)' = EXTERNALMEASURE("Background rejected capacities (last hour)", INTEGER, "DirectQuery to AS - Fabric Capacity Metrics")
+		formatString: 0
+		displayFolder: Health
+		lineageTag: 95ab28b2-2cb0-4dc4-b4cd-a29de6c5013e
+		sourceLineageTag: 9eabb931-a1e2-4bf1-b7ec-86d2665b7870
+		dataCategory: Uncategorized
+
+	measure 'Interactive delayed capacities (last 24 hours)' = EXTERNALMEASURE("Interactive delayed capacities (last 24 hours)", INTEGER, "DirectQuery to AS - Fabric Capacity Metrics")
+		formatString: 0
+		displayFolder: Health
+		lineageTag: 3df201af-8e57-4174-935d-f60295ef3f87
+		sourceLineageTag: e3b844f3-1968-4858-accf-98197c5277fb
+		dataCategory: Uncategorized
+
+	measure 'Interactive delayed capacities (last 7 days)' = EXTERNALMEASURE("Interactive delayed capacities (last 7 days)", INTEGER, "DirectQuery to AS - Fabric Capacity Metrics")
+		formatString: 0
+		displayFolder: Health
+		lineageTag: 60638ef1-231e-4883-bc1d-b4cb7767ab25
+		sourceLineageTag: 74ce70e0-1077-4c3b-8cb0-c78e8ce24fa0
+		dataCategory: Uncategorized
+
+	measure 'Interactive delayed capacities (last hour)' = EXTERNALMEASURE("Interactive delayed capacities (last hour)", INTEGER, "DirectQuery to AS - Fabric Capacity Metrics")
+		formatString: 0
+		displayFolder: Health
+		lineageTag: 4ae2936d-b5f7-4fb9-bbab-16ab79b55abe
+		sourceLineageTag: 3ca2d7d1-d234-4a90-ac76-11c62d94df4a
+		dataCategory: Uncategorized
+
+	measure 'Background rejection status' = EXTERNALMEASURE("Background rejection status", STRING, "DirectQuery to AS - Fabric Capacity Metrics")
+		isHidden
+		displayFolder: Throttling color format
+		lineageTag: a6c2c2e6-7ff5-4dbf-b737-b9dc1fb391bd
+		sourceLineageTag: 63a42ee8-ec90-480e-8832-5ee69e10ca62
+		dataCategory: Uncategorized
+
+	measure 'Interactive delay status' = EXTERNALMEASURE("Interactive delay status", STRING, "DirectQuery to AS - Fabric Capacity Metrics")
+		isHidden
+		displayFolder: Throttling color format
+		lineageTag: b520b755-dd7c-4d7b-88a1-0e82f2af1635
+		sourceLineageTag: e5a9a2ba-ea4d-4525-ad5c-f81a55932d01
+		dataCategory: Uncategorized
+
+	measure 'Interactive rejection status' = EXTERNALMEASURE("Interactive rejection status", STRING, "DirectQuery to AS - Fabric Capacity Metrics")
+		isHidden
+		displayFolder: Throttling color format
+		lineageTag: 3a650dc5-30f3-408c-83ee-63f7bd5c0839
+		sourceLineageTag: ee4b35b5-2fb0-4f08-894a-ca33d77ce74f
+		dataCategory: Uncategorized
+
+	partition 'All Measures' = entity
+		mode: directQuery
+		source
+			entityName: All Measures
+			expressionSource: 'DirectQuery to AS - Fabric Capacity Metrics'
+

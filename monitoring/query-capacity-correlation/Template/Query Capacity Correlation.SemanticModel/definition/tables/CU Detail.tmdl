@@ -1,0 +1,320 @@
+table 'CU Detail'
+	lineageTag: 13bb5240-128b-4cf5-b100-feec4e97d9de
+	sourceLineageTag: 748a0e64-927b-4dfb-aa4f-32e1c62bd061
+
+	column 'Window start time'
+		dataType: dateTime
+		formatString: General Number
+		lineageTag: 2f4e5bdb-9f06-4a6d-84ef-0973ed6926df
+		sourceLineageTag: a9d97aff-db11-46c5-968d-69f37c3e98f6
+		dataCategory: Uncategorized
+		summarizeBy: none
+		sourceColumn: Window start time
+
+		annotation SummarizationSetBy = User
+
+	column Interactive
+		dataType: decimal
+		isNullable: false
+		lineageTag: a09a3185-a873-47a1-a774-9638a5cf5a66
+		sourceLineageTag: 68eaa3db-0eae-47be-a9c2-738b3e91598b
+		dataCategory: Uncategorized
+		summarizeBy: sum
+		sourceColumn: Interactive
+
+		annotation SummarizationSetBy = User
+
+	column Background
+		dataType: decimal
+		isNullable: false
+		lineageTag: 846a5ec5-1f21-43a2-8f9a-5ee9d9094c96
+		sourceLineageTag: 0b59b8da-7308-4115-a155-2f61c7df4093
+		dataCategory: Uncategorized
+		summarizeBy: sum
+		sourceColumn: Background
+
+		annotation SummarizationSetBy = User
+
+	column 'Interactive non billable'
+		dataType: decimal
+		isNullable: false
+		lineageTag: c1d4498e-d83d-4965-b653-56eb8b582562
+		sourceLineageTag: e01b9636-0d27-4428-98b0-88d7bfbd849b
+		dataCategory: Uncategorized
+		summarizeBy: sum
+		sourceColumn: Interactive non billable
+
+		annotation SummarizationSetBy = User
+
+	column 'Background non billable'
+		dataType: decimal
+		isNullable: false
+		lineageTag: 1d3eb709-e019-4a0e-a0f2-7ed6fdb3f302
+		sourceLineageTag: 71302081-b69e-4fac-b9d2-2f0e4964646c
+		dataCategory: Uncategorized
+		summarizeBy: sum
+		sourceColumn: Background non billable
+
+		annotation SummarizationSetBy = User
+
+	column 'Interactive delay %'
+		dataType: double
+		formatString: 0%;-0%;0%
+		lineageTag: 87788058-e292-4e6c-a0e2-f6bb80623164
+		sourceLineageTag: 7e85bf6b-2e88-4daa-9b7b-ebe974ed48cd
+		dataCategory: Uncategorized
+		summarizeBy: sum
+		sourceColumn: Interactive delay %
+
+		annotation SummarizationSetBy = User
+
+	column 'Interactive rejection %'
+		dataType: double
+		formatString: 0%;-0%;0%
+		lineageTag: 03b76db8-a0fe-4b97-a52c-1368c62bf2c1
+		sourceLineageTag: 8ae12396-37c1-4adc-a213-65cb56b509ee
+		dataCategory: Uncategorized
+		summarizeBy: sum
+		sourceColumn: Interactive rejection %
+
+		annotation SummarizationSetBy = User
+
+	column 'Background rejection %'
+		dataType: double
+		formatString: 0%;-0%;0%
+		lineageTag: dec06c98-bb0b-472e-bc17-2b23b305ac56
+		sourceLineageTag: 6d08ac61-ed6d-47a5-8b77-a40050767e2c
+		dataCategory: Uncategorized
+		summarizeBy: sum
+		sourceColumn: Background rejection %
+
+		annotation SummarizationSetBy = User
+
+	column 'Auto scale capacity units'
+		dataType: int64
+		formatString: 0
+		lineageTag: 7faea7d4-46d9-44d3-9116-c169b4625280
+		sourceLineageTag: 21d6c855-4465-424f-9f07-0d772597709a
+		dataCategory: Uncategorized
+		summarizeBy: sum
+		sourceColumn: Auto scale capacity units
+
+		annotation SummarizationSetBy = User
+
+	column StartOfHour
+		dataType: dateTime
+		formatString: General Number
+		lineageTag: c5e021ed-7921-4589-a5fd-716f80626c7a
+		sourceLineageTag: e4458a08-7bd4-4ab9-adc2-b89bf7a92e6a
+		dataCategory: Uncategorized
+		summarizeBy: none
+		sourceColumn: StartOfHour
+
+		annotation SummarizationSetBy = User
+
+	column 'CU (s)'
+		dataType: decimal
+		isNullable: false
+		formatString: 0
+		lineageTag: e9da09e8-7569-43de-bbfa-609c4d008f1e
+		sourceLineageTag: 788d2318-67b4-4434-a844-10383b07ce5f
+		dataCategory: Uncategorized
+		summarizeBy: sum
+		sourceColumn: CU (s)
+
+		annotation SummarizationSetBy = User
+
+	column 'Base capacity units'
+		dataType: int64
+		formatString: 0
+		lineageTag: 8251f2c6-862a-4cf6-8002-f34a43dc4f67
+		sourceLineageTag: 609da27b-dea1-4c06-b888-ce58f20204d1
+		dataCategory: Uncategorized
+		summarizeBy: sum
+		sourceColumn: Base capacity units
+
+		annotation SummarizationSetBy = User
+
+	column 'Window end time'
+		dataType: dateTime
+		formatString: General Number
+		lineageTag: 6ab7516a-b101-41cd-ab28-ffd8f0cd817b
+		sourceLineageTag: ae19d8e0-4c0f-4123-8214-3a911c37d453
+		dataCategory: Uncategorized
+		summarizeBy: none
+		sourceColumn: Window end time
+
+		annotation SummarizationSetBy = User
+
+	column Threshold
+		dataType: double
+		formatString: 0.00%;-0.00%;0.00%
+		lineageTag: ee2c3536-04f2-47c2-b3b3-7a32982b63d6
+		sourceLineageTag: 9ddfaf24-c0f8-4081-9aa4-b3754d4769fd
+		dataCategory: Uncategorized
+		summarizeBy: none
+		sourceColumn: Threshold
+
+		annotation SummarizationSetBy = User
+
+	column 'Start of 6min'
+		dataType: dateTime
+		formatString: General Number
+		lineageTag: 89d18603-021e-4872-98e1-eb6494d8da91
+		sourceLineageTag: ffe52ea0-b9c7-4d3e-9ca8-c73a04d028bf
+		dataCategory: Uncategorized
+		summarizeBy: none
+		sourceColumn: Start of 6min
+
+		annotation SummarizationSetBy = User
+
+	column 'Peak 6min interactive'
+		dataType: double
+		lineageTag: d4b49cbe-8d4f-48d2-adda-b63421826425
+		sourceLineageTag: 42fa1ebb-2555-4bf5-9722-d9c5a1767e1b
+		dataCategory: Uncategorized
+		summarizeBy: sum
+		sourceColumn: Peak 6min interactive
+
+		annotation SummarizationSetBy = User
+
+	column 'Peak 6min background'
+		dataType: double
+		lineageTag: 28ad4f0e-8d31-4dae-b5df-b4853a4088fc
+		sourceLineageTag: 7da03b36-8145-45ce-a8f8-f9e2fc15a9ad
+		dataCategory: Uncategorized
+		summarizeBy: sum
+		sourceColumn: Peak 6min background
+
+		annotation SummarizationSetBy = User
+
+	column 'Peak 6min interactive non billable'
+		dataType: double
+		lineageTag: 75b76f78-d837-48ca-91e1-49af218da3d1
+		sourceLineageTag: 13ccd18e-de4b-4a65-a108-ad5d452caa74
+		dataCategory: Uncategorized
+		summarizeBy: sum
+		sourceColumn: Peak 6min interactive non billable
+
+		annotation SummarizationSetBy = User
+
+	column 'Peak 6min background non billable'
+		dataType: double
+		lineageTag: c1763687-97d9-444a-bfca-c16600ee668b
+		sourceLineageTag: cb701ada-5ebc-4622-85f7-96d405db205c
+		dataCategory: Uncategorized
+		summarizeBy: sum
+		sourceColumn: Peak 6min background non billable
+
+		annotation SummarizationSetBy = User
+
+	column 'Peak 6min interactive delay %'
+		dataType: double
+		lineageTag: 56ae936d-b322-47e3-8125-42f70d207bf5
+		sourceLineageTag: f09abee4-b098-442b-99ec-e3c14ec23c12
+		dataCategory: Uncategorized
+		summarizeBy: sum
+		sourceColumn: Peak 6min interactive delay %
+
+		annotation SummarizationSetBy = User
+
+	column 'Peak 6min interactive rejection %'
+		dataType: double
+		lineageTag: 2233cff3-211b-491b-9d0c-00f864eb3071
+		sourceLineageTag: d597bc3f-060c-4bf5-94c3-feb4ab891637
+		dataCategory: Uncategorized
+		summarizeBy: sum
+		sourceColumn: Peak 6min interactive rejection %
+
+		annotation SummarizationSetBy = User
+
+	column 'Peak 6min background rejection %'
+		dataType: double
+		lineageTag: 92676e41-93e7-4112-9946-e662dfb7c155
+		sourceLineageTag: 2646cb98-8d88-4bf5-871c-2efe9e85026e
+		dataCategory: Uncategorized
+		summarizeBy: sum
+		sourceColumn: Peak 6min background rejection %
+
+		annotation SummarizationSetBy = User
+
+	column 'Start of Hour'
+		dataType: dateTime
+		isNullable: false
+		formatString: General Number
+		lineageTag: f9088980-3b97-4db3-9c96-c14416c0c84f
+		sourceLineageTag: 21b3a945-f24d-4ddf-a15e-73596275f553
+		dataCategory: Uncategorized
+		summarizeBy: none
+		sourceColumn: Start of Hour
+
+		annotation SummarizationSetBy = User
+
+	column 'CU limit'
+		dataType: double
+		lineageTag: 6f423246-3c03-4269-abf7-d75ddea6ae59
+		sourceLineageTag: 7e9ecc7d-e6ef-4bf7-b582-6cedd58e0ee2
+		dataCategory: Uncategorized
+		summarizeBy: sum
+		sourceColumn: CU limit
+
+		annotation SummarizationSetBy = User
+
+	column SKU
+		dataType: string
+		lineageTag: 8e48661c-a780-4bfa-963c-380d12b53bb1
+		sourceLineageTag: f7b7bfa8-bb1a-4c17-a6f7-85507bc3e427
+		dataCategory: Uncategorized
+		summarizeBy: none
+		sourceColumn: SKU
+
+		annotation SummarizationSetBy = User
+
+	column 'Processed overage'
+		dataType: double
+		formatString: #,0.00
+		lineageTag: 9839a8e7-a932-4904-9f8c-eaeb0746ef9a
+		sourceLineageTag: 7edc80dc-6756-4e4f-a3d7-759a614e6543
+		dataCategory: Uncategorized
+		summarizeBy: sum
+		sourceColumn: Processed overage
+
+		annotation SummarizationSetBy = User
+
+	column 'Overage billing limit'
+		dataType: double
+		formatString: #,0.00
+		lineageTag: 7b9c9668-3972-439c-8d58-dfc6a54db4c7
+		sourceLineageTag: 8b8745e5-b95a-4fd6-9a65-65d21b6e2145
+		dataCategory: Uncategorized
+		summarizeBy: sum
+		sourceColumn: Overage billing limit
+
+		annotation SummarizationSetBy = User
+
+	column 'Peak 6min processed overage'
+		dataType: double
+		lineageTag: 79631021-9390-4702-a0fd-480598fc5dfc
+		sourceLineageTag: 75677f54-44fd-4acb-9800-b7549c8dd6cb
+		dataCategory: Uncategorized
+		summarizeBy: sum
+		sourceColumn: Peak 6min processed overage
+
+		annotation SummarizationSetBy = User
+
+	column 'Peak 6min overage billing limit'
+		dataType: double
+		lineageTag: 479d0743-68cf-49ac-b42d-0b9e84caabd1
+		sourceLineageTag: caed4b0e-62dc-45cb-b3aa-004514f2891d
+		dataCategory: Uncategorized
+		summarizeBy: sum
+		sourceColumn: Peak 6min overage billing limit
+
+		annotation SummarizationSetBy = User
+
+	partition 'CU Detail' = entity
+		mode: directQuery
+		source
+			entityName: CU Detail
+			expressionSource: 'DirectQuery to AS - Fabric Capacity Metrics'
+

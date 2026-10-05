@@ -1,0 +1,28 @@
+table 'Item History User List'
+	lineageTag: 2b2550e7-df6a-4a43-99a8-255d00b7300d
+	sourceLineageTag: 1bb8c432-5928-4cb1-b9d5-354b459121a8
+
+	column user
+		dataType: string
+		lineageTag: e07825a4-b151-44fb-95d0-d88f1164955a
+		sourceLineageTag: 2dae942e-ad96-42ba-a132-f47803b215c3
+		dataCategory: Uncategorized
+		summarizeBy: none
+		sourceColumn: user
+
+		extendedProperty ParameterMetadata =
+				{
+				  "version": 2,
+				  "kind": 1,
+				  "supportsMultipleValues": true,
+				  "selectAllValue": "Default"
+				}
+
+		annotation SummarizationSetBy = User
+
+	partition 'Item History User List' = entity
+		mode: directQuery
+		source
+			entityName: Item History User List
+			expressionSource: 'DirectQuery to AS - Fabric Capacity Metrics'
+

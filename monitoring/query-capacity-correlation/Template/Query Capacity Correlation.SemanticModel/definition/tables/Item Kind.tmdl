@@ -1,0 +1,30 @@
+table 'Item Kind'
+	lineageTag: 113d8c09-cb1c-426c-902c-9d803764404a
+	sourceLineageTag: b3526854-4681-408c-af72-996277752916
+
+	column 'Item kind'
+		dataType: string
+		lineageTag: 76fa7259-1a48-44c7-a109-9e9fe050afa0
+		sourceLineageTag: f973f345-f6ba-4c04-a5e7-f945c6aa5dde
+		dataCategory: Uncategorized
+		summarizeBy: none
+		sourceColumn: Item kind
+
+		annotation SummarizationSetBy = User
+
+	column Measure
+		dataType: string
+		lineageTag: 6510ab9f-124f-478a-abbc-0668d4a97e65
+		sourceLineageTag: 3a92e0cc-3810-4bbc-b969-81cd443c14a2
+		dataCategory: Uncategorized
+		summarizeBy: none
+		sourceColumn: Measure
+
+		annotation SummarizationSetBy = User
+
+	partition 'Item Kind' = entity
+		mode: directQuery
+		source
+			entityName: Item Kind
+			expressionSource: 'DirectQuery to AS - Fabric Capacity Metrics'
+

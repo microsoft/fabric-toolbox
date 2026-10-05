@@ -1,0 +1,23 @@
+table 'Operation Names'
+	isHidden
+	lineageTag: db7909b0-0ae8-4bb3-ac64-d946bc833b1e
+	sourceLineageTag: a89e2afd-a3fc-4378-b2f4-cd0b7181bc48
+
+	column 'Operation name'
+		dataType: string
+		isHidden
+		isNullable: false
+		lineageTag: df9e1ef1-0763-4f4b-a499-0ac8847c6f40
+		sourceLineageTag: cab90be0-b0db-470b-8df8-b4377e654ecf
+		dataCategory: Uncategorized
+		summarizeBy: none
+		sourceColumn: Operation name
+
+		annotation SummarizationSetBy = User
+
+	partition 'Operation Names' = entity
+		mode: directQuery
+		source
+			entityName: Operation Names
+			expressionSource: 'DirectQuery to AS - Fabric Capacity Metrics'
+

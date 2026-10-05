@@ -1,0 +1,174 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.10.0/schema.json",
+  "name": "c166ba65548ef26dc50c",
+  "position": {
+    "x": 0,
+    "y": 0,
+    "z": 0,
+    "height": 255,
+    "width": 400,
+    "tabOrder": 0
+  },
+  "visual": {
+    "visualType": "textbox",
+    "objects": {
+      "general": [
+        {
+          "properties": {
+            "paragraphs": [
+              {
+                "textRuns": [
+                  {
+                    "value": "FinOps Maturity Score - Composite (0 to 100 scale)",
+                    "textStyle": {
+                      "fontWeight": "bold"
+                    }
+                  }
+                ],
+                "horizontalTextAlignment": "center"
+              },
+              {
+                "textRuns": [
+                  {
+                    "value": ""
+                  }
+                ]
+              },
+              {
+                "textRuns": [
+                  {
+                    "value": "Weighted aggregate of all "
+                  },
+                  {
+                    "value": "5 FinOps best-practice",
+                    "textStyle": {
+                      "fontWeight": "bold"
+                    }
+                  },
+                  {
+                    "value": " dimensions for Microsoft Fabric capacity management:"
+                  }
+                ]
+              },
+              {
+                "textRuns": [
+                  {
+                    "value": "RI Coverage "
+                  },
+                  {
+                    "value": "30%",
+                    "textStyle": {
+                      "fontWeight": "bold"
+                    }
+                  },
+                  {
+                    "value": " "
+                  }
+                ],
+                "listType": "bullet"
+              },
+              {
+                "textRuns": [
+                  {
+                    "value": "RI Utilization "
+                  },
+                  {
+                    "value": "25%",
+                    "textStyle": {
+                      "fontWeight": "bold"
+                    }
+                  }
+                ],
+                "listType": "bullet"
+              },
+              {
+                "textRuns": [
+                  {
+                    "value": "Capacity Utilization "
+                  },
+                  {
+                    "value": "20%",
+                    "textStyle": {
+                      "fontWeight": "bold"
+                    }
+                  }
+                ],
+                "listType": "bullet"
+              },
+              {
+                "textRuns": [
+                  {
+                    "value": "Pause Cost "
+                  },
+                  {
+                    "value": "15%",
+                    "textStyle": {
+                      "fontWeight": "bold"
+                    }
+                  }
+                ],
+                "listType": "bullet"
+              },
+              {
+                "textRuns": [
+                  {
+                    "value": "Low auto-scale "
+                  },
+                  {
+                    "value": "10%",
+                    "textStyle": {
+                      "fontWeight": "bold"
+                    }
+                  }
+                ],
+                "listType": "bullet"
+              },
+              {
+                "textRuns": [
+                  {
+                    "value": ""
+                  }
+                ]
+              },
+              {
+                "textRuns": [
+                  {
+                    "value": "A "
+                  },
+                  {
+                    "value": "score of 100",
+                    "textStyle": {
+                      "fontWeight": "bold",
+                      "color": "#2aaa92"
+                    }
+                  },
+                  {
+                    "value": " represents full FinOps maturity: all capacity RI-backed, fully utilized, no pause waste, no auto-scale bursts."
+                  }
+                ]
+              },
+              {
+                "textRuns": [
+                  {
+                    "value": "A "
+                  },
+                  {
+                    "value": "score under of 50 ",
+                    "textStyle": {
+                      "fontWeight": "bold",
+                      "color": "#f6465a"
+                    }
+                  },
+                  {
+                    "value": "indicates significant cost optimization opportunities exist."
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    },
+    "drillFilterOtherVisuals": true
+  }
+}

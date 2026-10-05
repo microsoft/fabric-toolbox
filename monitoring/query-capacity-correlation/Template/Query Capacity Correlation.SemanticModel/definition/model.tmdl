@@ -1,0 +1,130 @@
+model Model
+	culture: en-US
+	defaultPowerBIDataSourceVersion: powerBI_V3
+	discourageImplicitMeasures
+	sourceQueryCulture: en-US
+	valueFilterBehavior: independent
+	dataAccessOptions
+		legacyRedirects
+		returnErrorValuesAsNull
+
+annotation __PBI_TimeIntelligenceEnabled = 1
+
+annotation PBI_QueryOrder = ["DirectQuery to AS - Fabric Capacity Metrics","Hour Windows","Capacity Hour","Query Executions"]
+
+annotation PBI_ProTooling = ["DaxQueryView_Desktop","DevMode"]
+
+ref table TimePoints2
+ref table Timepoints
+ref table 'Timepoint CU Detail'
+ref table 'Timepoint Interactive Detail'
+ref table 'Timepoint Background Detail'
+ref table Capacities
+ref table Items
+ref table 'All Measures'
+ref table Metrics
+ref table Datetime
+ref table 'Items Throttled'
+ref table 'Metrics By Item And Day'
+ref table 'Metrics By Item And Hour'
+ref table 'Metrics By Item Operation And Hour'
+ref table 'Performance Delta Snapshot'
+ref table 'Timepoint2 Interactive Detail'
+ref table 'Timepoint2 Background Detail'
+ref table 'Metrics By Item Operation And Day'
+ref table 'Max Memory By Item'
+ref table 'Metrics By Item'
+ref table 'Operation Names'
+ref table 'Metrics By Item And Operation'
+ref table 'Item Kind'
+ref table 'Storage By Workspaces'
+ref table 'Storage By Workspaces And Day'
+ref table 'Storage By Workspaces And Hour'
+ref table 'Top N Selector'
+ref table Workspaces
+ref table 'CU Detail'
+ref table 'Timepoint Overage Detail'
+ref table 'Timepoint Overages By Workloads'
+ref table 'Timepoint2 Overages By Workloads'
+ref table Dates
+ref table 'Operation For Storage'
+ref table Workloads
+ref table 'Billing Type'
+ref table 'Workload For Storage'
+ref table 'System Events'
+ref table 'Timepoint2 CU Detail'
+ref table 'Timepoint detail page optional columns (interactive operations)'
+ref table 'Timepoint detail page optional columns (background operations)'
+ref table 'Max Memory By Item And Hour'
+ref table 'CU Detail For Workload Autoscale'
+ref table 'Timepoint Detail For Workload Autoscale'
+ref table 'Metrics By Item And Day For Workload Autoscale'
+ref table 'Metrics By Item And Hour For Workload Autoscale'
+ref table 'Metrics By Item And Operation And Hour For Workload Autoscale'
+ref table 'Metrics By Item And Operation And Day For Workload Autoscale'
+ref table 'Metrics By Item For Workload Autoscale'
+ref table 'Metrics By Item And Operation For Workload Autoscale'
+ref table 'Feature autoscale page optional columns'
+ref table 'Timepoint CU Detail For Workload Autoscale'
+ref table 'Timepoint2 CU Detail For Workload Autoscale'
+ref table 'Timepoint2 Detail For Workload Autoscale'
+ref table 'Feature autoscale timepoint page optional columns'
+ref table 'Feature autoscale timepoint2 page optional columns'
+ref table 'Timepoint Interactive Item Detail'
+ref table 'Timepoint Background Item Detail'
+ref table 'Timepoint Interactive Summary'
+ref table 'Timepoint Background Summary'
+ref table 'Timepoint Workspace List'
+ref table 'Timepoint Item List'
+ref table 'Timepoint Operation Name List'
+ref table 'Timepoint Operation Id List'
+ref table 'Timepoint User List'
+ref table 'Timepoint Status List'
+ref table 'Items Operations'
+ref table 'Time-Point summary page optional columns'
+ref table 'Time-Point summary page optional columns (interactive operations)'
+ref table 'Time-Point detail page optional columns (background operations)'
+ref table 'CU Threshold'
+ref table 'Time-Point detail page optional columns (interactive operations)'
+ref table 'Filter Records'
+ref table 'Timepoint2 detail page optional columns (interactive operations)'
+ref table 'Timepoint2 detail page optional columns (background operations)'
+ref table 'Item History Operation Detail'
+ref table 'Item History Operation'
+ref table 'Item History Main'
+ref table 'Item History Summary'
+ref table 'Item History Workspace List'
+ref table 'Item History Operation Name List'
+ref table 'Item History User List'
+ref table 'Item History Experience List'
+ref table 'Date End'
+ref table 'Date Start'
+ref table 'Item history workspace details optional columns'
+ref table 'Item history operation details optional columns'
+ref table Start
+ref table End
+ref table 'Health page optional columns (last 24 hours)'
+ref table 'Usage Operation (Last 1 hour)'
+ref table 'Usage Summary (Last 1 hour)'
+ref table 'Usage Operation (Last 24 hours)'
+ref table 'Usage Summary (Last 24 hours)'
+ref table 'Usage Operation (Last 7 days)'
+ref table 'Usage Summary (Last 7 days)'
+ref table 'Health page optional columns (last 1 hour)'
+ref table 'Surge Protection By Day'
+ref table 'Surge Protection By Hour'
+ref table 'Surge Protection Blocked Workspaces Detail'
+ref table 'Compute page optional columns'
+ref table 'Usage Summary By Capacities (Last 7 days)'
+ref table 'Timepoint Capacity Overage Detail'
+ref table 'Usage Summary By Capacities (Last 1 hour)'
+ref table 'Usage Summary By Capacities (Last 24 hours)'
+ref table 'Operations (Last 1 hour)'
+ref table 'Operations (Last 24 hours)'
+ref table DateTableTemplate_cffe5045-aa4b-4374-a5f5-a2b312331702
+ref table 'Query Executions'
+ref table 'Capacity Hour'
+ref table 'Hour Windows'
+ref table LocalDateTable_176e0acf-0035-4a53-a205-272d9dd707ba
+
+ref cultureInfo en-US

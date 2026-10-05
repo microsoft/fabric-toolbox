@@ -1,0 +1,28 @@
+table 'Timepoint User List'
+	lineageTag: 95442ef6-2587-4f6e-84c4-2ef2c922a1e0
+	sourceLineageTag: 90ce5d4d-dc06-404c-b96a-eac60dd4db24
+
+	column User
+		dataType: string
+		lineageTag: a57dd93c-5ec1-4b66-8de7-c5a53c400860
+		sourceLineageTag: ebbde5c8-71ef-436f-86f8-b8355fc5bb6d
+		dataCategory: Uncategorized
+		summarizeBy: none
+		sourceColumn: User
+
+		extendedProperty ParameterMetadata =
+				{
+				  "version": 2,
+				  "kind": 1,
+				  "supportsMultipleValues": true,
+				  "selectAllValue": "__SelectAll__"
+				}
+
+		annotation SummarizationSetBy = User
+
+	partition 'Timepoint User List' = entity
+		mode: directQuery
+		source
+			entityName: Timepoint User List
+			expressionSource: 'DirectQuery to AS - Fabric Capacity Metrics'
+
