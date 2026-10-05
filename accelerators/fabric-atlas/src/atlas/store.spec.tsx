@@ -85,6 +85,9 @@ function Harness() {
       <span data-testid="sync-workspace">{atlas.syncWorkspaceId ?? ""}</span>
       <span data-testid="sync-error">{atlas.syncError ?? ""}</span>
       <span data-testid="hydration-error">{atlas.hydrationError ?? ""}</span>
+      <span data-testid="sync-run-ids">
+        {atlas.data.syncRuns.map((run) => run.id).join(",")}
+      </span>
       <button type="button" onClick={atlas.retryHydration}>
         Retry hydration
       </button>
@@ -353,6 +356,49 @@ describe("AtlasProvider synchronization", () => {
     expect(screen.getByTestId("requires-sync")).toHaveTextContent("false");
     expect(screen.getByTestId("progress")).toHaveTextContent("100");
     expect(screen.getByTestId("stage")).toHaveTextContent("Workspace is ready");
+  });
+
+  it("keeps the ten latest persisted runs after a successful synchronization", async () => {
+    const hydrated = structuredClone(SAMPLE_DATA);
+    hydrated.syncRuns = Array.from({ length: 10 }, (_, index) => ({
+      id: `old-${index}`,
+      startedAt: new Date(
+        Date.parse("2026-10-01T10:00:00.000Z") - index * 60_000,
+      ).toISOString(),
+      finishedAt: new Date(
+        Date.parse("2026-10-01T10:00:30.000Z") - index * 60_000,
+      ).toISOString(),
+      status: "completed" as const,
+      itemsSynced: hydrated.items.length,
+    }));
+    const fresh = structuredClone(SAMPLE_DATA);
+    fresh.syncRuns = [{
+      id: "current",
+      startedAt: "2026-10-05T12:00:00.000Z",
+      finishedAt: "2026-10-05T12:04:00.000Z",
+      status: "completed",
+      itemsSynced: fresh.items.length,
+    }];
+    backend.loadFromDb.mockResolvedValue(hydrated);
+    backend.runFabricSync.mockResolvedValue(fresh);
+
+    render(
+      <AtlasProvider isPreview={false} currentUser={currentUser}>
+        <Harness />
+      </AtlasProvider>,
+    );
+    await waitFor(() =>
+      expect(screen.getByTestId("hydrating")).toHaveTextContent("false"),
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "Sync" }));
+
+    await waitFor(() =>
+      expect(screen.getByTestId("syncing")).toHaveTextContent("false"),
+    );
+    expect(screen.getByTestId("sync-run-ids")).toHaveTextContent(
+      "current,old-0,old-1,old-2,old-3,old-4,old-5,old-6,old-7,old-8",
+    );
   });
 
   it("warns before a refresh while resumable synchronization is active", async () => {

@@ -8,7 +8,12 @@ import {
   useState,
   type ReactNode,
 } from "react";
-import { SAMPLE_DATA, type AtlasData, type Comment } from "./model";
+import {
+  SAMPLE_DATA,
+  type AtlasData,
+  type Comment,
+  type SyncRun,
+} from "./model";
 import {
   loadCommentsFromDb,
   loadFromDb,
@@ -156,6 +161,21 @@ const AtlasContext = createContext<AtlasContextValue | null>(null);
 
 function clone(d: AtlasData): AtlasData {
   return JSON.parse(JSON.stringify(d));
+}
+
+function latestSyncRuns(
+  ...groups: readonly (readonly SyncRun[])[]
+): SyncRun[] {
+  const byId = new Map<string, SyncRun>();
+  for (const run of groups.flat()) {
+    if (!byId.has(run.id)) byId.set(run.id, run);
+  }
+  return [...byId.values()]
+    .sort(
+      (left, right) =>
+        Date.parse(right.startedAt) - Date.parse(left.startedAt),
+    )
+    .slice(0, 10);
 }
 
 function historyAfterSync(
@@ -778,11 +798,15 @@ export function AtlasProvider({
               ]),
             );
             next.comments = [...comments.values()];
+            next.syncRuns = latestSyncRuns(
+              fresh.syncRuns,
+              previous.syncRuns,
+            );
           }
           const finishedAt =
             next.workspace.syncedAt ?? new Date().toISOString();
           if (!fresh) {
-            next.syncRuns = [
+            next.syncRuns = latestSyncRuns([
               {
                 id: `s-${Date.now()}`,
                 startedAt,
@@ -793,7 +817,7 @@ export function AtlasProvider({
                 summary: `${next.items.length} items · ${next.edges.length} lineage edges · ${next.principals.length} principals · ${next.jobs.length} jobs`,
               },
               ...next.syncRuns,
-            ].slice(0, 20);
+            ]);
           }
           setData(next);
           setHydrating(false);

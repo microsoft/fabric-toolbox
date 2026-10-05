@@ -2356,7 +2356,8 @@ function syncRunsFromRows(rows: Row[], fallbackTime: string): AtlasData["syncRun
     .sort(
       (left, right) =>
         Date.parse(right.startedAt) - Date.parse(left.startedAt),
-    );
+    )
+    .slice(0, 10);
 }
 
 /**

@@ -29,7 +29,7 @@ export const SYNC_BACKEND_CAPABILITIES = {
   },
 } as const satisfies Record<string, SyncCapability>;
 
-export const RECENT_RUNS_PREVIEW_COUNT = 5;
+export const RECENT_RUNS_PREVIEW_COUNT = 10;
 export const ERROR_SUMMARY_LENGTH = 160;
 
 export type WorkspaceSyncStatus =

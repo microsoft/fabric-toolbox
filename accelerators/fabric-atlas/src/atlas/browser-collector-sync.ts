@@ -43,7 +43,11 @@ export interface BrowserCollectorDependencies {
   legacy?: () => Promise<RawSync>;
   timeoutMs?: number;
   maxCalls?: number;
+  maxAttempts?: number;
+  retryDelayMs?: number;
 }
+const COLLECTOR_BATCH_SIZE = 4;
+const COMPATIBILITY_BATCH_SIZE = 4;
 const DEFINITIONS = new Set(["Ontology", "GraphModel", "DataAgent"]);
 const SQL = new Set([
   "SQLDatabase",
@@ -129,6 +133,43 @@ async function bounded<T>(operation: () => Promise<T>, timeoutMs: number, signal
     if (abort) signal?.removeEventListener("abort", abort);
   }
 }
+function retryableCollectorFailure(error: unknown): boolean {
+  const statusCode = Number((error as { status?: unknown } | null)?.status);
+  if ([408, 429, 500, 502, 503, 504].includes(statusCode)) return true;
+  const message = error instanceof Error ? error.message : String(error);
+  return /abort|network|fetch|gateway|rate.?limit|temporar|timeout|timed out/i.test(message);
+}
+function stoppedCollectorEnvelope(value: unknown, depth = 0): boolean {
+  if (depth > 8 || value == null) return false;
+  if (Array.isArray(value)) {
+    return value.some((entry) => stoppedCollectorEnvelope(entry, depth + 1));
+  }
+  if (typeof value !== "object") return false;
+  const data = value as Record<string, unknown>;
+  if (typeof data.code === "string" && STOP.has(data.code)) return true;
+  return Object.values(data).some((entry) =>
+    stoppedCollectorEnvelope(entry, depth + 1),
+  );
+}
+function collectorRetryDelay(milliseconds: number, signal?: AbortSignal) {
+  return new Promise<void>((resolve, reject) => {
+    if (signal?.aborted) {
+      reject(new Error("Synchronization cancelled."));
+      return;
+    }
+    const done = () => {
+      signal?.removeEventListener("abort", cancel);
+      resolve();
+    };
+    const timer = window.setTimeout(done, milliseconds);
+    const cancel = () => {
+      window.clearTimeout(timer);
+      signal?.removeEventListener("abort", cancel);
+      reject(new Error("Synchronization cancelled."));
+    };
+    signal?.addEventListener("abort", cancel, { once: true });
+  });
+}
 
 /** Browser-serialized composition; Phase 2 scheduling/claims/publication are deliberately not used. */
 export async function collectBrowserWorkspace(
@@ -152,7 +193,31 @@ export async function collectBrowserWorkspace(
       input: AppFunctionsSchema[N]["input"], options: { timeoutMs: number },
     ) => Promise<AppFunctionsSchema[N]["output"]>;
     if (!invoke) throw new Error("Required Rayfin collector is not deployed. Use the explicit Python rollback flag.");
-    return bounded(() => invoke.call(client.functions[name], input, { timeoutMs: timeout }), timeout, signal);
+    const maxAttempts = dependencies.maxAttempts ?? 3;
+    for (let attempt = 0; attempt < maxAttempts; attempt += 1) {
+      try {
+        const result = await bounded(
+          () => invoke.call(client.functions[name], input, { timeoutMs: timeout }),
+          timeout + Math.min(5_000, Math.max(50, timeout / 10)),
+          signal,
+        );
+        if (!stoppedCollectorEnvelope(result) || attempt + 1 >= maxAttempts) {
+          return result;
+        }
+      } catch (error) {
+        if (
+          !retryableCollectorFailure(error) ||
+          attempt + 1 >= maxAttempts
+        ) {
+          throw error;
+        }
+      }
+      await collectorRetryDelay(
+        (dependencies.retryDelayMs ?? 750) * 2 ** attempt,
+        signal,
+      );
+    }
+    throw new Error(`${name} collector did not complete.`);
   };
   const compatibility = dependencies.compatibility ?? createCompatibilityInvoker(workspaceId, identity, correlationId, signal);
   const sources: NonNullable<RawSync["collectorSources"]> = { core: { source: "rayfin" } };
@@ -196,9 +261,13 @@ export async function collectBrowserWorkspace(
   const schemaFallbackIds: string[] = [];
   const knownStorageSchemas = new Set<string>();
   const partialStorageSchemas = new Set<string>();
-  for (let offset = 0; offset < items.length; offset += 8) {
+  for (
+    let offset = 0;
+    offset < items.length;
+    offset += COLLECTOR_BATCH_SIZE
+  ) {
     assertSyncActive(signal);
-    const batch = items.slice(offset, offset + 8);
+    const batch = items.slice(offset, offset + COLLECTOR_BATCH_SIZE);
     progress?.(12 + Math.floor(offset / Math.max(1, items.length) * 35), `Collecting Rayfin metadata (${offset}/${items.length})`);
     const provenance = batch.filter((item) => PROVENANCE.has(item.type));
     if (provenance.length) {
@@ -317,10 +386,10 @@ export async function collectBrowserWorkspace(
     }
   }
   progress?.(48, "Collecting required scanner compatibility evidence");
-  const scanner = await bounded(() => compatibility({
+  const scanner = await compatibility({
     version: 1, stage: "scanner",
     items: items.map((item) => ({ ...item, collectors: [] })), schemaItemIds: schemaFallbackIds,
-  }), 195_000, signal);
+  });
   if (scanner.compatibilityVersion !== 1 || scanner.compatibilityStage !== "scanner" ||
     scanner.workspace?.id !== workspaceId || scanner.correlationId !== correlationId ||
     !scanner.requestedItemIds || scanner.requestedItemIds.length !== items.length ||
@@ -335,11 +404,23 @@ export async function collectBrowserWorkspace(
     lineage: scanner.sections!.lineage, schema: { status: "complete" }, config: { status: "complete" } };
   raw.capabilities = { ...raw.capabilities, ...scanner.capabilities };
   const pending = [...plans.values()];
-  for (let offset = 0; offset < pending.length; offset += 8) {
-    let remaining = pending.slice(offset, offset + 8);
+  for (
+    let offset = 0;
+    offset < pending.length;
+    offset += COMPATIBILITY_BATCH_SIZE
+  ) {
+    let remaining = pending.slice(
+      offset,
+      offset + COMPATIBILITY_BATCH_SIZE,
+    );
     for (let attempt = 0; remaining.length && attempt < 4; attempt++) {
       progress?.(50 + Math.floor(offset / Math.max(1, pending.length) * 9), `Collecting exact compatibility gaps (${offset}/${pending.length})`);
-      const result = await bounded(() => compatibility({ version: 1, stage: "items", items: remaining, schemaItemIds: [] }), 195_000, signal);
+      const result = await compatibility({
+        version: 1,
+        stage: "items",
+        items: remaining,
+        schemaItemIds: [],
+      });
       const expected = new Map(remaining.map((item) => [item.id, item]));
       if (result.compatibilityVersion !== 1 || result.compatibilityStage !== "items" ||
         result.workspace?.id !== workspaceId || result.correlationId !== correlationId ||

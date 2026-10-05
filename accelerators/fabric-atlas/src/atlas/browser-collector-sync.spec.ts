@@ -116,7 +116,14 @@ function harness() {
       ...common,
       schema: Object.fromEntries(plan.schemaItemIds.map((id) => [id, [table("Sales", "Power BI admin scanner")]])),
       lineage: [{ source: MODEL, target: REPORT, relation: "report" }],
-      itemMetadata: Object.fromEntries(items.map((item) => [item.id, { scannerMatched: item.id === MODEL || item.id === REPORT, ownerAvailable: false }])),
+      itemMetadata: Object.fromEntries(plan.items.map((item) => [
+        item.id,
+        {
+          scannerMatched:
+            item.type === "SemanticModel" || item.type === "Report",
+          ownerAvailable: false,
+        },
+      ])),
       sections: Object.fromEntries(["scanner", "schema", "config", "lineage", "access"].map((name) => [name, complete()])),
       capabilities: Object.fromEntries(["endorsement", "sensitivity", "tags", "ownership"].map((name) => [name, complete()])),
     };
@@ -170,7 +177,18 @@ describe("active browser collector composition", () => {
   it("calls all supported Rayfin stages serially and plans only exact Python gaps", async () => {
     const h = harness();
     const result = await collectBrowserWorkspace(WS, identity, RUN, undefined, undefined, h.deps);
-    expect(h.sequence).toEqual(["core", "provenance", "definitions", "sql", "kql", "powerbi", "python-scanner", "python-items", "relations"]);
+    expect(h.sequence[0]).toBe("core");
+    expect(new Set(h.sequence)).toEqual(new Set([
+      "core",
+      "provenance",
+      "definitions",
+      "sql",
+      "kql",
+      "powerbi",
+      "python-scanner",
+      "python-items",
+      "relations",
+    ]));
     expect(h.maxActive()).toBe(1);
     expect(h.legacy).not.toHaveBeenCalled();
     expect(h.compatibility.mock.calls[0][0].schemaItemIds).toEqual([]);
@@ -182,6 +200,84 @@ describe("active browser collector composition", () => {
     validateRawSync(result.raw, WS);
     expect(result.itemRelationsCollection?.workspaceItemCount).toBe(items.length);
   });
+
+  it("retries timed-out collectors and keeps slow metadata batches bounded", async () => {
+    const h = harness();
+    const kqlItems = Array.from({ length: 8 }, (_, index) => ({
+      id: `${index + 1}`.padStart(8, "0") +
+        "-8888-4888-8888-" +
+        `${index + 1}`.padStart(12, "0"),
+      type: "KQLDatabase",
+    }));
+    const value = core();
+    value.items = kqlItems;
+    value.itemMetadata = Object.fromEntries(
+      kqlItems.map((item) => [
+        item.id,
+        { scannerMatched: false, ownerAvailable: false },
+      ]),
+    );
+    h.functions.workspaceCollectCore.invoke.mockResolvedValueOnce(value);
+    const kql = h.functions.workspaceCollectKqlMetadata.invoke;
+    kql.mockRejectedValueOnce(
+      Object.assign(new Error("Gateway timeout"), { status: 504 }),
+    );
+    kql.mockImplementation(async (input: Record<string, unknown>) => {
+      const requested = input.items as Array<{ id: string; type: string }>;
+      return {
+        ...common(
+          "kql-metadata",
+          requested.map((item) => ({ ...item, ...complete() })),
+        ),
+        schemas: Object.fromEntries(
+          requested.map((item) => [
+            item.id,
+            {
+              ...complete(),
+              source: "fabric-kql-database-definition",
+              tables: [],
+            },
+          ]),
+        ),
+        artifactMetadata: {},
+        config: [],
+        sections: {
+          kqlProperties: complete(),
+          kqlSchema: complete(),
+        },
+        capabilities: { kqlSchema: complete() },
+        blockers: [],
+      };
+    });
+
+    await expect(
+      collectBrowserWorkspace(
+        WS,
+        identity,
+        RUN,
+        undefined,
+        undefined,
+        {
+          ...h.deps,
+          retryDelayMs: 0,
+        },
+      ),
+    ).resolves.toBeTruthy();
+
+    expect(kql).toHaveBeenCalledTimes(3);
+    expect(
+      kql.mock.calls.every(
+        ([input]) =>
+          (input.items as Array<unknown>).length <= 4,
+      ),
+    ).toBe(true);
+    const itemPlans = h.compatibility.mock.calls
+      .map(([plan]) => plan)
+      .filter((plan) => plan.stage === "items");
+    expect(itemPlans).toHaveLength(2);
+    expect(itemPlans.every((plan) => plan.items.length <= 4)).toBe(true);
+  });
+
   it("keeps Item Relations Preview evidence out of authoritative lineage", async () => {
     const h = harness();
     const result = await collectBrowserWorkspace(WS, identity, RUN, undefined, undefined, h.deps);
@@ -510,7 +606,11 @@ describe("active browser collector composition", () => {
     await expect(collectBrowserWorkspace(WS, identity, RUN, undefined, controller.signal, h.deps)).rejects.toThrow("cancelled");
     expect(h.functions.workspaceCollectCore.invoke).not.toHaveBeenCalled();
     h.functions.workspaceCollectCore.invoke.mockImplementationOnce(() => new Promise(() => undefined));
-    await expect(collectBrowserWorkspace(WS, identity, RUN, undefined, undefined, { ...h.deps, timeoutMs: 10 })).rejects.toThrow("deadline");
+    await expect(collectBrowserWorkspace(WS, identity, RUN, undefined, undefined, {
+      ...h.deps,
+      timeoutMs: 10,
+      maxAttempts: 1,
+    })).rejects.toThrow("deadline");
     expect(h.legacy).not.toHaveBeenCalled();
   });
   it("does not make Preview transport failure a snapshot-authority failure", async () => {

@@ -261,19 +261,19 @@ describe("WorkspaceSynchronizationPanel", () => {
     ).toBeInTheDocument();
   });
 
-  it("shows the latest five runs and expands to the full history", () => {
-    renderPanel(context({}, runs(7)));
+  it("shows the latest ten runs and expands to the full history", () => {
+    renderPanel(context({}, runs(12)));
     const table = screen.getByRole("table", {
       name: "Synchronization runs, newest first",
     });
-    expect(within(table).getAllByRole("row")).toHaveLength(6);
+    expect(within(table).getAllByRole("row")).toHaveLength(11);
 
-    const toggle = screen.getByRole("button", { name: "View all 7 runs" });
+    const toggle = screen.getByRole("button", { name: "View all 12 runs" });
     expect(toggle).toHaveAttribute("aria-expanded", "false");
     fireEvent.click(toggle);
-    expect(within(table).getAllByRole("row")).toHaveLength(8);
+    expect(within(table).getAllByRole("row")).toHaveLength(13);
     expect(
-      screen.getByRole("button", { name: "Show latest 5" }),
+      screen.getByRole("button", { name: "Show latest 10" }),
     ).toHaveAttribute("aria-expanded", "true");
   });
 
