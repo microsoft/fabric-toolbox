@@ -1,7 +1,84 @@
-from dataclasses import asdict, dataclass
-from typing import Any, Dict, List, Optional
+from dataclasses import asdict, dataclass, field
+from typing import Any, Dict, List, Literal, Optional
 
 from .common import AssessmentStatus
+
+
+@dataclass
+class SynapseQueryActivity:
+    """A request observed in a Synapse dedicated SQL pool."""
+
+    request_id: str
+    session_id: str
+    status: str
+    resource_class: str
+    importance: str
+    submit_time: Optional[str]
+    start_time: Optional[str]
+    end_time: Optional[str]
+    duration_ms: Optional[float]
+    queue_duration_ms: Optional[float]
+    label: Optional[str]
+    login_name: Optional[str]
+    command: Optional[str]
+    json_response: Any
+
+
+@dataclass
+class SynapseSessionActivity:
+    """A session observed in a Synapse dedicated SQL pool."""
+
+    session_id: str
+    status: str
+    login_name: Optional[str]
+    login_time: Optional[str]
+    query_count: Optional[int]
+    client_id: Optional[str]
+    app_name: Optional[str]
+    json_response: Any
+
+
+@dataclass
+class SynapseDurationStatistics:
+    """Duration distribution for completed dedicated-pool requests."""
+
+    average_ms: Optional[float]
+    p50_ms: Optional[float]
+    p90_ms: Optional[float]
+    p99_ms: Optional[float]
+    max_ms: Optional[float]
+
+
+@dataclass
+class SynapseTemporalBucket:
+    """Request count for a day-of-week and hour-of-day bucket."""
+
+    day_of_week: int
+    hour: int
+    request_count: int
+
+
+@dataclass
+class SynapseWorkloadProfile:
+    """Collected activity and derived workload metrics for a dedicated SQL pool."""
+
+    collection_status: str
+    description: str
+    configured_window_days: int
+    configured_top_n: int
+    sql_text_redacted: bool
+    collected_at: str
+    observed_start: Optional[str]
+    observed_end: Optional[str]
+    request_count: int
+    session_count: int
+    peak_concurrency: int
+    status_distribution: Dict[str, int]
+    resource_class_distribution: Dict[str, int]
+    duration_statistics: SynapseDurationStatistics
+    temporal_buckets: List[SynapseTemporalBucket]
+    requests: List[SynapseQueryActivity]
+    sessions: List[SynapseSessionActivity]
 
 
 @dataclass
@@ -15,6 +92,98 @@ class SynapseWorkspaceInfo:
     status: str
     endpoints: dict[str, str]
     json_response: Any
+
+
+ColumnCompatibility = Literal["compatible", "review", "unsupported"]
+
+
+@dataclass
+class SynapseColumn:
+    """Column metadata collected from INFORMATION_SCHEMA.COLUMNS."""
+
+    name: str
+    ordinal_position: int
+    data_type: str
+    is_nullable: bool
+    character_maximum_length: Optional[int]
+    numeric_precision: Optional[int]
+    numeric_scale: Optional[int]
+    datetime_precision: Optional[int]
+    column_default: Optional[str]
+    character_set_name: Optional[str]
+    collation_name: Optional[str]
+    compatibility: ColumnCompatibility
+    compatibility_note: str
+    json_response: Any
+
+
+@dataclass
+class SynapseDataTypeSummary:
+    """Column count and Fabric compatibility for a normalized SQL data type."""
+
+    data_type: str
+    column_count: int
+    compatibility: ColumnCompatibility
+    compatibility_note: str
+
+
+@dataclass
+class SynapseCompatibilityTotals:
+    """Column totals grouped by Fabric compatibility classification."""
+
+    compatible: int = 0
+    review: int = 0
+    unsupported: int = 0
+
+
+@dataclass
+class SynapseWideObject:
+    """Table or view meeting the configured wide-object threshold."""
+
+    database: str
+    schema: str
+    object_type: Literal["table", "view"]
+    name: str
+    column_count: int
+
+
+@dataclass
+class SynapseColumnDatabaseStatus:
+    """Column collection outcome for one dedicated or serverless database."""
+
+    database: str
+    database_type: Literal["dedicated", "serverless"]
+    status: Literal["collected", "capped", "partial", "skipped", "unavailable"]
+    objects_considered: int
+    objects_collected: int
+    columns_collected: int
+    reason: Optional[str] = None
+
+
+@dataclass
+class SynapseColumnSummary:
+    """Workspace-level column collection and Fabric compatibility summary."""
+
+    collection_status: Literal[
+        "completed", "capped", "partial", "skipped", "unavailable"
+    ]
+    generated_at: str
+    configured_max_column_objects: Optional[int]
+    wide_object_threshold: int
+    total_objects_considered: int
+    total_objects_collected: int
+    total_columns: int
+    nullable_columns: int
+    data_types: List[SynapseDataTypeSummary] = field(default_factory=list)
+    compatibility_totals: SynapseCompatibilityTotals = field(
+        default_factory=SynapseCompatibilityTotals
+    )
+    wide_objects: List[SynapseWideObject] = field(default_factory=list)
+    database_statuses: List[SynapseColumnDatabaseStatus] = field(default_factory=list)
+    capped_databases: List[str] = field(default_factory=list)
+    partial_databases: List[str] = field(default_factory=list)
+    unavailable_databases: List[str] = field(default_factory=list)
+    skipped_reason: Optional[str] = None
 
 
 @dataclass
@@ -54,6 +223,115 @@ class CodeObjectLines:
 
 
 @dataclass
+class SqlCodeObjectDefinition:
+    """SQL code object definition extracted from a database."""
+
+    database_name: str
+    schema_name: str
+    object_name: str
+    object_type: str
+    definition: Optional[str]
+    is_encrypted: bool
+    created_at: Optional[str]
+    modified_at: Optional[str]
+
+    json_response: Any
+
+
+@dataclass
+class SynapseSqlDefinition:
+    """Stored SQL module definition and extraction metadata."""
+
+    name: str
+    database: str
+    schema: str
+    object_type: str
+    sql_type: str
+    sql_type_description: str
+    definition: Optional[str]
+    original_length: int
+    stored_length: int
+    created_at: Optional[str]
+    modified_at: Optional[str]
+    is_encrypted: bool
+    is_unavailable: bool
+    is_truncated: bool
+    redaction_mode: str
+    definition_hash: Optional[str]
+    json_response: Any
+
+
+@dataclass
+class SqlComplexityObject:
+    """Scored SQL code object."""
+
+    database_name: str
+    schema_name: str
+    object_name: str
+    object_type: str
+    definition_status: str
+    definition_length: int
+    definition_hash: Optional[str]
+    definition: Optional[str]
+    line_count: int
+    score: Optional[int]
+    complexity_level: Optional[str]
+    matched_rules: List[str]
+    escalation_reasons: List[str]
+    created_at: Optional[str]
+    modified_at: Optional[str]
+
+
+@dataclass
+class SqlComplexitySummary:
+    """Database-level SQL complexity summary."""
+
+    status: str
+    rubric_version: str
+    total_objects: int
+    scored_objects: int
+    unavailable_definitions: int
+    distribution: Dict[str, int]
+    by_type: Dict[str, Dict[str, int]]
+    objects_needing_review: int
+    readiness_percentage: Optional[float]
+    readiness_indicator: str
+    elapsed_seconds: float
+    errors: List[str]
+
+
+@dataclass
+class SqlComplexityAssessment:
+    """SQL complexity results for a database."""
+
+    summary: SqlComplexitySummary
+    objects: List[SqlComplexityObject]
+
+
+@dataclass
+class SynapseSqlDefinitions:
+    """Collection of SQL module definitions in a dedicated database."""
+
+    definitions: List[SynapseSqlDefinition] = field(default_factory=list)
+
+
+@dataclass
+class SynapseDefinitionSummary:
+    """Definition extraction summary for a dedicated database."""
+
+    extraction_status: str = "not_requested"
+    status_description: str = ""
+    total_objects: int = 0
+    counts_by_type: Dict[str, int] = field(default_factory=dict)
+    encrypted_objects: int = 0
+    unavailable_objects: int = 0
+    truncated_objects: int = 0
+    total_definition_characters: int = 0
+    age_buckets: Dict[str, int] = field(default_factory=dict)
+    largest_objects: List[Dict[str, Any]] = field(default_factory=list)
+
+
+@dataclass
 class SynapseTable:
     """Synapse Table information."""
 
@@ -62,6 +340,7 @@ class SynapseTable:
     schema: str
     statistics: Optional[TableStatistics]
     json_response: Any
+    columns: List[SynapseColumn] = field(default_factory=list)
 
 
 @dataclass
@@ -79,6 +358,7 @@ class SynapseView:
     database: str
     schema: str
     json_response: Any
+    columns: List[SynapseColumn] = field(default_factory=list)
 
 
 @dataclass
@@ -113,6 +393,11 @@ class SynapseDedicatedDatabase:
     name: str
     schemas: SynapseSchemas
     json_response: Any
+    complexity: Optional[SqlComplexityAssessment] = None
+    definitions: SynapseSqlDefinitions = field(default_factory=SynapseSqlDefinitions)
+    definition_summary: SynapseDefinitionSummary = field(
+        default_factory=SynapseDefinitionSummary
+    )
 
 
 @dataclass
@@ -124,10 +409,11 @@ class SynapseDedicatedPool:
     sku: str
     database: SynapseDedicatedDatabase
     tables_count: int
-    size_gb: int
+    size_gb: float
     code_lines: list[CodeObjectLines]
     code_objects: list[CodeObjectCount]
     json_response: Any
+    workload: Optional[SynapseWorkloadProfile] = None
 
 
 @dataclass
@@ -146,6 +432,7 @@ class SynapseServerlessDatabase:
     origin_type: str
     schemas: SynapseSchemas
     json_response: Any
+    complexity: Optional[SqlComplexityAssessment] = None
 
 
 @dataclass
@@ -153,6 +440,148 @@ class SynapseServerlessDatabases:
     """Collection of Databases in a Synapse workspace."""
 
     databases: List[SynapseServerlessDatabase]
+
+
+@dataclass
+class SynapseServerlessActivitySourceDiagnostic:
+    """Capability probe result for a serverless activity source."""
+
+    source_name: str
+    status: str
+    available_columns: List[str] = field(default_factory=list)
+    message: Optional[str] = None
+
+
+@dataclass
+class SynapseServerlessQueryActivity:
+    """Detailed serverless SQL query activity."""
+
+    source_name: str
+    request_id: Optional[str] = None
+    session_id: Optional[int] = None
+    connection_id: Optional[str] = None
+    query_hash: Optional[str] = None
+    database_name: Optional[str] = None
+    principal_name: Optional[str] = None
+    status: Optional[str] = None
+    submit_time: Optional[str] = None
+    start_time: Optional[str] = None
+    end_time: Optional[str] = None
+    elapsed_time_ms: Optional[int] = None
+    processed_bytes: Optional[int] = None
+    remote_processed_bytes: Optional[int] = None
+    memory_processed_bytes: Optional[int] = None
+    disk_processed_bytes: Optional[int] = None
+    row_count: Optional[int] = None
+    statement_type: Optional[str] = None
+    program_name: Optional[str] = None
+    error_code: Optional[int] = None
+    query_text: Optional[str] = None
+
+
+@dataclass
+class SynapseServerlessDailyDatabaseUsage:
+    """Daily aggregated serverless SQL usage by database."""
+
+    date: str
+    database_name: str
+    query_count: int
+    processed_bytes: int
+    total_elapsed_time_ms: int
+    average_elapsed_time_ms: float
+
+
+@dataclass
+class SynapseServerlessDatabaseSummary:
+    """Serverless SQL summary for one database."""
+
+    database_name: str
+    query_count: int
+    processed_bytes: int
+    average_elapsed_time_ms: float
+    max_elapsed_time_ms: int
+    success_count: int
+    failure_count: int
+    cancelled_count: int = 0
+
+
+@dataclass
+class SynapseServerlessTopQueryMetric:
+    """Redacted query metric for visualization-safe summaries."""
+
+    source_name: str
+    request_id: Optional[str] = None
+    session_id: Optional[int] = None
+    connection_id: Optional[str] = None
+    query_hash: Optional[str] = None
+    database_name: Optional[str] = None
+    principal_name: Optional[str] = None
+    status: Optional[str] = None
+    start_time: Optional[str] = None
+    end_time: Optional[str] = None
+    elapsed_time_ms: Optional[int] = None
+    processed_bytes: Optional[int] = None
+
+
+@dataclass
+class SynapseServerlessPerformanceSummary:
+    """Overall serverless SQL activity summary."""
+
+    total_queries: int = 0
+    queries_last_24h: Optional[int] = None
+    total_processed_bytes: int = 0
+    total_elapsed_time_ms: int = 0
+    average_elapsed_time_ms: float = 0.0
+    max_elapsed_time_ms: int = 0
+    success_count: int = 0
+    failure_count: int = 0
+    cancelled_count: int = 0
+    collection_window_start: Optional[str] = None
+    collection_window_end: Optional[str] = None
+    top_slowest_queries: List[SynapseServerlessTopQueryMetric] = field(
+        default_factory=list
+    )
+    top_largest_queries: List[SynapseServerlessTopQueryMetric] = field(
+        default_factory=list
+    )
+
+
+@dataclass
+class SynapseServerlessActivityCollectionMetadata:
+    """Collection metadata for serverless SQL activity."""
+
+    status: str = "unavailable"
+    attempted: bool = False
+    history_days: int = 0
+    top_n: int = 0
+    requested_sources: List[str] = field(default_factory=list)
+    available_sources: List[str] = field(default_factory=list)
+    detailed_sources_used: List[str] = field(default_factory=list)
+    supplemental_sources_used: List[str] = field(default_factory=list)
+    collected_at: Optional[str] = None
+    warnings: List[str] = field(default_factory=list)
+    source_diagnostics: List[SynapseServerlessActivitySourceDiagnostic] = field(
+        default_factory=list
+    )
+
+
+@dataclass
+class SynapseServerlessActivity:
+    """Serverless SQL activity payload."""
+
+    metadata: SynapseServerlessActivityCollectionMetadata = field(
+        default_factory=SynapseServerlessActivityCollectionMetadata
+    )
+    queries: List[SynapseServerlessQueryActivity] = field(default_factory=list)
+    daily_database_usage: List[SynapseServerlessDailyDatabaseUsage] = field(
+        default_factory=list
+    )
+    database_summaries: List[SynapseServerlessDatabaseSummary] = field(
+        default_factory=list
+    )
+    performance_summary: SynapseServerlessPerformanceSummary = field(
+        default_factory=SynapseServerlessPerformanceSummary
+    )
 
 
 @dataclass
@@ -164,6 +593,9 @@ class SynapseServerlessPool:
     queries_last_24h: Optional[int]
     databases: SynapseServerlessDatabases
     json_response: Any
+    activity: SynapseServerlessActivity = field(
+        default_factory=SynapseServerlessActivity
+    )
 
 
 @dataclass
@@ -269,6 +701,12 @@ class SynapseAssessmentMetadata:
 
     mode: str
     timestamp: str
+    query_history_days: int = 7
+    query_history_top: int = 1000
+    sql_text_redacted: bool = True
+    query_history_skipped: bool = False
+    skip_columns: bool = False
+    max_column_objects: Optional[int] = None
 
 
 @dataclass
@@ -417,6 +855,7 @@ class SynapseAssessment:
     # Connection information
     subscription_id: Optional[str] = None
     resource_group: Optional[str] = None
+    column_summary: Optional[SynapseColumnSummary] = None
 
     def get_summary(self) -> dict:
         """Create a summary of workspace assessment data."""
@@ -507,6 +946,27 @@ class SynapseAssessment:
         summary["data_warehouse"]["counts"]["serverless"][
             "views"
         ] = total_serverless_views
+        summary["data_warehouse"]["counts"]["serverless"][
+            "queries_last_24h"
+        ] = self.sql_pools.serverless_pool.queries_last_24h
+
+        serverless_activity = self.sql_pools.serverless_pool.activity
+        serverless_performance = serverless_activity.performance_summary
+        serverless_metadata = serverless_activity.metadata
+        summary["data_warehouse"]["counts"]["serverless"]["activity"] = {
+            "status": serverless_metadata.status,
+            "attempted": serverless_metadata.attempted,
+            "queries": serverless_performance.total_queries,
+            "processed_bytes": serverless_performance.total_processed_bytes,
+            "average_duration_ms": round(
+                serverless_performance.average_elapsed_time_ms, 2
+            ),
+            "max_duration_ms": serverless_performance.max_elapsed_time_ms,
+            "success_count": serverless_performance.success_count,
+            "failure_count": serverless_performance.failure_count,
+            "cancelled_count": serverless_performance.cancelled_count,
+            "warnings": len(serverless_metadata.warnings),
+        }
 
         ## Data Warehouse
         summary["data_warehouse"]["counts"]["dedicated"] = {}
@@ -524,6 +984,27 @@ class SynapseAssessment:
         summary["data_warehouse"]["counts"]["dedicated"][
             "tables"
         ] = total_dedicated_tables
+        total_dedicated_views = sum(
+            len(schema.views.views)
+            for pool in self.sql_pools.dedicated_pools
+            for schema in pool.database.schemas.schemas
+        )
+        summary["data_warehouse"]["counts"]["dedicated"][
+            "views"
+        ] = total_dedicated_views
+
+        if self.column_summary is not None:
+            summary["data_warehouse"]["columns"] = {
+                "collection_status": self.column_summary.collection_status,
+                "objects_considered": self.column_summary.total_objects_considered,
+                "objects_collected": self.column_summary.total_objects_collected,
+                "total_columns": self.column_summary.total_columns,
+                "nullable_columns": self.column_summary.nullable_columns,
+                "wide_objects": len(self.column_summary.wide_objects),
+                "compatibility_totals": asdict(
+                    self.column_summary.compatibility_totals
+                ),
+            }
 
         dedicated_table_rows = sum(
             sum(
@@ -597,4 +1078,137 @@ class SynapseAssessment:
             for pool in self.sql_pools.dedicated_pools
         )
 
+        workload_profiles = [
+            pool.workload
+            for pool in self.sql_pools.dedicated_pools
+            if pool.workload is not None
+        ]
+        collected_profiles = [
+            profile
+            for profile in workload_profiles
+            if profile.collection_status == "collected"
+        ]
+        summary["data_warehouse"]["workload"] = {
+            "pool_count": len(workload_profiles),
+            "collected_pool_count": len(collected_profiles),
+            "request_count": sum(
+                profile.request_count for profile in collected_profiles
+            ),
+            "session_count": sum(
+                profile.session_count for profile in collected_profiles
+            ),
+            "max_peak_concurrency": max(
+                (profile.peak_concurrency for profile in collected_profiles),
+                default=0,
+            ),
+        }
+        complexity_assessments = [
+            pool.database.complexity
+            for pool in self.sql_pools.dedicated_pools
+            if pool.database.complexity is not None
+        ]
+        complexity_assessments.extend(
+            database.complexity
+            for database in self.sql_pools.serverless_pool.databases.databases
+            if database.complexity is not None
+        )
+
+        if complexity_assessments:
+            distribution = {
+                level: sum(
+                    assessment.summary.distribution.get(level, 0)
+                    for assessment in complexity_assessments
+                )
+                for level in ("LOW", "MEDIUM", "HIGH", "VERY_HIGH")
+            }
+            scored_objects = sum(
+                assessment.summary.scored_objects
+                for assessment in complexity_assessments
+            )
+            ready_objects = distribution["LOW"] + distribution["MEDIUM"]
+            readiness_percentage = (
+                round((ready_objects / scored_objects) * 100, 1)
+                if scored_objects
+                else None
+            )
+
+            summary["data_warehouse"]["complexity"] = {
+                "databases": len(complexity_assessments),
+                "total_objects": sum(
+                    assessment.summary.total_objects
+                    for assessment in complexity_assessments
+                ),
+                "scored_objects": scored_objects,
+                "unavailable_definitions": sum(
+                    assessment.summary.unavailable_definitions
+                    for assessment in complexity_assessments
+                ),
+                "objects_needing_review": sum(
+                    assessment.summary.objects_needing_review
+                    for assessment in complexity_assessments
+                ),
+                "distribution": distribution,
+                "readiness_percentage": readiness_percentage,
+                "readiness_indicator": self._get_readiness_indicator(
+                    readiness_percentage
+                ),
+            }
+        definition_summaries = [
+            pool.database.definition_summary for pool in self.sql_pools.dedicated_pools
+        ]
+        definition_counts_by_type: Dict[str, int] = {}
+        definition_age_buckets: Dict[str, int] = {}
+        definition_largest_objects: List[Dict[str, Any]] = []
+
+        for definition_summary in definition_summaries:
+            for object_type, count in definition_summary.counts_by_type.items():
+                definition_counts_by_type[object_type] = (
+                    definition_counts_by_type.get(object_type, 0) + count
+                )
+            for bucket, count in definition_summary.age_buckets.items():
+                definition_age_buckets[bucket] = (
+                    definition_age_buckets.get(bucket, 0) + count
+                )
+            definition_largest_objects.extend(definition_summary.largest_objects)
+
+        summary["data_warehouse"]["counts"]["dedicated"]["definitions"] = {
+            "databases_requested": sum(
+                item.extraction_status != "not_requested"
+                for item in definition_summaries
+            ),
+            "databases_completed": sum(
+                item.extraction_status == "completed" for item in definition_summaries
+            ),
+            "total_objects": sum(item.total_objects for item in definition_summaries),
+            "counts_by_type": definition_counts_by_type,
+            "encrypted_objects": sum(
+                item.encrypted_objects for item in definition_summaries
+            ),
+            "unavailable_objects": sum(
+                item.unavailable_objects for item in definition_summaries
+            ),
+            "truncated_objects": sum(
+                item.truncated_objects for item in definition_summaries
+            ),
+            "total_definition_characters": sum(
+                item.total_definition_characters for item in definition_summaries
+            ),
+            "age_buckets": definition_age_buckets,
+            "largest_objects": sorted(
+                definition_largest_objects,
+                key=lambda item: item.get("original_length", 0),
+                reverse=True,
+            )[:10],
+        }
+
         return summary
+
+    @staticmethod
+    def _get_readiness_indicator(readiness_percentage: Optional[float]) -> str:
+        if readiness_percentage is None:
+            return "UNKNOWN"
+        if readiness_percentage >= 80:
+            return "READY"
+        if readiness_percentage >= 50:
+            return "REVIEW"
+        return "HIGH_EFFORT"

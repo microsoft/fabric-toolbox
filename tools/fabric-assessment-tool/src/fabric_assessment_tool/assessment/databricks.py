@@ -28,8 +28,8 @@ class DatabricksWorkspaceInfo:
     id: str
     name: str
     resource_group: str
-    url: str
-    status: str
+    url: Optional[str]
+    status: Optional[str]
     tier: str
     json_response: Any
     location: Optional[str] = None

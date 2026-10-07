@@ -1,0 +1,90 @@
+<div class="card workload-profile" data-workspace="{{ workload_workspace }}">
+    <div class="card-header">
+        Workload Profile: {{ workload_pool_name }}
+        <span class="badge {% if workload.collection_status == 'collected' %}badge-success{% elif workload.collection_status == 'skipped' %}badge-secondary{% else %}badge-warning{% endif %}">
+            {{ workload.collection_status | title }}
+        </span>
+    </div>
+    <div class="card-body">
+        {% if workload.collection_status != 'collected' %}
+        <div class="empty-state">
+            <strong>Workload data {{ workload.collection_status }}.</strong>
+            <p>{{ workload.description }}</p>
+        </div>
+        {% else %}
+        {% set durations = workload.duration_statistics or {} %}
+        <div class="row">
+            <div class="col"><div class="stat-card"><div class="stat-value">{{ workload.request_count | format_number }}</div><div class="stat-label">Requests</div></div></div>
+            <div class="col"><div class="stat-card"><div class="stat-value">{{ workload.session_count | format_number }}</div><div class="stat-label">Sessions</div></div></div>
+            <div class="col"><div class="stat-card"><div class="stat-value">{{ workload.peak_concurrency }}</div><div class="stat-label">Peak Concurrency</div></div></div>
+            <div class="col"><div class="stat-card"><div class="stat-value">{{ ((durations.p90_ms or 0) / 1000) | round(2) }}s</div><div class="stat-label">P90 Duration</div></div></div>
+        </div>
+        <p class="text-muted mb-2">
+            Configured window: {{ workload.configured_window_days }} days; observed:
+            {{ workload.observed_start | default('N/A', true) }} to {{ workload.observed_end | default('N/A', true) }}.
+            SQL text: {% if workload.sql_text_redacted %}redacted{% else %}included in JSON only{% endif %}.
+        </p>
+        <div class="row">
+            <div class="col col-4"><div class="chart-container small"><canvas id="{{ workload_id }}-resource"></canvas></div></div>
+            <div class="col col-4"><div class="chart-container small"><canvas id="{{ workload_id }}-status"></canvas></div></div>
+            <div class="col col-4"><div class="chart-container small"><canvas id="{{ workload_id }}-duration"></canvas></div></div>
+        </div>
+
+        {% set max_bucket = workload.temporal_buckets | map(attribute='request_count') | max if workload.temporal_buckets else 0 %}
+        <h4 class="mt-2 mb-1">Temporal Heatmap</h4>
+        <div class="table-responsive">
+            <table class="table workload-heatmap">
+                <thead><tr><th>Day / Hour</th>{% for hour in range(24) %}<th>{{ hour }}</th>{% endfor %}</tr></thead>
+                <tbody>
+                {% for day_name in ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'] %}
+                    {% set day = loop.index0 %}
+                    <tr><th>{{ day_name }}</th>
+                    {% for hour in range(24) %}
+                        {% set matches = workload.temporal_buckets | selectattr('day_of_week', 'equalto', day) | selectattr('hour', 'equalto', hour) | list %}
+                        {% set count = matches[0].request_count if matches else 0 %}
+                        {% set intensity = (count / max_bucket) if max_bucket else 0 %}
+                        <td title="{{ day_name }} {{ '%02d' | format(hour) }}:00 - {{ count }} requests" style="background: rgba(0, 120, 212, {{ 0.08 + (0.82 * intensity) if count else 0 }}); text-align:center;">{{ count if count else '' }}</td>
+                    {% endfor %}
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        <script>
+        (() => {
+            const createBar = (id, title, labels, values, color) => {
+                const canvas = document.getElementById(id);
+                if (!canvas) return;
+                new Chart(canvas, {
+                    type: 'bar',
+                    data: { labels, datasets: [{ data: values, backgroundColor: color }] },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: { legend: { display: false }, title: { display: true, text: title } },
+                        scales: { y: { beginAtZero: true } }
+                    }
+                });
+            };
+            const resourceDistribution = {{ workload.resource_class_distribution | tojson }};
+            const statusDistribution = {{ workload.status_distribution | tojson }};
+            createBar('{{ workload_id }}-resource', 'Resource Class Distribution', Object.keys(resourceDistribution), Object.values(resourceDistribution), '#0078d4');
+            createBar('{{ workload_id }}-status', 'Status Distribution', Object.keys(statusDistribution), Object.values(statusDistribution), '#49a078');
+            createBar(
+                '{{ workload_id }}-duration',
+                'Duration Distribution (seconds)',
+                ['Average', 'P50', 'P90', 'P99', 'Max'],
+                [
+                    {{ (durations.average_ms or 0) / 1000 }},
+                    {{ (durations.p50_ms or 0) / 1000 }},
+                    {{ (durations.p90_ms or 0) / 1000 }},
+                    {{ (durations.p99_ms or 0) / 1000 }},
+                    {{ (durations.max_ms or 0) / 1000 }}
+                ],
+                '#8661c1'
+            );
+        })();
+        </script>
+        {% endif %}
+    </div>
+</div>

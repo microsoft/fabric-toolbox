@@ -131,6 +131,20 @@ When using Entra ID authentication modes (`entra-interactive`, `entra-spn`, or `
    GRANT CREATE VIEW TO [user@yourdomain.com];
    ```
 
+4. **Workload Profiling Permissions**: Query-history profiling reads the dedicated-pool DMVs directly and does not require `vTableSizes`:
+   ```sql
+   GRANT VIEW DATABASE STATE TO [user@yourdomain.com];
+   GRANT SELECT ON sys.dm_pdw_exec_requests TO [user@yourdomain.com];
+   GRANT SELECT ON sys.dm_pdw_exec_sessions TO [user@yourdomain.com];
+   ```
+
+4. **Definition Permission** (Optional): If you use `--extract-definitions`, grant access to stored procedure, function, and view text:
+   ```sql
+   GRANT VIEW DEFINITION TO [user@yourdomain.com];
+   ```
+
+   Without this permission, the assessment continues and records the affected definitions or database as unavailable.
+
 > **Note:** Ensure that the Azure Synapse workspace has Entra ID authentication enabled with an Entra ID admin configured. See [Microsoft documentation](https://learn.microsoft.com/en-us/azure/synapse-analytics/sql/active-directory-authentication) for details.
 
 ### Databricks Service Principal Permissions
@@ -148,6 +162,42 @@ When using a service principal for Databricks assessments (via `DATABRICKS_CLIEN
 
 > **Tip:** For the most complete assessment, grant the service principal **Workspace Admin** role on each workspace. Without this, some resources may silently return empty results.
 
+### Synapse Serverless SQL Activity Collection
+
+By default, `fat assess --source synapse` now attempts to collect recent serverless SQL activity from the built-in on-demand endpoint:
+
+- Hostname: `<workspace>-ondemand.sql.azuresynapse.net`
+- Database: `master`
+- Default history window: `30` days
+- Default detailed-row cap: `1000`
+
+#### Authentication precedence
+
+Serverless SQL activity inherits the existing dedicated SQL settings unless you provide serverless-specific overrides:
+
+1. Explicit `--serverless-sql-*` override
+2. Matching existing `--sql-*` option or workspace SQL administrator login/password
+3. Existing default behavior for the selected auth mode
+
+This means you do **not** need to provide serverless credentials separately when the inherited dedicated SQL settings are already sufficient.
+
+#### Capability probing and graceful degradation
+
+Serverless SQL metadata is not exposed uniformly across all Synapse environments. The tool probes compatible DMV/view sources before collecting activity and degrades gracefully when a source is unavailable, unsupported, or missing columns:
+
+- `completed`: activity sources were collected successfully
+- `partial`: at least one detailed activity source worked, but other compatible sources were unavailable
+- `unavailable`: no detailed activity source was usable; the overall workspace assessment still completes, but is marked incomplete
+- `skipped`: activity collection was explicitly disabled with `--skip-serverless-activity`
+
+Expected connection, permission, unsupported-object, and column-shape failures do **not** fail the entire workspace assessment.
+
+#### Permissions, reachability, and privacy
+
+- The client must be able to reach the on-demand SQL endpoint over the network.
+- The chosen SQL identity must be allowed to connect to the endpoint and query the available activity DMVs/views.
+- Structured JSON export preserves full query text **when the source exposes it** under `resources/sql_pools/serverless_pool_Built-in.json`.
+- Generated HTML reports intentionally exclude query text and only show safe identifiers, timestamps, durations, and processed-byte metrics.
 
 ## CLI Commands
 
@@ -180,6 +230,16 @@ fat assess --source <synapse|databricks> \
 - `--auth-method`: Authentication method (`azure-cli` or `fabric`). Default: auto-detect based on environment
 - `--sql-admin-password`: SQL admin password for dedicated SQL pools (bypasses interactive prompt)
 - `--create-dmv`: Auto-create vTableSizes DMV without confirmation prompt (for non-interactive execution)
+- `--skip-columns`: Skip all ODBC column metadata queries and emit an explicit `skipped` column collection status
+- `--max-column-objects N`: Collect columns for at most `N` tables and views per database. The positive limit is applied independently to each database using schema, object type, and object name ordering; selected objects always include every column.
+- `--extract-definitions`: Opt in to stored procedure, function, and view definition extraction from Synapse dedicated SQL pools
+- `--definition-redaction`: Protect exported SQL using `none`, `full`, `partial` (default), or `hash`
+  - `none`: Store SQL text, subject to `--max-definition-size`
+  - `full`: Store metadata only
+  - `partial`: Store a bounded prefix and suffix with the middle removed
+  - `hash`: Store metadata and a SHA-256 digest, but no SQL text
+- `--definition-schema-filter`: Comma-separated exact schema names to include
+- `--max-definition-size`: Maximum stored definition characters (default: `1000000`; `0` disables the limit). Original length and truncation status are always retained
 - `--sql-auth-mode`: SQL pool authentication mode for dedicated SQL pools:
   - `sql` (default): Traditional SQL authentication with username/password
   - `entra-interactive`: Entra ID interactive authentication (browser popup with MFA support)
@@ -190,9 +250,22 @@ fat assess --source <synapse|databricks> \
 - `--sql-tenant-id`: Azure tenant ID (optional, defaults to 'common')
 - `--resources`: Comma-separated list of resource types to extract. When omitted, all resources are extracted. Use this to re-extract only specific resources without repeating a full assessment. Previously exported data for other resources is preserved and summaries are recalculated accurately.
   - Valid Databricks resources: `clusters`, `sql_warehouses`, `notebooks`, `jobs`, `catalogs`, `external_locations`, `connections`, `secret_scopes`, `pipelines`, `repos`, `experiments`, `serving_endpoints`, `alerts`, `genie_spaces`, `cluster_policies`, `instance_pools`
-- `--download-notebooks`: Download and export full Databricks notebook source content. When omitted, notebook extraction is metadata-first, skips workspace/export calls, and falls back to `workspace/get-status` only when list metadata is missing.
-- `--max-parallel-api-calls`: Maximum concurrent Databricks API calls used by notebook/job extraction and catalog schema fan-out (default: `8`; catalog fan-out is internally capped to avoid excessive throttling).
-- `--log-file`: Optional path to write logs. Logging is configured only when this option is set (no console logging handlers are configured). Uses standard logging format (`%(asctime)s - %(name)s - %(levelname)s - %(message)s`).
+- `--query-history-days`: Dedicated SQL pool workload lookback in days (default: `7`, range: `1-365`)
+- `--query-history-top`: Maximum recent requests and sessions retained per pool (default: `1000`, range: `1-10000`)
+- `--include-sql-text`: Include SQL command text in dedicated-pool JSON. SQL text is redacted by default and is never rendered in HTML reports.
+- `--skip-query-history`: Skip dedicated SQL pool request/session workload collection
+- `--serverless-history-days`: Days of Synapse serverless SQL activity to collect (default: `30`, range: `1..45`)
+- `--serverless-top-n`: Maximum number of detailed serverless SQL activity rows to retain (default: `1000`, range: `1..10000`)
+- `--skip-serverless-activity`: Skip optional serverless SQL activity collection entirely
+- `--serverless-sql-auth-mode`: Optional serverless SQL auth override. If omitted, inherits `--sql-auth-mode`
+- `--serverless-sql-username`: Optional serverless SQL username override. If omitted, inherits the workspace SQL admin login when available
+- `--serverless-sql-password`: Optional serverless SQL password override. If omitted, inherits `--sql-admin-password` when available
+- `--serverless-sql-client-id`: Optional service principal client ID override for serverless SQL
+- `--serverless-sql-client-secret`: Optional service principal client secret override for serverless SQL
+- `--serverless-sql-tenant-id`: Optional tenant override for serverless SQL SPN authentication
+- `--sql-complexity`: Enable procedure, function, and view complexity scoring for reachable Synapse SQL databases
+- `--sql-definition-redaction`: SQL definition export mode (`full` or `none`). Default: `full`
+- `--sql-complexity-schemas`: Optional comma-separated schema allowlist for SQL complexity scoring
 
 **Examples:**
 ```bash
@@ -216,8 +289,48 @@ fat assess --source synapse --ws workspace1 -o ./results \
 # Assess with Entra ID default (uses Azure CLI credentials)
 fat assess --source synapse --ws workspace1 -o ./results --sql-auth-mode entra-default
 
+# Assess a 30-day workload window while retaining the 5,000 newest requests
+fat assess --source synapse --ws workspace1 -o ./results \
+    --query-history-days 30 \
+    --query-history-top 5000
+
+# Explicitly include SQL text in JSON output
+fat assess --source synapse --ws workspace1 -o ./results --include-sql-text
+# Assess while overriding only the serverless SQL activity auth mode
+fat assess --source synapse --ws workspace1 -o ./results \
+    --sql-auth-mode sql \
+    --sql-admin-password "your-sql-password" \
+    --serverless-sql-auth-mode entra-default
+
+# Assess while skipping optional serverless SQL activity collection
+fat assess --source synapse --ws workspace1 -o ./results --skip-serverless-activity
+# Skip column collection while preserving the table/view inventory
+fat assess --source synapse --ws workspace1 -o ./results --skip-columns
+
+# Bound column collection for very large databases
+fat assess --source synapse --ws workspace1 -o ./results \
+    --sql-auth-mode entra-default \
+    --max-column-objects 500
+# Assess SQL code complexity with definitions redacted from output
+fat assess --source synapse --ws workspace1 -o ./results \
+    --sql-auth-mode entra-default \
+    --sql-complexity
+
+# Score selected schemas and include definitions in per-object JSON
+fat assess --source synapse --ws workspace1 -o ./results \
+    --sql-auth-mode entra-default \
+    --sql-complexity \
+    --sql-complexity-schemas dbo,reporting \
+    --sql-definition-redaction none
+# Extract dedicated SQL definitions with safe defaults
+fat assess --source synapse --ws workspace1 -o ./results \
+    --sql-auth-mode entra-default \
+    --extract-definitions \
+    --definition-redaction partial \
+    --definition-schema-filter dbo,reporting \
+    --max-definition-size 1000000
+
 # Assess Databricks workspace
-# Note: Job run-history calls are skipped for jobs without notebook tasks.
 fat assess --source databricks --ws my-workspace --output results_folder
 
 # Assess AWS Databricks workspace using environment-variable authentication
@@ -236,15 +349,98 @@ fat assess --source databricks --cloud aws --ws dev,prod --resources jobs -o res
 
 # Re-extract jobs and notebooks without repeating the full assessment
 fat assess --source databricks --cloud aws --ws dev --resources jobs,notebooks -o results_folder
-
-# Increase API parallelism for Databricks extraction
-fat assess --source databricks --ws jdc-adb -o results_folder \
-    --max-parallel-api-calls 12
-
-# Write detailed logs to a file (includes API elapsed-time debug logs)
-fat assess --source databricks --ws jdc-adb -o results_folder \
-    --log-file ./fat-assess.log
 ```
+
+### Synapse Column Metadata
+
+When SQL/Entra ODBC authentication is available, the tool executes one ordered
+`INFORMATION_SCHEMA` query per reachable dedicated or serverless database. The
+query returns tables, views, and their columns in a batch rather than issuing a
+query per object. Dedicated views are added from this ODBC inventory, while
+serverless ODBC results supplement the Synapse dev-endpoint inventory.
+
+Each table/view JSON includes a `columns` array with ordinal position, SQL type,
+nullability, length, precision/scale, datetime precision, default, character
+set, collation, and Fabric Warehouse migration guidance. Compatibility uses:
+
+- `compatible`: directly supported types
+- `review`: types needing size, precision, collation, or conversion review;
+  unknown types also default to this category
+- `unsupported`: types without a direct Fabric Warehouse representation
+
+Objects with 100 or more columns are reported as wide. A workspace-level
+`column_summary.json` records totals, normalized type distribution,
+compatibility counts, wide objects, configured cap, and explicit
+`completed`/`capped`/`partial`/`skipped`/`unavailable` database outcomes.
+Serverless column collection depends on ODBC connectivity and permissions; a
+failure retains the existing inventory and is reported as unavailable rather
+than as a successful empty result.
+### SQL Complexity Scoring
+
+SQL complexity scoring is opt-in and covers stored procedures, scalar and
+table-valued functions, and views in reachable dedicated and serverless
+databases. The tool performs one catalog query per database and records
+encrypted, permission-hidden, and failed definitions explicitly instead of
+assigning them a misleading score.
+
+Definitions are fully redacted by default. Redacted object files retain the
+definition length and SHA-256 hash for traceability but contain no SQL text.
+Use `--sql-definition-redaction none` only when the output location is approved
+to store source definitions.
+
+The versioned heuristic assigns points for code size and migration-risk
+patterns including branching, loops, transactions, error handling, dynamic
+SQL, cursors, temporary objects, cross-database references, external access,
+and compatibility-sensitive T-SQL. Score bands are:
+
+| Score | Level |
+|---:|---|
+| 0-2 | LOW |
+| 3-6 | MEDIUM |
+| 7-11 | HIGH |
+| 12+ | VERY_HIGH |
+
+Severe patterns can raise the minimum level to HIGH, and multiple severe
+patterns can raise it to VERY_HIGH. Each scored object includes the matched
+rules and human-readable escalation reasons.
+
+Migration readiness is the percentage of successfully scored objects rated
+LOW or MEDIUM:
+
+| Percentage | Indicator |
+|---:|---|
+| 80-100% | READY |
+| 50-79.9% | REVIEW |
+| Below 50% | HIGH_EFFORT |
+| No scored definitions | UNKNOWN |
+
+Complexity output is stored below each database:
+
+```text
+data/<database_type>/databases/<database>/complexity/
+├── summary.json
+└── objects/
+    ├── procedures/
+    ├── functions/
+    └── views/
+```
+
+The Synapse data-warehousing HTML view shows readiness, level distribution,
+complexity by object type, unavailable definitions, and objects requiring
+review. SQL connectivity and metadata visibility depend on the selected
+`--sql-auth-mode`; missing `VIEW DEFINITION` permission is reported as an
+incomplete assessment rather than failing the workspace.
+Definition extraction is Synapse dedicated-pool only and is disabled unless `--extract-definitions` is supplied. Definition JSON is written by object type under:
+
+```text
+data/dedicated_databases/databases/{database}/definitions/
+├── summary.json
+├── stored_procedures/{schema}.{object}.json
+├── functions/{schema}.{object}.json
+└── views/{schema}.{object}.json
+```
+
+Definitions are read from `sys.sql_modules` as unbounded SQL text, avoiding the 4,000-character limit of `INFORMATION_SCHEMA.ROUTINES.ROUTINE_DEFINITION`. Encrypted modules, missing `VIEW DEFINITION` access, original length, and truncation are recorded in metadata. The generated HTML report uses metadata only and never displays SQL text.
 
 ### `fat visualize` - Generate interactive HTML reports
 
@@ -278,6 +474,7 @@ fat visualize -i <assessment_output_dir> \
 - **Navigation**: Browse between Overview, Admin, Data Engineering, Data Warehousing, and Data Integration views
 - **Resource Details**: Drill down into individual workspaces for detailed artifact information
 - **Charts**: Visual breakdowns of languages, activity types, pool sizes, and more
+- **Synapse Column Analysis**: Column totals, SQL type distribution, Fabric compatibility, collection status, and workspace-filterable wide tables/views
 
 **Examples:**
 ```bash
@@ -298,12 +495,21 @@ fat visualize -i ./assessment_output --view data-engineering -o ./engineering_re
 - **Admin**: Linked services, integration runtimes, managed private endpoints, Spark libraries, Spark configurations
 - **Data Engineering**: Notebooks (with language, Spark config, MSSparkUtils usage), Spark pools, Spark job definitions
 - **Data Warehousing**: Dedicated SQL pools (tables, size, stored procedures), serverless databases
+- **Dedicated SQL Workloads**: Request/session counts, resource-class and status distributions, duration percentiles, peak concurrency, observed history window, and day/hour heatmaps
+- **Data Warehousing**: Dedicated SQL pools (tables, size, stored procedures), serverless databases, serverless SQL activity trends, processed bytes, query counts, and top slow/large query metrics (without query text)
+- **Data Warehousing**: Dedicated SQL pools, tables, serverless databases, and optional SQL definition type/size/age analysis
 - **Data Integration**: Pipelines (activity counts, complexity), dataflows, datasets
 
 **Databricks-Specific Views:**
 - **Data Engineering**: Notebooks (with language, dbutils usage), clusters, jobs, DLT pipelines, MLflow experiments, repos
 - **Data Warehousing**: SQL warehouses, Unity Catalog (catalogs, schemas, tables)
 - **Overview**: Resource Summary chart (logarithmic y-axis) covering all 11 Databricks resource categories — Notebooks, Clusters, Jobs, SQL Warehouses, Tables, DLT Pipelines, Repos, MLflow Experiments, Serving Endpoints, SQL Alerts, Genie Spaces
+
+### Dedicated SQL workload output
+
+Each dedicated pool JSON under `resources/sql_pools/` contains a `workload` object with collection status, configured and observed windows, aggregate metrics, temporal buckets, and bounded request/session activity. Synapse DMVs have finite retention, so the observed window may be shorter than the configured lookback.
+
+SQL command text is omitted by default. `--include-sql-text` adds command text to the pool JSON only; generated HTML reports never display query text. Permission, paused-pool, and connectivity failures are recorded as explicit unavailable states so unrelated assessment data and reports can still be produced.
 
 **Screenshots:**
 
@@ -372,6 +578,7 @@ The details of each extracted resource is stored in a specific file, the list of
       "workspace_directory": "/tmp/assessment/workspace1",
       "files_created": [
         "/tmp/assessment/workspace1/summary.json",
+        "/tmp/assessment/workspace1/column_summary.json",
         "/tmp/assessment/workspace1/workspace.json",
         "/tmp/assessment/workspace1/resources/sql_pools/dedicated_pool_dw100c.json",
         "/tmp/assessment/workspace1/resources/sql_pools/serverless_pool_Built-in.json",
