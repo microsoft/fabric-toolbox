@@ -6,19 +6,11 @@ function ProcessLogFiles {
         [string]
         $storagePath, 
         [datetime]
-        $executionDate, 
+        $executionDate,
         [psobject]
-        $eventHubs,
-        [psobject]
-        $lakehouse,
-        [psobject]
-        $servicePrincipal,
-        [int]
-        $reportRetention,
+        $config,
         [bool]
-        $isReport,
-        [psobject]
-        $ConnectionProperties
+        $isReport
     )
 
     Write-Host "Files modified since last run: $($logFiles.Count)"
@@ -92,36 +84,39 @@ function ProcessLogFiles {
         }
 
         #Upload to EventStram
-        if ($eventHubs.UploadReports -and $fileReady -and $isReport) {
+        if ($config.EventHubs.UploadReports -and $fileReady -and $isReport) {
             Write-Host "Loading $($logFile.Name)"            
-            $eventStreamConnection = ($eventHubs.ConnectionStrings | Where-Object { $_.Report -eq "Reports" }).EventHubConnectionString
 
-            if ($eventStreamConnection) {
-                Write-Host "Sending to EventHub"
-                Add-LogToEventHub -connectionString $eventStreamConnection -logPath $fileOutputPath -logType $reportName -ConnectionProperties $ConnectionProperties
-            }
+            Write-Host "Sending to EventHub"
+            Add-LogToEventHub -config $config -logPath $fileOutputPath -logType $reportName 
         }        
 
         #Upload to Lakehouse
-        if ((($isReport -and $lakehouse.UploadReports) -or ($lakehouse.UploadLogs -and !$isReport)) -and $fileReady) {
-            Write-Host "Loading $logFile.Name"
+        if ((($isReport -and $config.Lakehouse.UploadReports) -or ($config.Lakehouse.UploadLogs -and !$isReport)) -and $fileReady) {
+            Write-Host "Loading $($logFile.Name)"
 
-            $itemPath = "$($lakehouse.LakehouseName)/Files/$($storagePathTemp)$(Split-Path $fileOutputPath -Leaf)"
+            $itemPath = "$($config.Lakehouse.LakehouseName)/Files/$($storagePathTemp)$(Split-Path $fileOutputPath -Leaf)"
             $tempFile = ".\temp\$(Split-Path $fileOutputPath -Leaf)"
             if (!(Test-Path ".\temp")) {
                 New-Item -Path ".\temp" -ItemType Directory -Force -ErrorAction SilentlyContinue | Out-Null
             }
 
-            Connect-Lakehouse -TenantId $servicePrincipal.TennatId -AppId $servicePrincipal.AppId -SecretText $servicePrincipal.SecretText
+            $TenantId = $config.ServicePrincipal.TenantId 
+            
+            $AppId  = $config.ServicePrincipal.AppId 
 
-            Copy-Item -Path $fileOutputPath -Destination $tempFile -Force -PassThru
-            Add-FileToLakehouse -workspaceName $lakehouse.WorkspaceName -lakehousePath $itemPath -filePath $tempFile
+            $SecretText = (ConvertFrom-SecureWithMachineKey  $config.ServicePrincipal.SecretText) | ConvertTo-SecureString -AsPlainText -Force
+
+            Connect-Lakehouse -TenantId $TenantId -AppId $AppId -SecretText $SecretText
+
+            Copy-Item -Path $fileOutputPath -Destination $tempFile -Force
+            Add-FileToLakehouse -workspaceName $config.Lakehouse.WorkspaceName -lakehousePath $itemPath -filePath $tempFile
             Remove-Item -Path $tempFile -Force
         }
 
         if ($isReport) {
             $fileOutputPath = Merge-ReportFiles -logFile $fileOutputPath -report $reportName
-            Remove-OldReportFiles -logFile $fileOutputPath -daysToKeep $reportRetention
+            Remove-OldReportFiles -logFile $fileOutputPath -report $reportName -daysToKeep $config.ReportRetention
         }
     }
 }
@@ -150,14 +145,14 @@ function UploadGatewayLogs {
             $state = Get-Content $stateFilePath
 
             if ([string]::IsNullOrEmpty($state)) {
-                $state = New-Object psobject 
+                $state = [pscustomobject]@{}
             }
             else {
                 $state = Get-Content $stateFilePath | ConvertFrom-Json
             }
         }
         else {
-            $state = New-Object psobject 
+            $state = [pscustomobject]@{}
         }
     
         if ($state.GatewayLogs.LastRun) {
@@ -209,7 +204,7 @@ function UploadGatewayLogs {
 
                 if (!$reportFile) {
                     Write-Host "Cannot find any report ('*Report_*.log') file on '$path' to infer the GatewayId. Please ensure there is at least one report. If its a newly installed Gateway you may need to run a refresh and wait a couple of minutes."
-                    Exit
+                    continue
                 }
 
                 $gatewayIdFromCSV = Get-Content -path $reportFile.FullName -First 2 | ConvertFrom-Csv | Select-Object -ExpandProperty GatewayObjectId
@@ -243,7 +238,7 @@ function UploadGatewayLogs {
                 Write-Host "Gateway Report log count: $($logFiles.Count)"
 
                 if ($logFiles.Count -gt 0) {
-                    ProcessLogFiles -logFiles $logFiles -storagePath $outputPathReports -executionDate $runDate -eventHubs $config.EventHubs -lakehouse $config.Lakehouse -servicePrincipal $config.ServicePrincipal -reportRetention $config.ReportRetention -isReport $true  -ConnectionProperties $ConnectionProperties | Out-Null
+                    ProcessLogFiles -logFiles $logFiles -storagePath $outputPathReports -executionDate $runDate -config $config -isReport $true | Out-Null
                 }
             }
 
@@ -258,7 +253,7 @@ function UploadGatewayLogs {
                 Write-Host "Gateway Verbose Log count: $($logFiles.Count)"
 
                 if ($logFiles.Count -gt 0) {
-                    ProcessLogFiles -logFiles $logFiles -storagePath $outputPathLogs -executionDate $runDate -eventHubs $config.EventHubs  -lakehouse $config.Lakehouse -servicePrincipal $config.ServicePrincipal -isReport $false -ConnectionProperties $ConnectionProperties | Out-Null
+                    ProcessLogFiles -logFiles $logFiles -storagePath $outputPathLogs -executionDate $runDate -config $config -isReport $false | Out-Null
                 }
 
                 $state.GatewayLogs.VerboseLastRun = $runDate.ToString("o")

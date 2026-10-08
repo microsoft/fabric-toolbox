@@ -20,18 +20,71 @@ This solution uses Microsoft Fabric to address these issues by providing:
 
 Benefits include faster incident response, improved health analytics, and streamlined operations, consequently enhancing overall efficiency and reducing downtime. 
 
-The solution is divided in several modules that can be used independently or together.
+The solution is divided into five modules that can be installed and used independently or together.
 
 # Modules included with the Fabric Platform Monitoring 
 
-- Capacity Utilization
-   - Uses the Capacity Events to get the information of the capacity in real-time.
-- Gateway Monitoring
-   - To receive the information of the Gateway in real-time. It requires a PowerShell script deployed in the Gateway Machine. Only works with On-Premise Data Gateway and not with VNET Gateways.
-- Activity Events
-   - Extract and store as fast as possible the Activity Events of the platform, using Eventhouse for handling semi-structure data. You could extract the logs with a frequency as low as 2 minutes.
-- Inventory
-   - Extract the information of the tenant, keeping a semi-structure format for some details like specific item details that could be added or change over time.
+Each module is installed separately through [Fabric Jumpstart](https://jumpstart.fabric.microsoft.com/). Open a Fabric notebook in the workspace where you want to deploy the module, run the corresponding installation command, and then follow the configuration instructions on the module's catalog page.
+
+## Capacity Events
+
+Uses Capacity Events to provide capacity information in real time.
+
+[View Capacity Events in the Fabric Jumpstart catalog](https://jumpstart.fabric.microsoft.com/catalog/fpm-capacity-events/).
+
+```python
+import fabric_jumpstart as jumpstart
+
+jumpstart.install("fpm-capacity-events")
+```
+
+## Gateway Monitoring
+
+Receives On-Premises Data Gateway information in real time. This module requires a PowerShell script to be deployed on each gateway machine and does not support virtual network data gateways.
+
+[View Gateway Monitoring in the Fabric Jumpstart catalog](https://jumpstart.fabric.microsoft.com/catalog/fpm-gateway-monitoring/).
+
+```python
+import fabric_jumpstart as jumpstart
+
+jumpstart.install("fpm-gateway-monitoring")
+```
+
+## Activity Events
+
+Extracts and stores Fabric activity events in Eventhouse. The extraction can be scheduled as frequently as every two minutes.
+
+[View Activity Events in the Fabric Jumpstart catalog](https://jumpstart.fabric.microsoft.com/catalog/fpm-activity-events/).
+
+```python
+import fabric_jumpstart as jumpstart
+
+jumpstart.install("fpm-activity-events")
+```
+
+## Workspace Item Events
+
+Captures tenant-wide Fabric item lifecycle events, including item creation, updates, and deletion, and stores them in Eventhouse for near-real-time analysis.
+
+[View Workspace Item Events in the Fabric Jumpstart catalog](https://jumpstart.fabric.microsoft.com/catalog/fpm-workspace-item-events/).
+
+```python
+import fabric_jumpstart as jumpstart
+
+jumpstart.install("fpm-workspace-item-events")
+```
+
+## Fabric Inventory
+
+Extracts tenant inventory information while retaining semi-structured details for Fabric items whose metadata can change over time.
+
+[View Fabric Inventory in the Fabric Jumpstart catalog](https://jumpstart.fabric.microsoft.com/catalog/fpm-fabric-inventory/).
+
+```python
+import fabric_jumpstart as jumpstart
+
+jumpstart.install("fpm-fabric-inventory")
+```
 
 > [!CAUTION]
 > At the moment the Capacity Events are in Public Preview. Any change to this event source will be reflected in the solution over time. Please update your solution if the Capacity Events source is updated.
@@ -83,13 +136,13 @@ The Notebooks uses the [Semantic Link Labs](https://github.com/microsoft/semanti
 
 ## Full process overview 
 
-To implement this solution, we have some step to follow. This steps will cover the creation of all the items in the previous architecture and the script in the Gateway Nodes. We can find the following steps needs to be done: 
+Install the modules that you need from the [Fabric Jumpstart catalog](https://jumpstart.fabric.microsoft.com/). Each module deploys its own Fabric items and can be configured independently. The remaining steps depend on the selected modules:
 
-- Fabric items initial setup
-- Eventstream changes
-- Notebook scheduling
-- Real-Time Dashboard configuration
-- Script deployment and setup in the gateway nodes (Optional)
+- Install each selected module with its Fabric Jumpstart command.
+- Complete the post-installation configuration described on the module's catalog page.
+- Configure notebook or pipeline schedules where required.
+- Configure the deployed real-time dashboards and reports.
+- For Gateway Monitoring, deploy and configure the scripts on the gateway nodes.
 
 
 ## Requirements and estimated workloads 
@@ -112,12 +165,14 @@ To implement this solution, we have some step to follow. This steps will cover t
 - Microsoft Fabric Capacity of F8 or higher, recommended F16 (the capacity size needed will depend on the amount of logs sent and processed by the system)
 
 
-## Fabric initial setup 
+## Install the Fabric modules
 
-Create a workspace and import the [Platform Monitoring Setup Notebook](/monitoring/fabric-platform-monitoring/setup/Fabric%20Platform%20Monitoring%20Setup.ipynb). Follow the instructions for the first run.
+Create or select the Fabric workspace that will host the monitoring solution. In a Fabric notebook attached to that workspace, run the installation command shown above for each module that you want to deploy.
+
+Fabric Jumpstart installs each module independently. After installation completes, open the module's catalog page and follow its setup instructions to configure credentials, event sources, schedules, and any other module-specific requirements.
 
 > [!CAUTION]
-> No change are made to any additional item in the workspace or eventhouse. But if you customize the default ones (Notebook, Policies, Tables, Functions, etc), the change could be reverted back or the update could fail.
+> Updating or reinstalling a module can overwrite custom changes made to its deployed notebooks, policies, tables, functions, dashboards, or other managed items.
 
 ## Script deployment and setup in the gateway nodes (Optional)
 
