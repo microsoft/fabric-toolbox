@@ -1,4 +1,5 @@
 #Requires -Modules Az.Accounts, Az.Resources
+#Requires -Version 7
 
 function Restore-Workspaces {
     [CmdletBinding()]
@@ -37,24 +38,115 @@ function Restore-Workspaces {
 
     try {
         foreach ($wsId in $workspaceIds) {
-            try {
-                $workspaceStatus = Invoke-RestMethod -Method GET -Uri "https://api.fabric.microsoft.com/v1/admin/workspaces/$wsId" -Headers $h
-                $workspaceDisplayName = $workspaceStatus.name
-                $workspaceState = $workspaceStatus.state
-
-                if ($workspaceState -eq 'Deleted') {
-                    $body = @{ newWorkspaceAdminPrincipal = @{ id = $adminOid; type = 'User' }; 'newWorkspaceName' = "RestoredWorkspace_$($workspaceDisplayName)_$wsId" } | ConvertTo-Json -Depth 5
-                    
-                    Invoke-RestMethod -Method POST -Uri "https://api.fabric.microsoft.com/v1/admin/workspaces/$wsId/restore" -Headers $h -Body $body
-                    Write-Host "Restored inactive workspace, new workspace name: RestoredWorkspace_$($workspaceDisplayName)_$wsId"
+            $numGetWorkspaceRetries = 0
+            
+            while ($true) {
+                if ($numGetWorkspaceRetries -gt 5) {
+                    Write-Warning "Maximum retry attempts reached. Skipping getting status of workspace $wsId"
+                    $getSucceeded = $false
+                    break
                 }
-                elseif ($workspaceState -eq 'Removing') {
-                    Write-Host "Workspace $wsId is in 'Removing' state, cannot reliably restore workspace as it is in the process of being permanently deleted"
+
+                try {
+                    $workspaceStatus = Invoke-RestMethod -Method GET -Uri "https://api.fabric.microsoft.com/v1/admin/workspaces/$wsId" -Headers $h
+                    $getSucceeded = $true
+                    break
+                }
+                catch {
+                    $getSucceeded = $false
+                    $numGetWorkspaceRetries++
+
+                    $response = $_.Exception.Response
+                        
+                    if (-not $response) {
+                        continue
+                    }
+
+                    $error_returned = $response.StatusCode
+
+                    if ($error_returned -ne 429) {
+                        Write-Warning "Get Workspace API failed with error code ($error_returned)."
+                        break
+                    }
+                    else {
+                        $retryAfter = $_.Exception.Response.Headers.RetryAfter
+                        if ($null -ne $retryAfter -and $null -ne $retryAfter.Delta) {
+                            $retryAfterSeconds = [Math]::Ceiling($retryAfter.Delta.TotalSeconds)
+                        }
+                        else {
+                            $retryAfterSeconds = 60
+                        }
+
+                        Write-Host "Throttled, waiting $retryAfterSeconds seconds before retrying to get workspace status again."
+                        Start-Sleep -Seconds $retryAfterSeconds
+                        continue
+                    }
                 }
             }
-            catch {
-                Write-Warning "Error occurred: $($PSItem.Exception.Message)"
+
+            if ($getSucceeded -eq $false) {
                 continue
+            }
+
+            $workspaceDisplayName = $workspaceStatus.name
+            $workspaceState = $workspaceStatus.state
+
+            $intervalBetweenRequestsMilliseconds = 6000
+
+            if ($workspaceState -eq 'Deleted') {
+                $body = @{ newWorkspaceAdminPrincipal = @{ id = $adminOid; type = 'User' }; 'newWorkspaceName' = "RestoredWorkspace_$($workspaceDisplayName)_$wsId" } | ConvertTo-Json -Depth 5
+                
+
+                $numRestoreRetries = 0
+                $restoreSucceeded = $false
+                while ($true) {
+                    if ($numRestoreRetries -gt 5) {
+                        Write-Warning "Maximum retry attempts reached. Skipping restoration of workspace $wsId"
+                        break
+                    }
+
+                    try {
+                        Start-Sleep -Milliseconds $intervalBetweenRequestsMilliseconds
+                        Invoke-RestMethod -Method POST -Uri "https://api.fabric.microsoft.com/v1/admin/workspaces/$wsId/restore" -Headers $h -Body $body
+                        $restoreSucceeded = $true
+                        break
+                    }
+                    catch {
+                        $numRestoreRetries++
+
+                        $response = $_.Exception.Response
+                        
+                        if (-not $response) {
+                            continue
+                        }
+
+                        $error_returned = $response.StatusCode
+
+                        if ($error_returned -ne 429) {
+                            Write-Warning "Restore Workspace API failed with error code ($error_returned)."
+                            break
+                        }
+
+                        $retryAfter = $_.Exception.Response.Headers.RetryAfter
+                        if ($null -ne $retryAfter -and $null -ne $retryAfter.Delta) {
+                            $retryAfterSeconds = [Math]::Ceiling($retryAfter.Delta.TotalSeconds)
+                        }
+                        else {
+                            $retryAfterSeconds = 60
+                        }
+
+                        Write-Host "Throttled, waiting $retryAfterSeconds seconds before retrying to restore workspace again."
+                        Start-Sleep -Seconds $retryAfterSeconds
+                        continue
+                    }
+                }
+
+                if ($restoreSucceeded) {
+                    Write-Host "Restored inactive workspace, new workspace name: RestoredWorkspace_$($workspaceDisplayName)_$wsId"
+                }
+            }
+            elseif ($workspaceState -eq 'Removing') {
+                Write-Host "Workspace $wsId is in 'Removing' state, cannot reliably restore workspace as it is in the process of being permanently deleted."
             }
         }
     }
