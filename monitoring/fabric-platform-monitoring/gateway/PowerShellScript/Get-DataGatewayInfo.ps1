@@ -1,6 +1,69 @@
-# This sample helps automate the installation and configuration of the On-premises data gateway using available PowerShell cmdlets. This script helps with silent install of new gateway cluster with one gateway member only. The script also allows addition gateway admins. For information on each PowerShell script visit the help page for individual PowerSHell cmdlets.
+<#
+.SYNOPSIS
+    Collects On-premises Data Gateway node information from the Microsoft Fabric
+    REST API and publishes it to an Event Hub for platform monitoring.
 
-# Before begining to install and register a gateway, for connecting to the gateway service, you would need to use the # Connect-DataGatewayServiceAccount. More information documented in the help page of that cmdlet.
+.DESCRIPTION
+    This script authenticates to Microsoft Fabric using a service principal defined
+    in a JSON configuration file, then performs the following steps:
+
+        1. Loads the helper modules found in the '.\Modules' folder (loading
+           Utils.psm1 first so shared functions are available to the others).
+        2. Reads and parses the configuration file (default '.\configs\Config.json').
+        3. Decrypts the service principal client secret (protected with the local
+           machine key) and signs in with Connect-AzAccount.
+        4. Acquires a Fabric API access token and enumerates all gateways together
+           with their members to locate the gateway member whose id matches the
+           configured GatewayId.
+        5. Gathers local machine details (OS, cores, memory) via Get-ComputerInfo
+           and combines them with the gateway/member metadata into a single object.
+        6. If an Event Hub connection string flagged as "Reports" exists in the
+           configuration, wraps the object as a "GatewayNodeInfo" log message and
+           sends it to the Event Hub via Add-MsgEventHub.
+
+    Any error is written to the console and appended to
+    '<logFolder>GatewayMonitoring.log'.
+
+    This script is intended to run on the gateway machine itself (for example on a
+    schedule) so that the reported machine metrics reflect that node.
+
+.PARAMETER configFilePath
+    Path to the JSON configuration file. Defaults to '.\configs\Config.json'.
+
+    The configuration is expected to contain:
+        - GatewayId                           Id of the gateway member to report on.
+        - ServicePrincipal.TennatId           Azure AD tenant id.
+        - ServicePrincipal.AppId              Service principal (application) id.
+        - ServicePrincipal.SecretText         Client secret encrypted with the
+                                              local machine key
+                                              (see ConvertFrom-SecureWithMachineKey).
+        - EventHubs.ConnectionStrings         Array of Event Hub connection strings;
+                                              the entry with Report = "Reports" is used.
+        - ConnectionProperties                Additional connection properties passed
+                                              to Add-MsgEventHub.
+
+.PARAMETER logFolder
+    Folder where the error log ('GatewayMonitoring.log') is written.
+    Defaults to '.\logs\'.
+
+.EXAMPLE
+    .\Get-DataGatewayInfo.ps1
+
+    Runs the script using the default configuration and log paths.
+
+.EXAMPLE
+    .\Get-DataGatewayInfo.ps1 -configFilePath "C:\Fabric\Config.json" -logFolder "C:\Fabric\logs\"
+
+    Runs the script using a custom configuration file and log folder.
+
+.NOTES
+    Requires PowerShell 7 or later and the Az.Accounts module.
+    Depends on the helper modules in the '.\Modules' folder, including
+    ConvertFrom-SecureWithMachineKey and Add-MsgEventHub.
+
+    Before installing and registering a gateway, use Connect-DataGatewayServiceAccount
+    to connect to the gateway service. See that cmdlet's help for details.
+#>
 
 #requires -Version 7 -Modules Az.Accounts
 
@@ -44,9 +107,9 @@ try {
 
     $secureClientSecret = (ConvertFrom-SecureWithMachineKey  $config.ServicePrincipal.SecretText) | ConvertTo-SecureString -AsPlainText -Force
     $memberId = $config.GatewayId
-    $tenantId  = $config.ServicePrincipal.TennatId
+    $tenantId  = $config.ServicePrincipal.TenantId
     $appId = $Config.ServicePrincipal.AppId
-    $servicePrincipal = New-Object PSCredential -ArgumentList $appId, $secureClientSecret
+    $servicePrincipal = [System.Management.Automation.PSCredential]::new($appId, $secureClientSecret)
     
 
     Connect-AzAccount -ServicePrincipal -Credential $servicePrincipal -TenantId $tenantId
@@ -69,7 +132,7 @@ try {
         }
     }
 
-    $computerInfor = Get-ComputerInfo 
+    $computerInfo = Get-ComputerInfo 
 
     $gatewayObject = @{
         clusterId = $gateway.id
@@ -83,24 +146,21 @@ try {
         type = $gateway.type
         version = $member.version
         versionStatus = ""
-        osName = $computerInfor.OsName
-        osVersion = $computerInfor.OsVersion
-        cores = $computerInfor.CsNumberOfProcessors
-        logicalCores = $computerInfor.CsNumberOfLogicalProcessors
-        memoryGb = ($computerInfor.CsTotalPhysicalMemory / 1Gb)
+        osName = $computerInfo.OsName
+        osVersion = $computerInfo.OsVersion
+        cores = $computerInfo.CsNumberOfProcessors
+        logicalCores = $computerInfo.CsNumberOfLogicalProcessors
+        memoryGb = ($computerInfo.CsTotalPhysicalMemory / 1Gb)
     }
 
-    $eventStreamConnection = ($config.EventHubs.ConnectionStrings | Where-Object { $_.Report -eq "Reports" }).EventHubConnectionString
 
-    if ($eventStreamConnection){
-        $body = @{
-            logType = "GatewayNodeInfo"
-            log     = @($gatewayObject)
-            logDate = [datetime]::UtcNow
-        } | ConvertTo-Json -Depth 5
+    $body = @{
+        logType = "GatewayNodeInfo"
+        log     = @($gatewayObject)
+        logDate = [datetime]::UtcNow
+    } | ConvertTo-Json -Depth 5
 
-        Add-MsgEventHub -connectionString $eventStreamConnection -msg $body -connectionProperties $config.ConnectionProperties
-    }
+    Add-MsgEventHub -msg $body -connectionType "Reports" -config $config
 
 }
 catch {    
