@@ -12,11 +12,11 @@ Please update any references to the old REST API, to use this new one.
 
 
 ### Notebooks examples
-[Using users context](MDSyncNewRESTAPI.ipynb) - This uses the authenication token of the current user.
+[Using users context](MDSyncNewRESTAPI.ipynb) - This uses the authentication token of the current user.
 
 [Using a service principal](./MDSyncNewRESTPIAPISP.ipynb) - This allows you to use a service prinipal
 
-[Using users context with search by name](https://github.com/datakoenig/fabric-toolbox/blob/main/samples/notebook-refresh-tables-in-sql-endpoint/MDSyncNewRESTAPI_byName.ipynb) - This uses the authenication token of the current user and searches the Lakehouse by name
+[Using users context with search by name](https://github.com/datakoenig/fabric-toolbox/blob/main/samples/notebook-refresh-tables-in-sql-endpoint/MDSyncNewRESTAPI_byName.ipynb) - This uses the authentication token of the current user and searches the Lakehouse by name
 
 
 ## Old

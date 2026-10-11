@@ -96,7 +96,7 @@ Each notebook performs the required activity only if at least one item of the re
 
 ## <u>Helper notebooks</u>
 
-- The **nb_helper** notebook contains a set of funtions required during the execution of the pre and post deployment notebooks listed above.
+- The **nb_helper** notebook contains a set of functions required during the execution of the pre and post deployment notebooks listed above.
 
 - The **nb_prepare_cicd_workspace** notebook can help setting up the CI/CD workspace and rebind the notebooks listed above to the CI/CD lakehouse. The steps described in the notebook can be performed manually.
 
