@@ -3,7 +3,7 @@
 A web application to Mirror or Clone Microsoft Fabric lakehouses (including SQL analytics endpoint) using shortcuts and also copying the views and stored procedures . 
 
 This tool allows you to replicate the structure of one lakehouse to another by creating table and schema shortcuts that point to the original tables.
-It also copies the views and stored procs from the SQL Anayltics Endpoint (It does not copy the security, RLS or CLS).
+It also copies the views and stored procs from the SQL Analytics Endpoint (It does not copy the security, RLS or CLS).
 
 ## Features
 

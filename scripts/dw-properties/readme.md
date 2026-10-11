@@ -1,14 +1,14 @@
-# Properies about the Warehouse / SQL Anayltics Endpoint
+# Properties about the Warehouse / SQL Analytics Endpoint
 
 ## What is the Edition?
-The Edition tells us if we are connecting to a Warehouse or SQL Anayltics Endpoint (SQL AE)
+The Edition tells us if we are connecting to a Warehouse or SQL Analytics Endpoint (SQL AE)
 
 `SELECT db_name(), DATABASEPROPERTYEX(db_name(), 'Edition')  AS Edition; ` 
 
 |Edition      |Type                                                        |
 |-------------|-----------------------------------------------------------|
 |DataWarehouse|Fabric Warehouse                                           |
-|LakeWarehouse|SQL Anayltics Endpoint (for Lakehouse or Mirrored database)|
+|LakeWarehouse|SQL Analytics Endpoint (for Lakehouse or Mirrored database)|
 
 
 ## What is the Item ID
