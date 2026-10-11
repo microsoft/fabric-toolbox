@@ -37,7 +37,7 @@ The following parameters are defined in the template:
 10. **Edit** the credentials of the data source in Fabric
 11. Trigger the first initial refresh in Fabric
     - **Important:** Schedule the semantic model refresh, on daily basis. _The calendar table has to be refreshed every day._
-12. Once the refresh has been succeeded, open the report
+12. Once the refresh has succeeded, open the report
 
 **Congratulations!** You are ready to go!
 

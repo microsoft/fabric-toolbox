@@ -127,7 +127,7 @@ The following Fabric items are deployed and used:
          - Git Connections
       - Configured to run every 30 min.
 - Pipelines:
-   -For each of the notebooks there´s a Pipeline for the execution and tracking of the Notebooks. Configure the scheduling of the activities within the Pipelines according to the recommended times
+   - For each of the notebooks there´s a Pipeline for the execution and tracking of the Notebooks. Configure the scheduling of the activities within the Pipelines according to the recommended times
 
 
 The Notebooks uses the [Semantic Link Labs](https://github.com/microsoft/semantic-link-labs) to interact with the APIs.

@@ -27,7 +27,7 @@ Consider also that deployments in Fabric deployment pipelines have a linear stru
 - **[Run_post_activity.py](cicd/Run_post_activity.py):** A Python script is triggered for post-deployment activities, launching a post-activity notebook to rebind connections, among other tasks. For more information please visit [Run post activiy details](https://github.com/microsoft/fabric-toolbox/blob/main/accelerators/CICD/Branch-out-to-new-workspace/README.md).
 Please note that the post-activity notebook must exist and can be found [here](https://github.com/microsoft/fabric-toolbox/blob/main/accelerators/CICD/Branch-out-to-new-workspace/Fabric/Branch%20out%20to%20new%20workspace%20-%20Post%20Activity.ipynb)
 
-## Prerequisite and configurations required
+## Prerequisites and configurations required
 
 - You need all the workspaces required for your workflow (DEV, UAT, XXX, Prod)
   - If you want to automate this part please visit [this page](https://github.com/Azure-Samples/modern-data-warehouse-dataops/blob/main/e2e_samples/fabric_dataops_sample/README.md) for an example
