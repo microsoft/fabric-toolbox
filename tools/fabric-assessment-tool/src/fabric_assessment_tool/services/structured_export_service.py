@@ -1,4 +1,5 @@
 import json
+from copy import deepcopy
 from abc import ABC, abstractmethod
 from dataclasses import asdict
 from datetime import datetime
@@ -109,6 +110,18 @@ class JSONExporter(BaseExporter):
         files_created = [str(summary_path)]
 
         if isinstance(assessment_data, SynapseAssessment):
+            column_summary_path = workspace_dir / "column_summary.json"
+            column_summary = (
+                asdict(assessment_data.column_summary)
+                if assessment_data.column_summary is not None
+                else {
+                    "collection_status": "unavailable",
+                    "reason": "Column summary was not present in this assessment.",
+                }
+            )
+            with open(column_summary_path, "w") as f:
+                json.dump(column_summary, f, indent=2, cls=DecimalEncoder)
+            files_created.append(str(column_summary_path))
             files_created.extend(self._export_synapse_details(data, workspace_dir))
         elif isinstance(assessment_data, DatabricksAssessment):
             files_created.extend(
@@ -194,12 +207,21 @@ class JSONExporter(BaseExporter):
 
             # Dedicated pools
             for i, pool in enumerate(data["sql_pools"].get("dedicated_pools", [])):
-                pool_file = sql_pools_dir / f"dedicated_pool_{pool['name']}.json"
+                export_pool = deepcopy(pool)
+                workload = export_pool.get("workload") or {}
+                if workload.get("sql_text_redacted", True):
+                    export_pool = self._strip_sql_text(export_pool)
+                pool_file = sql_pools_dir / f"dedicated_pool_{export_pool['name']}.json"
+                if isinstance(export_pool.get("database"), dict):
+                    database_data = dict(export_pool["database"])
+                    database_data.pop("definitions", None)
+                    database_data.pop("definition_summary", None)
+                    export_pool["database"] = database_data
                 with open(pool_file, "w") as f:
                     json.dump(
                         {
                             "type": "dedicated_pool",
-                            "pool_data": pool,
+                            "pool_data": export_pool,
                             "exported_at": datetime.now().isoformat(),
                         },
                         f,
@@ -208,14 +230,15 @@ class JSONExporter(BaseExporter):
                     )
                 files_created.append(str(pool_file))
 
-            # Serverless pools
-            for i, pool in enumerate(data["sql_pools"].get("serverless_pools", [])):
-                pool_file = sql_pools_dir / f"serverless_pool_{pool['name']}.json"
+            # Serverless pool
+            serverless_pool = data["sql_pools"].get("serverless_pool")
+            if serverless_pool:
+                pool_file = sql_pools_dir / f"serverless_pool_{serverless_pool['name']}.json"
                 with open(pool_file, "w") as f:
                     json.dump(
                         {
                             "type": "serverless_pool",
-                            "pool_data": pool,
+                            "pool_data": serverless_pool,
                             "exported_at": datetime.now().isoformat(),
                         },
                         f,
@@ -335,6 +358,19 @@ class JSONExporter(BaseExporter):
 
         return files_created
 
+    @classmethod
+    def _strip_sql_text(cls, value: Any) -> Any:
+        """Remove SQL command text recursively from a serialized structure."""
+        if isinstance(value, dict):
+            return {
+                key: cls._strip_sql_text(item)
+                for key, item in value.items()
+                if key != "command"
+            }
+        if isinstance(value, list):
+            return [cls._strip_sql_text(item) for item in value]
+        return value
+
     def _export_synapse_serverless_databases(
         self, data: Dict[str, Any], data_dir: Path, files_created: List[str]
     ):
@@ -360,7 +396,9 @@ class JSONExporter(BaseExporter):
             # Export database info
             db_file = db_dir / f"{db_name}.json"
             db_info = {
-                key: value for key, value in database.items() if key != "schemas"
+                key: value
+                for key, value in database.items()
+                if key not in {"schemas", "complexity"}
             }
             with open(db_file, "w") as f:
                 json.dump(
@@ -374,6 +412,8 @@ class JSONExporter(BaseExporter):
                     cls=DecimalEncoder,
                 )
             files_created.append(str(db_file))
+
+            self._export_sql_complexity(database, db_dir, files_created)
 
             # Export schemas
             if "schemas" in database and "schemas" in database["schemas"]:
@@ -463,13 +503,17 @@ class JSONExporter(BaseExporter):
             if "database" in pool:
                 database = pool["database"]
                 db_name = database.get("name", "unknown")
-                db_dir = dedicated_databases_dir / "databases" / db_name
+                safe_db_name = self._safe_filename(db_name)
+                db_dir = dedicated_databases_dir / "databases" / safe_db_name
                 db_dir.mkdir(parents=True, exist_ok=True)
 
                 # Export database info
-                db_file = db_dir / f"{db_name}.json"
+                db_file = db_dir / f"{safe_db_name}.json"
                 db_info = {
-                    key: value for key, value in database.items() if key != "schemas"
+                    key: value
+                    for key, value in database.items()
+                    if key not in {"schemas", "complexity"}
+                    if key not in ("schemas", "definitions", "definition_summary")
                 }
                 db_info["pool_name"] = pool_name  # Add reference to the pool
                 with open(db_file, "w") as f:
@@ -484,6 +528,13 @@ class JSONExporter(BaseExporter):
                         cls=DecimalEncoder,
                     )
                 files_created.append(str(db_file))
+
+                self._export_sql_complexity(database, db_dir, files_created)
+                self._export_synapse_definitions(
+                    database=database,
+                    db_dir=db_dir,
+                    files_created=files_created,
+                )
 
                 # Export schemas
                 if "schemas" in database and "schemas" in database["schemas"]:
@@ -556,6 +607,120 @@ class JSONExporter(BaseExporter):
                                         cls=DecimalEncoder,
                                     )
                                 files_created.append(str(view_file))
+
+    def _export_sql_complexity(
+        self,
+        database: Dict[str, Any],
+        database_dir: Path,
+        files_created: List[str],
+    ) -> None:
+        complexity = database.get("complexity")
+        if not complexity:
+            return
+
+        complexity_dir = database_dir / "complexity"
+        complexity_dir.mkdir(exist_ok=True)
+
+        summary_path = complexity_dir / "summary.json"
+        with open(summary_path, "w") as f:
+            json.dump(
+                {
+                    "type": "sql_complexity_summary",
+                    "data": complexity.get("summary", {}),
+                    "exported_at": datetime.now().isoformat(),
+                },
+                f,
+                indent=2,
+                cls=DecimalEncoder,
+            )
+        files_created.append(str(summary_path))
+
+        type_folders = {
+            "PROCEDURE": "procedures",
+            "FUNCTION": "functions",
+            "VIEW": "views",
+        }
+        objects_dir = complexity_dir / "objects"
+        for obj in complexity.get("objects", []):
+            folder_name = type_folders.get(obj.get("object_type", ""), "other")
+            object_type_dir = objects_dir / folder_name
+            object_type_dir.mkdir(parents=True, exist_ok=True)
+
+            safe_name = self._safe_filename(
+                f"{obj.get('schema_name', 'unknown')}.{obj.get('object_name', 'unknown')}"
+            )
+            object_path = object_type_dir / f"{safe_name}.json"
+            with open(object_path, "w") as f:
+                json.dump(
+                    {
+                        "type": "sql_complexity_object",
+                        "data": obj,
+                        "exported_at": datetime.now().isoformat(),
+                    },
+                    f,
+                    indent=2,
+                    cls=DecimalEncoder,
+                )
+            files_created.append(str(object_path))
+
+    def _export_synapse_definitions(
+        self,
+        database: Dict[str, Any],
+        db_dir: Path,
+        files_created: List[str],
+    ) -> None:
+        """Export dedicated SQL definitions and their database summary."""
+
+        summary = database.get("definition_summary")
+        definitions_wrapper = database.get("definitions", {})
+        definitions = definitions_wrapper.get("definitions", [])
+
+        if not summary or summary.get("extraction_status") == "not_requested":
+            return
+
+        definitions_dir = db_dir / "definitions"
+        definitions_dir.mkdir(exist_ok=True)
+
+        summary_file = definitions_dir / "summary.json"
+        with open(summary_file, "w") as f:
+            json.dump(
+                {
+                    "type": "sql_definition_summary",
+                    "data": summary,
+                    "exported_at": datetime.now().isoformat(),
+                },
+                f,
+                indent=2,
+                cls=DecimalEncoder,
+            )
+        files_created.append(str(summary_file))
+
+        type_directories = {
+            "stored_procedure": "stored_procedures",
+            "function": "functions",
+            "view": "views",
+        }
+        for definition in definitions:
+            object_type = definition.get("object_type", "unknown")
+            type_dir = definitions_dir / type_directories.get(
+                object_type, self._safe_filename(object_type)
+            )
+            type_dir.mkdir(exist_ok=True)
+            schema_name = self._safe_filename(definition.get("schema", "unknown"))
+            object_name = self._safe_filename(definition.get("name", "unknown"))
+            definition_file = type_dir / f"{schema_name}.{object_name}.json"
+            with open(definition_file, "w") as f:
+                json.dump(
+                    {
+                        "type": "sql_definition",
+                        "data": definition,
+                        "exported_at": datetime.now().isoformat(),
+                    },
+                    f,
+                    indent=2,
+                    cls=DecimalEncoder,
+                )
+            files_created.append(str(definition_file))
 
     @staticmethod
     def _safe_filename(name: str) -> str:

@@ -23,6 +23,7 @@
     {% set dw_counts = dw.get('counts', {}) if dw is mapping else {} %}
     {% set dw_dedicated = dw_counts.get('dedicated', {}) if dw_counts is mapping else {} %}
     {% set dw_serverless = dw_counts.get('serverless', {}) if dw_counts is mapping else {} %}
+    {% set column_summary = workspace.column_summary if workspace.column_summary is mapping else {} %}
     <div class="col">
         <div class="stat-card">
             <div class="stat-value">{{ de_hybrid.get('notebooks', de.get('notebooks', 0)) }}</div>
@@ -51,6 +52,12 @@
         <div class="stat-card">
             <div class="stat-value">{{ dw_dedicated.get('tables', 0) + dw_serverless.get('tables', 0) }}</div>
             <div class="stat-label">Tables</div>
+        </div>
+    </div>
+    <div class="col">
+        <div class="stat-card">
+            <div class="stat-value">{{ column_summary.get('total_columns', 'N/A') }}</div>
+            <div class="stat-label">Columns</div>
         </div>
     </div>
     {% else %}
@@ -114,7 +121,8 @@
                 <tr>
                     <td><strong>Assessment Status</strong></td>
                     <td>
-                        {% set status = workspace.summary.assessment_status | default('unknown') %}
+                        {% set status_obj = workspace.summary.assessment_status | default('unknown') %}
+                        {% set status = status_obj.get('status', status_obj) if status_obj is mapping else status_obj %}
                         <span class="badge {% if status == 'completed' %}badge-success{% elif status == 'incomplete' %}badge-warning{% else %}badge-secondary{% endif %}">
                             {{ status | title }}
                         </span>
@@ -124,6 +132,117 @@
         </table>
     </div>
 </div>
+
+{% if workspace.platform == 'synapse' %}
+{% set column_summary = workspace.column_summary if workspace.column_summary is mapping else {} %}
+<div class="card mt-2">
+    <div class="card-header">Column Metadata and Fabric Compatibility</div>
+    <div class="card-body">
+        {% if column_summary %}
+        {% set compatibility = column_summary.get('compatibility_totals', {}) %}
+        <p>
+            Collection status:
+            {% set column_status = column_summary.get('collection_status', 'unavailable') %}
+            <span class="badge {% if column_status == 'completed' %}badge-success{% elif column_status in ['capped', 'partial'] %}badge-warning{% elif column_status == 'skipped' %}badge-secondary{% else %}badge-danger{% endif %}">
+                {{ column_status | replace('_', ' ') | title }}
+            </span>
+            <span class="badge badge-success">Compatible: {{ compatibility.get('compatible', 0) | format_number }}</span>
+            <span class="badge badge-warning">Review: {{ compatibility.get('review', 0) | format_number }}</span>
+            <span class="badge badge-danger">Unsupported: {{ compatibility.get('unsupported', 0) | format_number }}</span>
+        </p>
+        <div class="row">
+            <div class="col col-6">
+                <div class="chart-container">
+                    <canvas id="workspaceColumnTypeChart"></canvas>
+                </div>
+            </div>
+            <div class="col col-6">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Data Type</th>
+                            <th>Compatibility</th>
+                            <th class="text-right">Columns</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for entry in column_summary.get('data_types', []) %}
+                        <tr>
+                            <td>{{ entry.data_type }}</td>
+                            <td><span class="badge {% if entry.compatibility == 'compatible' %}badge-success{% elif entry.compatibility == 'unsupported' %}badge-danger{% else %}badge-warning{% endif %}">{{ entry.compatibility | title }}</span></td>
+                            <td class="text-right">{{ entry.column_count | format_number }}</td>
+                        </tr>
+                        {% else %}
+                        <tr><td colspan="3" class="text-muted">No columns were collected.</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        {% if column_summary.get('database_statuses') %}
+        <h3>Database Collection Status</h3>
+        <div class="table-responsive">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Database</th>
+                        <th>Type</th>
+                        <th>Status</th>
+                        <th class="text-right">Objects</th>
+                        <th class="text-right">Collected</th>
+                        <th>Reason</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for database in column_summary.database_statuses %}
+                    <tr>
+                        <td>{{ database.database }}</td>
+                        <td>{{ database.database_type | title }}</td>
+                        <td>{{ database.status | title }}</td>
+                        <td class="text-right">{{ database.objects_considered }}</td>
+                        <td class="text-right">{{ database.objects_collected }}</td>
+                        <td>{{ database.reason | default('', true) }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% endif %}
+
+        {% if column_summary.get('wide_objects') %}
+        <h3>Wide Tables and Views (100+ Columns)</h3>
+        <div class="table-responsive">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Database</th>
+                        <th>Schema</th>
+                        <th>Type</th>
+                        <th>Name</th>
+                        <th class="text-right">Columns</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in column_summary.wide_objects %}
+                    <tr>
+                        <td>{{ item.database }}</td>
+                        <td>{{ item.schema }}</td>
+                        <td>{{ item.object_type | title }}</td>
+                        <td>{{ item.name }}</td>
+                        <td class="text-right">{{ item.column_count }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% endif %}
+        {% else %}
+        <p class="text-muted">This legacy assessment does not include column_summary.json.</p>
+        {% endif %}
+    </div>
+</div>
+{% endif %}
 
 <!-- Resources by Category -->
 {% if workspace.resources %}
@@ -345,6 +464,20 @@
 </div>
 {% endif %}
 
+{% if workspace.platform == 'synapse' and workspace.resources.sql_pools %}
+<h3 class="mt-2 mb-1">Dedicated SQL Pool Workloads</h3>
+{% for pool in workspace.resources.sql_pools %}
+{% set pool_info = pool.data or pool.pool_data or pool %}
+{% if pool_info.workload %}
+{% set workload = pool_info.workload %}
+{% set workload_pool_name = pool_info.name | default('Unknown') %}
+{% set workload_workspace = workspace_name %}
+{% set workload_id = 'ws-workload-' ~ loop.index %}
+{% include "synapse/_workload_profile.html" %}
+{% endif %}
+{% endfor %}
+{% endif %}
+
 <!-- Admin Resources (Synapse) -->
 {% if workspace.admin %}
 <h3 class="mt-2 mb-1">Admin Resources</h3>
@@ -421,4 +554,31 @@
 <div class="mt-2">
     <a href="{{ base_path }}index.html">← Back to Overview</a>
 </div>
+{% endblock %}
+
+{% block scripts %}
+{% if workspace.platform == 'synapse' and workspace.column_summary is mapping %}
+<script>
+const workspaceColumnTypeCtx = document.getElementById('workspaceColumnTypeChart');
+if (workspaceColumnTypeCtx) {
+    new Chart(workspaceColumnTypeCtx, {
+        type: 'bar',
+        data: {
+            labels: {{ workspace.column_summary.get('data_types', []) | map(attribute='data_type') | list | tojson }},
+            datasets: [{
+                label: 'Columns',
+                data: {{ workspace.column_summary.get('data_types', []) | map(attribute='column_count') | list | tojson }},
+                backgroundColor: '#008272'
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
+            scales: { y: { beginAtZero: true } }
+        }
+    });
+}
+</script>
+{% endif %}
 {% endblock %}

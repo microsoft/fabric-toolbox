@@ -37,6 +37,28 @@ class AssessmentService:
         resources: Optional[List[str]] = None,
         download_notebooks: bool = False,
         max_parallel_api_calls: int = 8,
+        query_history_days: int = 7,
+        query_history_top: int = 1000,
+        include_sql_text: bool = False,
+        skip_query_history: bool = False,
+        serverless_history_days: int = 30,
+        serverless_top_n: int = 1000,
+        skip_serverless_activity: bool = False,
+        serverless_sql_auth_mode: Optional[str] = None,
+        serverless_sql_username: Optional[str] = None,
+        serverless_sql_password: Optional[str] = None,
+        serverless_sql_client_id: Optional[str] = None,
+        serverless_sql_client_secret: Optional[str] = None,
+        serverless_sql_tenant_id: Optional[str] = None,
+        skip_columns: bool = False,
+        max_column_objects: Optional[int] = None,
+        sql_complexity: bool = False,
+        sql_definition_redaction: str = "full",
+        sql_complexity_schemas: Optional[List[str]] = None,
+        extract_definitions: bool = False,
+        definition_redaction: str = "partial",
+        definition_schema_filter: Optional[List[str]] = None,
+        max_definition_size: int = 1_000_000,
     ) -> Dict[str, Any]:
         """
         Perform assessment on specified workspaces.
@@ -60,6 +82,24 @@ class AssessmentService:
             sql_client_id: Service principal client ID (required for 'entra-spn' mode)
             sql_client_secret: Service principal client secret (required for 'entra-spn' mode)
             sql_tenant_id: Azure tenant ID (optional for 'entra-spn' mode)
+            serverless_history_days: Number of days of serverless SQL activity to collect
+            serverless_top_n: Maximum number of detailed serverless SQL rows to keep
+            skip_serverless_activity: Skip serverless SQL activity collection
+            serverless_sql_auth_mode: Optional auth-mode override for serverless SQL
+            serverless_sql_username: Optional SQL username override for serverless SQL
+            serverless_sql_password: Optional SQL password override for serverless SQL
+            serverless_sql_client_id: Optional SPN client ID override for serverless SQL
+            serverless_sql_client_secret: Optional SPN secret override for serverless SQL
+            serverless_sql_tenant_id: Optional SPN tenant override for serverless SQL
+            skip_columns: Skip Synapse column metadata collection
+            max_column_objects: Optional positive per-database table/view collection cap
+            sql_complexity: Enable SQL code complexity scoring
+            sql_definition_redaction: Definition export mode ('full' or 'none')
+            sql_complexity_schemas: Optional schema allowlist for scoring
+            extract_definitions: Extract SQL module definitions from dedicated pools
+            definition_redaction: Definition protection mode
+            definition_schema_filter: Exact schema names to include
+            max_definition_size: Maximum stored definition characters; 0 is unlimited
 
         Returns:
             Assessment results dictionary
@@ -88,9 +128,10 @@ class AssessmentService:
             )
 
         # Get or create client for the source
-        client_kwargs = {}
+        client_kwargs: Dict[str, Any] = {}
         if source == "databricks":
             client_kwargs["cloud"] = cloud
+            client_kwargs["max_parallel_api_calls"] = max_parallel_api_calls
         if subscription_id:
             client_kwargs["subscription_id"] = subscription_id
         if auth_method:
@@ -108,10 +149,41 @@ class AssessmentService:
             client_kwargs["sql_client_secret"] = sql_client_secret
         if sql_tenant_id:
             client_kwargs["sql_tenant_id"] = sql_tenant_id
+        client_kwargs["query_history_days"] = query_history_days
+        client_kwargs["query_history_top"] = query_history_top
+        client_kwargs["include_sql_text"] = include_sql_text
+        client_kwargs["skip_query_history"] = skip_query_history
+        client_kwargs["serverless_history_days"] = serverless_history_days
+        client_kwargs["serverless_top_n"] = serverless_top_n
+        client_kwargs["skip_serverless_activity"] = skip_serverless_activity
+        if serverless_sql_auth_mode:
+            client_kwargs["serverless_sql_auth_mode"] = serverless_sql_auth_mode
+        if serverless_sql_username:
+            client_kwargs["serverless_sql_username"] = serverless_sql_username
+        if serverless_sql_password is not None:
+            client_kwargs["serverless_sql_password"] = serverless_sql_password
+        if serverless_sql_client_id:
+            client_kwargs["serverless_sql_client_id"] = serverless_sql_client_id
+        if serverless_sql_client_secret:
+            client_kwargs["serverless_sql_client_secret"] = serverless_sql_client_secret
+        if serverless_sql_tenant_id:
+            client_kwargs["serverless_sql_tenant_id"] = serverless_sql_tenant_id
+        if skip_columns:
+            client_kwargs["skip_columns"] = True
+        if max_column_objects is not None:
+            client_kwargs["max_column_objects"] = max_column_objects
+        if source == "synapse":
+            client_kwargs["sql_complexity"] = sql_complexity
+            client_kwargs["sql_definition_redaction"] = sql_definition_redaction
+            client_kwargs["sql_complexity_schemas"] = sql_complexity_schemas or []
+        client_kwargs["extract_definitions"] = extract_definitions
+        client_kwargs["definition_redaction"] = definition_redaction
+        client_kwargs["definition_schema_filter"] = definition_schema_filter or []
+        client_kwargs["max_definition_size"] = max_definition_size
         client = self._get_client(source=source, **client_kwargs)
 
         # Perform assessment
-        assessment_results = {
+        assessment_results: Dict[str, Any] = {
             "metadata": {
                 "source": source,
                 "mode": mode,
@@ -120,6 +192,10 @@ class AssessmentService:
                 "timestamp": datetime.now().isoformat(),
                 "version": "0.3.0",
                 "output_format": output_format,
+                "column_collection": {
+                    "skip_columns": skip_columns,
+                    "max_column_objects": max_column_objects,
+                },
             },
             "results": [],
             "summary": {
@@ -130,7 +206,7 @@ class AssessmentService:
             },
         }
 
-        export_results = {"results": []}
+        export_results: Dict[str, Any] = {"results": []}
 
         if not workspaces or len(workspaces) == 0:
             # Get all workspaces from the client and let the client choose which ones to assess
@@ -151,20 +227,19 @@ class AssessmentService:
             # print(f"Assessing workspace: {workspace}")
             try:
                 # Get assessment data as dataclass object
-                assess_kwargs = {}
-                if source == "databricks":
-                    assess_kwargs.update(
+                workspace_assessment = client.assess_workspace(
+                    workspace,
+                    mode,
+                    **(
                         {
                             "resources": resources,
                             "output_path": output_path,
                             "download_notebooks": download_notebooks,
                             "max_parallel_api_calls": max_parallel_api_calls,
                         }
-                    )
-                workspace_assessment = client.assess_workspace(
-                    workspace,
-                    mode,
-                    **assess_kwargs,
+                        if source == "databricks"
+                        else {}
+                    ),
                 )
 
                 # Export the assessment data using the structured export service
@@ -190,7 +265,7 @@ class AssessmentService:
                     "success" if assessment_status == "completed" else "incomplete"
                 )
 
-                result_entry = {
+                result_entry: Dict[str, Any] = {
                     "workspace": workspace,
                     "status": result_status,
                     "summary": workspace_assessment.get_summary(),

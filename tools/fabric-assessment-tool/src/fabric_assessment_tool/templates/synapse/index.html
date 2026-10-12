@@ -38,6 +38,12 @@
             <div class="stat-label">Spark Pools</div>
         </div>
     </div>
+    <div class="col">
+        <div class="stat-card">
+            <div class="stat-value" id="stat-columns">{{ summary.total_columns | default(0) | format_number }}</div>
+            <div class="stat-label">Columns</div>
+        </div>
+    </div>
 </div>
 
 <!-- Resource Counts -->
@@ -91,12 +97,91 @@
                             <td>Dataflows</td>
                             <td class="text-right">{{ summary.total_dataflows | default(0) | format_number }}</td>
                         </tr>
+                        <tr>
+                            <td>Columns</td>
+                            <td class="text-right">{{ summary.total_columns | default(0) | format_number }}</td>
+                        </tr>
                     </tbody>
                 </table>
             </div>
         </div>
     </div>
 </div>
+
+<!-- Column Analysis -->
+<div class="card">
+    <div class="card-header">Column Metadata and Fabric Compatibility</div>
+    <div class="card-body">
+        <div class="row">
+            <div class="col col-6">
+                <div class="chart-container">
+                    <canvas id="columnTypeChart"></canvas>
+                </div>
+            </div>
+            <div class="col col-6">
+                <p>
+                    <span class="badge badge-success">Compatible: <span id="compat-compatible">{{ summary.column_compatibility.compatible | default(0) | format_number }}</span></span>
+                    <span class="badge badge-warning">Review: <span id="compat-review">{{ summary.column_compatibility.review | default(0) | format_number }}</span></span>
+                    <span class="badge badge-danger">Unsupported: <span id="compat-unsupported">{{ summary.column_compatibility.unsupported | default(0) | format_number }}</span></span>
+                </p>
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Data Type</th>
+                            <th>Compatibility</th>
+                            <th class="text-right">Columns</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for entry in summary.column_type_totals | default([]) %}
+                        <tr>
+                            <td>{{ entry.data_type }}</td>
+                            <td><span class="badge {% if entry.compatibility == 'compatible' %}badge-success{% elif entry.compatibility == 'unsupported' %}badge-danger{% else %}badge-warning{% endif %}">{{ entry.compatibility | title }}</span></td>
+                            <td class="text-right">{{ entry.column_count | format_number }}</td>
+                        </tr>
+                        {% else %}
+                        <tr><td colspan="3" class="text-muted">No column metadata is available. Legacy assessments remain supported.</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% if summary.wide_objects %}
+<div class="card">
+    <div class="card-header">Wide Tables and Views (100+ Columns)</div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Workspace</th>
+                        <th>Database</th>
+                        <th>Schema</th>
+                        <th>Type</th>
+                        <th>Name</th>
+                        <th class="text-right">Columns</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in summary.wide_objects %}
+                    <tr data-workspace="{{ item.workspace }}">
+                        <td>{{ item.workspace }}</td>
+                        <td>{{ item.database }}</td>
+                        <td>{{ item.schema }}</td>
+                        <td>{{ item.object_type | title }}</td>
+                        <td>{{ item.name }}</td>
+                        <td class="text-right">{{ item.column_count | format_number }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endif %}
 
 <!-- Workspaces List -->
 <div class="card">
@@ -112,6 +197,8 @@
                         <th class="text-right">Pipelines</th>
                         <th class="text-right">SQL Pools</th>
                         <th class="text-right">Tables</th>
+                        <th class="text-right">Columns</th>
+                        <th>Column Status</th>
                         <th>Status</th>
                     </tr>
                 </thead>
@@ -125,6 +212,7 @@
                     {% set dw_counts = dw.get('counts', {}) if dw is mapping else {} %}
                     {% set dw_dedicated = dw_counts.get('dedicated', {}) if dw_counts is mapping else {} %}
                     {% set dw_serverless = dw_counts.get('serverless', {}) if dw_counts is mapping else {} %}
+                    {% set columns = ws.column_summary if ws.column_summary is mapping else {} %}
                     <tr data-workspace="{{ ws_name }}">
                         <td>
                             <a href="{{ base_path }}workspaces/{{ ws_name }}.html">{{ ws_name }}</a>
@@ -142,6 +230,13 @@
                             {% set ded_tables = dw_dedicated.get('tables', 0) if dw_dedicated is mapping else 0 %}
                             {% set srv_tables = dw_serverless.get('tables', 0) if dw_serverless is mapping else 0 %}
                             {{ ded_tables + srv_tables }}
+                        </td>
+                        <td class="text-right">{{ columns.get('total_columns', 'N/A') }}</td>
+                        <td>
+                            {% set column_status = columns.get('collection_status', 'legacy/no data') %}
+                            <span class="badge {% if column_status == 'completed' %}badge-success{% elif column_status in ['capped', 'partial'] %}badge-warning{% elif column_status == 'skipped' %}badge-secondary{% else %}badge-danger{% endif %}">
+                                {{ column_status | replace('_', ' ') | title }}
+                            </span>
                         </td>
                         <td>
                             {% set status_obj = ws.summary.get('assessment_status', 'unknown') %}
@@ -220,6 +315,7 @@ const workspaceData = {
 {% set dw_counts = dw.get('counts', {}) if dw is mapping else {} %}
 {% set dw_dedicated = dw_counts.get('dedicated', {}) if dw_counts is mapping else {} %}
 {% set dw_serverless = dw_counts.get('serverless', {}) if dw_counts is mapping else {} %}
+{% set columns = ws.column_summary if ws.column_summary is mapping else {} %}
     "{{ ws_name }}": {
         notebooks: {{ de_hybrid.get('notebooks', de.get('notebooks', 0)) if de_hybrid is mapping else de.get('notebooks', 0) }},
         pipelines: {{ di_counts.get('pipelines', di.get('pipelines', 0)) if di_counts is mapping else di.get('pipelines', 0) }},
@@ -228,16 +324,22 @@ const workspaceData = {
         tables: {{ (dw_dedicated.get('tables', 0) if dw_dedicated is mapping else 0) + (dw_serverless.get('tables', 0) if dw_serverless is mapping else 0) }},
         datasets: {{ di_counts.get('datasets', di.get('datasets', 0)) if di_counts is mapping else di.get('datasets', 0) }},
         linked_services: {{ di_counts.get('linked_services', di.get('linked_services', 0)) if di_counts is mapping else di.get('linked_services', 0) }},
-        dataflows: {{ di_counts.get('dataflows', di.get('dataflows', 0)) if di_counts is mapping else di.get('dataflows', 0) }}
+        dataflows: {{ di_counts.get('dataflows', di.get('dataflows', 0)) if di_counts is mapping else di.get('dataflows', 0) }},
+        columns: {{ columns.get('total_columns', 0) }},
+        compatibility: {{ columns.get('compatibility_totals', {}) | tojson }},
+        data_types: {{ columns.get('data_types', []) | tojson }}
     }{% if not loop.last %},{% endif %}
 {% endfor %}
 };
 
 let resourceChart = null;
+let columnTypeChart = null;
 
 function updateFilteredStats(selectedWorkspaces) {
     let workspaceCount = 0;
-    let notebooks = 0, pipelines = 0, sqlPools = 0, sparkPools = 0, tables = 0, datasets = 0, dataflows = 0, linkedServices = 0;
+    let notebooks = 0, pipelines = 0, sqlPools = 0, sparkPools = 0, tables = 0, datasets = 0, dataflows = 0, linkedServices = 0, columns = 0;
+    const compatibility = { compatible: 0, review: 0, unsupported: 0 };
+    const dataTypes = {};
     
     selectedWorkspaces.forEach(ws => {
         const data = workspaceData[ws];
@@ -251,6 +353,13 @@ function updateFilteredStats(selectedWorkspaces) {
             datasets += data.datasets || 0;
             dataflows += data.dataflows || 0;
             linkedServices += data.linked_services || 0;
+            columns += data.columns || 0;
+            Object.keys(compatibility).forEach(key => {
+                compatibility[key] += (data.compatibility || {})[key] || 0;
+            });
+            (data.data_types || []).forEach(entry => {
+                dataTypes[entry.data_type] = (dataTypes[entry.data_type] || 0) + (entry.column_count || 0);
+            });
         }
     });
     
@@ -259,10 +368,20 @@ function updateFilteredStats(selectedWorkspaces) {
     document.getElementById('stat-pipelines').textContent = pipelines;
     document.getElementById('stat-sql-pools').textContent = sqlPools;
     document.getElementById('stat-spark-pools').textContent = sparkPools;
+    document.getElementById('stat-columns').textContent = columns.toLocaleString();
+    document.getElementById('compat-compatible').textContent = compatibility.compatible.toLocaleString();
+    document.getElementById('compat-review').textContent = compatibility.review.toLocaleString();
+    document.getElementById('compat-unsupported').textContent = compatibility.unsupported.toLocaleString();
     
     if (resourceChart) {
         resourceChart.data.datasets[0].data = [notebooks, pipelines, sqlPools, sparkPools, tables, datasets, dataflows, linkedServices];
         resourceChart.update();
+    }
+    if (columnTypeChart) {
+        const entries = Object.entries(dataTypes).sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]));
+        columnTypeChart.data.labels = entries.map(entry => entry[0]);
+        columnTypeChart.data.datasets[0].data = entries.map(entry => entry[1]);
+        columnTypeChart.update();
     }
 }
 
@@ -295,6 +414,27 @@ if (resourceCtx) {
                     '#00bcf2',
                     '#8764b8'
                 ]
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
+            scales: { y: { beginAtZero: true } }
+        }
+    });
+}
+
+const columnTypeCtx = document.getElementById('columnTypeChart');
+if (columnTypeCtx) {
+    columnTypeChart = new Chart(columnTypeCtx, {
+        type: 'bar',
+        data: {
+            labels: {{ summary.column_type_totals | default([]) | map(attribute='data_type') | list | tojson }},
+            datasets: [{
+                label: 'Columns',
+                data: {{ summary.column_type_totals | default([]) | map(attribute='column_count') | list | tojson }},
+                backgroundColor: '#008272'
             }]
         },
         options: {
