@@ -220,6 +220,7 @@ export interface AtlasData {
   // id, populated by live Fabric/Power BI metadata. Report pages stay in config
   // because the Asset Catalog's schema shape is intentionally tabular.
   schema?: Record<string, ModelTableSchema[]>;
+  semanticModelEvidence?: Record<string, SemanticModelEvidence>;
   itemMetadata?: Record<string, FabricItemMetadata>;
   objectEdges?: MetadataObjectLineageEdge[];
 }
@@ -282,18 +283,23 @@ const KQL_EVENTS = "10000000-0000-4000-8000-000000000014";
 
 // ---------- deep lineage: real semantic-model / gold schema (from TMDL) ----------
 
+export type ModelExpressionStatus = "sanitized" | "unsupported";
+
 export interface ModelColumn {
   name: string;
   dataType: string;
   objectType?: string;
   description?: string;
   isHidden?: boolean;
+  expr?: string;
+  expressionStatus?: ModelExpressionStatus;
 }
 export interface ModelMeasure {
   name: string;
   expr?: string;
   description?: string;
   isHidden?: boolean;
+  expressionStatus?: ModelExpressionStatus;
 }
 export interface ModelTableSchema {
   name: string;
@@ -305,6 +311,33 @@ export interface ModelTableSchema {
   columns: ModelColumn[];
   measures: ModelMeasure[];
   metadata?: FabricItemMetadata;
+}
+
+export interface SemanticModelRelationship {
+  name: string;
+  fromTable: string;
+  fromColumn: string;
+  toTable: string;
+  toColumn: string;
+  isActive?: boolean;
+}
+
+export interface SemanticModelDependencyEvidence {
+  table: string;
+  object: string;
+  objectType: "column" | "measure";
+  referencedTable: string;
+  referencedObject: string;
+  referencedObjectType: "column" | "measure";
+  source:
+    | "static-qualified-reference"
+    | "static-unique-measure-reference";
+}
+
+export interface SemanticModelEvidence {
+  relationships: SemanticModelRelationship[];
+  dependencies: SemanticModelDependencyEvidence[];
+  expressionsOmitted: number;
 }
 
 const AR_TABLES: ModelTableSchema[] = [
@@ -425,12 +458,12 @@ export const MODEL_SCHEMA: Record<string, ModelTableSchema[]> = {
   [LH]: AR_TABLES.map((t) => ({ ...t, measures: [] })),
 };
 
-/** Sub-object schema for an item: live-synced schema first, sample schema as fallback. */
+/** Live-synchronized sub-object schema for an item. */
 export function schemaFor(
   data: { schema?: Record<string, ModelTableSchema[]> },
   id: string,
 ): ModelTableSchema[] | undefined {
-  const tables = data.schema?.[id] ?? MODEL_SCHEMA[id];
+  const tables = data.schema?.[id];
   return tables?.filter((table) => table.name !== ITEM_METADATA_SCHEMA_NAME);
 }
 

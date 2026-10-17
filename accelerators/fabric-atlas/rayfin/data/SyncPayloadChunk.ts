@@ -1,9 +1,9 @@
 import { authenticated, entity, int, text, uuid } from '@microsoft/rayfin-core';
-import { SYNC_WRITER_SUBJECT } from './sync-policy.js';
+import { syncWriterPolicy } from './sync-policy.js';
 
 @entity()
 @authenticated(['read', 'create'], {
-  policy: (claims) => claims.sub.eq(SYNC_WRITER_SUBJECT),
+  policy: (claims) => syncWriterPolicy(claims),
 })
 export class SyncPayloadChunk {
   @uuid() id!: string;

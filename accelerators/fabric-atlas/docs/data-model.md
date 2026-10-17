@@ -153,7 +153,10 @@ A configuration fact or a chunk of serialized object metadata.
 
 Schema chunks use the private `__schema__` section. Chunking preserves complete
 object lists within the bounded SQL text field. A hidden metadata envelope
-retains safe KQL, Ontology, Graph Model and Data Agent structures after reload.
+retains safe KQL, Ontology, Graph Model, Data Agent and Notebook reference
+structures after reload. Notebook metadata contains only bounded object names,
+read or write direction and optional source item/workspace IDs. It contains no
+cell source, SQL text or dynamic expression.
 
 Verified object-lineage edges use the private `__object_edges__` section. Each
 edge stores source and target item, object kind, stable ID, readable name,
@@ -185,6 +188,11 @@ attempt.
 `workspace_id`, `snapshotId`, `correlationId?`, `writerEmail?`, `startedAt`,
 `finishedAt?`, `status`, `itemsSynced?`, `durationMs?`, `failureCode?`,
 `failureMessage?`, `triggeredBy?`, `summary?`
+
+Workspace Hub combines the newest trusted `SyncRun` with the newest trusted
+`Workspace` manifest for each selected workspace. A failed or unfinished run
+does not replace the last valid snapshot, and a partial status read does not
+erase the last known workspace state.
 
 ## ItemRelationsEvidenceSnapshot
 

@@ -203,7 +203,7 @@ describe("AccessView", () => {
     expect(screen.getByRole("dialog")).toBeInTheDocument();
     expect(screen.getByText(/Urgent orphan risks/)).toBeInTheDocument();
     expect(
-      screen.getByText("Ownership metadata coverage"),
+      screen.getByText("Workspace ownership evidence"),
     ).toBeInTheDocument();
     expect(
       screen.getByRole("button", { name: "Close departure pack" }),

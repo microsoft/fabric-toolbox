@@ -62,6 +62,7 @@ function context(
     workspaceScopes: scopes,
     workspaceScopesLoading: false,
     workspaceScopesError: undefined,
+    workspaceSyncStatuses: {},
     activeWorkspaceId: ACTIVE,
     reloadWorkspaceScopes: vi.fn(async () => undefined),
     selectWorkspace: vi.fn(),
@@ -161,7 +162,7 @@ describe("WorkspaceSynchronizationPanel", () => {
 
     expect(screen.getByText("2 selected")).toBeInTheDocument();
     expect(screen.getByText("Last valid snapshot")).toBeInTheDocument();
-    expect(screen.getByText("Not loaded")).toBeInTheDocument();
+    expect(screen.getByText("Not synchronized")).toBeInTheDocument();
     fireEvent.click(
       screen.getByRole("button", { name: "Actions for Second workspace" }),
     );

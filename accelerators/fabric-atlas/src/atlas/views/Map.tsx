@@ -37,6 +37,7 @@ import {
   PREVIEW_DATA_DASH,
 } from "../components/LineageSourceLegend";
 import { MetadataObjectImpactDialog } from "../components/MetadataObjectImpactDialog";
+import { ObjectLineageCanvas } from "../components/ObjectLineageCanvas";
 import { PreviewApiNotice } from "../components/PreviewApiNotice";
 import { RelationshipEvidencePane } from "../components/RelationshipEvidencePane";
 import { ResizableInspector } from "../components/ResizableInspector";
@@ -82,6 +83,7 @@ import {
   type ObjectGraphNode as ObjectNode,
 } from "../metadata-object-graph";
 import { useDisplayPreference } from "../display-preferences";
+import { derivedFromSnapshot } from "../derived";
 import {
   buildAccessReviewRows,
   selectAccessByItem,
@@ -126,6 +128,7 @@ import {
   type LineageIndex,
   type SchemaObjectRef,
 } from "../lineage";
+import { xrayObjectKey } from "../semantic-xray";
 
 const NODE_W = 220;
 const NODE_H = 76;
@@ -289,7 +292,7 @@ function initialInspectorTab(): InspectorTab {
 }
 
 function initialSelected(items: Item[], index: LineageIndex): string {
-  const requested = searchParam("item");
+  const requested = searchParam("item") || searchParam("xray.model");
   if (items.some((item) => item.fabricId === requested)) return requested;
   const candidates = items.filter((item) => item.itemType === "SemanticModel");
   const ranked = (candidates.length > 0 ? candidates : items)
@@ -339,17 +342,102 @@ function objectGraph(
   selected: Item | undefined,
   selectedSchema: ModelTableSchema[],
   upstream: Item[],
+  downstream: Item[],
   itemById: Map<string, Item>,
   lineageIndex: LineageIndex,
   tableName: string,
 ): ObjectGraph {
-  if (!selected || selectedSchema.length === 0) {
+  if (!selected) {
     return {
       nodes: [],
       edges: [],
       width: 1080,
       height: 520,
       stageLabels: ["Source objects", "Model tables", "Fields", "Consumers"],
+      verifiedMetadata: false,
+      truncated: false,
+    };
+  }
+  if (selectedSchema.length === 0) {
+    if (selected.itemType !== "Notebook") {
+      return {
+        nodes: [],
+        edges: [],
+        width: 1080,
+        height: 520,
+        stageLabels: ["Source objects", "Model tables", "Fields", "Consumers"],
+        verifiedMetadata: false,
+        truncated: false,
+      };
+    }
+    const maxRows = Math.max(1, upstream.length, downstream.length);
+    const ownerY = 72 + Math.floor((maxRows - 1) / 2) * OBJECT_ROW_GAP;
+    const owner: ObjectNode = {
+      id: `owner:${selected.fabricId}`,
+      label: selected.displayName,
+      subtitle: typeMeta(selected.itemType).label,
+      code: typeMeta(selected.itemType).code,
+      color: typeMeta(selected.itemType).color,
+      itemId: selected.fabricId,
+      kind: "owner",
+      x: 382,
+      y: ownerY,
+    };
+    const sourceNodes = upstream.map(
+      (item, index): ObjectNode => ({
+        id: `source-item:${item.fabricId}`,
+        label: item.displayName,
+        subtitle: typeMeta(item.itemType).label,
+        code: typeMeta(item.itemType).code,
+        color: typeMeta(item.itemType).color,
+        itemId: item.fabricId,
+        kind: "source",
+        x: 24,
+        y: 72 + index * OBJECT_ROW_GAP,
+      }),
+    );
+    const consumerNodes = downstream.map(
+      (item, index): ObjectNode => ({
+        id: `consumer-item:${item.fabricId}`,
+        label: item.displayName,
+        subtitle: typeMeta(item.itemType).label,
+        code: typeMeta(item.itemType).code,
+        color: typeMeta(item.itemType).color,
+        itemId: item.fabricId,
+        kind: "consumer",
+        x: 740,
+        y: 72 + index * OBJECT_ROW_GAP,
+      }),
+    );
+    return {
+      nodes: [...sourceNodes, owner, ...consumerNodes],
+      edges: [
+        ...sourceNodes.map((node) => ({
+          source: node.id,
+          target: owner.id,
+          relation:
+            lineageIndex.incoming
+              .get(selected.fabricId)
+              ?.find((entry) => entry.edge.source === node.itemId)
+              ?.edge.relation ?? "depends on",
+        })),
+        ...consumerNodes.map((node) => ({
+          source: owner.id,
+          target: node.id,
+          relation:
+            lineageIndex.outgoing
+              .get(selected.fabricId)
+              ?.find((entry) => entry.edge.target === node.itemId)
+              ?.edge.relation ?? "depends on",
+        })),
+      ],
+      width: 1080,
+      height: Math.max(520, 148 + maxRows * OBJECT_ROW_GAP),
+      stageLabels: [
+        "Upstream items",
+        "Selected notebook",
+        "Downstream items",
+      ],
       verifiedMetadata: false,
       truncated: false,
     };
@@ -598,6 +686,7 @@ export function MapView({
   const [impactReportOpen, setImpactReportOpen] = useState(false);
   const [lineageView, setLineageView] =
     useState<LineageView>(initialLineageView);
+  const [semanticResetVersion, setSemanticResetVersion] = useState(0);
   const [includePreview, setIncludePreview] = useState(initialPreview);
   const [evidenceAttempt, setEvidenceAttempt] = useState(0);
   const [relationshipId, setRelationshipId] = useState("");
@@ -720,6 +809,10 @@ export function MapView({
     () => schemaFor(data, activeId) ?? [],
     [activeId, data],
   );
+  const semanticObjectMode =
+    mode === "objects" &&
+    selected?.itemType === "SemanticModel" &&
+    schema.length > 0;
   const impact = useMemo(
     () =>
       getLineageImpact(
@@ -766,34 +859,56 @@ export function MapView({
       ),
     [items],
   );
-  const visibleItems = useMemo(() => {
+  const lineageItems = useMemo(() => {
     const observed = previewActive
       ? items.filter((item) =>
           graphLineageIndex.incidentIds.has(item.fabricId) ||
           evidenceModel.previewGraph?.nodes.some((node) => node.id === item.fabricId.toLowerCase() && node.queried))
       : items;
-    const candidates = observed.length ? observed : items;
+    return observed.length ? observed : items;
+  }, [
+    evidenceModel.previewGraph,
+    graphLineageIndex,
+    items,
+    previewActive,
+  ]);
+  const visibleItems = useMemo(() => {
     const filtered =
       typeFilter === "all" &&
       healthFilter === "all" &&
       !query.trim()
-        ? candidates
-        : candidates.filter((item) =>
+        ? lineageItems
+        : lineageItems.filter((item) =>
             matchesItemFilters(item, typeFilter, healthFilter, query),
           );
+    const contextual =
+      typeFilter === "all"
+        ? filtered
+        : (() => {
+            const visible = new Set<string>();
+            for (const item of filtered) {
+              visible.add(item.fabricId);
+              const itemImpact = getLineageImpact(
+                graphLineageIndex,
+                item.fabricId,
+                Number.POSITIVE_INFINITY,
+              );
+              itemImpact.upstream.ids.forEach((id) => visible.add(id));
+              itemImpact.downstream.ids.forEach((id) => visible.add(id));
+            }
+            return lineageItems.filter((item) => visible.has(item.fabricId));
+          })();
     if (!impactMode || !activeId) {
-      return filtered;
+      return contextual;
     }
-    return filtered.filter((item) => connected.has(item.fabricId));
+    return contextual.filter((item) => connected.has(item.fabricId));
   }, [
     activeId,
     connected,
-    evidenceModel.previewGraph,
     graphLineageIndex,
     healthFilter,
     impactMode,
-    items,
-    previewActive,
+    lineageItems,
     query,
     typeFilter,
   ]);
@@ -808,9 +923,20 @@ export function MapView({
       ),
     [graphEdges, visibleIds],
   );
+  const layoutIds = useMemo(
+    () => new Set(lineageItems.map((item) => item.fabricId)),
+    [lineageItems],
+  );
+  const layoutEdges = useMemo(
+    () =>
+      graphEdges.filter(
+        (edge) => layoutIds.has(edge.source) && layoutIds.has(edge.target),
+      ),
+    [graphEdges, layoutIds],
+  );
   const atlasLayout = useMemo(
     () =>
-      buildStagedLayout(visibleItems, visibleEdges, {
+      buildStagedLayout(lineageItems, layoutEdges, {
         nodeWidth: NODE_W,
         nodeHeight: NODE_H,
         columnGap: NODE_COLUMN_GAP,
@@ -818,7 +944,7 @@ export function MapView({
         componentGap: 52,
         focusId: resolvedFocusId,
       }),
-    [resolvedFocusId, visibleEdges, visibleItems],
+    [layoutEdges, lineageItems, resolvedFocusId],
   );
   const storedPreviewOverlay = useMemo(
     () =>
@@ -843,10 +969,10 @@ export function MapView({
     ],
   );
   const previewLayout = useMemo(() => layoutPreviewGraph(
-    visibleItems, storedPreviewOverlay, data.workspace.fabricId,
+    lineageItems, storedPreviewOverlay, data.workspace.fabricId,
     { nodeWidth: NODE_W, nodeHeight: NODE_H, columnGap: NODE_COLUMN_GAP, rowGap: NODE_ROW_GAP },
     evidenceModel,
-  ), [data.workspace.fabricId, evidenceModel, storedPreviewOverlay, visibleItems]);
+  ), [data.workspace.fabricId, evidenceModel, lineageItems, storedPreviewOverlay]);
   const layout = previewActive ? previewLayout : atlasLayout;
   const posOf = (id: string) => drag[id] ?? layout.positions.get(id) ?? { x: 0, y: 0 };
   const previewOverlay = storedPreviewOverlay && {
@@ -962,6 +1088,7 @@ export function MapView({
             selected,
             schema,
             upstream,
+            downstream,
             itemById,
             lineageIndex,
             tableName,
@@ -980,6 +1107,7 @@ export function MapView({
       selectedMetadataEdges,
       tableName,
       upstream,
+      downstream,
     ],
   );
   const objectGroups = useMemo(
@@ -1076,14 +1204,14 @@ export function MapView({
     else url.searchParams.delete("health");
     if (impactMode) url.searchParams.set("impact", "focused");
     else url.searchParams.delete("impact");
-    if (mode === "objects" && objects.table) url.searchParams.set("table", objects.table);
+    if (mode === "objects" && !semanticObjectMode && objects.table) url.searchParams.set("table", objects.table);
     else url.searchParams.delete("table");
-    if (mode === "objects" && resolvedSourceFilter !== "all") {
+    if (mode === "objects" && !semanticObjectMode && resolvedSourceFilter !== "all") {
       url.searchParams.set("source", resolvedSourceFilter);
     } else {
       url.searchParams.delete("source");
     }
-    if (mode === "objects" && resolvedObjectKindFilter !== "all") {
+    if (mode === "objects" && !semanticObjectMode && resolvedObjectKindFilter !== "all") {
       url.searchParams.set("objectKind", resolvedObjectKindFilter);
     } else {
       url.searchParams.delete("objectKind");
@@ -1115,6 +1243,7 @@ export function MapView({
     query,
     resolvedObjectKindFilter,
     resolvedSourceFilter,
+    semanticObjectMode,
     tab,
     typeFilter,
   ]);
@@ -1486,6 +1615,27 @@ export function MapView({
   };
 
   const resetGraph = () => {
+    if (semanticObjectMode) {
+      setQuery("");
+      const url = new URL(window.location.href);
+      for (const key of [
+        "tables",
+        "object",
+        "dax",
+        "table",
+        "xray.model",
+        "xray.object",
+      ]) {
+        url.searchParams.delete(key);
+      }
+      window.history.replaceState(
+        null,
+        "",
+        `${url.pathname}${url.search}${url.hash}`,
+      );
+      setSemanticResetVersion((value) => value + 1);
+      return;
+    }
     setAtlasDrag({});
     setPreviewDrag({});
     setZoom(DEFAULT_MAP_ZOOM);
@@ -1506,6 +1656,54 @@ export function MapView({
     });
   };
 
+  const openSemanticObjectInXRay = (objectKey: string) => {
+    const url = new URL(window.location.href);
+    url.searchParams.set("view", "xray");
+    url.searchParams.set("xray.model", activeId);
+    url.searchParams.set("xray.object", objectKey);
+    url.searchParams.set("item", activeId);
+    url.searchParams.set("object", objectKey);
+    window.history.replaceState(
+      null,
+      "",
+      `${url.pathname}${url.search}${url.hash}`,
+    );
+    setLineageView("xray");
+  };
+
+  const openXRayObjectInObjectLineage = (
+    modelId: string,
+    objectKey: string,
+  ) => {
+    const objectTable = objectKey.split("\u0000")[1];
+    if (modelId !== activeId && itemById.has(modelId)) {
+      setSelId(modelId);
+      setFocusId(modelId);
+      setSelectedItemIds(new Set([modelId]));
+      resetObjectContext(true, modelId);
+    }
+    const url = new URL(window.location.href);
+    url.searchParams.set("lineage", "objects");
+    url.searchParams.set("view", "graph");
+    url.searchParams.set("item", modelId);
+    url.searchParams.set("object", objectKey);
+    if (objectTable) {
+      url.searchParams.set(
+        "tables",
+        encodeURIComponent(objectTable),
+      );
+    }
+    url.searchParams.delete("table");
+    window.history.replaceState(
+      null,
+      "",
+      `${url.pathname}${url.search}${url.hash}`,
+    );
+    setMode("objects");
+    setLineageView("graph");
+    setQuery("");
+  };
+
   const copyLink = async () => {
     try {
       await navigator.clipboard.writeText(window.location.href);
@@ -1516,7 +1714,11 @@ export function MapView({
     }
   };
 
-  const accessRows = useMemo(() => buildAccessReviewRows(data), [data]);
+  const accessRows = derivedFromSnapshot(
+    data,
+    "access-review-rows",
+    buildAccessReviewRows,
+  );
   const effectiveAccess = useMemo(() => {
     return selectAccessByItem(accessRows, activeId).map((row) => ({
       principalRef: row.principalRef,
@@ -1739,7 +1941,9 @@ export function MapView({
         value="xray"
         className="flex min-h-0 flex-1 flex-col focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ring"
       >
-        <SemanticXRayPanel />
+        <SemanticXRayPanel
+          onOpenObjectLineage={openXRayObjectInObjectLineage}
+        />
       </Tabs.Content>
       <Tabs.Content
         value="evidence"
@@ -1777,6 +1981,7 @@ export function MapView({
               key={value}
               type="button"
               disabled={previewActive && value === "objects"}
+              aria-label={value}
               aria-current={mode === value ? "true" : undefined}
               title={previewActive && value === "objects" ? "Item Relations does not provide object lineage." : undefined}
               onClick={() => {
@@ -1792,7 +1997,7 @@ export function MapView({
                 mode === value && "bg-card text-brand-foreground shadow-fabric-2",
               )}
             >
-              {value}
+              {value === "items" ? "Item lineage" : "Object lineage"}
             </button>
           ))}
         </div>
@@ -1805,7 +2010,11 @@ export function MapView({
           <span className="sr-only">Search lineage</span>
           <input
             value={query}
-            onChange={(event) => changeQuery(event.target.value)}
+            onChange={(event) =>
+              semanticObjectMode
+                ? setQuery(event.target.value)
+                : changeQuery(event.target.value)
+            }
             placeholder={mode === "items" ? "Search items…" : "Search objects…"}
             className="w-full rounded-lg border border-input bg-card pl-[31px] pr-m outline-none"
           />
@@ -1847,7 +2056,11 @@ export function MapView({
             </select>
           </>
         ) : (
-          objects.verifiedMetadata ? (
+          semanticObjectMode ? (
+            <span className="text-200 text-muted-foreground">
+              Whole-model search · bounded multi-table view
+            </span>
+          ) : objects.verifiedMetadata ? (
             <>
               {metadataSourceOptions.length > 0 && (
                 <select
@@ -1936,7 +2149,10 @@ export function MapView({
           type="button"
           role="switch"
           aria-checked={impactMode}
-          onClick={() => setImpactMode((current) => !current)}
+          onClick={() => {
+            preserveMapViewport();
+            setImpactMode((current) => !current);
+          }}
           className={cn(
             "flex items-center gap-s rounded-lg border px-m font-semibold",
             impactMode
@@ -1965,7 +2181,7 @@ export function MapView({
             Focus selection
           </button>
         )}
-        {(mode === "items"
+        {!semanticObjectMode && (mode === "items"
           ? selectedItemIds.size
           : selectedObjectIds.size) > 1 && (
           <span className="rounded-lg border border-primary/30 bg-primary/10 px-[9px] py-[7px] text-[11px] font-semibold text-primary">
@@ -1985,7 +2201,7 @@ export function MapView({
         </button>
       </div>
 
-      {mode === "objects" && objectGroups.length > 0 && (
+      {mode === "objects" && !semanticObjectMode && objectGroups.length > 0 && (
         <section
           aria-label="Object item groups"
           className="flex flex-wrap items-center gap-m border-b border-border bg-secondary/70 px-l py-s"
@@ -2067,6 +2283,20 @@ export function MapView({
       )}
 
       <div className="flex min-h-0 flex-1 flex-col xl:flex-row">
+        {semanticObjectMode && selected ? (
+          <ObjectLineageCanvas
+            key={`${selected.fabricId}:${semanticResetVersion}`}
+            data={data}
+            item={selected}
+            tables={schema}
+            query={query}
+            onOpenXRay={openSemanticObjectInXRay}
+            onSelectItem={(itemId) => {
+              if (switchActiveItem(itemId)) setMode("items");
+            }}
+          />
+        ) : (
+        <>
         <div
           ref={mapRef}
           onPointerDown={mapPanStart}
@@ -2089,7 +2319,11 @@ export function MapView({
             <div className="sticky left-[16px] top-[12px] z-20 max-w-[500px] rounded-lg border border-border bg-card px-[10px] py-[7px] text-[11px] text-muted-foreground shadow-fabric-4">
               {objects.verifiedMetadata
                 ? "Verified object metadata is shown from the selected item snapshot."
-                : "Stored object inventory. Consumer links are item-level unless a verified object binding was collected."}
+                : selected?.itemType === "Notebook" &&
+                    schema.length === 0 &&
+                    objects.nodes.length > 0
+                  ? "No direct notebook object references were resolved. Showing verified item-level dependencies."
+                  : "Stored object inventory. Consumer links are item-level unless a verified object binding was collected."}
               {objects.truncated
                 ? ` The view is limited to ${MAX_VISIBLE_OBJECT_EDGES} edges. Narrow the source, object or kind filter for the remaining relationships.`
                 : ""}
@@ -3123,7 +3357,9 @@ export function MapView({
                             disabled={previewActive}
                             onClick={() => {
                               setMode("objects");
-                              changeObjectTable(schema[0].name);
+                              if (selected?.itemType !== "SemanticModel") {
+                                changeObjectTable(schema[0].name);
+                              }
                             }}
                             className="text-200 font-semibold text-primary hover:underline"
                           >
@@ -3157,18 +3393,56 @@ export function MapView({
                             {open && (
                               <div className="border-t border-border px-[10px] py-[8px]">
                                 {table.measures.map((measure) => (
-                                  <div key={measure.name} className="flex items-center gap-[7px] py-[2px] text-[11px]">
+                                  <button
+                                    key={measure.name}
+                                    type="button"
+                                    onClick={() => {
+                                      if (selected?.itemType === "SemanticModel") {
+                                        openXRayObjectInObjectLineage(
+                                          activeId,
+                                          xrayObjectKey(
+                                            "measure",
+                                            table.name,
+                                            measure.name,
+                                          ),
+                                        );
+                                      } else {
+                                        setMode("objects");
+                                        changeObjectTable(table.name);
+                                      }
+                                    }}
+                                    className="flex w-full items-center gap-[7px] py-[2px] text-left text-[11px] hover:text-primary"
+                                  >
                                     <span className="h-[6px] w-[6px] rounded-sm bg-object-measure" />
                                     <span>{measure.name}</span>
                                     <span className="ml-auto text-[9px] text-muted-foreground">measure</span>
-                                  </div>
+                                  </button>
                                 ))}
                                 {table.columns.map((column) => (
-                                  <div key={column.name} className="flex items-center gap-[7px] py-[2px] text-[11px]">
+                                  <button
+                                    key={column.name}
+                                    type="button"
+                                    onClick={() => {
+                                      if (selected?.itemType === "SemanticModel") {
+                                        openXRayObjectInObjectLineage(
+                                          activeId,
+                                          xrayObjectKey(
+                                            "column",
+                                            table.name,
+                                            column.name,
+                                          ),
+                                        );
+                                      } else {
+                                        setMode("objects");
+                                        changeObjectTable(table.name);
+                                      }
+                                    }}
+                                    className="flex w-full items-center gap-[7px] py-[2px] text-left text-[11px] hover:text-primary"
+                                  >
                                     <span className="h-[6px] w-[6px] rounded-sm bg-object-column" />
                                     <span className="min-w-0 flex-1 truncate font-mono">{column.name}</span>
                                     <span className="text-[9px] text-muted-foreground">{column.dataType}</span>
-                                  </div>
+                                  </button>
                                 ))}
                               </div>
                             )}
@@ -3277,6 +3551,8 @@ export function MapView({
           </Tabs.Root>
           )}
         </ResizableInspector>
+        </>
+        )}
       </div>
       </Tabs.Content>
       </Tabs.Root>

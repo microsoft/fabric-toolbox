@@ -9,6 +9,7 @@ import {
   loadCommentsFromDb,
   loadFromDb,
   loadHistoryFromDb,
+  loadWorkspaceSyncStatuses,
   persistComment,
   readWithRetry,
   runFabricSync,
@@ -151,6 +152,8 @@ describe("Rayfin snapshot persistence", () => {
     browserCollectors.collectBrowserWorkspace.mockReset();
     ATLAS_CONFIG.syncAdminEmail = identity.email;
     ATLAS_CONFIG.syncAdminSubject = identity.id;
+    ATLAS_CONFIG.breakGlassSyncAdminEmail = "";
+    ATLAS_CONFIG.breakGlassSyncAdminSubject = "";
     ATLAS_CONFIG.snapshotRetentionCount = 12;
     ATLAS_CONFIG.previousSyncWriters = [];
     (
@@ -239,6 +242,70 @@ describe("Rayfin snapshot persistence", () => {
     mocks.mapSyncToAtlas
       .mockReset()
       .mockReturnValue(structuredClone(SAMPLE_DATA));
+  });
+
+  it("loads failed and unfinished workspace status without losing the last valid snapshot", async () => {
+    const secondWorkspaceId = "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa";
+    const primarySnapshotId = "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb";
+    const secondSnapshotId = "cccccccc-cccc-4ccc-8ccc-cccccccccccc";
+    mocks.data.Workspace.rows.push(
+      summaryMarker(
+        primarySnapshotId,
+        "2026-10-01T10:00:00.000Z",
+        { fabricId: workspaceId },
+      ),
+      summaryMarker(
+        secondSnapshotId,
+        "2026-10-02T10:00:00.000Z",
+        {
+          fabricId: secondWorkspaceId,
+          displayName: "Second workspace",
+        },
+      ),
+    );
+    mocks.data.SyncRun.rows.push(
+      {
+        id: "unfinished-primary",
+        workspace_id: workspaceId,
+        writerEmail: identity.email,
+        startedAt: "2026-10-03T08:00:00.000Z",
+        status: "running",
+      },
+      {
+        id: "failed-secondary",
+        workspace_id: secondWorkspaceId,
+        writerEmail: identity.email,
+        startedAt: "2026-10-03T09:00:00.000Z",
+        finishedAt: "2026-10-03T09:01:00.000Z",
+        status: "failed",
+        failureMessage: "Fabric returned HTTP 403.",
+      },
+    );
+
+    await expect(
+      loadWorkspaceSyncStatuses(false, [
+        workspaceId,
+        secondWorkspaceId,
+        workspaceId,
+      ]),
+    ).resolves.toEqual({
+      [workspaceId]: {
+        snapshotId: primarySnapshotId,
+        snapshotAt: "2026-10-01T10:00:00.000Z",
+        lastRunStatus: "running",
+        lastRunStartedAt: "2026-10-03T08:00:00.000Z",
+        lastRunFinishedAt: undefined,
+        lastRunError: undefined,
+      },
+      [secondWorkspaceId]: {
+        snapshotId: secondSnapshotId,
+        snapshotAt: "2026-10-02T10:00:00.000Z",
+        lastRunStatus: "failed",
+        lastRunStartedAt: "2026-10-03T09:00:00.000Z",
+        lastRunFinishedAt: "2026-10-03T09:01:00.000Z",
+        lastRunError: "Fabric returned HTTP 403.",
+      },
+    });
   });
 
   it("does not publish a Workspace marker when an individual write fails", async () => {
@@ -439,6 +506,23 @@ describe("Rayfin snapshot persistence", () => {
       }),
     ).rejects.toThrow(/configured Atlas sync administrator/i);
     expect(mocks.invokeSyncAll).not.toHaveBeenCalled();
+  });
+
+  it("allows the configured break-glass synchronizer to publish", async () => {
+    const breakGlass = {
+      id: "77777777-7777-4777-8777-777777777777",
+      name: "Break glass",
+      email: "break-glass@example.test",
+    };
+    ATLAS_CONFIG.breakGlassSyncAdminSubject = breakGlass.id;
+    ATLAS_CONFIG.breakGlassSyncAdminEmail = breakGlass.email;
+
+    await expect(runFabricSync(false, breakGlass)).resolves.toBeTruthy();
+    expect(mocks.data.Workspace.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        writerEmail: breakGlass.email,
+      }),
+    );
   });
 
   it("stores collected Item Relations evidence only after the snapshot marker", async () => {
@@ -1531,6 +1615,44 @@ describe("Rayfin snapshot persistence", () => {
         .map((row) => String(row.value))
         .join(""),
     ).not.toMatch(/aiInstructions|fewShots|businessValue/);
+  });
+
+  it("persists semantic model evidence in the existing snapshot payload", async () => {
+    const atlas = structuredClone(SAMPLE_DATA);
+    const model = atlas.items.find(
+      (item) => item.itemType === "SemanticModel",
+    )!;
+    atlas.semanticModelEvidence = {
+      [model.fabricId]: {
+        relationships: [],
+        dependencies: [
+          {
+            table: "Sales",
+            object: "Revenue",
+            objectType: "measure",
+            referencedTable: "Sales",
+            referencedObject: "Amount",
+            referencedObjectType: "column",
+            source: "static-qualified-reference",
+          },
+        ],
+        expressionsOmitted: 1,
+      },
+    };
+    mocks.mapSyncToAtlas.mockReturnValue(atlas);
+
+    await runFabricSync(false, identity);
+
+    const evidenceWrites = mocks.data.ConfigEntry.create.mock.calls
+      .map(([row]) => row as Record<string, unknown>)
+      .filter((row) => row.section === "__semantic_model_evidence__");
+    expect(evidenceWrites.length).toBeGreaterThan(0);
+    expect(evidenceWrites.map((row) => String(row.value)).join("")).toContain(
+      "static-qualified-reference",
+    );
+    expect(evidenceWrites.map((row) => String(row.value)).join("")).not.toMatch(
+      /accessToken|password|businessValue/,
+    );
   });
 
   it("falls back to the previous complete manifest during hydration", async () => {

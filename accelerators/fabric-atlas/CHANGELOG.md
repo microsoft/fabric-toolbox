@@ -4,6 +4,110 @@ All notable changes to Fabric Atlas are documented in this file.
 
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.1.3] - 2026-10-17
+
+### Fixed
+
+- Show verified notebook item-level upstream and downstream dependencies in
+  Object Lineage when no direct static object reference was resolved.
+- Keep detailed notebook object lineage unchanged when literal references are
+  available.
+- State the fallback explicitly instead of presenting an empty object graph or
+  guessing dynamically constructed objects.
+
+## [2.1.2] - 2026-10-17
+
+### Added
+
+- Notebook Object Lineage for direct literal Spark table, Delta table-path and
+  literal SQL references, with read and write direction.
+- Metadata-only Notebook definition projection through Rayfin Functions.
+
+### Changed
+
+- Item-type filters retain the complete connected lineage context of matching
+  items.
+- Impact mode reuses the full graph layout so the selected node and viewport
+  stay fixed.
+- Notebook family coverage now reports partial object and lineage evidence
+  instead of excluding every object by design.
+
+### Fixed
+
+- Closed the governance radar polygon when one or more pillar scores are
+  unavailable; `N/A` remains explicit and plots at zero.
+- Preserved notebook read direction through source-to-consumer lineage
+  normalization.
+
+## [2.1.1] - 2026-10-17
+
+### Added
+
+- Workspace-wide Departure Pack ownership coverage with separate privileged
+  access, identity-reference and ownership-unknown review sections.
+- Ontology 2.0 TMDL projection for entities, keys, scalar and time-series
+  properties, and entity relationships.
+- Persisted Workspace Hub status derived from trusted workspace manifests and
+  SyncRun audit rows for every selected workspace.
+
+### Changed
+
+- Expanded Departure Pack Markdown, reassignment CSV and access CSV exports
+  with evidence categories, limitations and downstream consumers.
+- Kept recorded Owner or Edit access and configured-by or modified-by
+  references separate from documented business ownership.
+- Preserved known workspace status across workspace switches, later sync
+  batches and partial status refreshes.
+
+### Fixed
+
+- Prevented non-active workspace status from reverting to `Not loaded` after
+  the browser synchronization queue changed or cleared.
+- Retained the last valid snapshot beside failed or unfinished run evidence.
+- Preserved the time-series marker when projected Ontology metadata enters the
+  canonical Atlas schema inventory.
+
+## [2.1.0] - 2026-10-17
+
+### Added
+
+- Complete Semantic Model Object Lineage with a fixed table inventory,
+  bounded multi-table field blocks, whole-model search and canonical deep links.
+- Direct and transitive DAX edges for the focused object, with collapsed-table
+  endpoints and explicit verified, inferred, unresolved and omitted evidence.
+- Cross-navigation between Object Lineage, X-Ray, Asset Catalog and global
+  search results.
+- Snapshot persistence for model relationships, static dependencies,
+  calculated-column expressions and expression coverage.
+- Local diagnostics for hydration, synchronization, X-Ray and Object Lineage
+  build timings.
+- Optional break-glass synchronizer identity under the same Rayfin data
+  policies as the primary synchronizer.
+
+### Changed
+
+- Unified X-Ray and schema impact analysis on one Semantic Model dependency
+  index.
+- Replaced the Vega governance radar with a keyboard-accessible SVG.
+- Lazy-loaded application views and built the global search index only when
+  opened.
+- Reused expensive access, governance, coverage and schema derivations per
+  immutable snapshot.
+- Increased hydration cursor pages from 100 to 1,000 rows and started marker
+  and SyncRun reads together.
+- Scoped the initial auth redirect through `RAYFIN_AUTH_REDIRECT_URI`.
+
+### Fixed
+
+- Preserved measure references after `RETURN` and `NOT` in browser and
+  Rayfin Function DAX tokenizers.
+- Prevented omitted expressions from producing an unqualified "No DAX
+  consumers" result.
+- Made object and schema keys independent from the browser locale.
+- Removed preview schema fallback from production lookups.
+- Kept the active Semantic Model selected when Object Lineage is reset.
+- Neutralized CSV cells beginning with a tab or carriage return.
+
 ## [2.0.0] - 2026-10-03
 
 ### Added

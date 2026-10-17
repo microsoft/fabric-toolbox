@@ -110,8 +110,6 @@ describe("SynchronizerAuthority policy", () => {
       .filter(ts.isPropertyAssignment)
       .find((property) => property.name.getText() === "policy")!
       .initializer as ts.ArrowFunction;
-    expect(policy.body.getText(source)).toBe(
-      "claims.sub.eq(SYNC_WRITER_SUBJECT)",
-    );
+    expect(policy.body.getText(source)).toBe("syncWriterPolicy(claims)");
   });
 });

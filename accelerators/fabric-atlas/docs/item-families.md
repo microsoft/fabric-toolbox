@@ -67,6 +67,10 @@ data exists:
 - **Unknown types** keep top-level identity with a neutral fallback.
 - **Fabric Apps.** `AppBackend` and `OrgApp` stay at top-level identity until
   a documented contract exposes dependent items or services.
+- **Notebooks.** `workspaceCollectDefinitions` reads the documented notebook
+  definition and projects direct literal table and `Tables/...` references.
+  Object and lineage coverage are Partial because code, cells, SQL text,
+  credentials and dynamic references are never persisted.
 
 ## Reference tenant observation (2026-10-02)
 

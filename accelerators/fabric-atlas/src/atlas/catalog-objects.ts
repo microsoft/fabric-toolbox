@@ -39,6 +39,7 @@ export const ASSET_OBJECT_KINDS = [
   "graphSourceMapping",
   "dataAgentSource",
   "dataAgentElement",
+  "notebookObject",
 ] as const;
 
 export type AssetObjectKind = (typeof ASSET_OBJECT_KINDS)[number];
@@ -99,6 +100,7 @@ const KIND_LABELS: Record<AssetObjectKind, string> = {
   graphSourceMapping: "Graph source mapping",
   dataAgentSource: "Data Agent source",
   dataAgentElement: "Data Agent selected source element",
+  notebookObject: "Notebook object reference",
 };
 
 const METADATA_KIND_LABELS: Record<MetadataObjectKind, string> = {
@@ -116,6 +118,7 @@ const METADATA_KIND_LABELS: Record<MetadataObjectKind, string> = {
   dataAgentElement: "Data Agent selected element",
   kqlFunction: "KQL function",
   kqlMaterializedView: "KQL materialized view",
+  notebookObject: "Notebook object reference",
 };
 
 export function assetObjectKindLabel(kind: AssetObjectKind): string {
@@ -184,6 +187,9 @@ function schemaTableKind(
   if (objectType === METADATA_OBJECT_TYPES.dataAgentSource.toLowerCase()) {
     return "dataAgentSource";
   }
+  if (objectType === METADATA_OBJECT_TYPES.notebookObject.toLowerCase()) {
+    return "notebookObject";
+  }
   const isView = objectType.includes("view");
   if (itemType === "KQLDatabase") {
     return isView ? "kqlMaterializedView" : "kqlTable";
@@ -239,6 +245,7 @@ function metadataKindForAsset(
     graphProperty: "graphProperty",
     dataAgentSource: "dataAgentSource",
     dataAgentElement: "dataAgentElement",
+    notebookObject: "notebookObject",
   };
   return mapping[kind];
 }
@@ -813,6 +820,31 @@ export function buildCatalogObjects(
             ),
           });
         }
+      }
+    } else if (metadata.kind === "notebook") {
+      for (const object of metadata.objects) {
+        add(item, {
+          objectId: object.id,
+          kind: "notebookObject",
+          name: object.name,
+          dataType: object.operation,
+          source: object.sourceItemId,
+          sourceItemId: object.sourceItemId,
+          sourceItemName: sourceItemName(itemsById, object.sourceItemId),
+          description: "Static literal reference",
+          details: {
+            operation: object.operation,
+            sourceItemId: object.sourceItemId,
+            sourceWorkspaceId: object.sourceWorkspaceId,
+          },
+          metadataRef: metadataReference(
+            item.fabricId,
+            "notebookObject",
+            object.id,
+            object.name,
+            { tableName: object.name },
+          ),
+        });
       }
     } else {
       for (const fn of metadata.functions) {

@@ -422,12 +422,14 @@ describe("normalizeLineageEdges", () => {
     const normalized = normalizeLineageEdges(items, [
       { source: "notebook", target: "pipeline", relation: "Direct Lake" },
       { source: "lakehouse", target: "notebook", relation: "reads" },
+      { source: "lakehouse", target: "notebook", relation: "notebook reads" },
       { source: "model", target: "report", relation: "report" },
     ]);
 
     expect(normalized).toEqual([
       { source: "pipeline", target: "notebook", relation: "orchestrates", broken: undefined },
       { source: "notebook", target: "lakehouse", relation: "writes", broken: undefined },
+      { source: "lakehouse", target: "notebook", relation: "notebook reads", broken: undefined },
       { source: "model", target: "report", relation: "binds", broken: undefined },
     ]);
   });

@@ -7,7 +7,7 @@ import {
   text,
   uuid,
 } from '@microsoft/rayfin-core';
-import { SYNC_WRITER_SUBJECT } from './sync-policy.js';
+import { syncWriterEmailPolicy, syncWriterPolicy } from './sync-policy.js';
 
 export type OperationalIncidentSource = 'fabric-job-history';
 
@@ -22,13 +22,11 @@ export type OperationalIncidentSource = 'fabric-job-history';
 @entity()
 @authenticated('read')
 @authenticated('delete', {
-  policy: (claims) => claims.sub.eq(SYNC_WRITER_SUBJECT),
+  policy: (claims) => syncWriterPolicy(claims),
 })
 @authenticated('create', {
   policy: (claims, item) =>
-    claims.email
-      .eq(item.writerEmail)
-      .and(claims.sub.eq(SYNC_WRITER_SUBJECT)),
+    syncWriterEmailPolicy(claims, item.writerEmail),
 })
 export class OperationalIncident {
   @uuid() id!: string;

@@ -6,6 +6,8 @@
 //-----------------------------------------------------------------------
 
 import {
+  lazy,
+  Suspense,
   useCallback,
   useEffect,
   useMemo,
@@ -73,18 +75,65 @@ import {
   useDisplayPreference,
 } from "./atlas/display-preferences";
 
-import { OverviewView } from "./atlas/views/Overview";
-import { MapView } from "./atlas/views/Map";
-import { CatalogView } from "./atlas/views/Catalog";
-import { AssetCatalogView } from "./atlas/views/AssetCatalog";
-import { AccessView } from "./atlas/views/Access";
-import { GovernanceCenterView } from "./atlas/views/GovernanceCenter";
-import { JobsView } from "./atlas/views/Jobs";
-import { WorkspaceHubView } from "./atlas/views/WorkspaceHub";
-import { AboutView } from "./atlas/views/About";
 import { AtlasBootView, FirstSyncView } from "./atlas/views/FirstSync";
 
 export type { Tab } from "./atlas/navigation";
+
+const overviewLoader = () => import("./atlas/views/Overview");
+const mapLoader = () => import("./atlas/views/Map");
+const catalogLoader = () => import("./atlas/views/Catalog");
+const assetCatalogLoader = () => import("./atlas/views/AssetCatalog");
+const accessLoader = () => import("./atlas/views/Access");
+const governanceLoader = () => import("./atlas/views/GovernanceCenter");
+const jobsLoader = () => import("./atlas/views/Jobs");
+const workspaceLoader = () => import("./atlas/views/WorkspaceHub");
+const aboutLoader = () => import("./atlas/views/About");
+
+const OverviewView = lazy(() =>
+  overviewLoader().then((module) => ({ default: module.OverviewView })),
+);
+const MapView = lazy(() =>
+  mapLoader().then((module) => ({ default: module.MapView })),
+);
+const CatalogView = lazy(() =>
+  catalogLoader().then((module) => ({ default: module.CatalogView })),
+);
+const AssetCatalogView = lazy(() =>
+  assetCatalogLoader().then((module) => ({
+    default: module.AssetCatalogView,
+  })),
+);
+const AccessView = lazy(() =>
+  accessLoader().then((module) => ({ default: module.AccessView })),
+);
+const GovernanceCenterView = lazy(() =>
+  governanceLoader().then((module) => ({
+    default: module.GovernanceCenterView,
+  })),
+);
+const JobsView = lazy(() =>
+  jobsLoader().then((module) => ({ default: module.JobsView })),
+);
+const WorkspaceHubView = lazy(() =>
+  workspaceLoader().then((module) => ({
+    default: module.WorkspaceHubView,
+  })),
+);
+const AboutView = lazy(() =>
+  aboutLoader().then((module) => ({ default: module.AboutView })),
+);
+
+const VIEW_LOADERS: Partial<Record<Tab, () => Promise<unknown>>> = {
+  overview: overviewLoader,
+  map: mapLoader,
+  catalog: catalogLoader,
+  assets: assetCatalogLoader,
+  access: accessLoader,
+  governance: governanceLoader,
+  jobs: jobsLoader,
+  workspace: workspaceLoader,
+  about: aboutLoader,
+};
 
 const NAV_GROUPS: {
   label: string;
@@ -174,6 +223,8 @@ function SidebarContent({
                   key={id}
                   type="button"
                   onClick={() => onNavigate(id)}
+                  onMouseEnter={() => void VIEW_LOADERS[id]?.()}
+                  onFocus={() => void VIEW_LOADERS[id]?.()}
                   aria-current={tab === id ? "page" : undefined}
                   className={cn(
                     "relative flex items-center gap-[10px] rounded-md px-[10px] py-[7px] text-left text-[13px] font-medium transition-colors",
@@ -275,7 +326,10 @@ function App() {
       delete document.documentElement.dataset.atlasDensity;
     };
   }, [density.value]);
-  const workspaceSearchIndex = useMemo(() => buildSearchIndex(data), [data]);
+  const workspaceSearchIndex = useMemo(
+    () => (commandOpen ? buildSearchIndex(data) : []),
+    [commandOpen, data],
+  );
   const catalogAvailability = catalogSearchAvailability({
     enabled: isFeatureEnabled(CATALOG_SEARCH_FEATURE_ID),
     isPreview,
@@ -406,7 +460,7 @@ function App() {
       // Retain screen filters, but never replay entities from another workspace.
       const url = new URL(window.location.href);
       for (const key of [
-        "item", "table", "source", "objectKind", "expand",
+        "item", "table", "tables", "object", "dax", "source", "objectKind", "expand",
         "catalog.item", "assets.item", "assets.table", "assets.object", "assets.objectId", "assets.objectKind",
         "access.item", "access.principal", "jobs.item", "jobs.job",
         "workspace.item", "workspace.comment", "governance.current", "governance.baseline",
@@ -637,6 +691,16 @@ function App() {
               transition={{ duration: 0.16, ease: "easeOut" }}
               className="h-full"
             >
+              <Suspense
+                fallback={
+                  <div
+                    role="status"
+                    className="flex h-full min-h-64 items-center justify-center text-300 text-muted-foreground"
+                  >
+                    Loading Fabric Atlas view...
+                  </div>
+                }
+              >
               {tab === "overview" && <OverviewView onOpen={navigate} />}
               {tab === "map" && <MapView />}
               {tab === "catalog" && (
@@ -685,6 +749,7 @@ function App() {
                 />
               )}
               {tab === "about" && <AboutView />}
+              </Suspense>
             </motion.div>
           </AnimatePresence>
         </main>
@@ -694,6 +759,19 @@ function App() {
         open={commandOpen}
         onClose={() => setCommandOpen(false)}
         onSelect={(result) => navigate(navigationForSearch(result))}
+        onOpenXRay={(result) =>
+          navigate({
+            tab: "map",
+            focus: {
+              requestId: crypto.randomUUID(),
+              itemId: result.target.itemId,
+              tableName: result.target.tableName,
+              objectName: result.target.objectName ?? result.title,
+              objectKind: result.target.objectKind,
+              filters: { view: "xray" },
+            },
+          })
+        }
         catalogSearch={
           catalogAvailability === "disabled"
             ? undefined

@@ -77,7 +77,7 @@ describe("ItemFamilyCoverageSection", () => {
     render(<ItemFamilyCoverageSection data={TENANT_SHAPED} />);
     const inventory = screen.getByRole("listbox", { name: "Item family coverage" });
     const options = within(inventory).getAllByRole("option");
-    expect(options[0]).toHaveAccessibleName(/^Notebook\. 2 items\. Catalog Collected\. Objects Excluded by design/);
+    expect(options[0]).toHaveAccessibleName(/^Notebook\. 2 items\. Catalog Collected\. Objects Partial\. Lineage Partial/);
     expect(options.map((option) => option.getAttribute("aria-label")?.split(".")[0])).toEqual([
       "Notebook",
       "Business Process Solutions (Microsoft",

@@ -105,4 +105,45 @@ describe("buildOffboardingReport", () => {
       buildOffboardingReport(value, person.principalId).owned,
     ).toEqual([]);
   });
+
+  it("surfaces privileged and identity-linked items without claiming ownership", () => {
+    const value = data();
+    value.items.push({
+      ...item("notebook"),
+      itemType: "Notebook",
+      ownerEmail: undefined,
+      ownerMetadataAvailable: false,
+      configuredBy: person.email,
+    });
+    value.grants.push({
+      principalRef: person.principalId,
+      itemFabricId: "notebook",
+      accessLevel: "edit",
+      source: "directShare",
+    });
+
+    const report = buildOffboardingReport(value, person.principalId);
+
+    expect(report.workspaceOwnershipCoverage).toEqual({
+      documented: 3,
+      total: 4,
+      unknown: 1,
+      percentage: 75,
+    });
+    expect(report.privilegedReview).toEqual([
+      expect.objectContaining({
+        item: expect.objectContaining({ fabricId: "notebook" }),
+        evidence: expect.arrayContaining(["direct-edit-access"]),
+      }),
+    ]);
+    expect(report.identityDependencies).toEqual([
+      expect.objectContaining({
+        item: expect.objectContaining({ fabricId: "notebook" }),
+        evidence: ["configured-by"],
+      }),
+    ]);
+    expect(report.ownershipUnknown.map((entry) => entry.fabricId)).toContain(
+      "notebook",
+    );
+  });
 });

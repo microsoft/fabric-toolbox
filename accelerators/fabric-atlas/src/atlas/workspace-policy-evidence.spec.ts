@@ -161,8 +161,8 @@ describe("additive policy evidence entity permissions", () => {
   it("shares app-audience reads but restricts every write to the immutable synchronizer", () => {
     const entity = readFileSync(resolve("rayfin", "data", "AccessPolicyEvidence.ts"), "utf8");
     expect(entity).toContain("@authenticated('read')");
-    expect(entity).toContain("claims.sub.eq(SYNC_WRITER_SUBJECT).and(claims.email.eq(item.writerEmail))");
-    expect(entity).toContain("@authenticated('delete', { policy: (claims) => claims.sub.eq(SYNC_WRITER_SUBJECT) })");
+    expect(entity).toContain("syncWriterEmailPolicy(claims, item.writerEmail)");
+    expect(entity).toContain("@authenticated('delete', { policy: (claims) => syncWriterPolicy(claims) })");
     expect(entity).not.toMatch(/authenticated\('update'|anonymous|accessToken|businessRows|principalId|decision/);
     expect(entity).toContain("@date({ optional: true }) observedAt?");
     const schema = readFileSync(resolve("rayfin", "data", "schema.ts"), "utf8");

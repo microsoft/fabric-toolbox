@@ -65,6 +65,7 @@ const METADATA_NATIVE_ITEM_TYPES = new Set([
   "GraphModel",
   "DataAgent",
   "KQLDatabase",
+  "Notebook",
 ]);
 
 export function shouldUseVerifiedMetadataGraph(
@@ -187,6 +188,9 @@ function metadataNodeStyle(kind: MetadataObjectKind): {
   }
   if (kind === "kqlMaterializedView") {
     return { code: "MV", color: "var(--color-lineage-upstream)" };
+  }
+  if (kind === "notebookObject") {
+    return { code: "NB", color: "var(--color-object-table)" };
   }
   if (kind === "graphNode") {
     return { code: "GN", color: "var(--color-primary)" };

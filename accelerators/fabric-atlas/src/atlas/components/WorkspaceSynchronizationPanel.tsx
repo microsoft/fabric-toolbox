@@ -118,6 +118,13 @@ function ScopeStatus({ row }: { row: ScopeWorkspaceRow }) {
           Cancelled
         </span>
       );
+    case "unfinished":
+      return (
+        <span className={cn(CHIP, "border-signal-warning-foreground/20 bg-signal-warning-background text-signal-warning-foreground")}>
+          <Clock3 className="icon-size-100" aria-hidden="true" />
+          Unfinished run
+        </span>
+      );
     case "unsynchronized":
       return (
         <span className={cn(CHIP, "border-signal-warning-foreground/20 bg-signal-warning-background text-signal-warning-foreground")}>
@@ -156,17 +163,24 @@ function ScopeDetail({ row }: { row: ScopeWorkspaceRow }) {
       return (
         <div className="flex flex-col gap-xxs">
           <ErrorDetail message={status.message} className="text-foreground" />
-          {row.active && (
-            <span>
-              {status.snapshotAt
-                ? `Snapshot from ${formatRunStart(status.snapshotAt)} kept`
-                : "No snapshot published"}
-            </span>
-          )}
+          <span>
+            {status.snapshotAt
+              ? `Snapshot from ${formatRunStart(status.snapshotAt)} kept`
+              : "No snapshot published"}
+          </span>
         </div>
       );
     case "cancelled":
       return <>Cancelled before publication</>;
+    case "unfinished":
+      return (
+        <>
+          Previous browser run has no completion result.
+          {status.snapshotAt
+            ? ` Snapshot from ${formatRunStart(status.snapshotAt)} kept.`
+            : ""}
+        </>
+      );
     case "unsynchronized":
       return <>Run the first synchronization</>;
     default:
@@ -208,6 +222,7 @@ function SelectedWorkspacesCard() {
     workspaceScopes,
     workspaceScopesLoading,
     workspaceScopesError,
+    workspaceSyncStatuses,
     reloadWorkspaceScopes,
     activeWorkspaceId,
     syncing,
@@ -233,6 +248,7 @@ function SelectedWorkspacesCard() {
     lastSyncedAt,
     syncQueue,
     syncWorkspaceId,
+    persistedStatuses: workspaceSyncStatuses,
   });
   const canManageScope = canSync && isFeatureEnabled("fabric-app-functions");
   const canStart = canSync && (isPreview || configured);

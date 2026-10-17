@@ -122,6 +122,13 @@ describe("AssetCatalogView", () => {
     ).toBeInTheDocument();
     expect(screen.getByText("Depends on")).toBeInTheDocument();
     expect(screen.getAllByText("DAX").length).toBeGreaterThan(0);
+    expect(
+      screen.getByRole("link", { name: "Object Lineage" }),
+    ).toHaveAttribute("href", expect.stringContaining("lineage=objects"));
+    expect(screen.getByRole("link", { name: "X-Ray" })).toHaveAttribute(
+      "href",
+      expect.stringContaining("view=xray"),
+    );
     expect(screen.getAllByText(/total_revenue_chf/).length).toBeGreaterThan(0);
   });
 

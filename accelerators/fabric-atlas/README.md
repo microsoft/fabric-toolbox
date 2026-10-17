@@ -14,20 +14,20 @@ the last validated snapshot in Fabric so everyone sees the same state.
 
 [Install](docs/installation.md) ·
 [Architecture](docs/architecture.md) ·
-[Whitepaper](https://github.com/fredgis/FabricAtlas/blob/df15df1/docs/fabric-atlas-whitepaper.pdf) ·
-[Technical presentation](https://github.com/fredgis/FabricAtlas/blob/df15df1/prez/Fabric-Atlas-Dev-Architecture.pdf) ·
+[Whitepaper](https://github.com/fredgis/FabricAtlas/blob/f19b97a/docs/fabric-atlas-whitepaper.pdf) ·
+[Technical presentation](https://github.com/fredgis/FabricAtlas/blob/f19b97a/prez/Fabric-Atlas-Dev-Architecture.pdf) ·
 [Capabilities](#capabilities) ·
 [Status legend](#status-legend) ·
 [Roadmap](#current-limits-and-roadmap) ·
 [Changelog](CHANGELOG.md) ·
-[Contribute](https://github.com/fredgis/FabricAtlas/blob/df15df1/.github/CONTRIBUTING.md)
+[Contribute](https://github.com/fredgis/FabricAtlas/blob/f19b97a/.github/CONTRIBUTING.md)
 
 </div>
 
 This Fabric Toolbox copy tracks
-[`fredgis/FabricAtlas@df15df1`](https://github.com/fredgis/FabricAtlas/commit/df15df1).
+[`fredgis/FabricAtlas@f19b97a`](https://github.com/fredgis/FabricAtlas/commit/f19b97a).
 
-## Fabric Atlas 2.0 demo
+## Fabric Atlas 2.1 demo
 
 https://github.com/user-attachments/assets/4f34a994-a130-4a74-bce7-d2d2bbab7d65
 
@@ -35,7 +35,7 @@ https://github.com/user-attachments/assets/4f34a994-a130-4a74-bce7-d2d2bbab7d65
 
 ## Whitepaper
 
-The [Fabric Atlas whitepaper](https://github.com/fredgis/FabricAtlas/blob/df15df1/docs/fabric-atlas-whitepaper.pdf) explains how
+The [Fabric Atlas whitepaper](https://github.com/fredgis/FabricAtlas/blob/f19b97a/docs/fabric-atlas-whitepaper.pdf) explains how
 the product collects and validates metadata, publishes immutable snapshots,
 traces item and DAX dependencies, reviews effective access, and builds
 principal-centred departure packs. It also covers governance, operations,
@@ -44,12 +44,12 @@ security boundaries, deployment and known API limits.
 The screenshots use FGI-MAIN as one example deployment. Its counts and findings
 are not product defaults or a reference architecture.
 
-<a href="https://github.com/fredgis/FabricAtlas/blob/df15df1/docs/fabric-atlas-whitepaper.pdf">
-  <img src="https://raw.githubusercontent.com/fredgis/FabricAtlas/df15df1/docs/assets/fabric-atlas-whitepaper-hero.png" alt="Fabric Atlas 2.0 whitepaper preview with the cover, Lineage Evidence, X-Ray, coverage and multi-workspace pages" width="100%">
+<a href="https://github.com/fredgis/FabricAtlas/blob/f19b97a/docs/fabric-atlas-whitepaper.pdf">
+  <img src="https://raw.githubusercontent.com/fredgis/FabricAtlas/f19b97a/docs/assets/fabric-atlas-whitepaper-hero.png" alt="Fabric Atlas 2.0 whitepaper preview with the cover, Lineage Evidence, X-Ray, coverage and multi-workspace pages" width="100%">
 </a>
 
-[Read the PDF](https://github.com/fredgis/FabricAtlas/blob/df15df1/docs/fabric-atlas-whitepaper.pdf) ·
-[Read the Markdown version](https://github.com/fredgis/FabricAtlas/blob/df15df1/docs/fabric-atlas-whitepaper.md)
+[Read the PDF](https://github.com/fredgis/FabricAtlas/blob/f19b97a/docs/fabric-atlas-whitepaper.pdf) ·
+[Read the Markdown version](https://github.com/fredgis/FabricAtlas/blob/f19b97a/docs/fabric-atlas-whitepaper.md)
 
 ## Read-only Atlas MCP
 
@@ -95,12 +95,11 @@ identity gates, tool contracts and limitations.
 
 ## Technical presentation
 
-The [Fabric Atlas development and architecture presentation](https://github.com/fredgis/FabricAtlas/blob/df15df1/prez/Fabric-Atlas-Dev-Architecture.pdf)
+The [Fabric Atlas development and architecture presentation](https://github.com/fredgis/FabricAtlas/blob/f19b97a/prez/Fabric-Atlas-Dev-Architecture.pdf)
 documents the Rayfin-first collector path, manifest-last publication, current
 entity groups, local MCP and the exact Rayfin platform gaps that keep Python
 compatibility and browser-driven synchronization in place. The editable deck,
-PDF and PlantUML sources are in the
-[`prez/` directory](https://github.com/fredgis/FabricAtlas/tree/df15df1/prez).
+PDF and PlantUML sources are in [`prez/`](prez/).
 
 ## What it does
 
@@ -108,15 +107,16 @@ Fabric workspaces spread operational metadata across many portal pages and APIs.
 Fabric Atlas collects that metadata without copying business data.
 
 - Select and synchronize multiple workspaces without mixing their snapshots.
-- Browse Fabric items and inspect SQL, KQL, semantic, ontology, graph and Data
-  Agent objects in one catalog.
+- Browse Fabric items and inspect SQL, KQL, semantic, ontology, graph, Data
+  Agent and direct notebook object references in one catalog.
 - Search items, objects, principals, jobs, configuration and notes with
   `Ctrl+K`.
 - Trace trusted item and object lineage, raw Item Relations Preview evidence
   and DAX dependencies through Semantic X-Ray.
 - Compare validated snapshots, review changes and export impact evidence.
 - Review effective recorded access, run local What-if scenarios and generate
-  departure packs.
+  departure packs that separate ownership, privileged access, identity
+  references and unknown evidence.
 - Track findings, item-family Coverage, Policies & AI and six governance
   posture pillars.
 - Inspect job failures, inferred downstream impact and portal-only monitoring
@@ -127,19 +127,19 @@ Fabric Atlas collects that metadata without copying business data.
 
 ## Capabilities
 
-| Area | Included in Fabric Atlas 2.0 |
+| Area | Included in Fabric Atlas 2.1 |
 |---|---|
-| Workspaces and sync | Shared workspace scope, independent validated snapshots, active-workspace switching, staged progress and last-known-good fallback |
-| Catalog and search | Item Catalog, alphabetized Asset Catalog, `Ctrl+K` search, SQL/KQL/semantic/ontology/graph/Data Agent inventory |
-| Lineage and impact | Trusted Atlas graph, Item Relations Preview, Evidence, Changes, X-Ray, object lineage and exportable impact reports |
-| Governance | Findings, Radar, snapshot comparison, history, item-family Coverage, posture targets and Policies & AI |
-| Access | Effective recorded access, principal review, personal decisions, What-if simulation and departure packs |
+| Workspaces and sync | Shared workspace scope, independent validated snapshots, persisted per-workspace run status, active-workspace switching, staged progress and last-known-good fallback |
+| Catalog and search | Item Catalog, alphabetized Asset Catalog, `Ctrl+K` search, SQL/KQL/semantic/Ontology 2.0/graph/Data Agent inventory |
+| Lineage and impact | Trusted Atlas graph, connected type-filter context, stable Impact mode, Item Relations Preview, Evidence, Changes, X-Ray, notebook and semantic object lineage, and exportable impact reports |
+| Governance | Findings, a closed six-pillar Radar, snapshot comparison, history, item-family Coverage, posture targets and Policies & AI |
+| Access | Effective recorded access, principal review, personal decisions, What-if simulation and evidence-based departure packs |
 | Operations | Job history, observed incidents, inferred downstream impact, monitoring boundaries, configuration and team notes |
 | Security | Fabric brokered authentication, synchronizer-only publication, metadata-only storage and user-scoped personal state |
 | Extensibility | Typed Rayfin Functions, minimal Python compatibility and an optional read-only local Atlas MCP |
 
 Detailed feature and coverage notes are in the
-[whitepaper](https://github.com/fredgis/FabricAtlas/blob/df15df1/docs/fabric-atlas-whitepaper.pdf),
+[whitepaper](https://github.com/fredgis/FabricAtlas/blob/f19b97a/docs/fabric-atlas-whitepaper.pdf),
 [architecture](docs/architecture.md) and
 [item-family coverage](docs/item-families.md).
 
@@ -203,7 +203,9 @@ metadata snapshot. Counts change when the workspace is synchronized again.
 ### Workspace overview
 
 The overview uses the governance radar as its visual anchor, with current
-health, priority signals, freshness and inventory reach beside it.
+health, priority signals, freshness and inventory reach beside it. All six
+pillars stay connected. An unavailable score remains labelled `N/A` and is
+anchored at zero instead of breaking the polygon.
 
 ![Fabric Atlas workspace overview](docs/screenshots/workspace-overview-v2.png)
 
@@ -225,7 +227,9 @@ additive effective access.
 ### Interactive lineage
 
 The Atlas graph follows verified snapshot relationships from orchestration to
-consumption. Impact mode removes unrelated components while the inspector keeps
+consumption. Item-type filters keep the matching items and their connected
+lineage context. Impact mode removes unrelated components without moving the
+selected node or changing the graph viewport, while the inspector keeps
 upstream, downstream, schema, access and run evidence in view.
 
 ![Fabric Atlas item lineage](docs/screenshots/interactive-lineage-v2.png)
@@ -240,14 +244,22 @@ marked as Beta rather than authoritative lineage.
 
 ### Object lineage
 
-Object mode expands a synchronized table into its columns and connected Fabric
-items. The inspector keeps ownership, impact and related metadata visible while
-objects are selected or rearranged. Selecting an object from another Fabric item
-switches the active item and rebuilds the object graph. Deep-lineage tables can
-be expanded or collapsed together. Connected Fabric items are grouped into
-collapsible summary nodes. Hold the left mouse button on the canvas background
-to pan. Item and Preview boxes can be moved freely, and Reset returns the graph
-to its computed source-to-consumer layout.
+Semantic Model Object Lineage starts with the complete table inventory and no
+implicit field focus. Up to eight stable table blocks can be opened at once,
+with whole-model search keeping every synchronized measure and column
+discoverable. Focused objects show verified DAX inputs and consumers, while
+name-matched sources remain explicitly inferred. X-Ray, Asset Catalog and
+global search link to the same table-qualified object. Reset keeps the active
+model and clears only the object view. Other Fabric item types keep their
+verified object graph and connected-item grouping.
+
+Notebook Object Lineage shows direct literal table references found in the
+notebook definition, including read and write direction. The collector parses
+the definition in memory and publishes only bounded object names, operations
+and source item IDs. It never stores notebook cells, source code, SQL text,
+credentials or dynamically constructed references. When no direct object name
+can be resolved, Object Lineage shows the notebook's verified item-level
+upstream and downstream dependencies instead of an empty graph.
 
 ![Fabric Atlas object lineage](docs/screenshots/object-lineage-v2.png)
 
@@ -292,9 +304,11 @@ run finishes or is cancelled.
 
 ### Workspace Hub
 
-Workspace Hub shows the selected synchronization scope, latest validated
-snapshot and manual run history. Scheduling remains visibly disabled until
-Fabric exposes a supported unattended trigger and identity contract.
+Workspace Hub shows persisted status, the latest validated snapshot and manual
+run history for every selected workspace. Failed or unfinished browser runs
+retain the last valid snapshot, and status remains available when another
+workspace is synchronized. Scheduling remains visibly disabled until Fabric
+exposes a supported unattended trigger and identity contract.
 
 ![Fabric Atlas Workspace Hub](docs/screenshots/workspace-hub-v2.png)
 
@@ -401,7 +415,7 @@ contracts or a separate product decision.
 | OneLake security and Purview DLP | Portal links and explicit unavailable states | Public read APIs for role membership and restriction evidence |
 | Report visual usage | Not collected | A supported report definition path with sensitivity and permission handling |
 | Shared action plans and notifications | Not implemented | Reviewed team workflow, ownership model and delivery channel |
-| 2.0 maintenance | Version 2.0.0 is the current release line | Patch releases for verified fixes; larger workflows depend on the contracts above |
+| 2.1 maintenance | Version 2.1.3 is the current release line | Patch releases for verified fixes; larger workflows depend on the contracts above |
 
 ## Quickstart
 
@@ -555,8 +569,7 @@ Found a bug, a missing Fabric object type or a useful governance workflow?
 [Open an issue](https://github.com/fredgis/FabricAtlas/issues/new/choose).
 
 Pull requests are welcome. Read
-[the contribution guide](https://github.com/fredgis/FabricAtlas/blob/df15df1/.github/CONTRIBUTING.md)
-before starting.
+[the contribution guide](https://github.com/fredgis/FabricAtlas/blob/f19b97a/.github/CONTRIBUTING.md) before starting.
 
 ## Project links
 
@@ -567,8 +580,8 @@ before starting.
 - [Data model](docs/data-model.md)
 - [Power BI metadata replacement and blocker](docs/powerbi-scanner-replacement.md)
 - [Optional Power BI scanner Secret Store setup](docs/powerbi-scanner-secret-store.md)
-- [Security policy](https://github.com/fredgis/FabricAtlas/blob/df15df1/.github/SECURITY.md)
-- [Code of conduct](https://github.com/fredgis/FabricAtlas/blob/df15df1/.github/CODE_OF_CONDUCT.md)
+- [Security policy](https://github.com/fredgis/FabricAtlas/blob/f19b97a/.github/SECURITY.md)
+- [Code of conduct](https://github.com/fredgis/FabricAtlas/blob/f19b97a/.github/CODE_OF_CONDUCT.md)
 
 ## Coverage
 

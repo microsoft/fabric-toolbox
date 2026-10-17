@@ -69,6 +69,12 @@ export const ATLAS_CONFIG = {
     (import.meta.env.VITE_RAYFIN_ATLAS_SYNC_ADMIN_EMAIL as string) || "",
   syncAdminSubject:
     (import.meta.env.VITE_RAYFIN_ATLAS_SYNC_ADMIN_SUBJECT as string) || "",
+  breakGlassSyncAdminEmail:
+    (import.meta.env
+      .VITE_RAYFIN_ATLAS_BREAK_GLASS_SYNC_ADMIN_EMAIL as string) || "",
+  breakGlassSyncAdminSubject:
+    (import.meta.env
+      .VITE_RAYFIN_ATLAS_BREAK_GLASS_SYNC_ADMIN_SUBJECT as string) || "",
   snapshotRetentionCount: boundedInteger(
     import.meta.env.VITE_RAYFIN_ATLAS_SNAPSHOT_RETENTION_COUNT,
     12,
@@ -85,6 +91,22 @@ export const ATLAS_CONFIG = {
   // and is forwarded to Fabric REST inside the function.
   scope: "https://analysis.windows.net/powerbi/api/.default",
 };
+
+export function configuredSyncWriters(): Array<{
+  subject: string;
+  email: string;
+}> {
+  return [
+    {
+      subject: ATLAS_CONFIG.syncAdminSubject.trim(),
+      email: ATLAS_CONFIG.syncAdminEmail.trim().toLowerCase(),
+    },
+    {
+      subject: ATLAS_CONFIG.breakGlassSyncAdminSubject.trim(),
+      email: ATLAS_CONFIG.breakGlassSyncAdminEmail.trim().toLowerCase(),
+    },
+  ].filter((writer) => writer.subject && writer.email);
+}
 
 /** Resolved UDF `sync_all` invoke URL, or null when not configured yet. */
 export function getUdfUrl(): string | null {

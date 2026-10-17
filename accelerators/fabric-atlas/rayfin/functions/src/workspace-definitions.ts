@@ -33,6 +33,7 @@ export const DEFINITION_ROUTES: ReadonlyMap<string, string> = new Map([
   ["Ontology", "ontologies"],
   ["GraphModel", "graphModels"],
   ["DataAgent", "dataAgents"],
+  ["Notebook", "notebooks"],
 ]);
 
 export const COLLECT_DEFINITION_LIMITS = {

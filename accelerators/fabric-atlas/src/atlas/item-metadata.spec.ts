@@ -12,6 +12,7 @@ import {
   metadataSchemaEntry,
   projectItemMetadataToSchema,
   parseDataAgentMetadata,
+  parseFabricItemMetadata,
   parseGraphModelMetadata,
   parseKqlDatabaseMetadata,
   parseObjectLineagePayload,
@@ -202,6 +203,85 @@ describe("ontology metadata", () => {
         bindings: [],
       }),
     ).toBeUndefined();
+  });
+});
+
+describe("notebook metadata", () => {
+  it("keeps static object operations and emits item and object lineage", () => {
+    const notebookId = "55555555-5555-4555-8555-555555555555";
+    const lakehouseId = "66666666-6666-4666-8666-666666666666";
+    const metadata = parseFabricItemMetadata("Notebook", {
+      kind: "notebook",
+      language: "python",
+      defaultLakehouse: {
+        itemId: lakehouseId,
+        workspaceId: "11111111-1111-4111-8111-111111111111",
+        displayName: "Operations lakehouse",
+      },
+      objects: [
+        {
+          id: "bronze.rentals",
+          name: "bronze.rentals",
+          operation: "read",
+          sourceItemId: lakehouseId,
+          sourceWorkspaceId: "11111111-1111-4111-8111-111111111111",
+        },
+        {
+          id: "silver.rentals",
+          name: "silver.rentals",
+          operation: "write",
+          sourceItemId: lakehouseId,
+          sourceWorkspaceId: "11111111-1111-4111-8111-111111111111",
+        },
+      ],
+    });
+
+    expect(metadata).toMatchObject({
+      kind: "notebook",
+      objects: [
+        { name: "bronze.rentals", operation: "read" },
+        { name: "silver.rentals", operation: "write" },
+      ],
+    });
+    if (!metadata) throw new Error("Notebook metadata was not accepted.");
+    expect(metadataItemLineageEdges(notebookId, metadata)).toEqual([
+      {
+        source: lakehouseId,
+        target: notebookId,
+        relation: "notebook reads",
+      },
+      {
+        source: notebookId,
+        target: lakehouseId,
+        relation: "notebook writes",
+      },
+    ]);
+    expect(metadataObjectLineageEdges(notebookId, metadata)).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          relation: "reads",
+          source: expect.objectContaining({
+            itemId: lakehouseId,
+            name: "bronze.rentals",
+          }),
+          target: expect.objectContaining({
+            itemId: notebookId,
+            name: "bronze.rentals",
+          }),
+        }),
+        expect.objectContaining({
+          relation: "writes",
+          source: expect.objectContaining({
+            itemId: notebookId,
+            name: "silver.rentals",
+          }),
+          target: expect.objectContaining({
+            itemId: lakehouseId,
+            name: "silver.rentals",
+          }),
+        }),
+      ]),
+    );
   });
 });
 

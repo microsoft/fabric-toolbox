@@ -272,8 +272,8 @@ const FAMILIES: readonly ItemFamilyCapability[] = [
   }),
   family("Notebook", {
     coverage: {
-      objects: entry("excluded", "Source code and cells stay outside the metadata boundary."),
-      lineage: SCANNER_RELATIONS,
+      objects: entry("partial", "Direct literal table and OneLake table-path references are projected; source code, cells and dynamic expressions are not stored."),
+      lineage: entry("partial", "Scanner item relations plus verified static notebook read and write references."),
     },
   }),
   family("DataPipeline", {

@@ -4,6 +4,26 @@ export interface DaxRef {
   name: string;
 }
 
+const DAX_RESERVED_WORDS = new Set([
+  "and",
+  "asc",
+  "at",
+  "by",
+  "define",
+  "desc",
+  "evaluate",
+  "false",
+  "in",
+  "measure",
+  "not",
+  "or",
+  "order",
+  "return",
+  "start",
+  "true",
+  "var",
+]);
+
 function stripStringsAndComments(expression: string): string {
   const output = expression.split("");
   let index = 0;
@@ -110,8 +130,8 @@ export function extractDaxRefs(expression: string): DaxRef[] {
   const push = (reference: DaxRef) => {
     const key = [
       reference.kind,
-      reference.table?.toLocaleLowerCase() ?? "",
-      reference.name.toLocaleLowerCase(),
+      reference.table?.toLowerCase() ?? "",
+      reference.name.toLowerCase(),
     ].join("\u0000");
     if (!seen.has(key)) {
       seen.add(key);
@@ -142,9 +162,11 @@ export function extractDaxRefs(expression: string): DaxRef[] {
     const identifier = /^[\p{L}_][\p{L}\p{N}_.]*/u.exec(code.slice(index));
     if (identifier) {
       const identifierEnd = index + identifier[0].length;
-      const bracketStart = skipWhitespace(code, identifierEnd);
-      const bracket = readBracket(code, bracketStart);
-      if (bracket) {
+      const bracket = readBracket(code, identifierEnd);
+      if (
+        bracket &&
+        !DAX_RESERVED_WORDS.has(identifier[0].toLowerCase())
+      ) {
         push({
           kind: "column",
           table: identifier[0],

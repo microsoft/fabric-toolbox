@@ -48,6 +48,15 @@ export interface WorkspaceSyncEntry {
   finishedAt?: string;
 }
 
+export interface PersistedWorkspaceSyncStatus {
+  snapshotId?: string;
+  snapshotAt?: string;
+  lastRunStatus?: SyncRun["status"] | "cancelled";
+  lastRunStartedAt?: string;
+  lastRunFinishedAt?: string;
+  lastRunError?: string;
+}
+
 export type ScopeWorkspaceStatus =
   | { kind: "running"; phase: string; progress: number }
   | { kind: "queued" }
@@ -55,8 +64,8 @@ export type ScopeWorkspaceStatus =
   | { kind: "snapshot"; snapshotAt: string }
   | { kind: "synchronized"; finishedAt?: string }
   | { kind: "cancelled" }
-  | { kind: "unsynchronized" }
-  | { kind: "inactive" };
+  | { kind: "unfinished"; startedAt?: string; snapshotAt?: string }
+  | { kind: "unsynchronized" };
 
 export interface ScopeWorkspaceRow {
   id: string;
@@ -92,6 +101,7 @@ export function scopeWorkspaceRows({
   lastSyncedAt,
   syncQueue = [],
   syncWorkspaceId,
+  persistedStatuses = {},
 }: {
   scopes: readonly WorkspaceScope[];
   activeWorkspaceId: string;
@@ -101,6 +111,9 @@ export function scopeWorkspaceRows({
   lastSyncedAt?: string;
   syncQueue?: readonly WorkspaceSyncEntry[];
   syncWorkspaceId?: string;
+  persistedStatuses?: Readonly<
+    Record<string, PersistedWorkspaceSyncStatus>
+  >;
 }): ScopeWorkspaceRow[] {
   const entries = new Map(
     syncQueue.map((entry) => [entry.workspaceId, entry]),
@@ -108,6 +121,7 @@ export function scopeWorkspaceRows({
   return scopes.map((scope) => {
     const active = scope.id === activeWorkspaceId;
     const entry = entries.get(scope.id);
+    const persisted = persistedStatuses[scope.id];
     const running =
       syncing &&
       (syncWorkspaceId ? syncWorkspaceId === scope.id : active);
@@ -120,27 +134,48 @@ export function scopeWorkspaceRows({
       };
     } else if (syncing && entry?.status === "queued") {
       status = { kind: "queued" };
-    } else if (active) {
-      const failure =
-        syncError ?? (entry?.status === "failed" ? entry.error : undefined);
-      if (failure) {
-        status = { kind: "failed", message: failure, snapshotAt: lastSyncedAt };
-      } else if (lastSyncedAt) {
-        status = { kind: "snapshot", snapshotAt: lastSyncedAt };
-      } else {
-        status = { kind: "unsynchronized" };
-      }
     } else if (entry?.status === "failed") {
       status = {
         kind: "failed",
         message: entry.error ?? "Synchronization failed.",
+        snapshotAt: persisted?.snapshotAt,
       };
     } else if (entry?.status === "cancelled") {
       status = { kind: "cancelled" };
+    } else if (active && syncError) {
+      status = {
+        kind: "failed",
+        message: syncError,
+        snapshotAt: persisted?.snapshotAt ?? lastSyncedAt,
+      };
+    } else if (persisted?.lastRunStatus === "failed") {
+      status = {
+        kind: "failed",
+        message:
+          persisted.lastRunError ?? "The last synchronization failed.",
+        snapshotAt: persisted.snapshotAt,
+      };
+    } else if (persisted?.lastRunStatus === "running") {
+      status = {
+        kind: "unfinished",
+        startedAt: persisted.lastRunStartedAt,
+        snapshotAt: persisted.snapshotAt,
+      };
+    } else if (persisted?.snapshotAt) {
+      status = {
+        kind: "snapshot",
+        snapshotAt: persisted.snapshotAt,
+      };
+    } else if (active) {
+      if (lastSyncedAt) {
+        status = { kind: "snapshot", snapshotAt: lastSyncedAt };
+      } else {
+        status = { kind: "unsynchronized" };
+      }
     } else if (entry?.status === "completed") {
       status = { kind: "synchronized", finishedAt: entry.finishedAt };
     } else {
-      status = { kind: "inactive" };
+      status = { kind: "unsynchronized" };
     }
     return {
       id: scope.id,

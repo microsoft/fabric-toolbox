@@ -758,6 +758,9 @@ export function snapshotCatalogFromData(data: AtlasData): SnapshotCatalog {
         })),
       ]),
     ),
+    semanticModelEvidence: data.semanticModelEvidence
+      ? structuredClone(data.semanticModelEvidence)
+      : undefined,
     itemMetadata: data.itemMetadata
       ? structuredClone(data.itemMetadata)
       : undefined,

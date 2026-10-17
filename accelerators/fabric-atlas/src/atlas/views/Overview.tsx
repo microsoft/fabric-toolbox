@@ -13,6 +13,7 @@ import {
   Users,
 } from "lucide-react";
 import { useAtlas } from "../store";
+import { derivedFromSnapshot } from "../derived";
 import {
   buildAccessReviewRows,
   getCoverageDiagnostics,
@@ -155,15 +156,20 @@ export function OverviewView({
   const confidential = items.filter((item) =>
     confidentialLabels.has((item.sensitivity ?? "").toLowerCase()),
   );
-  const coverageDiagnostics = useMemo(
-    () => getCoverageDiagnostics(data),
-    [data],
+  const coverageDiagnostics = derivedFromSnapshot(
+    data,
+    "coverage-diagnostics",
+    getCoverageDiagnostics,
   );
   const endorsementCoverage = coverageDiagnostics.byId.endorsement;
   const sensitivityCoverage = coverageDiagnostics.byId.sensitivity;
   const ownerCoverage = coverageDiagnostics.byId.owners;
   const external = principals.filter((principal) => principal.external);
-  const accessRows = useMemo(() => buildAccessReviewRows(data), [data]);
+  const accessRows = derivedFromSnapshot(
+    data,
+    "access-review-rows",
+    buildAccessReviewRows,
+  );
   const itemOnly = new Set(
     accessRows
       .filter(

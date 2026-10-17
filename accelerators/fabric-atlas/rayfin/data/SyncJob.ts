@@ -1,5 +1,5 @@
 import { authenticated, date, entity, int, set, text, uuid } from '@microsoft/rayfin-core';
-import { SYNC_WRITER_SUBJECT } from './sync-policy.js';
+import { syncWriterPolicy } from './sync-policy.js';
 
 export type SyncJobState =
   | 'queued'
@@ -12,7 +12,7 @@ export type SyncJobState =
 @entity()
 @authenticated('read')
 @authenticated(['create', 'update', 'delete'], {
-  policy: (claims) => claims.sub.eq(SYNC_WRITER_SUBJECT),
+  policy: (claims) => syncWriterPolicy(claims),
 })
 export class SyncJob {
   @uuid() id!: string;

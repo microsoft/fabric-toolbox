@@ -5,6 +5,7 @@ import { afterEach, describe, expect, expectTypeOf, it, vi } from "vitest";
 import { fabricApiUrl, type FabricQuery } from "../../rayfin/functions/src/fabric-rest";
 import {
   POWERBI_PROJECTION_LIMITS, projectReport, projectSemanticModel,
+  staticDaxReferences,
 } from "../../rayfin/functions/src/powerbi-projections";
 import { SYNCHRONIZER_AUTHORITY_ID } from "../../rayfin/functions/src/synchronizer-gate";
 import type { AppFunctionsSchema } from "../../rayfin/functions/src/types";
@@ -235,6 +236,17 @@ describe("Power BI metadata-only projections", () => {
       source: "static-qualified-reference",
     });
     expect(result.dependencies.every((dependency) => dependency.referencedObject !== "redacted")).toBe(true);
+  });
+  it("does not treat DAX keywords as table names", () => {
+    expect(
+      staticDaxReferences(
+        "VAR total = [Total]\nRETURN [Margin] + NOT[Inactive]",
+      ),
+    ).toEqual([
+      { name: "Total" },
+      { name: "Margin" },
+      { name: "Inactive" },
+    ]);
   });
   it("omits ambiguous naked references rather than manufacturing dependencies", () => {
     const input = model();

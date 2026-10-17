@@ -9,6 +9,7 @@ import { isWorkspaceSection } from "./navigation";
 import type { SavedViewFilters } from "./saved-views";
 import { ITEM_TYPES } from "./model";
 import { ASSET_OBJECT_KINDS } from "./catalog-objects";
+import { xrayObjectKey } from "./semantic-xray";
 
 interface AtlasLocation {
   hash: string;
@@ -36,6 +37,9 @@ const KNOWN_KEYS = new Set([
   "health",
   "impact",
   "table",
+  "tables",
+  "object",
+  "dax",
   "source",
   "objectKind",
   "inspector",
@@ -191,6 +195,9 @@ export function parseAtlasLocation(
         "health",
         "impact",
         "table",
+        "tables",
+        "object",
+        "dax",
         "source",
         "objectKind",
         "inspector",
@@ -391,6 +398,29 @@ export function urlForNavigation(
     set(params, "item", focus?.itemId);
     if (filterValue(focus, "impact") === "focused") {
       params.set("impact", "focused");
+    }
+    if (
+      focus?.itemId &&
+      focus.tableName &&
+      focus.objectName &&
+      (focus.objectKind === "measure" || focus.objectKind === "column")
+    ) {
+      const objectKey = xrayObjectKey(
+        focus.objectKind,
+        focus.tableName,
+        focus.objectName,
+      );
+      params.set("lineage", "objects");
+      params.set("object", objectKey);
+      params.set(
+        "tables",
+        encodeURIComponent(focus.tableName.toLowerCase()),
+      );
+      if (filterValue(focus, "view") === "xray") {
+        params.set("view", "xray");
+        params.set("xray.model", focus.itemId);
+        params.set("xray.object", objectKey);
+      }
     }
   } else if (navigation.tab === "catalog") {
     set(params, "catalog.q", focus?.query ?? filterValue(focus, "search"));

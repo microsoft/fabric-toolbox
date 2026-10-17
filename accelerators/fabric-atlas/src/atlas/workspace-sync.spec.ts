@@ -41,7 +41,7 @@ describe("workspace synchronization projection", () => {
     });
     expect(running[1]).toMatchObject({
       active: false,
-      status: { kind: "inactive" },
+      status: { kind: "unsynchronized" },
     });
   });
 
@@ -138,6 +138,66 @@ describe("workspace synchronization projection", () => {
     expect(synchronized[1].status).toEqual({
       kind: "synchronized",
       finishedAt: "2026-10-02T11:00:00.000Z",
+    });
+  });
+
+  it("keeps persisted snapshot status for every workspace after queues reset", () => {
+    const rows = scopeWorkspaceRows({
+      scopes,
+      activeWorkspaceId: ACTIVE,
+      syncing: false,
+      syncProgress: 0,
+      lastSyncedAt: "2026-10-02T10:00:00.000Z",
+      syncQueue: [],
+      persistedStatuses: {
+        [ACTIVE]: {
+          snapshotAt: "2026-10-02T10:00:00.000Z",
+          lastRunStatus: "completed",
+        },
+        [OTHER]: {
+          snapshotAt: "2026-10-02T11:00:00.000Z",
+          lastRunStatus: "completed",
+        },
+      },
+    });
+
+    expect(rows.map((row) => row.status)).toEqual([
+      { kind: "snapshot", snapshotAt: "2026-10-02T10:00:00.000Z" },
+      { kind: "snapshot", snapshotAt: "2026-10-02T11:00:00.000Z" },
+    ]);
+  });
+
+  it("retains the last snapshot when the persisted run failed or never finished", () => {
+    const rows = scopeWorkspaceRows({
+      scopes,
+      activeWorkspaceId: ACTIVE,
+      syncing: false,
+      syncProgress: 0,
+      persistedStatuses: {
+        [ACTIVE]: {
+          snapshotAt: "2026-10-02T10:00:00.000Z",
+          lastRunStatus: "failed",
+          lastRunStartedAt: "2026-10-03T08:00:00.000Z",
+          lastRunFinishedAt: "2026-10-03T08:01:00.000Z",
+          lastRunError: "Fabric returned HTTP 403.",
+        },
+        [OTHER]: {
+          snapshotAt: "2026-10-02T11:00:00.000Z",
+          lastRunStatus: "running",
+          lastRunStartedAt: "2026-10-03T09:00:00.000Z",
+        },
+      },
+    });
+
+    expect(rows[0].status).toEqual({
+      kind: "failed",
+      message: "Fabric returned HTTP 403.",
+      snapshotAt: "2026-10-02T10:00:00.000Z",
+    });
+    expect(rows[1].status).toEqual({
+      kind: "unfinished",
+      startedAt: "2026-10-03T09:00:00.000Z",
+      snapshotAt: "2026-10-02T11:00:00.000Z",
     });
   });
 

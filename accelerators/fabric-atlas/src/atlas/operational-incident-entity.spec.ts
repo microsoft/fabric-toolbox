@@ -52,9 +52,9 @@ describe('OperationalIncident entity', () => {
     expect(rule('read')).toHaveLength(1);
     expect(policy('read')).toBeUndefined();
     expect(policy('create')).toBe(
-      'claims.email.eq(item.writerEmail).and(claims.sub.eq(SYNC_WRITER_SUBJECT))',
+      'syncWriterEmailPolicy(claims,item.writerEmail)',
     );
-    expect(policy('delete')).toBe('claims.sub.eq(SYNC_WRITER_SUBJECT)');
+    expect(policy('delete')).toBe('syncWriterPolicy(claims)');
     expect(rule('update')).toHaveLength(0);
   });
 

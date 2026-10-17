@@ -58,7 +58,7 @@ describe("SemanticXRayPanel", () => {
     expect(within(detail).getByRole("button", { name: "revenue_by_month [Monthly Revenue]" })).toBeInTheDocument();
     expect(detail).toHaveTextContent("[PM] · unresolved");
     expect(detail).toHaveTextContent(
-      "No DAX consumers in this model. Report and visual usage is not exposed by Fabric APIs, so this does not mean unused.",
+      "No DAX consumers among collected expressions. Report and visual usage is not exposed by Fabric APIs, so this does not mean unused.",
     );
   });
 

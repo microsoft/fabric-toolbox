@@ -6,6 +6,7 @@ import {
   FileText,
   FolderTree,
   MessageSquare,
+  Network,
   Search,
   Settings2,
   Sigma,
@@ -102,12 +103,14 @@ export function CommandPalette({
   open,
   onClose,
   onSelect,
+  onOpenXRay,
   catalogSearch,
 }: {
   index: SearchIndexEntry[];
   open: boolean;
   onClose: () => void;
   onSelect: (result: SearchResult) => void;
+  onOpenXRay?: (result: SearchResult) => void;
   catalogSearch?: CommandPaletteCatalogSearch;
 }) {
   const [query, setQuery] = useState("");
@@ -156,6 +159,11 @@ export function CommandPalette({
 
   const choose = (result: SearchResult) => {
     onSelect(result);
+    close();
+  };
+
+  const chooseXRay = (result: SearchResult) => {
+    onOpenXRay?.(result);
     close();
   };
 
@@ -461,42 +469,75 @@ export function CommandPalette({
                 {results.map((result, indexValue) => {
                   const Icon = KIND_ICON[result.kind];
                   const active = resolvedActiveIndex === indexValue;
+                  const canOpenXRay =
+                    !!onOpenXRay &&
+                    (result.kind === "measure" || result.kind === "column") &&
+                    !!result.target.itemId &&
+                    !!result.target.tableName &&
+                    !!result.target.objectName;
                   return (
-                    <button
+                    <div
                       id={`atlas-search-result-${indexValue}`}
                       key={result.id}
-                      type="button"
                       role="option"
                       aria-selected={active}
                       onMouseEnter={() => setActiveIndex(indexValue)}
                       onClick={() => choose(result)}
                       className={optionClass(active)}
                     >
-                      <span
-                        className={cn(
-                          "flex icon-size-600 shrink-0 items-center justify-center rounded-xl",
-                          active
-                            ? "bg-primary-foreground/15"
-                            : "bg-primary/10 text-brand-foreground",
-                        )}
+                      <button
+                        type="button"
+                        onClick={(event) => {
+                          event.stopPropagation();
+                          choose(result);
+                        }}
+                        className="flex min-w-0 flex-1 items-center gap-m text-left"
                       >
-                        <Icon className="icon-size-200" aria-hidden="true" />
-                      </span>
-                      <span className="min-w-0 flex-1">
-                        <span className="block truncate text-300 font-semibold">
-                          {result.title}
-                        </span>
                         <span
                           className={cn(
-                            "block truncate text-200",
+                            "flex icon-size-600 shrink-0 items-center justify-center rounded-xl",
                             active
-                              ? "text-primary-foreground/75"
-                              : "text-muted-foreground",
+                              ? "bg-primary-foreground/15"
+                              : "bg-primary/10 text-brand-foreground",
                           )}
                         >
-                          {result.subtitle ?? KIND_LABEL[result.kind]}
+                          <Icon className="icon-size-200" aria-hidden="true" />
                         </span>
-                      </span>
+                        <span className="min-w-0 flex-1">
+                          <span className="block truncate text-300 font-semibold">
+                            {result.title}
+                          </span>
+                          <span
+                            className={cn(
+                              "block truncate text-200",
+                              active
+                                ? "text-primary-foreground/75"
+                                : "text-muted-foreground",
+                            )}
+                          >
+                            {result.subtitle ?? KIND_LABEL[result.kind]}
+                          </span>
+                        </span>
+                      </button>
+                      {canOpenXRay && (
+                        <button
+                          type="button"
+                          aria-label={`Open ${result.title} in X-Ray`}
+                          onClick={(event) => {
+                            event.stopPropagation();
+                            chooseXRay(result);
+                          }}
+                          className={cn(
+                            "flex h-[32px] shrink-0 items-center gap-xs rounded-md border px-s text-200 font-semibold",
+                            active
+                              ? "border-primary-foreground/30 text-primary-foreground hover:bg-primary-foreground/10"
+                              : "border-border text-muted-foreground hover:bg-accent hover:text-foreground",
+                          )}
+                        >
+                          <Network className="icon-size-100" aria-hidden="true" />
+                          X-Ray
+                        </button>
+                      )}
                       <span
                         className={cn(
                           "shrink-0 rounded-md border px-s py-xxs text-200 font-semibold uppercase tracking-wide",
@@ -507,7 +548,7 @@ export function CommandPalette({
                       >
                         {KIND_LABEL[result.kind]}
                       </span>
-                    </button>
+                    </div>
                   );
                 })}
                 </div>

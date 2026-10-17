@@ -108,7 +108,7 @@ describe("App global workspace selector", () => {
         window.history.replaceState(null, "", `/?ctid=tenant&workspace.section=notes&workspace.item=${item.fabricId}&workspace.comment=previous-note#workspace`);
         renderApp();
         const selector = await headerSelector();
-        expect(screen.getByLabelText("Target")).toHaveValue(item.fabricId);
+        expect(await screen.findByLabelText("Target")).toHaveValue(item.fabricId);
         fireEvent.change(selector, { target: { value: SECOND_WORKSPACE } });
         await waitFor(() => expect(screen.getByLabelText("Target")).toHaveValue(""));
         const params = new URL(window.location.href).searchParams;
@@ -127,7 +127,9 @@ describe("App global workspace selector", () => {
         expect(
             screen.getAllByRole("combobox", { name: "Active workspace" }),
         ).toEqual([selector]);
-        expect(screen.getByText(/Switch workspaces from the header/)).toBeInTheDocument();
+        expect(
+            await screen.findByText(/Switch workspaces from the header/),
+        ).toBeInTheDocument();
 
         selector.focus();
         fireEvent.change(selector, { target: { value: SECOND_WORKSPACE } });

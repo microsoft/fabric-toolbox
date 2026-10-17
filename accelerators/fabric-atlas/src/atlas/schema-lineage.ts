@@ -1,7 +1,7 @@
-import { extractDaxRefs } from "./dax-refs";
 import { createLineageIndex } from "./lineage";
 import type { SchemaObjectRef } from "./lineage";
 import type { AtlasData, ModelTableSchema } from "./model";
+import { buildSemanticModelXRay } from "./semantic-xray";
 
 export interface SchemaDependency {
   from: SchemaObjectRef;
@@ -15,7 +15,7 @@ export interface SchemaLineageIndex {
 }
 
 function normalize(value: string | undefined): string {
-  return value?.trim().toLocaleLowerCase() ?? "";
+  return value?.trim().toLowerCase() ?? "";
 }
 
 export function schemaObjectKey(reference: SchemaObjectRef): string {
@@ -47,14 +47,6 @@ function matchingTables(
   );
 }
 
-function exactTables(
-  tables: ModelTableSchema[],
-  name: string,
-): ModelTableSchema[] {
-  const expected = normalize(name);
-  return tables.filter((table) => normalize(table.name) === expected);
-}
-
 export function buildSchemaDependencies(
   data: Pick<AtlasData, "items" | "schema" | "edges">,
 ): SchemaDependency[] {
@@ -76,103 +68,55 @@ export function buildSchemaDependencies(
 
   for (const item of data.items) {
     const tables = schema[item.fabricId] ?? [];
-    const measuresByName = new Map<string, SchemaObjectRef[]>();
-    for (const table of tables) {
-      for (const measure of table.measures) {
-        const key = normalize(measure.name);
-        const values = measuresByName.get(key) ?? [];
-        values.push({
+    const xray = buildSemanticModelXRay(item.fabricId, tables);
+    for (const [fromKey, targetKeys] of xray.dependsOn) {
+      const source = xray.objects.get(fromKey);
+      if (!source) continue;
+      const from: SchemaObjectRef = {
+        itemId: item.fabricId,
+        kind: source.kind,
+        tableName: source.table,
+        name: source.name,
+      };
+      for (const targetKey of targetKeys) {
+        const target = xray.objects.get(targetKey);
+        if (!target) continue;
+        const to: SchemaObjectRef = {
           itemId: item.fabricId,
-          kind: "measure",
-          tableName: table.name,
-          name: measure.name,
-        });
-        measuresByName.set(key, values);
-      }
-    }
-
-    for (const table of tables) {
-      for (const measure of table.measures) {
-        if (!measure.expr?.trim()) continue;
-        const from: SchemaObjectRef = {
-          itemId: item.fabricId,
-          kind: "measure",
-          tableName: table.name,
-          name: measure.name,
+          kind: target.kind,
+          tableName: target.table,
+          name: target.name,
         };
-        for (const reference of extractDaxRefs(measure.expr)) {
-          if (reference.kind === "measure") {
-            const target = uniqueMatch(
-              measuresByName.get(normalize(reference.name)) ?? [],
-            );
-            if (target) add({ from, to: target, confidence: "verified" });
-            continue;
-          }
-          const targetTable = uniqueMatch(
-            exactTables(tables, reference.table ?? ""),
-          );
-          if (!targetTable) continue;
-          const matchingColumns = targetTable.columns.filter(
-              (candidate) =>
-                normalize(candidate.name) === normalize(reference.name),
-            );
-          const matchingMeasures = targetTable.measures.filter(
-            (candidate) =>
-              normalize(candidate.name) === normalize(reference.name),
-          );
-          if (matchingColumns.length + matchingMeasures.length !== 1) {
-            continue;
-          }
-          const column = matchingColumns[0];
-          if (!column) {
-            const qualifiedMeasure = matchingMeasures[0];
-            add({
-              from,
-              to: {
-                itemId: item.fabricId,
-                kind: "measure",
-                tableName: targetTable.name,
-                name: qualifiedMeasure.name,
-              },
-              confidence: "verified",
-            });
-            continue;
-          }
-          const modelColumn: SchemaObjectRef = {
-            itemId: item.fabricId,
-            kind: "column",
-            tableName: targetTable.name,
-            name: column.name,
-          };
-          add({ from, to: modelColumn, confidence: "verified" });
+        add({ from, to, confidence: "verified" });
 
-          if (item.itemType !== "SemanticModel") continue;
-          const candidates: SchemaObjectRef[] = [];
-          for (const incoming of lineage.incoming.get(item.fabricId) ?? []) {
-            const upstreamTables = schema[incoming.edge.source] ?? [];
-            const upstreamTable = uniqueMatch(
-              matchingTables(upstreamTables, targetTable.name),
-            );
-            if (!upstreamTable) continue;
-            const upstreamColumn = uniqueMatch(
-              upstreamTable.columns.filter(
-                (candidate) =>
-                  normalize(candidate.name) === normalize(column.name),
-              ),
-            );
-            if (upstreamColumn) {
-              candidates.push({
-                itemId: incoming.edge.source,
-                kind: "column",
-                tableName: upstreamTable.name,
-                name: upstreamColumn.name,
-              });
-            }
+        if (item.itemType !== "SemanticModel" || target.kind !== "column") {
+          continue;
+        }
+        const candidates: SchemaObjectRef[] = [];
+        for (const incoming of lineage.incoming.get(item.fabricId) ?? []) {
+          const upstreamTables = schema[incoming.edge.source] ?? [];
+          const upstreamTable = uniqueMatch(
+            matchingTables(upstreamTables, target.table),
+          );
+          if (!upstreamTable) continue;
+          const upstreamColumn = uniqueMatch(
+            upstreamTable.columns.filter(
+              (candidate) =>
+                normalize(candidate.name) === normalize(target.name),
+            ),
+          );
+          if (upstreamColumn) {
+            candidates.push({
+              itemId: incoming.edge.source,
+              kind: "column",
+              tableName: upstreamTable.name,
+              name: upstreamColumn.name,
+            });
           }
-          const sourceColumn = uniqueMatch(candidates);
-          if (sourceColumn) {
-            add({ from, to: sourceColumn, confidence: "inferred" });
-          }
+        }
+        const sourceColumn = uniqueMatch(candidates);
+        if (sourceColumn) {
+          add({ from, to: sourceColumn, confidence: "inferred" });
         }
       }
     }

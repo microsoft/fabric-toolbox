@@ -7,7 +7,7 @@ import {
   text,
   uuid,
 } from '@microsoft/rayfin-core';
-import { SYNC_WRITER_SUBJECT } from './sync-policy.js';
+import { syncWriterEmailPolicy, syncWriterPolicy } from './sync-policy.js';
 
 export type ItemRelationsEvidenceRowType = 'manifest' | 'chunk';
 
@@ -19,13 +19,11 @@ export type ItemRelationsEvidenceRowType = 'manifest' | 'chunk';
 @entity()
 @authenticated('read')
 @authenticated('delete', {
-  policy: (claims) => claims.sub.eq(SYNC_WRITER_SUBJECT),
+  policy: (claims) => syncWriterPolicy(claims),
 })
 @authenticated('create', {
   policy: (claims, item) =>
-    claims.email
-      .eq(item.writerEmail)
-      .and(claims.sub.eq(SYNC_WRITER_SUBJECT)),
+    syncWriterEmailPolicy(claims, item.writerEmail),
 })
 export class ItemRelationsEvidenceSnapshot {
   @uuid() id!: string;

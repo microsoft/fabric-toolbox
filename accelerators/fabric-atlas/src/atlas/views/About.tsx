@@ -1,5 +1,6 @@
 import { useState } from "react";
 import {
+  Activity,
   Check,
   Code2,
   Copy,
@@ -8,6 +9,8 @@ import {
   GitCommitHorizontal,
   Map,
   Package,
+  RotateCcw,
+  Trash2,
 } from "lucide-react";
 import { pythonCollectorRollbackEnabled } from "../browser-collector-sync";
 import { PageHeader } from "../components/PageHeader";
@@ -22,6 +25,10 @@ import {
   releaseUrl,
 } from "../release";
 import { Card, SectionLabel } from "../ui";
+import {
+  atlasDiagnosticSummaries,
+  clearAtlasDiagnostics,
+} from "../diagnostics";
 
 const CLONE_COMMAND = `git clone ${REPOSITORY_URL}.git`;
 
@@ -56,6 +63,9 @@ function ProjectLink({
 
 export function AboutView() {
   const [copied, setCopied] = useState(false);
+  const [diagnostics, setDiagnostics] = useState(
+    atlasDiagnosticSummaries,
+  );
 
   const copyCloneCommand = async () => {
     try {
@@ -174,6 +184,75 @@ export function AboutView() {
             </div>
           </aside>
         </div>
+      </Card>
+      <Card className="overflow-hidden border-border shadow-fabric-2">
+        <div className="flex flex-wrap items-center gap-m border-b border-border bg-secondary px-l py-m">
+          <span className="flex icon-size-500 items-center justify-center rounded-lg bg-primary/10 text-brand-foreground">
+            <Activity className="icon-size-200" aria-hidden="true" />
+          </span>
+          <div className="min-w-0 flex-1">
+            <SectionLabel>Local diagnostics</SectionLabel>
+            <p className="mt-xs text-200 text-muted-foreground">
+              Browser-only timings. Nothing is sent outside this session.
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={() => setDiagnostics(atlasDiagnosticSummaries())}
+            className="atlas-control flex items-center gap-s rounded-lg border border-border bg-card px-m text-200 font-semibold hover:bg-accent"
+          >
+            <RotateCcw className="icon-size-200" aria-hidden="true" />
+            Refresh
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              clearAtlasDiagnostics();
+              setDiagnostics([]);
+            }}
+            className="atlas-control flex items-center gap-s rounded-lg border border-border bg-card px-m text-200 font-semibold hover:bg-accent"
+          >
+            <Trash2 className="icon-size-200" aria-hidden="true" />
+            Clear
+          </button>
+        </div>
+        {diagnostics.length === 0 ? (
+          <p className="p-l text-200 text-muted-foreground">
+            No timing samples yet. Open Map, X-Ray or synchronize a workspace,
+            then refresh this panel.
+          </p>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full border-collapse text-left text-200">
+              <thead className="bg-card">
+                <tr className="border-b border-border text-muted-foreground">
+                  <th className="px-l py-s font-semibold">Operation</th>
+                  <th className="px-l py-s font-semibold">Samples</th>
+                  <th className="px-l py-s font-semibold">Latest</th>
+                  <th className="px-l py-s font-semibold">Average</th>
+                  <th className="px-l py-s font-semibold">Maximum</th>
+                </tr>
+              </thead>
+              <tbody>
+                {diagnostics.map((entry) => (
+                  <tr key={entry.name} className="border-b border-border last:border-b-0">
+                    <td className="px-l py-s font-mono">{entry.name}</td>
+                    <td className="px-l py-s font-numeric">{entry.count}</td>
+                    <td className="px-l py-s font-numeric">
+                      {entry.latestMs.toFixed(1)} ms
+                    </td>
+                    <td className="px-l py-s font-numeric">
+                      {entry.averageMs.toFixed(1)} ms
+                    </td>
+                    <td className="px-l py-s font-numeric">
+                      {entry.maximumMs.toFixed(1)} ms
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
       </Card>
     </div>
   );

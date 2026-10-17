@@ -108,6 +108,39 @@ describe("CommandPalette", () => {
     );
   });
 
+  it("offers a direct X-Ray action for measures and columns", async () => {
+    const onOpenXRay = vi.fn();
+    render(
+      <CommandPalette
+        index={buildSearchIndex(SAMPLE_DATA)}
+        open
+        onClose={() => undefined}
+        onSelect={vi.fn()}
+        onOpenXRay={onOpenXRay}
+      />,
+    );
+
+    fireEvent.change(
+      screen.getByRole("combobox", { name: "Search workspace metadata" }),
+      { target: { value: "Total Revenue" } },
+    );
+    fireEvent.click(
+      await screen.findByRole("button", {
+        name: "Open Total Revenue in X-Ray",
+      }),
+    );
+
+    expect(onOpenXRay).toHaveBeenCalledWith(
+      expect.objectContaining({
+        kind: "measure",
+        target: expect.objectContaining({
+          tableName: "rentals_daily_summary",
+          objectName: "Total Revenue",
+        }),
+      }),
+    );
+  });
+
   it("supports keyboard navigation and selection", async () => {
     const onSelect = vi.fn();
     render(

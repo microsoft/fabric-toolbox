@@ -14,7 +14,7 @@
 // Every backend call is wired defensively so a missing/misconfigured backend
 // never breaks the UI — see docs/architecture.md for the full flow.
 
-import { ATLAS_CONFIG } from "./config";
+import { ATLAS_CONFIG, configuredSyncWriters } from "./config";
 import {
   invokeSyncAll,
   mapSyncToAtlas,
@@ -39,6 +39,8 @@ import {
   type ItemRelationsCollection,
 } from "./browser-collector-sync";
 import { normalizeLineageEdges } from "./lineage";
+import { measureDiagnostic } from "./diagnostics";
+import type { PersistedWorkspaceSyncStatus } from "./workspace-sync";
 import { DEPLOYMENT_ID } from "./release";
 import {
   buildAtlasHistory,
@@ -58,6 +60,7 @@ import type {
   Job,
   ModelTableSchema,
   Principal,
+  SemanticModelEvidence,
   WorkspaceInfo,
 } from "./model";
 import {
@@ -546,18 +549,16 @@ function textOrFallback(value: unknown, fallback: string): string {
 }
 
 function requireSyncWriter(user: SyncIdentity): string {
-  const expectedSubject = ATLAS_CONFIG.syncAdminSubject.trim();
   const actualSubject = user.id?.trim() ?? "";
-  if (
-    !expectedSubject ||
-    !actualSubject ||
-    actualSubject !== expectedSubject
-  ) {
+  const writer = configuredSyncWriters().find(
+    (candidate) => candidate.subject === actualSubject,
+  );
+  if (!actualSubject || !writer) {
     throw new Error(
       "Only the configured Atlas sync administrator can publish workspace snapshots.",
     );
   }
-  const writerEmail = ATLAS_CONFIG.syncAdminEmail.trim().toLowerCase();
+  const writerEmail = writer.email;
   if (!writerEmail || writerEmail.length > 160) {
     throw new Error(
       "The configured Atlas sync administrator email is invalid.",
@@ -701,8 +702,16 @@ export async function runFabricSync(
   try {
     let raw: Awaited<ReturnType<typeof invokeSyncAll>>;
     if (!pythonCollectorRollbackEnabled()) {
-      const collected = await collectBrowserWorkspace(
-        attempt.workspaceId, user, attempt.id, reportProgress, signal,
+      const collected = await measureDiagnostic(
+        "atlas.sync.collect",
+        () =>
+          collectBrowserWorkspace(
+            attempt.workspaceId,
+            user,
+            attempt.id,
+            reportProgress,
+            signal,
+          ),
       );
       raw = collected.raw;
       attempt.collectorSummary = collected.summary;
@@ -721,11 +730,15 @@ export async function runFabricSync(
     const atlas = mapSyncToAtlas(raw, WS_FALLBACK);
     reportProgress?.(66, "Building the governance catalog");
     reportProgress?.(69, "Preserving team notes");
-    const persisted = await persistSync(
-      atlas,
-      reportProgress,
-      attempt,
-      signal,
+    const persisted = await measureDiagnostic(
+      "atlas.sync.persist",
+      () =>
+        persistSync(
+          atlas,
+          reportProgress,
+          attempt,
+          signal,
+        ),
     );
     reportProgress?.(100, "Sync complete");
     return persisted;
@@ -1205,6 +1218,28 @@ async function persistSync(
   if (objectEdgeRows.length) {
     await insertAll("ConfigEntry", objectEdgeRows);
   }
+  const semanticModelEvidenceRows: Row[] = [];
+  for (const [itemId, evidence] of Object.entries(
+    atlas.semanticModelEvidence ?? {},
+  )) {
+    const serialized = JSON.stringify(evidence);
+    const chunks = serialized.match(/[\s\S]{1,1960}/g) ?? [""];
+    for (let part = 0; part < chunks.length; part += 1) {
+      semanticModelEvidenceRows.push({
+        itemFabricId: requiredExactPersistedText(
+          itemId,
+          PERSISTED_TEXT_LIMITS.reference.fabricId,
+          "Semantic model evidence item ID",
+        ),
+        section: "__semantic_model_evidence__",
+        label: "model",
+        value: `v1:${String(part + 1).padStart(4, "0")}:${String(chunks.length).padStart(4, "0")}:${chunks[part]}`,
+      });
+    }
+  }
+  if (semanticModelEvidenceRows.length) {
+    await insertAll("ConfigEntry", semanticModelEvidenceRows);
+  }
 
   const snapshotSummary = summarizeSnapshot(
     snapshotFromData(atlas, snapshotId, syncedAt.toISOString()),
@@ -1240,7 +1275,10 @@ async function persistSync(
     grantCount: atlas.grants.length,
     jobCount: atlas.jobs.length,
     configCount: atlas.config.length,
-    schemaEntryCount: schemaRows.length + objectEdgeRows.length,
+    schemaEntryCount:
+      schemaRows.length +
+      objectEdgeRows.length +
+      semanticModelEvidenceRows.length,
     summaryVersion: 1,
     healthyCount: snapshotSummary.healthyCount,
     staleCount: snapshotSummary.staleCount,
@@ -1353,7 +1391,7 @@ export async function readWithRetry(
       let cursor: string | undefined;
       const seenCursors = new Set<string>();
       while (true) {
-        let query = api.select(fields).where(filter).first(100);
+        let query = api.select(fields).where(filter).first(1_000);
         if (cursor) query = query.after(cursor);
         const page = await query.executePaginated();
         rows.push(...page.items);
@@ -1384,6 +1422,7 @@ function trustedWriterEmails(): string[] {
     ...new Set(
       [
         ATLAS_CONFIG.syncAdminEmail,
+        ATLAS_CONFIG.breakGlassSyncAdminEmail,
         ...ATLAS_CONFIG.previousSyncWriters,
       ]
         .map((email) => email.trim().toLowerCase())
@@ -1554,6 +1593,138 @@ function parseObjectEdgeRows(rows: Row[]): MetadataObjectLineageEdge[] {
   return parsed.objectEdges;
 }
 
+function parseSemanticModelEvidenceRows(
+  rows: Row[],
+  itemIds: Set<string>,
+): Record<string, SemanticModelEvidence> {
+  const grouped = new Map<string, Row[]>();
+  for (const row of rows) {
+    const itemId = String(row.itemFabricId ?? "");
+    if (
+      !itemIds.has(itemId) ||
+      String(row.section) !== "__semantic_model_evidence__" ||
+      String(row.label) !== "model"
+    ) {
+      throw new Error("snapshot contains malformed semantic model evidence");
+    }
+    const values = grouped.get(itemId) ?? [];
+    values.push(row);
+    grouped.set(itemId, values);
+  }
+  const result: Record<string, SemanticModelEvidence> = {};
+  for (const [itemId, parts] of grouped) {
+    const serialized = parseChunkedValue(
+      parts.map((part) => String(part.value ?? "")),
+      "snapshot contains a malformed semantic model evidence chunk",
+      "snapshot contains incomplete semantic model evidence",
+    );
+    let value: unknown;
+    try {
+      value = JSON.parse(serialized);
+    } catch {
+      throw new Error("snapshot contains invalid semantic model evidence");
+    }
+    if (!value || Array.isArray(value) || typeof value !== "object") {
+      throw new Error("snapshot contains invalid semantic model evidence");
+    }
+    const raw = value as Record<string, unknown>;
+    if (
+      !Array.isArray(raw.relationships) ||
+      !Array.isArray(raw.dependencies) ||
+      typeof raw.expressionsOmitted !== "number" ||
+      !Number.isSafeInteger(raw.expressionsOmitted) ||
+      raw.expressionsOmitted < 0
+    ) {
+      throw new Error("snapshot contains invalid semantic model evidence");
+    }
+    const relationships = raw.relationships.map(
+      (entry): SemanticModelEvidence["relationships"][number] => {
+        if (!entry || Array.isArray(entry) || typeof entry !== "object") {
+          throw new Error(
+            "snapshot contains invalid semantic model relationship",
+          );
+        }
+        const relationship = entry as Record<string, unknown>;
+        const name = realText(relationship.name);
+        const fromTable = realText(relationship.fromTable);
+        const fromColumn = realText(relationship.fromColumn);
+        const toTable = realText(relationship.toTable);
+        const toColumn = realText(relationship.toColumn);
+        if (
+          !name ||
+          !fromTable ||
+          !fromColumn ||
+          !toTable ||
+          !toColumn ||
+          (relationship.isActive !== undefined &&
+            typeof relationship.isActive !== "boolean")
+        ) {
+          throw new Error(
+            "snapshot contains invalid semantic model relationship",
+          );
+        }
+        return {
+          name,
+          fromTable,
+          fromColumn,
+          toTable,
+          toColumn,
+          ...(relationship.isActive === undefined
+            ? {}
+            : { isActive: relationship.isActive }),
+        };
+      },
+    );
+    const dependencies = raw.dependencies.map(
+      (entry): SemanticModelEvidence["dependencies"][number] => {
+        if (!entry || Array.isArray(entry) || typeof entry !== "object") {
+          throw new Error(
+            "snapshot contains invalid semantic model dependency",
+          );
+        }
+        const dependency = entry as Record<string, unknown>;
+        const table = realText(dependency.table);
+        const object = realText(dependency.object);
+        const referencedTable = realText(dependency.referencedTable);
+        const referencedObject = realText(dependency.referencedObject);
+        const objectType = dependency.objectType;
+        const referencedObjectType = dependency.referencedObjectType;
+        const source = dependency.source;
+        if (
+          !table ||
+          !object ||
+          !referencedTable ||
+          !referencedObject ||
+          (objectType !== "column" && objectType !== "measure") ||
+          (referencedObjectType !== "column" &&
+            referencedObjectType !== "measure") ||
+          (source !== "static-qualified-reference" &&
+            source !== "static-unique-measure-reference")
+        ) {
+          throw new Error(
+            "snapshot contains invalid semantic model dependency",
+          );
+        }
+        return {
+          table,
+          object,
+          objectType,
+          referencedTable,
+          referencedObject,
+          referencedObjectType,
+          source,
+        };
+      },
+    );
+    result[itemId] = {
+      relationships,
+      dependencies,
+      expressionsOmitted: raw.expressionsOmitted,
+    };
+  }
+  return result;
+}
+
 type ReadEntity = (entity: string, filter: Row) => Promise<Row[]>;
 
 interface SnapshotRows {
@@ -1565,6 +1736,7 @@ interface SnapshotRows {
   regularConfigRows: Row[];
   schemaRows: Row[];
   objectEdgeRows: Row[];
+  semanticModelEvidenceRows: Row[];
   syncRows: Row[];
 }
 
@@ -1804,13 +1976,17 @@ async function readSnapshotRows(
     regularConfigRows: configRows.filter(
       (row) =>
         String(row.section) !== "__schema__" &&
-        String(row.section) !== "__object_edges__",
+        String(row.section) !== "__object_edges__" &&
+        String(row.section) !== "__semantic_model_evidence__",
     ),
     schemaRows: configRows.filter(
       (row) => String(row.section) === "__schema__",
     ),
     objectEdgeRows: configRows.filter(
       (row) => String(row.section) === "__object_edges__",
+    ),
+    semanticModelEvidenceRows: configRows.filter(
+      (row) => String(row.section) === "__semantic_model_evidence__",
     ),
     syncRows: rowsForSnapshot(allSyncRows, wid, snapshotId, writerEmail),
   };
@@ -1856,7 +2032,10 @@ function catalogFromRows(
     grantCount: rows.grantRows.length,
     jobCount: rows.jobRows.length,
     configCount: rows.regularConfigRows.length,
-    schemaEntryCount: rows.schemaRows.length + rows.objectEdgeRows.length,
+    schemaEntryCount:
+      rows.schemaRows.length +
+      rows.objectEdgeRows.length +
+      rows.semanticModelEvidenceRows.length,
   });
 
   const items: Item[] = rows.itemRows.map((row) => {
@@ -2006,6 +2185,10 @@ function catalogFromRows(
     }),
   );
   const objectEdges = parseObjectEdgeRows(rows.objectEdgeRows);
+  const semanticModelEvidence = parseSemanticModelEvidenceRows(
+    rows.semanticModelEvidenceRows,
+    itemIds,
+  );
   const snapshotId = String(marker.snapshotId);
   const syncedAt = validDateIso(marker.syncedAt) ?? markerTime;
   const workspace: WorkspaceInfo = {
@@ -2028,6 +2211,7 @@ function catalogFromRows(
     jobs,
     config,
     schema,
+    semanticModelEvidence,
     itemMetadata,
     objectEdges,
   };
@@ -2132,6 +2316,7 @@ async function deleteSnapshotContent(
         ...rows.regularConfigRows,
         ...rows.schemaRows,
         ...rows.objectEdgeRows,
+        ...rows.semanticModelEvidenceRows,
       ],
     ],
     ["JobRun", rows.jobRows],
@@ -2208,7 +2393,8 @@ async function cleanupOrphanSnapshots(
         rows.jobRows.length +
         rows.regularConfigRows.length +
         rows.schemaRows.length +
-        rows.objectEdgeRows.length;
+        rows.objectEdgeRows.length +
+        rows.semanticModelEvidenceRows.length;
       if (rowCount === 0) continue;
       await deleteSnapshotContent(
         data,
@@ -2360,6 +2546,52 @@ function syncRunsFromRows(rows: Row[], fallbackTime: string): AtlasData["syncRun
     .slice(0, 10);
 }
 
+export async function loadWorkspaceSyncStatuses(
+  isPreview: boolean,
+  workspaceIds: readonly string[],
+): Promise<Record<string, PersistedWorkspaceSyncStatus>> {
+  if (isPreview) return {};
+  const ids = [...new Set(workspaceIds.map((id) => workspaceId(id)))];
+  const data = await dataApi();
+  const read = readerFor(data);
+  const entries = await Promise.all(
+    ids.map(async (id) => {
+      try {
+        const [workspaceRows, syncRows] = await Promise.all([
+          readTrustedWorkspaceMarkers(read, id),
+          readTrustedSyncRuns(read, id),
+        ]);
+        const marker = trustedMarkers(workspaceRows, id)[0];
+        const snapshotAt = validDateIso(marker?.syncedAt);
+        const runs = syncRunsFromRows(
+          syncRows,
+          snapshotAt ?? new Date(0).toISOString(),
+        );
+        const lastRun = runs[0];
+        return [
+          id,
+          {
+            snapshotId: realText(marker?.snapshotId),
+            snapshotAt,
+            lastRunStatus: lastRun?.status,
+            lastRunStartedAt: lastRun?.startedAt,
+            lastRunFinishedAt: lastRun?.finishedAt,
+            lastRunError: lastRun?.failureMessage,
+          } satisfies PersistedWorkspaceSyncStatus,
+        ] as const;
+      } catch (error) {
+        console.warn("[atlas] workspace sync status unavailable", id, error);
+        return undefined;
+      }
+    }),
+  );
+  const result: Record<string, PersistedWorkspaceSyncStatus> = {};
+  for (const entry of entries) {
+    if (entry) result[entry[0]] = entry[1];
+  }
+  return result;
+}
+
 /**
  * Read the previously synced catalog back out of the Rayfin entities. Returns
  * `null` in preview or when nothing has been synced yet (so the caller shows
@@ -2370,16 +2602,17 @@ export async function loadFromDb(
   targetWorkspaceId?: string,
 ): Promise<AtlasData | null> {
   if (isPreview) return null;
+  return measureDiagnostic("atlas.hydration", async () => {
   const data = await dataApi();
   const wid = workspaceId(targetWorkspaceId);
   const read = readerFor(data);
-  const workspaceRows = await readTrustedWorkspaceMarkers(read, wid);
-  let syncRows: Row[] = [];
-  try {
-    syncRows = await readTrustedSyncRuns(read, wid);
-  } catch (error) {
-    console.warn("[atlas] sync history unavailable", error);
-  }
+  const [workspaceRows, syncRows] = await Promise.all([
+    readTrustedWorkspaceMarkers(read, wid),
+    readTrustedSyncRuns(read, wid).catch((error) => {
+      console.warn("[atlas] sync history unavailable", error);
+      return [] as Row[];
+    }),
+  ]);
 
   const markers = trustedMarkers(workspaceRows, wid);
   let snapshotError: unknown;
@@ -2419,6 +2652,7 @@ export async function loadFromDb(
     });
   }
   return null;
+  });
 }
 
 export async function loadHistoricalSnapshotFromDb(

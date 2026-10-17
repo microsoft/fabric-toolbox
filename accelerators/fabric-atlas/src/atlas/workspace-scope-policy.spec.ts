@@ -52,12 +52,14 @@ describe("workspace scope policy", () => {
       const rule = permissions.find((call) => actions(call).includes(action));
       expect(rule).toBeDefined();
       expect(policy(rule!)?.body.getText(source)).toContain(
-        "claims.sub.eq(SYNC_WRITER_SUBJECT)",
+        action === "create"
+          ? "syncWriterEmailPolicy(claims, item.writerEmail)"
+          : "syncWriterPolicy(claims)",
       );
     }
     const create = permissions.find((call) => actions(call).includes("create"));
     expect(policy(create!)?.body.getText(source).replace(/\s+/g, "")).toContain(
-      "claims.email.eq(item.writerEmail)",
+      "syncWriterEmailPolicy(claims,item.writerEmail)",
     );
   });
 

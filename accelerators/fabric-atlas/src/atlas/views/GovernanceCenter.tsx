@@ -38,6 +38,7 @@ import {
   type GovernanceFinding,
   type GovernanceSeverity,
 } from "../governance";
+import { derivedFromSnapshot } from "../derived";
 import {
   compareSnapshots,
   snapshotCatalogFromData,
@@ -368,8 +369,16 @@ export function GovernanceCenterView({
             snapshot.snapshotId !== effectiveCurrentSnapshotId,
         )?.snapshotId ?? "";
 
-  const findings = useMemo(() => buildGovernanceFindings(data), [data]);
-  const coverage = useMemo(() => getCoverageDiagnostics(data), [data]);
+  const findings = derivedFromSnapshot(
+    data,
+    "governance-findings",
+    buildGovernanceFindings,
+  );
+  const coverage = derivedFromSnapshot(
+    data,
+    "coverage-diagnostics",
+    getCoverageDiagnostics,
+  );
   const filteredFindings = useMemo(() => {
     const query = findingSearch.trim().toLowerCase();
     return findings.filter(

@@ -19,6 +19,7 @@ export const METADATA_OBJECT_TYPES = {
   graphNode: "Graph node",
   graphEdge: "Graph edge",
   dataAgentSource: "Data Agent source",
+  notebookObject: "Notebook object reference",
 } as const;
 
 export const DATA_AGENT_LINEAGE_ELEMENT_TYPES = [
@@ -250,11 +251,31 @@ export interface KqlDatabaseMetadata {
   materializedViews: KqlMaterializedViewMetadata[];
 }
 
+export interface NotebookObjectMetadata {
+  id: string;
+  name: string;
+  operation: "read" | "write" | "read-write";
+  sourceItemId?: string;
+  sourceWorkspaceId?: string;
+}
+
+export interface NotebookMetadata {
+  kind: "notebook";
+  language?: string;
+  defaultLakehouse?: {
+    itemId: string;
+    workspaceId?: string;
+    displayName?: string;
+  };
+  objects: NotebookObjectMetadata[];
+}
+
 export type FabricItemMetadata =
   | OntologyMetadata
   | GraphModelMetadata
   | DataAgentMetadata
-  | KqlDatabaseMetadata;
+  | KqlDatabaseMetadata
+  | NotebookMetadata;
 
 export type MetadataObjectKind =
   | "sourceObject"
@@ -270,7 +291,8 @@ export type MetadataObjectKind =
   | "dataAgentSource"
   | "dataAgentElement"
   | "kqlFunction"
-  | "kqlMaterializedView";
+  | "kqlMaterializedView"
+  | "notebookObject";
 
 export interface MetadataObjectRef {
   itemId: string;
@@ -466,14 +488,28 @@ function parseList<T>(
 
 function parseOntologyProperty(
   value: unknown,
-  timeSeries: boolean,
+  defaultTimeSeries: boolean,
 ): OntologyPropertyMetadata | undefined {
   if (!isRecord(value)) return undefined;
   const name = firstText(value, ["name", "displayName"]);
   const valueType = firstText(value, ["valueType", "dataType", "type"]);
   const id = firstText(value, ["id", "propertyId"]);
-  if (!id || !name || !valueType) return undefined;
-  return { id, name, valueType, timeSeries };
+  const declaredTimeSeries = value.timeSeries;
+  if (
+    !id ||
+    !name ||
+    !valueType ||
+    (declaredTimeSeries !== undefined &&
+      typeof declaredTimeSeries !== "boolean")
+  ) {
+    return undefined;
+  }
+  return {
+    id,
+    name,
+    valueType,
+    timeSeries: declaredTimeSeries ?? defaultTimeSeries,
+  };
 }
 
 function parseOntologyEntity(
@@ -1441,6 +1477,72 @@ export function parseKqlDatabaseMetadata(
     : undefined;
 }
 
+function parseNotebookObject(
+  value: unknown,
+): NotebookObjectMetadata | undefined {
+  if (!isRecord(value)) return undefined;
+  const id = firstText(value, ["id"]);
+  const name = firstText(value, ["name"]);
+  const operation = firstText(value, ["operation"]);
+  const sourceItemId = optionalText(value.sourceItemId);
+  const sourceWorkspaceId = optionalText(value.sourceWorkspaceId);
+  if (
+    !id ||
+    !name ||
+    !["read", "write", "read-write"].includes(operation ?? "") ||
+    sourceItemId === null ||
+    sourceWorkspaceId === null
+  ) {
+    return undefined;
+  }
+  return {
+    id,
+    name,
+    operation: operation as NotebookObjectMetadata["operation"],
+    ...(sourceItemId ? { sourceItemId } : {}),
+    ...(sourceWorkspaceId ? { sourceWorkspaceId } : {}),
+  };
+}
+
+export function parseNotebookMetadata(
+  value: unknown,
+): NotebookMetadata | undefined {
+  if (!isRecord(value) || containsUnsafeContent(value)) return undefined;
+  const language = optionalText(value.language);
+  const objects = parseList(
+    array(value, ["objects"]),
+    parseNotebookObject,
+  );
+  if (language === null || !objects) return undefined;
+  const uniqueObjects = uniqueBy(objects, (object) => object.id);
+  if (!uniqueObjects) return undefined;
+  let defaultLakehouse: NotebookMetadata["defaultLakehouse"];
+  if (value.defaultLakehouse != null) {
+    if (!isRecord(value.defaultLakehouse)) return undefined;
+    const itemId = firstText(value.defaultLakehouse, ["itemId"]);
+    const workspaceId = optionalText(value.defaultLakehouse.workspaceId);
+    const displayName = optionalText(value.defaultLakehouse.displayName);
+    if (
+      !itemId ||
+      workspaceId === null ||
+      displayName === null
+    ) {
+      return undefined;
+    }
+    defaultLakehouse = {
+      itemId,
+      ...(workspaceId ? { workspaceId } : {}),
+      ...(displayName ? { displayName } : {}),
+    };
+  }
+  return {
+    kind: "notebook",
+    ...(language ? { language } : {}),
+    ...(defaultLakehouse ? { defaultLakehouse } : {}),
+    objects: uniqueObjects,
+  };
+}
+
 export function parseFabricItemMetadata(
   itemType: ItemType | string,
   value: unknown,
@@ -1454,6 +1556,8 @@ export function parseFabricItemMetadata(
       return parseDataAgentMetadata(value);
     case "KQLDatabase":
       return parseKqlDatabaseMetadata(value);
+    case "Notebook":
+      return parseNotebookMetadata(value);
     default:
       return undefined;
   }
@@ -1467,6 +1571,7 @@ export function metadataSchemaEntry(
     graphModel: "GraphModel",
     dataAgent: "DataAgent",
     kql: "KQLDatabase",
+    notebook: "Notebook",
   };
   const parsed = parseFabricItemMetadata(
     itemTypeByKind[metadata.kind],
@@ -1592,6 +1697,18 @@ export function projectItemMetadataToSchema(
         })),
         envelope,
       ];
+    case "notebook":
+      return [
+        ...metadata.objects.map((object) => ({
+          name: object.name,
+          objectType: METADATA_OBJECT_TYPES.notebookObject,
+          source: object.sourceItemId,
+          description: `${object.operation} · static literal reference`,
+          columns: [],
+          measures: [],
+        })),
+        envelope,
+      ];
   }
 }
 
@@ -1692,6 +1809,33 @@ export function metadataItemLineageEdges(
   itemId: string,
   metadata: FabricItemMetadata,
 ): Edge[] {
+  if (metadata.kind === "notebook") {
+    return uniqueItemEdges(
+      metadata.objects.flatMap((object) => {
+        const sourceItemId =
+          object.sourceItemId ?? metadata.defaultLakehouse?.itemId;
+        if (!sourceItemId || sourceItemId === itemId) return [];
+        return [
+          ...(object.operation === "read" ||
+          object.operation === "read-write"
+            ? [{
+                source: sourceItemId,
+                target: itemId,
+                relation: "notebook reads",
+              }]
+            : []),
+          ...(object.operation === "write" ||
+          object.operation === "read-write"
+            ? [{
+                source: itemId,
+                target: sourceItemId,
+                relation: "notebook writes",
+              }]
+            : []),
+        ];
+      }),
+    );
+  }
   const sources =
     metadata.kind === "ontology"
       ? [
@@ -2118,6 +2262,38 @@ function dataAgentObjectLineageEdges(
   return edges;
 }
 
+function notebookObjectLineageEdges(
+  itemId: string,
+  metadata: NotebookMetadata,
+): MetadataObjectLineageCandidate[] {
+  return metadata.objects.flatMap((object) => {
+    const sourceItemId =
+      object.sourceItemId ?? metadata.defaultLakehouse?.itemId ?? itemId;
+    const source = sourceObjectRef(
+      sourceItemId,
+      object.id,
+      object.name,
+    );
+    const notebook: MetadataObjectRef = {
+      itemId,
+      kind: "notebookObject",
+      id: object.id,
+      name: object.name,
+      tableName: object.name,
+    };
+    return [
+      ...(object.operation === "read" ||
+      object.operation === "read-write"
+        ? [{ source, target: notebook, relation: "reads" }]
+        : []),
+      ...(object.operation === "write" ||
+      object.operation === "read-write"
+        ? [{ source: notebook, target: source, relation: "writes" }]
+        : []),
+    ];
+  });
+}
+
 export function metadataObjectLineageEdges(
   itemId: string,
   metadata: FabricItemMetadata,
@@ -2129,6 +2305,8 @@ export function metadataObjectLineageEdges(
         ? graphObjectLineageEdges(itemId, metadata)
         : metadata.kind === "dataAgent"
           ? dataAgentObjectLineageEdges(itemId, metadata)
+          : metadata.kind === "notebook"
+            ? notebookObjectLineageEdges(itemId, metadata)
           : metadata.materializedViews.flatMap((view) =>
               view.sourceTable
                 ? [
@@ -2167,6 +2345,7 @@ const METADATA_OBJECT_KINDS = new Set<MetadataObjectKind>([
   "dataAgentElement",
   "kqlFunction",
   "kqlMaterializedView",
+  "notebookObject",
 ]);
 
 const METADATA_OBJECT_KIND_ALIASES: Record<string, MetadataObjectKind> = {

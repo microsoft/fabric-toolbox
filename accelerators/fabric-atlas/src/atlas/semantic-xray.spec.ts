@@ -135,7 +135,56 @@ describe("semantic model X-Ray", () => {
     expect(evidence).toContain("- Sales [Total] (measure, 1 hop)");
     expect(evidence).toContain("- Sales 'Sales'[Amount] (column, 2 hops)");
     expect(evidence).toContain(
-      "No DAX consumers in this model. Report and visual usage is not exposed by Fabric APIs.",
+      "No DAX consumers among collected expressions. Report and visual usage is not exposed by Fabric APIs.",
+    );
+  });
+
+  it("includes calculated-column dependencies and expression coverage", () => {
+    const model = buildSemanticModelXRay(
+      MODEL,
+      [
+        {
+          name: "Sales",
+          columns: [
+            {
+              name: "Amount",
+              dataType: "decimal",
+            },
+            {
+              name: "Adjusted",
+              dataType: "decimal",
+              expr: "[Amount] * 2",
+              expressionStatus: "sanitized",
+            },
+          ],
+          measures: [
+            {
+              name: "Total",
+              expr: "SUM(Sales[Adjusted])",
+              expressionStatus: "sanitized",
+            },
+            {
+              name: "Hidden expression",
+              expressionStatus: "unsupported",
+            },
+          ],
+        },
+      ],
+      { relationships: [], dependencies: [], expressionsOmitted: 1 },
+    );
+
+    expect(
+      model.dependsOn.get(key("column", "Sales", "Adjusted")),
+    ).toEqual([key("column", "Sales", "Amount")]);
+    expect(model.collectedExpressionCount).toBe(2);
+    expect(model.expressionCount).toBe(3);
+    expect(model.unsupportedExpressionCount).toBe(1);
+    expect(model.expressionsOmitted).toBe(1);
+  });
+
+  it("uses locale-independent object keys", () => {
+    expect(xrayObjectKey("measure", "I", "INDICATOR")).toBe(
+      "measure\u0000i\u0000indicator",
     );
   });
 

@@ -1,4 +1,4 @@
-import { ChevronDown, ChevronRight, FileDown, Info, RefreshCcw, ScanSearch, Search } from "lucide-react";
+import { ChevronDown, ChevronRight, FileDown, Info, Network, RefreshCcw, ScanSearch, Search } from "lucide-react";
 import { useEffect, useId, useMemo, useState } from "react";
 import { downloadText, fileSlug } from "../download";
 import { LINEAGE_CAPABILITIES } from "../lineage-capabilities";
@@ -20,7 +20,15 @@ function param(name: string): string {
   return new URL(window.location.href).searchParams.get(name) ?? "";
 }
 
-function Metric({ label, value, tone }: { label: string; value: number; tone?: string }) {
+function Metric({
+  label,
+  value,
+  tone,
+}: {
+  label: string;
+  value: number | string;
+  tone?: string;
+}) {
   return (
     <div className="min-w-0 border-r border-border px-m py-s last:border-r-0">
       <div className={cn("font-numeric text-400 font-semibold", tone)}>{value}</div>
@@ -77,7 +85,11 @@ function SegmentedControl<T extends string>({
 }
 
 /** Complete DAX dependency explorer for one synchronized semantic model. */
-export function SemanticXRayPanel() {
+export function SemanticXRayPanel({
+  onOpenObjectLineage,
+}: {
+  onOpenObjectLineage?: (modelId: string, objectKey: string) => void;
+} = {}) {
   const { data } = useAtlas();
   const groupId = useId();
   const models = useMemo(
@@ -87,16 +99,27 @@ export function SemanticXRayPanel() {
         .sort((left, right) => left.displayName.localeCompare(right.displayName)),
     [data],
   );
-  const [requestedModel, setRequestedModel] = useState(() => param("xray.model"));
+  const [requestedModel, setRequestedModel] = useState(
+    () => param("xray.model") || param("item"),
+  );
   const modelId = models.some((model) => model.fabricId === requestedModel)
     ? requestedModel
     : models[0]?.fabricId ?? "";
   const model = models.find((entry) => entry.fabricId === modelId);
   const xray = useMemo(
-    () => (modelId ? buildSemanticModelXRay(modelId, schemaFor(data, modelId) ?? []) : undefined),
+    () =>
+      modelId
+        ? buildSemanticModelXRay(
+            modelId,
+            schemaFor(data, modelId) ?? [],
+            data.semanticModelEvidence?.[modelId],
+          )
+        : undefined,
     [data, modelId],
   );
-  const [selectedKey, setSelectedKey] = useState(() => param("xray.object"));
+  const [selectedKey, setSelectedKey] = useState(
+    () => param("xray.object") || param("object"),
+  );
   const [direction, setDirection] = useState<XRayDirection>(() =>
     param("xray.dir") === "dependsOn" ? "dependsOn" : "usedBy",
   );
@@ -204,10 +227,19 @@ export function SemanticXRayPanel() {
         </div>
       </div>
 
-      <div aria-label="Semantic model inventory" className="grid shrink-0 grid-cols-2 rounded-lg border border-border bg-card sm:grid-cols-3 xl:grid-cols-6">
+      <div aria-label="Semantic model inventory" className="grid shrink-0 grid-cols-2 rounded-lg border border-border bg-card sm:grid-cols-4 xl:grid-cols-7">
         <Metric label="Tables" value={xray.tables.length} />
         <Metric label="Measures" value={xray.measureCount} />
         <Metric label="Columns" value={xray.columnCount} />
+        <Metric
+          label="Expressions collected"
+          value={`${xray.collectedExpressionCount}/${xray.expressionCount}`}
+          tone={
+            xray.collectedExpressionCount < xray.expressionCount
+              ? "text-status-warning"
+              : undefined
+          }
+        />
         <Metric label="DAX dependencies" value={xray.edgeCount} />
         <Metric
           label="Unresolved or ambiguous"
@@ -265,7 +297,12 @@ export function SemanticXRayPanel() {
         {selected
           ? `${selected.name}: ${impact?.keys.size ?? 0} ${transitive ? "reachable" : "direct"} ${direction === "dependsOn" ? "inputs" : "consumers"} highlighted.`
           : "Tables start collapsed. Select a measure or column to highlight its inputs or consumers."}
-        {" "}Report visual usage and runtime queries are not collected or inferred.
+        {" "}DAX coverage: {xray.collectedExpressionCount} of{" "}
+        {xray.expressionCount} expressions collected
+        {xray.expressionsOmitted > 0
+          ? `; ${xray.expressionsOmitted} expressions were omitted by the metadata safety boundary`
+          : ""}
+        . Report visual usage and runtime queries are not collected or inferred.
       </p>
       <div className="atlas-xray-workbench">
         <div className="flex min-h-0 min-w-0 flex-col rounded-lg border border-border bg-secondary/50">
@@ -383,6 +420,11 @@ export function SemanticXRayPanel() {
               references={xray.references.filter((reference) => reference.from === selected.key)}
               inCycle={cycleKeys.has(selected.key)}
               onSelect={setSelectedKey}
+              onOpenObjectLineage={
+                onOpenObjectLineage
+                  ? () => onOpenObjectLineage(modelId, selected.key)
+                  : undefined
+              }
               onExport={() =>
                 downloadText(
                   xrayEvidenceMarkdown(xray, selected.key, model.displayName),
@@ -413,6 +455,7 @@ function ObjectDetail({
   references,
   inCycle,
   onSelect,
+  onOpenObjectLineage,
   onExport,
 }: {
   object: XRayObject;
@@ -422,6 +465,7 @@ function ObjectDetail({
   references: Array<{ reference: string; status: string }>;
   inCycle: boolean;
   onSelect: (key: string) => void;
+  onOpenObjectLineage?: () => void;
   onExport: () => void;
 }) {
   const list = (keys: string[], empty: string) =>
@@ -460,6 +504,12 @@ function ObjectDetail({
           {object.expression}
         </pre>
       )}
+      {object.expressionStatus === "unsupported" && (
+        <p className="rounded-md bg-status-warning/10 p-s text-200 text-foreground">
+          This expression was omitted by the metadata safety boundary. Dependency
+          results for this object are incomplete.
+        </p>
+      )}
       <p className="text-200 leading-300 text-muted-foreground">
         Direct references are listed below. Direct / Transitive changes which objects are highlighted in the table list.
       </p>
@@ -469,17 +519,15 @@ function ObjectDetail({
           Part of a DAX dependency cycle. Traversal stops at repeated objects.
         </p>
       )}
-      {object.kind === "measure" && (
-        <div>
-          <h4 className="text-300 font-semibold">Depends on · {dependsOn.length}</h4>
-          {list(dependsOn, "No resolved DAX references.")}
-        </div>
-      )}
+      <div>
+        <h4 className="text-300 font-semibold">Depends on · {dependsOn.length}</h4>
+        {list(dependsOn, "No resolved DAX references among collected expressions.")}
+      </div>
       <div>
         <h4 className="text-300 font-semibold">Used by in this model · {usedBy.length}</h4>
         {list(
           usedBy,
-          "No DAX consumers in this model. Report and visual usage is not exposed by Fabric APIs, so this does not mean unused.",
+          "No DAX consumers among collected expressions. Report and visual usage is not exposed by Fabric APIs, so this does not mean unused.",
         )}
       </div>
       {references.length > 0 && (
@@ -498,14 +546,26 @@ function ObjectDetail({
           </p>
         </div>
       )}
-      <button
-        type="button"
-        onClick={onExport}
-        className="inline-flex min-h-[var(--atlas-touch-target)] items-center gap-s self-start rounded-md border border-input bg-card px-l text-300 font-semibold hover:bg-accent sm:min-h-[var(--atlas-control-height)]"
-      >
-        <FileDown className="icon-size-200" aria-hidden="true" />
-        Export dependency evidence
-      </button>
+      <div className="flex flex-wrap gap-s">
+        {onOpenObjectLineage && (
+          <button
+            type="button"
+            onClick={onOpenObjectLineage}
+            className="inline-flex min-h-[var(--atlas-touch-target)] items-center gap-s rounded-md bg-primary px-l text-300 font-semibold text-primary-foreground hover:bg-primary/90 sm:min-h-[var(--atlas-control-height)]"
+          >
+            <Network className="icon-size-200" aria-hidden="true" />
+            Open in Object Lineage
+          </button>
+        )}
+        <button
+          type="button"
+          onClick={onExport}
+          className="inline-flex min-h-[var(--atlas-touch-target)] items-center gap-s rounded-md border border-input bg-card px-l text-300 font-semibold hover:bg-accent sm:min-h-[var(--atlas-control-height)]"
+        >
+          <FileDown className="icon-size-200" aria-hidden="true" />
+          Export dependency evidence
+        </button>
+      </div>
     </>
   );
 }

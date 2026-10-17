@@ -16,7 +16,10 @@ import {
   type DefinitionItemInput,
   type DefinitionStageEnvelope,
 } from "../../rayfin/functions/src/workspace-definitions";
-import { parseFabricItemMetadata } from "./item-metadata";
+import {
+  parseFabricItemMetadata,
+  projectItemMetadataToSchema,
+} from "./item-metadata";
 import { validateSyncEnrichment, type RawSync } from "./live-sync";
 
 const WS = "11111111-1111-4111-8111-111111111111";
@@ -33,6 +36,7 @@ const ROUTE = {
   [ONTOLOGY]: `${BASE}/ontologies/${ONTOLOGY}/getDefinition`,
   [GRAPH]: `${BASE}/graphModels/${GRAPH}/getDefinition`,
   [AGENT]: `${BASE}/dataAgents/${AGENT}/getDefinition`,
+  [NOTEBOOK]: `${BASE}/notebooks/${NOTEBOOK}/getDefinition`,
 };
 const OPERATION_URL = `https://api.fabric.microsoft.com/v1/operations/${OPERATION}`;
 
@@ -116,6 +120,107 @@ function ontologyDefinition() {
       targetKeyRefBindings: [{ sourceColumnName: "site_id", targetPropertyId: "s1" }],
     }),
     part("Future/forward-compatible.json", { private: "unknown content" }),
+  ]);
+}
+
+function ontologyV2Definition() {
+  return definition([
+    part(".platform", {
+      metadata: { type: "Ontology", displayName: "Ontology v2 fixture" },
+      config: { version: "2.0" },
+    }),
+    part("database.tmdl", "database\n\tcompatibilityLevel: 1000000\n"),
+    part(
+      "entities/default#Movie.tmdl",
+      [
+        "entity default#Movie",
+        "\tlineageTag: 11111111-1111-4111-8111-111111111111",
+        "\tbackingTable: movies",
+        "\tkeyProperty: MovieId",
+        "",
+        "\tproperty MovieId",
+        "\t\tdataType: string",
+        "\t\tlineageTag: 22222222-2222-4222-8222-222222222222",
+        "",
+        "\t\tbackingConfiguration",
+        "\t\t\tvalueColumn: movies.MovieId",
+        "",
+        "\tproperty Rating",
+        "\t\tdataType: TimeSeries<double>",
+        "\t\tlineageTag: 33333333-3333-4333-8333-333333333333",
+        "",
+        "\t\tbackingConfiguration",
+        "\t\t\ttype: timeSeries",
+        "\t\t\tvalueColumn: movie_ratings.Rating",
+        "\t\t\torderingColumn: movie_ratings.Timestamp",
+        "",
+      ].join("\r\n"),
+    ),
+    part(
+      "entities/default#Genre.tmdl",
+      [
+        "entity default#Genre",
+        "\tlineageTag: 44444444-4444-4444-8444-444444444444",
+        "\tbackingTable: genres",
+        "\tkeyProperty: GenreId",
+        "",
+        "\tproperty GenreId",
+        "\t\tdataType: string",
+        "\t\tlineageTag: 55555555-5555-4555-8555-555555555555",
+        "",
+      ].join("\r\n"),
+    ),
+    part(
+      "entityRelationships.tmdl",
+      [
+        "entityRelationship 'Movie In Genre'",
+        "\tlineageTag: 66666666-6666-4666-8666-666666666666",
+        "\tfromEntity: default#Movie",
+        "\ttoEntity: default#Genre",
+        "",
+        "\tbackingConfiguration",
+        "\t\trelationship: rel_movie_genre",
+        "",
+      ].join("\r\n"),
+    ),
+    part("namespaces/default.tmdl", "namespace default\n\tlineageTag: default\n"),
+    part("model.tmdl", "model Model\n\nref namespace default\n"),
+    part("tables/movies.tmdl", "table movies\n\tcolumn MovieId\n\t\tdataType: string\n"),
+  ]);
+}
+
+function notebookDefinition() {
+  return definition([
+    part(".platform", {
+      metadata: { type: "Notebook", displayName: "Notebook fixture" },
+      config: { version: "2.0" },
+    }),
+    part(
+      "notebook-content.py",
+      [
+        "# Fabric notebook source",
+        "# METADATA ********************",
+        "# META {",
+        '# META   "kernel_info": { "name": "synapse_pyspark" },',
+        '# META   "dependencies": {',
+        '# META     "lakehouse": {',
+        `# META       "default_lakehouse": "${LAKEHOUSE}",`,
+        '# META       "default_lakehouse_name": "Operations lakehouse",',
+        `# META       "default_lakehouse_workspace_id": "${WS}"`,
+        "# META     }",
+        "# META   }",
+        "# META }",
+        "# CELL ********************",
+        'bronze = spark.read.table("bronze.rentals_raw")',
+        'stations = spark.sql("""SELECT * FROM silver.stations""")',
+        'events = spark.read.format("delta").load("Tables/bronze/events")',
+        'bronze.write.mode("overwrite").saveAsTable("silver.rentals_clean")',
+        'events.write.format("delta").save("Tables/gold/events")',
+        'spark.sql("""MERGE INTO gold.rentals USING silver.rentals_clean ON 1 = 1""")',
+        "dynamic = spark.table(table_name)",
+        'private_value = "password=do-not-return"',
+      ].join("\n"),
+    ),
   ]);
 }
 
@@ -248,6 +353,7 @@ function routes(overrides: Routes = {}): Routes {
     ],
     [`${OPERATION_URL}/result`]: () => json(graphDefinition()),
     [ROUTE[AGENT]]: () => json(dataAgentDefinition()),
+    [ROUTE[NOTEBOOK]]: () => json(notebookDefinition()),
     ...overrides,
   };
 }
@@ -444,6 +550,168 @@ describe("workspaceCollectDefinitions authorization", () => {
 });
 
 describe("workspaceCollectDefinitions projections", () => {
+  it("projects new-experience Ontology v2 TMDL definitions", () => {
+    const projection = projectDefinition("Ontology", ontologyV2Definition());
+
+    expect(projection.unknownParts).toBe(0);
+    expect(projection.metadata).toEqual({
+      kind: "ontology",
+      entities: [
+        {
+          id: "11111111-1111-4111-8111-111111111111",
+          name: "default#Movie",
+          namespace: "default",
+          keyPropertyIds: [
+            "22222222-2222-4222-8222-222222222222",
+          ],
+          properties: [
+            {
+              id: "22222222-2222-4222-8222-222222222222",
+              name: "MovieId",
+              valueType: "string",
+              timeSeries: false,
+            },
+            {
+              id: "33333333-3333-4333-8333-333333333333",
+              name: "Rating",
+              valueType: "double",
+              timeSeries: true,
+            },
+          ],
+        },
+        {
+          id: "44444444-4444-4444-8444-444444444444",
+          name: "default#Genre",
+          namespace: "default",
+          keyPropertyIds: [
+            "55555555-5555-4555-8555-555555555555",
+          ],
+          properties: [
+            {
+              id: "55555555-5555-4555-8555-555555555555",
+              name: "GenreId",
+              valueType: "string",
+              timeSeries: false,
+            },
+          ],
+        },
+      ],
+      relationships: [
+        {
+          id: "66666666-6666-4666-8666-666666666666",
+          name: "Movie In Genre",
+          sourceEntityId: "11111111-1111-4111-8111-111111111111",
+          targetEntityId: "44444444-4444-4444-8444-444444444444",
+        },
+      ],
+      bindings: [],
+      contextualizations: [],
+    });
+    expect(projection.facts).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          section: "Ontology entity types",
+          label: "default#Movie",
+        }),
+        expect.objectContaining({
+          section: "Ontology relationship types",
+          label: "Movie In Genre",
+        }),
+      ]),
+    );
+    const metadata = parseFabricItemMetadata("Ontology", projection.metadata);
+    expect(metadata).toBeDefined();
+    if (!metadata) throw new Error("Ontology v2 metadata was not accepted.");
+    expect(projectItemMetadataToSchema(metadata)).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          name: "default#Movie",
+          objectType: "Ontology entity",
+          columns: expect.arrayContaining([
+            expect.objectContaining({
+              name: "MovieId",
+              dataType: "string",
+            }),
+            expect.objectContaining({
+              name: "Rating",
+              dataType: "double",
+              description: "Time-series property",
+            }),
+          ]),
+        }),
+        expect.objectContaining({
+          name: "Movie In Genre",
+          objectType: "Ontology relationship",
+        }),
+      ]),
+    );
+  });
+
+  it("projects notebook object dependencies without returning notebook source", () => {
+    const projection = projectDefinition("Notebook", notebookDefinition());
+
+    expect(projection.unknownParts).toBe(0);
+    expect(projection.references.sourceItemIds).toEqual([LAKEHOUSE]);
+    expect(projection.metadata).toEqual({
+      kind: "notebook",
+      language: "python",
+      defaultLakehouse: {
+        itemId: LAKEHOUSE,
+        workspaceId: WS,
+        displayName: "Operations lakehouse",
+      },
+      objects: [
+        {
+          id: "bronze.events",
+          name: "bronze.events",
+          operation: "read",
+          sourceItemId: LAKEHOUSE,
+          sourceWorkspaceId: WS,
+        },
+        {
+          id: "bronze.rentals_raw",
+          name: "bronze.rentals_raw",
+          operation: "read",
+          sourceItemId: LAKEHOUSE,
+          sourceWorkspaceId: WS,
+        },
+        {
+          id: "gold.events",
+          name: "gold.events",
+          operation: "write",
+          sourceItemId: LAKEHOUSE,
+          sourceWorkspaceId: WS,
+        },
+        {
+          id: "gold.rentals",
+          name: "gold.rentals",
+          operation: "write",
+          sourceItemId: LAKEHOUSE,
+          sourceWorkspaceId: WS,
+        },
+        {
+          id: "silver.rentals_clean",
+          name: "silver.rentals_clean",
+          operation: "read-write",
+          sourceItemId: LAKEHOUSE,
+          sourceWorkspaceId: WS,
+        },
+        {
+          id: "silver.stations",
+          name: "silver.stations",
+          operation: "read",
+          sourceItemId: LAKEHOUSE,
+          sourceWorkspaceId: WS,
+        },
+      ],
+    });
+    const serialized = JSON.stringify(projection);
+    expect(serialized).not.toContain("password=do-not-return");
+    expect(serialized).not.toContain("spark.read");
+    expect(serialized).not.toContain("MERGE INTO");
+    expect(serialized).not.toContain("table_name");
+  });
+
   it("projects a mixed batch into reviewed metadata, config facts and per-item evidence", async () => {
     const { result, fetchImpl, sleep } = collect(routes());
     const envelope = await result;
@@ -454,8 +722,8 @@ describe("workspaceCollectDefinitions projections", () => {
       authoritative: false,
       workspaceId: WS,
       errors: [],
-      sections: { definitions: { status: "complete", code: "partial-unsupported" } },
-      capabilities: { definitionEnrichment: { status: "complete", code: "partial-unsupported" } },
+      sections: { definitions: { status: "complete", code: "forward-compatible-parts-skipped" } },
+      capabilities: { definitionEnrichment: { status: "complete", code: "forward-compatible-parts-skipped" } },
     });
     expect(envelope).not.toHaveProperty("correlationId");
     expect(envelope.items).toEqual([
@@ -479,7 +747,12 @@ describe("workspaceCollectDefinitions projections", () => {
         status: "complete",
         references: { sourceItemIds: [LAKEHOUSE], ontologyItemIds: [], graphModelItemIds: [] },
       },
-      { id: NOTEBOOK, type: "Notebook", status: "unsupported", code: "item-type-unsupported" },
+      {
+        id: NOTEBOOK,
+        type: "Notebook",
+        status: "complete",
+        references: { sourceItemIds: [LAKEHOUSE], ontologyItemIds: [], graphModelItemIds: [] },
+      },
     ]);
 
     expect(envelope.artifactMetadata[ONTOLOGY]).toEqual({
@@ -605,10 +878,18 @@ describe("workspaceCollectDefinitions projections", () => {
         },
       ],
     });
-    for (const [itemId, type] of [[ONTOLOGY, "Ontology"], [GRAPH, "GraphModel"], [AGENT, "DataAgent"]]) {
+    expect(envelope.artifactMetadata[NOTEBOOK]).toMatchObject({
+      kind: "notebook",
+      language: "python",
+      defaultLakehouse: { itemId: LAKEHOUSE, workspaceId: WS },
+      objects: expect.arrayContaining([
+        { id: "bronze.rentals_raw", name: "bronze.rentals_raw", operation: "read", sourceItemId: LAKEHOUSE, sourceWorkspaceId: WS },
+        { id: "gold.rentals", name: "gold.rentals", operation: "write", sourceItemId: LAKEHOUSE, sourceWorkspaceId: WS },
+      ]),
+    });
+    for (const [itemId, type] of [[ONTOLOGY, "Ontology"], [GRAPH, "GraphModel"], [AGENT, "DataAgent"], [NOTEBOOK, "Notebook"]]) {
       expect(parseFabricItemMetadata(type, envelope.artifactMetadata[itemId])).toBeDefined();
     }
-    expect(envelope.artifactMetadata).not.toHaveProperty(NOTEBOOK);
 
     expect(envelope.config).toEqual(expect.arrayContaining([
       { itemId: ONTOLOGY, section: "Metadata capability", label: "Definition enrichment", value: "forward-compatible-parts-skipped" },
@@ -622,8 +903,10 @@ describe("workspaceCollectDefinitions projections", () => {
       { itemId: AGENT, section: "Data agent sources", label: "published:Sales lakehouse", value: `lakehouse_tables | ${LAKEHOUSE}` },
       { itemId: AGENT, section: "Data agent selected elements", label: "published:Sales lakehouse:dbo / sales / notes", value: "lakehouse_tables.column | selected no" },
       { itemId: AGENT, section: "Data agent", label: "State", value: "published" },
+      { itemId: NOTEBOOK, section: "Notebook", label: "Language", value: "python" },
+      { itemId: NOTEBOOK, section: "Notebook dependencies", label: "Default lakehouse", value: "Operations lakehouse" },
+      { itemId: NOTEBOOK, section: "Notebook object references", label: "gold.rentals", value: "write" },
     ]));
-    expect(envelope.config.some((entry) => entry.itemId === NOTEBOOK)).toBe(false);
 
     expect(urls(fetchImpl)).toEqual([
       ROUTE[ONTOLOGY],
@@ -632,9 +915,10 @@ describe("workspaceCollectDefinitions projections", () => {
       OPERATION_URL,
       `${OPERATION_URL}/result`,
       ROUTE[AGENT],
+      ROUTE[NOTEBOOK],
     ]);
     expect(fetchImpl.mock.calls.map(([, init]) => init?.method)).toEqual([
-      "POST", "POST", "GET", "GET", "GET", "POST",
+      "POST", "POST", "GET", "GET", "GET", "POST", "POST",
     ]);
     for (const [, init] of fetchImpl.mock.calls) {
       expect(init).toMatchObject({
@@ -676,7 +960,7 @@ describe("workspaceCollectDefinitions projections", () => {
 });
 
 describe("workspaceCollectDefinitions route allowlist", () => {
-  it.each(["Notebook", "Lakehouse", "FutureFabricThing", "constructor", "toString", "hasOwnProperty"])(
+  it.each(["Lakehouse", "FutureFabricThing", "constructor", "toString", "hasOwnProperty"])(
     "reports %s as unsupported without a request",
     async (type) => {
       const { result, fetchImpl } = collect(routes(), [{ id: NOTEBOOK, type }]);

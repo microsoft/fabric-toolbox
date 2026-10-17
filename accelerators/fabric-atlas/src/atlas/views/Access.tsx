@@ -73,6 +73,7 @@ import {
 import type { AccessLevel, Grant } from "../model";
 import type { AtlasNavigation } from "../navigation";
 import type { SavedViewFilters } from "../saved-views";
+import { derivedFromSnapshot } from "../derived";
 import { useAtlas } from "../store";
 import { PageHeader } from "../components/PageHeader";
 import { Card, PrincipalAvatar, SectionLabel, TypeGlyph, cn } from "../ui";
@@ -1295,14 +1296,19 @@ export function AccessView({
     data.workspace.fabricId, data.workspace.snapshotId,
     policyEnabled && (!isPreview || !!policyEvidenceLoader), policyEvidenceLoader, policyRefresh,
   );
+  const baseRows = derivedFromSnapshot(
+    data,
+    "access-review-rows",
+    buildAccessReviewRows,
+  );
   const rows = useMemo(
     () =>
-      buildAccessReviewRows(data).filter(
+      baseRows.filter(
         (row) => row.effectiveAccess !== "none",
       ).map((row) => ({
         ...row, coverage: withStoredPolicyEvidence(row.coverage, policyState.records),
       })),
-    [data, policyState.records],
+    [baseRows, policyState.records],
   );
   const summary = useMemo(() => summarizeAccessReview(rows), [rows]);
   const reviewScopeKey = `${isPreview ? "preview" : "live"}\u0000${data.workspace.fabricId}\u0000${currentUser.id}`;

@@ -14,6 +14,7 @@ const ONTOLOGY = "66666666-6666-4666-8666-666666666666";
 const SQL = "77777777-7777-4777-8777-777777777777";
 const KQL = "88888888-8888-4888-8888-888888888888";
 const FOREIGN = "99999999-9999-4999-8999-999999999999";
+const NOTEBOOK = "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa";
 const NOW = "2026-10-02T12:00:00.000Z";
 const identity = { id: USER, name: "Fixture", email: "fixture@example.test" };
 const items = [
@@ -91,7 +92,25 @@ function harness() {
         { id: REPORT, type: "Report", schema: unsupported("not-applicable"), pages: complete(), definition: complete(), identity: complete() },
       ]),
       schema: { [MODEL]: [table("Sales", "Fabric semantic model definition (TMSL)")] },
-      models: {}, reports: { [REPORT]: { pages: [{ name: "overview", displayName: "Overview", order: 0 }] } },
+      models: {
+        [MODEL]: {
+          tables: [table("Sales", "Fabric semantic model definition (TMSL)")],
+          relationships: [],
+          dependencies: [
+            {
+              table: "Sales",
+              object: "Total",
+              objectType: "measure",
+              referencedTable: "Sales",
+              referencedObject: "Id",
+              referencedObjectType: "column",
+              source: "static-qualified-reference",
+            },
+          ],
+          expressionsOmitted: 1,
+        },
+      },
+      reports: { [REPORT]: { pages: [{ name: "overview", displayName: "Overview", order: 0 }] } },
       itemMetadata: {}, config: [],
     })),
     workspaceCollectItemRelations: fn("relations", (input) => ({
@@ -199,6 +218,119 @@ describe("active browser collector composition", () => {
     expect(result.raw.collectorSources?.[`kqlDataPlane:${KQL}`]).toEqual({ source: "unsupported", code: "token-unavailable" });
     validateRawSync(result.raw, WS);
     expect(result.itemRelationsCollection?.workspaceItemCount).toBe(items.length);
+  });
+
+  it("collects notebook definitions and maps static object dependencies without source code", async () => {
+    const h = harness();
+    const value = core();
+    value.items = [...value.items, { id: NOTEBOOK, type: "Notebook" }];
+    value.itemMetadata = {
+      ...value.itemMetadata,
+      [NOTEBOOK]: { scannerMatched: false, ownerAvailable: false },
+    };
+    h.functions.workspaceCollectCore.invoke.mockResolvedValueOnce(value);
+    h.functions.workspaceCollectDefinitions.invoke.mockImplementation(
+      async (input: Record<string, unknown>) => {
+        const requested = input.items as Array<{ id: string; type: string }>;
+        return {
+          ...common(
+            "definitions",
+            requested.map((item) => ({ ...item, ...complete() })),
+          ),
+          artifactMetadata: Object.fromEntries(
+            requested.map((item) => [
+              item.id,
+              item.type === "Notebook"
+                ? {
+                    kind: "notebook",
+                    language: "python",
+                    defaultLakehouse: { itemId: SQL, workspaceId: WS },
+                    objects: [
+                      {
+                        id: "dbo.Customers",
+                        name: "dbo.Customers",
+                        operation: "read-write",
+                        sourceItemId: SQL,
+                        sourceWorkspaceId: WS,
+                      },
+                    ],
+                  }
+                : {
+                    kind: "ontology",
+                    entities: [],
+                    relationships: [],
+                    bindings: [],
+                    contextualizations: [],
+                  },
+            ]),
+          ),
+          config: [],
+          sections: { definitions: complete() },
+          capabilities: { definitionEnrichment: complete() },
+        };
+      },
+    );
+
+    const result = await collectBrowserWorkspace(
+      WS,
+      identity,
+      RUN,
+      undefined,
+      undefined,
+      h.deps,
+    );
+    const atlas = mapSyncToAtlas(result.raw, {
+      fabricId: WS,
+      displayName: "Fixture",
+      capacity: "",
+      region: "",
+    });
+
+    expect(
+      h.functions.workspaceCollectDefinitions.invoke.mock.calls.some(
+        ([input]) =>
+          (input.items as Array<{ id: string }>).some(
+            (item) => item.id === NOTEBOOK,
+          ),
+      ),
+    ).toBe(true);
+    expect(atlas.edges).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          source: SQL,
+          target: NOTEBOOK,
+          relation: "notebook reads",
+        }),
+        expect.objectContaining({
+          source: NOTEBOOK,
+          target: SQL,
+          relation: "notebook writes",
+        }),
+      ]),
+    );
+    expect(atlas.objectEdges).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          relation: "reads",
+          target: expect.objectContaining({
+            itemId: NOTEBOOK,
+            kind: "notebookObject",
+            name: "dbo.Customers",
+          }),
+        }),
+        expect.objectContaining({
+          relation: "writes",
+          source: expect.objectContaining({
+            itemId: NOTEBOOK,
+            kind: "notebookObject",
+            name: "dbo.Customers",
+          }),
+        }),
+      ]),
+    );
+    expect(JSON.stringify(result.raw)).not.toMatch(
+      /spark\.read|saveAsTable|password=/i,
+    );
   });
 
   it("retries timed-out collectors and keeps slow metadata batches bounded", async () => {
@@ -532,6 +664,15 @@ describe("active browser collector composition", () => {
     expect(raw.items).toEqual(core().items);
     expect(raw.itemMetadata?.[MODEL]?.scannerMatched).toBe(true);
     expect(raw.schema?.[MODEL]?.[0].columns).toEqual(table("Sales", "legacy").columns);
+    expect(raw.semanticModelEvidence?.[MODEL]).toMatchObject({
+      expressionsOmitted: 1,
+      dependencies: [
+        expect.objectContaining({
+          object: "Total",
+          referencedObject: "Id",
+        }),
+      ],
+    });
   });
   it("requests scanner schema only for an unsupported model definition and page fallback only for legacy reports", async () => {
     const h = harness();

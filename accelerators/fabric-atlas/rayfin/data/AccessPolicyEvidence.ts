@@ -1,13 +1,13 @@
 import { authenticated, date, entity, int, set, text, uuid } from '@microsoft/rayfin-core';
-import { SYNC_WRITER_SUBJECT } from './sync-policy.js';
+import { syncWriterEmailPolicy, syncWriterPolicy } from './sync-policy.js';
 
 @entity()
 @authenticated('read')
 @authenticated('create', {
   policy: (claims, item) =>
-    claims.sub.eq(SYNC_WRITER_SUBJECT).and(claims.email.eq(item.writerEmail)),
+    syncWriterEmailPolicy(claims, item.writerEmail),
 })
-@authenticated('delete', { policy: (claims) => claims.sub.eq(SYNC_WRITER_SUBJECT) })
+@authenticated('delete', { policy: (claims) => syncWriterPolicy(claims) })
 export class AccessPolicyEvidence {
   @uuid() id!: string;
   @uuid() workspace_id!: string;

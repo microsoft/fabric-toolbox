@@ -403,6 +403,46 @@ describe("MapView selection", () => {
     expect(viewport.scrollTop).toBe(180);
   });
 
+  it("keeps the selected item position and viewport fixed when Impact mode is enabled", async () => {
+    window.history.replaceState(null, "", "/#map");
+    const { container } = render(
+      <AtlasProvider isPreview>
+        <MapView />
+      </AtlasProvider>,
+    );
+    const viewport = container.querySelector<HTMLDivElement>(".atlas-map-grid")!;
+    viewport.scrollLeft = 140;
+    viewport.scrollTop = 180;
+    fireEvent.click(
+      screen.getByLabelText("04_demand_forecast, Notebook, healthy"),
+    );
+    await act(async () => {
+      await new Promise<void>((resolve) =>
+        window.requestAnimationFrame(() => resolve()),
+      );
+    });
+    const selected = screen.getByLabelText(
+      "04_demand_forecast, Notebook, healthy",
+    );
+    const position = { left: selected.style.left, top: selected.style.top };
+
+    fireEvent.click(screen.getByRole("switch", { name: "Impact mode" }));
+    await act(async () => {
+      await new Promise<void>((resolve) =>
+        window.requestAnimationFrame(() => resolve()),
+      );
+    });
+
+    const impacted = screen.getByLabelText(
+      "04_demand_forecast, Notebook, healthy",
+    );
+    expect({ left: impacted.style.left, top: impacted.style.top }).toEqual(
+      position,
+    );
+    expect(viewport.scrollLeft).toBe(140);
+    expect(viewport.scrollTop).toBe(180);
+  });
+
   it("shows only the selected impact subgraph", () => {
     window.history.replaceState(null, "", "/#map");
     const { container } = render(
@@ -563,7 +603,7 @@ describe("MapView selection", () => {
     }
   });
 
-  it("moves selection to a matching item when its type is filtered", () => {
+  it("keeps connected lineage context when selection moves to a filtered item type", () => {
     window.history.replaceState(null, "", "/#map");
     render(
       <AtlasProvider isPreview>
@@ -575,8 +615,8 @@ describe("MapView selection", () => {
       target: { value: "Report" },
     });
     expect(
-      screen.queryByLabelText("AlpineRent Sales Model, Semantic model, healthy"),
-    ).not.toBeInTheDocument();
+      screen.getByLabelText("AlpineRent Sales Model, Semantic model, healthy"),
+    ).toBeVisible();
     expect(
       screen.getByLabelText(`${report.displayName}, Report, ${report.health}`),
     ).toHaveAttribute("aria-pressed", "true");
@@ -585,66 +625,143 @@ describe("MapView selection", () => {
     );
   });
 
-  it("supports object selection, highlighting and drag", () => {
+  it("shows every verified notebook object dependency after switching to Object lineage", () => {
+    const notebook = SAMPLE_DATA.items.find(
+      (item) => item.displayName === "02_silver_transform",
+    )!;
+    const lakehouse = SAMPLE_DATA.items.find(
+      (item) => item.itemType === "Lakehouse",
+    )!;
+    const originalObjectEdges = SAMPLE_DATA.objectEdges;
+    SAMPLE_DATA.objectEdges = [
+      {
+        source: {
+          itemId: lakehouse.fabricId,
+          kind: "sourceObject",
+          id: "bronze.rentals_raw",
+          name: "bronze.rentals_raw",
+          tableName: "bronze.rentals_raw",
+        },
+        target: {
+          itemId: notebook.fabricId,
+          kind: "notebookObject",
+          id: "bronze.rentals_raw",
+          name: "bronze.rentals_raw",
+          tableName: "bronze.rentals_raw",
+        },
+        relation: "reads",
+        confidence: "verified",
+      },
+      {
+        source: {
+          itemId: notebook.fabricId,
+          kind: "notebookObject",
+          id: "silver.rentals_clean",
+          name: "silver.rentals_clean",
+          tableName: "silver.rentals_clean",
+        },
+        target: {
+          itemId: lakehouse.fabricId,
+          kind: "sourceObject",
+          id: "silver.rentals_clean",
+          name: "silver.rentals_clean",
+          tableName: "silver.rentals_clean",
+        },
+        relation: "writes",
+        confidence: "verified",
+      },
+    ];
     window.history.replaceState(null, "", "/#map");
-    const { container } = render(
+    render(
+      <AtlasProvider isPreview>
+        <MapView />
+      </AtlasProvider>,
+    );
+    SAMPLE_DATA.objectEdges = originalObjectEdges;
+
+    fireEvent.click(
+      screen.getByLabelText("02_silver_transform, Notebook, healthy"),
+    );
+    fireEvent.click(screen.getByRole("button", { name: "objects" }));
+
+    expect(
+      screen.getByLabelText(
+        /bronze\.rentals_raw, Notebook object reference/,
+      ),
+    ).toBeVisible();
+    expect(
+      screen.getByLabelText(
+        /silver\.rentals_clean, Notebook object reference/,
+      ),
+    ).toBeVisible();
+    expect(screen.getByText(/Verified object metadata is shown/)).toBeVisible();
+  });
+
+  it("falls back to item lineage when a notebook has no static object references", () => {
+    const originalObjectEdges = SAMPLE_DATA.objectEdges;
+    SAMPLE_DATA.objectEdges = [];
+    window.history.replaceState(null, "", "/#map");
+    render(
+      <AtlasProvider isPreview>
+        <MapView />
+      </AtlasProvider>,
+    );
+    SAMPLE_DATA.objectEdges = originalObjectEdges;
+
+    fireEvent.click(
+      screen.getByLabelText("02_silver_transform, Notebook, healthy"),
+    );
+    fireEvent.click(screen.getByRole("button", { name: "objects" }));
+
+    expect(
+      screen.getByLabelText(/AlpineRent Daily Load, 1 object · collapsed/),
+    ).toBeVisible();
+    expect(
+      screen.getByLabelText(/alpinerent_lakehouse, 1 object · collapsed/),
+    ).toBeVisible();
+    expect(
+      screen.getByText(
+        "No direct notebook object references were resolved. Showing verified item-level dependencies.",
+      ),
+    ).toBeVisible();
+  });
+
+  it("reveals and selects Semantic Model fields without implicit table focus", async () => {
+    window.history.replaceState(null, "", "/#map");
+    render(
       <AtlasProvider isPreview>
         <MapView />
       </AtlasProvider>,
     );
 
     fireEvent.click(screen.getByRole("button", { name: "objects" }));
-    const table = screen.getByLabelText(
-      /rentals_daily_summary, \d+ columns · \d+ measures/i,
-    );
-    const initialLeft = table.style.left;
-    const initialTop = table.style.top;
-
-    fireEvent.pointerDown(table, {
-      button: 0,
-      clientX: 100,
-      clientY: 100,
-      pointerId: 2,
-    });
-
-    fireEvent.pointerMove(table, {
-      clientX: 150,
-      clientY: 130,
-      pointerId: 2,
-    });
-    fireEvent.pointerUp(table, {
-      button: 0,
-      clientX: 150,
-      clientY: 130,
-      pointerId: 2,
-    });
-
-    expect(table.style.left).toBe(initialLeft);
-    expect(table.style.top).not.toBe(initialTop);
-
-    fireEvent.pointerDown(table, {
-      button: 0,
-      clientX: 150,
-      clientY: 130,
-      pointerId: 3,
-    });
-    fireEvent.pointerUp(table, {
-      button: 0,
-      clientX: 150,
-      clientY: 130,
-      pointerId: 3,
-    });
-
-    expect(table).toHaveAttribute("aria-pressed", "true");
-    expect(container.querySelectorAll(".atlas-flow").length).toBeGreaterThan(0);
     expect(
-      screen.getByRole("region", {
-        name: "Selected object lineage relationships",
+      screen.queryByRole("region", {
+        name: "rentals_daily_summary fields",
       }),
-    ).toBeInTheDocument();
+    ).not.toBeInTheDocument();
+
+    fireEvent.click(
+      screen.getByRole("button", {
+        name: "Expand rentals_daily_summary",
+      }),
+    );
+    fireEvent.click(
+      screen.getByRole("button", { name: "Total Revenue" }),
+    );
+
+    expect(
+      screen.getByRole("button", { name: "Total Revenue" }),
+    ).toHaveAttribute("aria-pressed", "true");
+    expect(screen.getByRole("button", { name: "Open in X-Ray" })).toBeInTheDocument();
+    await waitFor(() =>
+      expect(
+        new URL(window.location.href).searchParams.get("object"),
+      ).toContain("total revenue"),
+    );
   });
 
-  it("refreshes object lineage when a node from another item is selected", () => {
+  it("opens item lineage when an item-level consumer is selected", () => {
     window.history.replaceState(null, "", "/#map");
     render(
       <AtlasProvider isPreview>
@@ -658,17 +775,22 @@ describe("MapView selection", () => {
     )!;
 
     fireEvent.click(
-      screen.getByLabelText(
-        /AlpineRent Executive Dashboard, 1 object · collapsed/i,
-      ),
+      screen.getByRole("button", {
+        name: /AlpineRent Executive Dashboard.*Report/i,
+      }),
     );
 
+    expect(
+      screen.getByRole("button", {
+        name: "items",
+      }),
+    ).toHaveAttribute("aria-current", "true");
     expect(
       new URL(window.location.href).searchParams.get("item"),
     ).toBe(report.fabricId);
   });
 
-  it("selects the matching table when the object table filter changes", () => {
+  it("searches the complete Semantic Model inventory", () => {
     window.history.replaceState(null, "", "/#map");
     render(
       <AtlasProvider isPreview>
@@ -676,22 +798,26 @@ describe("MapView selection", () => {
       </AtlasProvider>,
     );
     fireEvent.click(screen.getByRole("button", { name: "objects" }));
-    const tableFilter = screen.getByLabelText("Select object lineage table");
-    const options = [...tableFilter.querySelectorAll("option")];
-    expect(options.length).toBeGreaterThan(1);
-    const nextTable = options[1].value;
-    fireEvent.click(screen.getByLabelText(/Total Revenue, Measure/i));
-    fireEvent.change(tableFilter, { target: { value: nextTable } });
-    const selectedTable = screen
-      .getAllByLabelText(
-        new RegExp(`^${nextTable.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")},`),
-      )
-      .find((node) => node.getAttribute("aria-label")?.includes("columns"));
+    fireEvent.change(screen.getByLabelText("Search lineage"), {
+      target: { value: "Total Station Revenue" },
+    });
+    fireEvent.click(
+      screen.getByRole("button", {
+        name: /Total Station Revenue.*station_utilization/i,
+      }),
+    );
+
     expect(
-      selectedTable,
+      screen.getByRole("region", {
+        name: "station_utilization fields",
+      }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "Total Station Revenue" }),
     ).toHaveAttribute("aria-pressed", "true");
   });
-  it("uses local table controls when a relational schema also has metadata edges", () => {
+
+  it("uses the Semantic Model path even when metadata object edges exist", () => {
     const previous = SAMPLE_DATA.objectEdges;
     const model = SAMPLE_DATA.items.find((item) => item.itemType === "SemanticModel")!;
     const lakehouse = SAMPLE_DATA.items.find((item) => item.itemType === "Lakehouse")!;
@@ -704,19 +830,20 @@ describe("MapView selection", () => {
       window.history.replaceState(null, "", "/#map");
       render(<AtlasProvider isPreview><MapView /></AtlasProvider>);
       fireEvent.click(screen.getByRole("button", { name: "objects" }));
-      const filter = screen.getByLabelText("Select object lineage table");
-      expect([...filter.querySelectorAll("option")].map((option) => option.value))
-        .toContain("rentals_daily_summary");
+      expect(screen.getByText("Whole-model search · bounded multi-table view")).toBeInTheDocument();
       expect(screen.queryByLabelText("Filter object lineage by source item")).not.toBeInTheDocument();
       expect(screen.queryByLabelText("Filter object lineage by object kind")).not.toBeInTheDocument();
-      fireEvent.change(filter, { target: { value: "station_utilization" } });
-      expect(screen.getByLabelText(/^station_utilization, \d+ columns/)).toHaveAttribute("aria-pressed", "true");
+      expect(
+        screen.getByRole("button", {
+          name: "Expand rentals_daily_summary",
+        }),
+      ).toBeInTheDocument();
     } finally {
       SAMPLE_DATA.objectEdges = previous;
     }
   });
 
-  it("expands and collapses every deep-lineage table", async () => {
+  it("expands a bounded set of tables and clears the object view", () => {
     window.history.replaceState(null, "", "/#map");
     render(
       <AtlasProvider isPreview>
@@ -725,37 +852,26 @@ describe("MapView selection", () => {
     );
 
     fireEvent.click(screen.getByRole("button", { name: "objects" }));
-    await selectInspectorTab("Summary", "Schema");
-    const tableToggles = () =>
-      [
-        ...screen
-          .getByLabelText("Item details inspector")
-          .querySelectorAll<HTMLButtonElement>("button[aria-expanded]"),
-      ];
-
-    expect(tableToggles().length).toBeGreaterThan(1);
     expect(
-      tableToggles().every(
-        (button) => button.getAttribute("aria-expanded") === "false",
-      ),
-    ).toBe(true);
+      screen.queryAllByRole("region", { name: / fields$/i }),
+    ).toHaveLength(0);
 
-    fireEvent.click(screen.getByRole("button", { name: "Expand all" }));
+    fireEvent.click(
+      screen.getByRole("button", { name: "Expand up to 8 tables" }),
+    );
     expect(
-      tableToggles().every(
-        (button) => button.getAttribute("aria-expanded") === "true",
-      ),
-    ).toBe(true);
+      screen.getAllByRole("region", { name: / fields$/i }).length,
+    ).toBeGreaterThan(1);
 
-    fireEvent.click(screen.getByRole("button", { name: "Collapse all" }));
+    fireEvent.click(
+      screen.getByRole("button", { name: "Clear object view" }),
+    );
     expect(
-      tableToggles().every(
-        (button) => button.getAttribute("aria-expanded") === "false",
-      ),
-    ).toBe(true);
+      screen.queryAllByRole("region", { name: / fields$/i }),
+    ).toHaveLength(0);
   });
 
-  it("expands and collapses object nodes by Fabric item", () => {
+  it("cross-navigates between Object Lineage and X-Ray", () => {
     window.history.replaceState(null, "", "/#map");
     render(
       <AtlasProvider isPreview>
@@ -764,27 +880,30 @@ describe("MapView selection", () => {
     );
 
     fireEvent.click(screen.getByRole("button", { name: "objects" }));
-    expect(
-      screen.getByLabelText(
-        /AlpineRent Executive Dashboard, 1 object · collapsed/i,
-      ),
-    ).toBeInTheDocument();
-
     fireEvent.click(
-      screen.getByRole("button", { name: "Expand all item groups" }),
+      screen.getByRole("button", {
+        name: "Expand rentals_daily_summary",
+      }),
+    );
+    fireEvent.click(
+      screen.getByRole("button", { name: "Total Revenue" }),
+    );
+    fireEvent.click(
+      screen.getByRole("button", { name: "Open in X-Ray" }),
+    );
+
+    expect(
+      screen.getByRole("heading", { name: "Semantic model X-Ray" }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", { name: "Total Revenue" }),
+    ).toBeInTheDocument();
+    fireEvent.click(
+      screen.getByRole("button", { name: "Open in Object Lineage" }),
     );
     expect(
-      screen.getByLabelText("AlpineRent Executive Dashboard, Report"),
-    ).toBeInTheDocument();
-
-    fireEvent.click(
-      screen.getByRole("button", { name: "Collapse all item groups" }),
-    );
-    expect(
-      screen.getByLabelText(
-        /AlpineRent Sales Model, \d+ objects · collapsed/i,
-      ),
-    ).toBeInTheDocument();
+      screen.getByRole("button", { name: "Total Revenue" }),
+    ).toHaveAttribute("aria-pressed", "true");
   });
 
   it("moves a multi-selection together and fully resets positions", () => {

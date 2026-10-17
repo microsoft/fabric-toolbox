@@ -2,7 +2,7 @@
 
 Assessment: **3 October 2026, Rayfin 1.36.2**.
 
-Fabric Atlas 2.0 is Rayfin-first. Typed Rayfin Functions collect the catalog,
+Fabric Atlas 2.1 is Rayfin-first. Typed Rayfin Functions collect the catalog,
 definitions, SQL and KQL structure, Item Relations, source provenance and
 policy evidence. Python remains only where Rayfin does not expose the required
 runtime contract.

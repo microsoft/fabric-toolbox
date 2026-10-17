@@ -1,5 +1,5 @@
 import { authenticated, date, entity, uuid } from '@microsoft/rayfin-core';
-import { SYNC_WRITER_SUBJECT } from './sync-policy.js';
+import { syncWriterPolicy } from './sync-policy.js';
 
 /**
  * One global sentinel used by Functions to prove the caller satisfies the
@@ -7,7 +7,7 @@ import { SYNC_WRITER_SUBJECT } from './sync-policy.js';
  */
 @entity()
 @authenticated(['create', 'read', 'update', 'delete'], {
-  policy: (claims) => claims.sub.eq(SYNC_WRITER_SUBJECT),
+  policy: (claims) => syncWriterPolicy(claims),
 })
 export class SynchronizerAuthority {
   @uuid() id!: string;

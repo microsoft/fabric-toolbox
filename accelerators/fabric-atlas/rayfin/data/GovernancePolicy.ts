@@ -1,16 +1,14 @@
 import { authenticated, date, entity, int, text, uuid } from '@microsoft/rayfin-core';
-import { SYNC_WRITER_SUBJECT } from './sync-policy.js';
+import { syncWriterEmailPolicy, syncWriterPolicy } from './sync-policy.js';
 
 @entity()
 @authenticated('read')
 @authenticated('create', {
   policy: (claims, item) =>
-    claims.email
-      .eq(item.writerEmail)
-      .and(claims.sub.eq(SYNC_WRITER_SUBJECT)),
+    syncWriterEmailPolicy(claims, item.writerEmail),
 })
 @authenticated('update', {
-  policy: (claims) => claims.sub.eq(SYNC_WRITER_SUBJECT),
+  policy: (claims) => syncWriterPolicy(claims),
   include: [
     'documentationTarget',
     'ownershipTarget',
@@ -25,7 +23,7 @@ import { SYNC_WRITER_SUBJECT } from './sync-policy.js';
   ],
 })
 @authenticated('delete', {
-  policy: (claims) => claims.sub.eq(SYNC_WRITER_SUBJECT),
+  policy: (claims) => syncWriterPolicy(claims),
 })
 export class GovernancePolicy {
   @uuid() id!: string;

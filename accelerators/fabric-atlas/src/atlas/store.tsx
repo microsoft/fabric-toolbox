@@ -19,10 +19,15 @@ import {
   loadFromDb,
   loadHistoryFromDb,
   loadHistoricalSnapshotFromDb,
+  loadWorkspaceSyncStatuses,
   persistComment,
   runFabricSync,
 } from "./backend";
-import { ATLAS_CONFIG, isSyncConfigured } from "./config";
+import {
+  ATLAS_CONFIG,
+  configuredSyncWriters,
+  isSyncConfigured,
+} from "./config";
 import {
   DEPLOYMENT_ID,
   sameDeploymentGeneration,
@@ -67,7 +72,10 @@ import {
   loadWorkspaceScopes,
   type WorkspaceScope,
 } from "./workspace-scope";
-import type { WorkspaceSyncEntry } from "./workspace-sync";
+import type {
+  PersistedWorkspaceSyncStatus,
+  WorkspaceSyncEntry,
+} from "./workspace-sync";
 
 export interface CurrentUser {
   id: string;
@@ -115,6 +123,7 @@ export interface AtlasContextValue {
   workspaceScopes: WorkspaceScope[];
   workspaceScopesLoading: boolean;
   workspaceScopesError?: string;
+  workspaceSyncStatuses: Record<string, PersistedWorkspaceSyncStatus>;
   activeWorkspaceId: string;
   reloadWorkspaceScopes: () => Promise<void>;
   selectWorkspace: (workspaceId: string) => void;
@@ -308,7 +317,9 @@ export function AtlasProvider({
   const canSync =
     isPreview ||
     (!!currentUser.id &&
-      currentUser.id.trim() === ATLAS_CONFIG.syncAdminSubject.trim());
+      configuredSyncWriters().some(
+        (writer) => writer.subject === currentUser.id.trim(),
+      ));
   const [requiresDeploymentSync, setRequiresDeploymentSync] = useState(
     !isPreview,
   );
@@ -323,6 +334,9 @@ export function AtlasProvider({
   const [workspaceScopesError, setWorkspaceScopesError] = useState<
     string | undefined
   >();
+  const [workspaceSyncStatuses, setWorkspaceSyncStatuses] = useState<
+    Record<string, PersistedWorkspaceSyncStatus>
+  >({});
   const [activeWorkspaceId, setActiveWorkspaceId] = useState(initialScope.id);
   const activeWorkspaceName =
     workspaceScopes.find(
@@ -381,8 +395,9 @@ export function AtlasProvider({
   const reloadWorkspaceScopes = useCallback(async () => {
     setWorkspaceScopesLoading(true);
     setWorkspaceScopesError(undefined);
+    let scopes: WorkspaceScope[];
     try {
-      const scopes = await loadWorkspaceScopes(isPreview);
+      scopes = await loadWorkspaceScopes(isPreview);
       setWorkspaceScopes(scopes);
       setActiveWorkspaceId((current) =>
         scopes.some((workspace) => workspace.id === current)
@@ -393,7 +408,26 @@ export function AtlasProvider({
       setWorkspaceScopesError(
         error instanceof Error ? error.message : String(error),
       );
+      setWorkspaceScopesLoading(false);
       throw error;
+    }
+    try {
+      const statuses = await loadWorkspaceSyncStatuses(
+        isPreview,
+        scopes.map((workspace) => workspace.id),
+      );
+      setWorkspaceSyncStatuses((current) => {
+        const next: Record<string, PersistedWorkspaceSyncStatus> = {};
+        for (const workspace of scopes) {
+          const status = statuses[workspace.id] ?? current[workspace.id];
+          if (status) next[workspace.id] = status;
+        }
+        return next;
+      });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      console.warn("[atlas] workspace status refresh failed", error);
+      setWorkspaceScopesError(`Workspace status is unavailable. ${message}`);
     } finally {
       setWorkspaceScopesLoading(false);
     }
@@ -760,6 +794,16 @@ export function AtlasProvider({
       const syncStartedAtMs = Date.now();
       setSyncStartedAt(syncStartedAtMs);
       const startedAt = new Date(syncStartedAtMs).toISOString();
+      setWorkspaceSyncStatuses((current) => ({
+        ...current,
+        [targetWorkspaceId]: {
+          ...current[targetWorkspaceId],
+          lastRunStatus: "running",
+          lastRunStartedAt: startedAt,
+          lastRunFinishedAt: undefined,
+          lastRunError: undefined,
+        },
+      }));
       let reportedProgress = 3;
       try {
         const fresh = await runFabricSync(
@@ -779,6 +823,24 @@ export function AtlasProvider({
           abortController.signal,
           targetWorkspaceId,
         );
+        const completedAt =
+          fresh?.workspace.syncedAt ?? new Date().toISOString();
+        setWorkspaceSyncStatuses((current) => ({
+          ...current,
+          [targetWorkspaceId]: {
+            ...current[targetWorkspaceId],
+            snapshotId:
+              fresh?.workspace.snapshotId ??
+              current[targetWorkspaceId]?.snapshotId,
+            snapshotAt:
+              fresh?.workspace.syncedAt ??
+              current[targetWorkspaceId]?.snapshotAt,
+            lastRunStatus: "completed",
+            lastRunStartedAt: startedAt,
+            lastRunFinishedAt: completedAt,
+            lastRunError: undefined,
+          },
+        }));
         if (appliesToActive) {
           if (operationGeneration.current !== generation) {
             return { status: "cancelled" };
@@ -862,9 +924,29 @@ export function AtlasProvider({
           err instanceof SyncCancelledError ||
           abortController.signal.aborted
         ) {
+          setWorkspaceSyncStatuses((current) => ({
+            ...current,
+            [targetWorkspaceId]: {
+              ...current[targetWorkspaceId],
+              lastRunStatus: "cancelled",
+              lastRunStartedAt: startedAt,
+              lastRunFinishedAt: new Date().toISOString(),
+              lastRunError: undefined,
+            },
+          }));
           return { status: "cancelled" };
         }
         const message = err instanceof Error ? err.message : String(err);
+        setWorkspaceSyncStatuses((current) => ({
+          ...current,
+          [targetWorkspaceId]: {
+            ...current[targetWorkspaceId],
+            lastRunStatus: "failed",
+            lastRunStartedAt: startedAt,
+            lastRunFinishedAt: new Date().toISOString(),
+            lastRunError: message,
+          },
+        }));
         if (appliesToActive && operationGeneration.current === generation) {
           setSyncError(message);
         }
@@ -937,6 +1019,15 @@ export function AtlasProvider({
             startedAt: new Date().toISOString(),
           });
           const outcome = await runWorkspaceSync(target, abortController);
+          if (!isPreview) {
+            const persisted = await loadWorkspaceSyncStatuses(false, [
+              target,
+            ]);
+            setWorkspaceSyncStatuses((current) => ({
+              ...current,
+              ...persisted,
+            }));
+          }
           lastStatus = outcome.status;
           settle([target], {
             status: outcome.status,
@@ -968,7 +1059,7 @@ export function AtlasProvider({
         }
       }
     },
-    [canSync, runWorkspaceSync, workspaceScopes],
+    [canSync, isPreview, runWorkspaceSync, workspaceScopes],
   );
 
   const sync = useCallback(async () => {
@@ -1467,6 +1558,7 @@ export function AtlasProvider({
       workspaceScopes,
       workspaceScopesLoading,
       workspaceScopesError,
+      workspaceSyncStatuses,
       activeWorkspaceId,
       reloadWorkspaceScopes,
       selectWorkspace,
@@ -1489,7 +1581,7 @@ export function AtlasProvider({
       removeGovernanceException: removeSharedGovernanceException,
       loadHistorySnapshot,
     }),
-    [data, history, hydrating, historyLoading, historyError, historyFailedSnapshotIds, savedViews, savedViewsLoading, savedViewsError, findingAcks, findingAcksLoading, findingAcksError, findingAckPendingIds, governancePolicy.targets, governancePolicyLoading, governancePolicyError, governanceExceptions, governanceExceptionsLoading, governanceExceptionsError, governanceExceptionPendingIds, commentsLoading, commentsError, syncing, syncProgress, syncStage, syncStartedAt, lastSyncedAt, isPreview, configured, canSync, hasData, requiresDeploymentSync, hydrationError, retryHydration, syncError, currentUser, workspaceScopes, workspaceScopesLoading, workspaceScopesError, activeWorkspaceId, reloadWorkspaceScopes, selectWorkspace, sync, syncWorkspaces, syncQueue, syncWorkspaceId, cancelSync, reloadComments, addComment, addSavedView, removeSavedView, saveFindingAcknowledgement, removeFindingAcknowledgement, reloadGovernancePolicy, saveGovernanceTargets, resetGovernanceTargets, reloadGovernanceExceptions, saveSharedGovernanceException, removeSharedGovernanceException, loadHistorySnapshot],
+    [data, history, hydrating, historyLoading, historyError, historyFailedSnapshotIds, savedViews, savedViewsLoading, savedViewsError, findingAcks, findingAcksLoading, findingAcksError, findingAckPendingIds, governancePolicy.targets, governancePolicyLoading, governancePolicyError, governanceExceptions, governanceExceptionsLoading, governanceExceptionsError, governanceExceptionPendingIds, commentsLoading, commentsError, syncing, syncProgress, syncStage, syncStartedAt, lastSyncedAt, isPreview, configured, canSync, hasData, requiresDeploymentSync, hydrationError, retryHydration, syncError, currentUser, workspaceScopes, workspaceScopesLoading, workspaceScopesError, workspaceSyncStatuses, activeWorkspaceId, reloadWorkspaceScopes, selectWorkspace, sync, syncWorkspaces, syncQueue, syncWorkspaceId, cancelSync, reloadComments, addComment, addSavedView, removeSavedView, saveFindingAcknowledgement, removeFindingAcknowledgement, reloadGovernancePolicy, saveGovernanceTargets, resetGovernanceTargets, reloadGovernanceExceptions, saveSharedGovernanceException, removeSharedGovernanceException, loadHistorySnapshot],
   );
 
   return <AtlasContext.Provider value={value}>{children}</AtlasContext.Provider>;

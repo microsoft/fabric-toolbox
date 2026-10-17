@@ -91,7 +91,11 @@ function sameText(left: unknown, right: unknown): boolean {
 function trustedWriterEmails(): string[] {
   return [
     ...new Set(
-      [ATLAS_CONFIG.syncAdminEmail, ...ATLAS_CONFIG.previousSyncWriters]
+      [
+        ATLAS_CONFIG.syncAdminEmail,
+        ATLAS_CONFIG.breakGlassSyncAdminEmail,
+        ...ATLAS_CONFIG.previousSyncWriters,
+      ]
         .map((email) => email.trim().toLowerCase())
         .filter(Boolean),
     ),

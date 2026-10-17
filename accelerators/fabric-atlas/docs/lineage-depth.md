@@ -14,6 +14,14 @@ capability gap instead of approximating it.
 | Ontology metrics | Deferred | Not present in collected Ontology definitions |
 | Ontology entity inheritance | Deferred | Not present in collected Ontology definitions |
 
+## Item graph filters and Impact mode
+
+The item graph computes one staged source-to-consumer layout for the complete
+selected workspace evidence. Type filters change visibility, not coordinates,
+and include the upstream and downstream context of matching items. Impact mode
+uses the same positions while hiding unrelated components, so entering or
+leaving Impact does not move the selected node or reset the viewport.
+
 ## #34 Lineage time machine
 
 **Changes → Time machine.** `src/atlas/lineage-time-machine.ts` compares two
@@ -95,14 +103,81 @@ evidence of one semantic model from the active snapshot.
   one resolved hop and **Transitive** follows every reachable resolved hop.
   Arrow keys operate these controls. The evidence pane lists direct
   references, while the selected direction and scope control list highlights.
-- Measures without DAX consumers say "No DAX consumers in this model"; report
-  and visual usage is not exposed by Fabric APIs, so they are not called
-  unused.
+- Measures and calculated columns use the same dependency index. Expression
+  coverage is shown as collected versus expected expressions. Unsupported or
+  omitted expressions remain visible as a coverage gap.
+- Objects without a collected consumer say "No DAX consumers among collected
+  expressions". Report and visual usage is not exposed by Fabric APIs, so they
+  are not called unused.
 - The selected object's dependency evidence can be exported as Markdown.
 - View state is shareable through `xray.model`, `xray.object`, `xray.dir`,
   `xray.scope`, `xray.kind` and `xray.q`.
-- **Limits.** The first iteration is a grouped dependency explorer, not a node
-  canvas. Cross-item lineage stays on the Graph tab.
+- X-Ray objects link directly to Object Lineage. Asset Catalog and global
+  search results expose the same navigation when an object belongs to a
+  synchronized Semantic Model.
+
+### Semantic Model Object Lineage
+
+The Graph tab uses `src/atlas/semantic-object-graph.ts`,
+`src/atlas/object-lineage-state.ts` and
+`src/atlas/components/ObjectLineageCanvas.tsx` for Semantic Models. Other
+verified metadata graphs keep their existing builder.
+
+- The initial view lists every model table with measure and column counts. No
+  table or field receives implicit focus.
+- Table rows stay fixed. Expanding a table opens a compact field block in the
+  first free vertical slot. Existing blocks never move when another block is
+  opened, selected or closed.
+- Search covers the complete model inventory, including objects in collapsed
+  tables. Selecting a result opens the owning table and focuses the object.
+- DAX arrows run from the referenced object to the consuming expression.
+  Direct edges are the default. Transitive edges and an off state are
+  available from the graph toolbar.
+- Name-matched source bindings remain dotted and labelled inferred. Item-level
+  model-to-consumer links stay visually separate from DAX evidence.
+- The model node shows inventory and coverage. It never presents one table's
+  fields as the complete Semantic Model.
+- Reset keeps the active model, closes all field blocks, clears object focus
+  and restores the default zoom.
+- Keyboard navigation uses one graph entry point with arrow keys between
+  model, table and visible field targets. `Enter` or `Space` activates the
+  current target.
+
+Bounds:
+
+| Bound | Value |
+|---|---:|
+| Expanded tables | 8 |
+| Visible field rows per block | 24 |
+| Total rendered field rows | 192 |
+| DAX edges | 250 |
+
+All fields remain discoverable through table counts, whole-model search,
+Asset Catalog, the schema inspector and X-Ray when rendering reaches a bound.
+
+Canonical Object Lineage URL state uses `item`, `tables`, `object` and `dax`.
+Legacy `table`, `xray.model` and `xray.object` parameters are read as
+fallbacks, then canonical state is written.
+
+### Notebook Object Lineage
+
+Notebook definitions are read through `workspaceCollectDefinitions`. The
+Function decodes the definition in memory and recognizes direct literal
+references from Spark table APIs, `saveAsTable`, `insertInto`, Delta table
+paths and literal `spark.sql` statements. SQL notebook definitions use the
+same bounded identifier parser.
+
+- Read edges run from the referenced object to the notebook object reference.
+- Write edges run from the notebook object reference to the target object.
+- The default Lakehouse dependency supplies the source item ID when Fabric
+  exposes it in notebook metadata.
+- Repeated read and write references merge into one `read-write` object.
+- Source code, cells, complete SQL statements, secrets and arbitrary URLs are
+  never returned or stored.
+- Dynamic identifiers, variables, generated SQL and runtime-only Spark plans
+  remain outside coverage and are not guessed. When no direct object is
+  resolved, Object Lineage displays the notebook's verified item-level
+  upstream and downstream dependencies with an explicit limitation message.
 
 ## #33 Cross-workspace expansion
 

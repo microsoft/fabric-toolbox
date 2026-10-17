@@ -47,6 +47,30 @@ export interface Reassignment {
   reason: string;
 }
 
+export type OffboardingReviewEvidence =
+  | "documented-owner"
+  | "direct-owner-access"
+  | "workspace-owner-access"
+  | "direct-edit-access"
+  | "workspace-edit-access"
+  | "configured-by"
+  | "modified-by"
+  | "ownership-unknown";
+
+export interface OffboardingReviewItem {
+  item: Item;
+  evidence: OffboardingReviewEvidence[];
+  accessOrigin?: AccessReviewRow["origin"];
+  accessLevel?: AccessReviewRow["effectiveAccess"];
+}
+
+export interface WorkspaceOwnershipCoverage {
+  documented: number;
+  total: number;
+  unknown: number;
+  percentage: number | null;
+}
+
 export interface OffboardingReport {
   kind: OffboardingKind;
   subject: OffboardingSubject;
@@ -54,8 +78,12 @@ export interface OffboardingReport {
   warnings: string[];
   access: AccessReviewRow[];
   ownershipCoverage: CoverageMetric;
+  workspaceOwnershipCoverage: WorkspaceOwnershipCoverage;
   owned: Item[];
   effectiveOwnerItems: Item[];
+  privilegedReview: OffboardingReviewItem[];
+  identityDependencies: OffboardingReviewItem[];
+  ownershipUnknown: Item[];
   ownership: OwnershipAssessment[];
   soleOwned: Item[];
   indeterminateOwnership: Item[];
@@ -117,6 +145,61 @@ function eligibleSuccessors(
   );
 }
 
+function workspaceOwnershipCoverage(
+  items: readonly Item[],
+): WorkspaceOwnershipCoverage {
+  const documented = items.filter(
+    (item) => item.ownerMetadataAvailable === true,
+  ).length;
+  const total = items.length;
+  return {
+    documented,
+    total,
+    unknown: total - documented,
+    percentage: total === 0 ? null : Math.round((documented / total) * 100),
+  };
+}
+
+function subjectReferences(principal: Principal): Set<string> {
+  return new Set(
+    [
+      principal.principalId,
+      principal.email,
+      principal.displayName,
+    ]
+      .map(normalize)
+      .filter(Boolean),
+  );
+}
+
+function identityEvidence(
+  item: Item,
+  references: ReadonlySet<string>,
+): OffboardingReviewEvidence[] {
+  const evidence: OffboardingReviewEvidence[] = [];
+  if (
+    item.configuredBy &&
+    references.has(normalize(item.configuredBy))
+  ) {
+    evidence.push("configured-by");
+  }
+  if (
+    item.modifiedBy &&
+    references.has(normalize(item.modifiedBy))
+  ) {
+    evidence.push("modified-by");
+  }
+  return evidence;
+}
+
+function accessEvidence(row: AccessReviewRow): OffboardingReviewEvidence {
+  const direct = row.origin === "item" || row.origin === "mixed";
+  if (row.effectiveAccess === "owner") {
+    return direct ? "direct-owner-access" : "workspace-owner-access";
+  }
+  return direct ? "direct-edit-access" : "workspace-edit-access";
+}
+
 export function buildOffboardingReport(
   data: AtlasData,
   principalIdOrKey: string,
@@ -149,12 +232,15 @@ export function buildOffboardingReport(
     candidates,
   };
   const ownershipCoverage = getCoverageDiagnostics(data).byId.owners;
+  const completeOwnershipCoverage = workspaceOwnershipCoverage(data.items);
   const kind: OffboardingKind =
     principal?.kind === "user" || principal?.kind === "guest"
       ? "person-offboarding"
       : "principal-removal";
   const warnings = [
     "Ownership is limited to documented type-specific Fabric metadata.",
+    `${completeOwnershipCoverage.unknown} of ${completeOwnershipCoverage.total} workspace items have no documented ownership evidence and require separate review.`,
+    "Owner/Edit access and configured or modified-by identities are review signals, not proof of business ownership.",
   ];
   if (kind === "principal-removal" && principal) {
     warnings.push(
@@ -173,8 +259,14 @@ export function buildOffboardingReport(
       warnings,
       access,
       ownershipCoverage,
+      workspaceOwnershipCoverage: completeOwnershipCoverage,
       owned: [],
       effectiveOwnerItems: [],
+      privilegedReview: [],
+      identityDependencies: [],
+      ownershipUnknown: data.items.filter(
+        (item) => item.ownerMetadataAvailable !== true,
+      ),
       ownership: [],
       soleOwned: [],
       indeterminateOwnership: [],
@@ -207,6 +299,32 @@ export function buildOffboardingReport(
       ]),
     ).values(),
   ];
+  const confirmedOwnedIds = new Set(roots.map((item) => item.fabricId));
+  const privilegedReview = access
+    .filter(
+      (row) =>
+        (row.effectiveAccess === "owner" ||
+          row.effectiveAccess === "edit") &&
+        !confirmedOwnedIds.has(row.itemId),
+    )
+    .map(
+      (row): OffboardingReviewItem => ({
+        item: row.item,
+        evidence: [accessEvidence(row)],
+        accessOrigin: row.origin,
+        accessLevel: row.effectiveAccess,
+      }),
+    );
+  const references = subjectReferences(principal);
+  const identityDependencies = data.items.flatMap((item) => {
+    const evidence = identityEvidence(item, references);
+    return evidence.length
+      ? [{ item, evidence } satisfies OffboardingReviewItem]
+      : [];
+  });
+  const ownershipUnknown = data.items.filter(
+    (item) => item.ownerMetadataAvailable !== true,
+  );
   const ownership = roots.map((item): OwnershipAssessment => {
     const ownerRows = allRows.filter(
       (row) =>
@@ -249,7 +367,16 @@ export function buildOffboardingReport(
   const blast = new Map<string, LineageImpactItem>();
   const blastSources = new Map<string, Set<string>>();
   const downstreamByRoot = new Map<string, LineageImpactItem[]>();
-  for (const root of roots) {
+  const impactRoots = [
+    ...new Map(
+      [
+        ...roots,
+        ...privilegedReview.map((entry) => entry.item),
+        ...identityDependencies.map((entry) => entry.item),
+      ].map((item) => [item.fabricId, item]),
+    ).values(),
+  ];
+  for (const root of impactRoots) {
     const path = getLineageImpact(lineage, root.fabricId).downstream;
     const consumers = [...path.ids]
       .map((id) => ({
@@ -373,8 +500,12 @@ export function buildOffboardingReport(
     warnings,
     access,
     ownershipCoverage,
+    workspaceOwnershipCoverage: completeOwnershipCoverage,
     owned,
     effectiveOwnerItems,
+    privilegedReview,
+    identityDependencies,
+    ownershipUnknown,
     ownership,
     soleOwned,
     indeterminateOwnership,

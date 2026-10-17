@@ -1121,17 +1121,54 @@ describe("object inventory mapping", () => {
               description: "Net amount",
               isHidden: false,
             },
+            {
+              name: "Adjusted",
+              dataType: "Decimal",
+              expression: "[Amount] * 2",
+              expressionStatus: "sanitized",
+            },
           ],
           measures: [
             {
               name: "Revenue",
               expression: "SUM(Sales[Amount])",
+              expressionStatus: "sanitized",
               description: "Total revenue",
               isHidden: false,
+            },
+            {
+              name: "Omitted",
+              expressionStatus: "unsupported",
             },
           ],
         },
       ],
+    };
+    raw.semanticModelEvidence = {
+      "model-1": {
+        relationships: [
+          {
+            name: "Sales relationship",
+            fromTable: "Sales",
+            fromColumn: "Amount",
+            toTable: "Sales",
+            toColumn: "Adjusted",
+            isActive: true,
+          },
+        ],
+        dependencies: [
+          {
+            table: "Sales",
+            object: "Revenue",
+            objectType: "measure",
+            referencedTable: "Sales",
+            referencedObject: "Amount",
+            referencedObjectType: "column",
+            source: "static-qualified-reference",
+          },
+        ],
+        expressionsOmitted: 1,
+      },
     };
 
     const atlas = mapSyncToAtlas(raw, {
@@ -1146,13 +1183,40 @@ describe("object inventory mapping", () => {
       objectType: "Model table",
       source: "Power BI admin scanner",
       description: "Sales facts",
-      columns: [{ name: "Amount", description: "Net amount" }],
+      columns: [
+        { name: "Amount", description: "Net amount" },
+        {
+          name: "Adjusted",
+          expr: "[Amount] * 2",
+          expressionStatus: "sanitized",
+        },
+      ],
       measures: [
         {
           name: "Revenue",
           expr: "SUM(Sales[Amount])",
+          expressionStatus: "sanitized",
           description: "Total revenue",
         },
+        {
+          name: "Omitted",
+          expressionStatus: "unsupported",
+        },
+      ],
+    });
+    expect(atlas.semanticModelEvidence?.["model-1"]).toMatchObject({
+      expressionsOmitted: 1,
+      relationships: [
+        expect.objectContaining({
+          name: "Sales relationship",
+          isActive: true,
+        }),
+      ],
+      dependencies: [
+        expect.objectContaining({
+          object: "Revenue",
+          referencedObject: "Amount",
+        }),
       ],
     });
   });

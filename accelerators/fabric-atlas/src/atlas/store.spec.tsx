@@ -17,6 +17,7 @@ const backend = vi.hoisted(() => ({
   loadFromDb: vi.fn(),
   loadHistoryFromDb: vi.fn(),
   loadHistoricalSnapshotFromDb: vi.fn(),
+  loadWorkspaceSyncStatuses: vi.fn(),
   persistComment: vi.fn(),
   runFabricSync: vi.fn(),
 }));
@@ -74,6 +75,16 @@ function Harness() {
       >
         Sync both
       </button>
+      <button
+        type="button"
+        onClick={() =>
+          void atlas.syncWorkspaces([
+            "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa",
+          ])
+        }
+      >
+        Sync second
+      </button>
       <span data-testid="queue">
         {atlas.syncQueue
           .map((entry) => `${entry.workspaceId.slice(0, 8)}:${entry.status}`)
@@ -104,6 +115,9 @@ function Harness() {
       </button>
       <button type="button" onClick={() => void atlas.addComment("New note")}>
         Add comment
+      </button>
+      <button type="button" onClick={() => void atlas.reloadWorkspaceScopes()}>
+        Reload scopes
       </button>
       <button
         type="button"
@@ -206,6 +220,15 @@ function Harness() {
       <span data-testid="workspace-scope-count">
         {atlas.workspaceScopes.length}
       </span>
+      <span data-testid="workspace-statuses">
+        {Object.entries(atlas.workspaceSyncStatuses)
+          .sort(([left], [right]) => left.localeCompare(right))
+          .map(
+            ([id, status]) =>
+              `${id.slice(0, 8)}:${status.lastRunStatus ?? "none"}:${status.snapshotAt ?? "none"}`,
+          )
+          .join("|")}
+      </span>
       <span data-testid="requires-sync">
         {String(atlas.requiresDeploymentSync)}
       </span>
@@ -236,6 +259,7 @@ describe("AtlasProvider synchronization", () => {
     backend.loadCommentsFromDb.mockReset().mockResolvedValue([]);
     backend.loadHistoryFromDb.mockReset();
     backend.loadHistoricalSnapshotFromDb.mockReset();
+    backend.loadWorkspaceSyncStatuses.mockReset().mockResolvedValue({});
     backend.persistComment.mockReset();
     backend.runFabricSync.mockReset();
     backend.loadFromDb.mockResolvedValue(null);
@@ -691,6 +715,130 @@ describe("AtlasProvider synchronization", () => {
       );
       expect(backend.runFabricSync).toHaveBeenCalledTimes(1);
       expect(screen.getByTestId("stage")).toHaveTextContent("Ready to sync");
+    });
+
+    it("keeps persisted status through a non-active sync, workspace switch and later batch", async () => {
+      const primarySnapshotAt = "2026-10-01T08:00:00.000Z";
+      const previousSecondSnapshotAt = "2026-10-01T09:00:00.000Z";
+      const firstSecondSnapshotAt = "2026-10-02T09:00:00.000Z";
+      const laterSecondSnapshotAt = "2026-10-03T09:00:00.000Z";
+      const persisted = {
+        [ATLAS_CONFIG.workspaceId]: {
+          snapshotId: "11111111-2222-4333-8444-555555555555",
+          snapshotAt: primarySnapshotAt,
+          lastRunStatus: "completed" as const,
+          lastRunStartedAt: "2026-10-01T07:58:00.000Z",
+          lastRunFinishedAt: primarySnapshotAt,
+        },
+        [SECOND]: {
+          snapshotId: "aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee",
+          snapshotAt: previousSecondSnapshotAt,
+          lastRunStatus: "completed" as const,
+          lastRunStartedAt: "2026-10-01T08:58:00.000Z",
+          lastRunFinishedAt: previousSecondSnapshotAt,
+        },
+      };
+      backend.loadWorkspaceSyncStatuses.mockImplementation(
+        async (_isPreview: boolean, workspaceIds: readonly string[]) =>
+          Object.fromEntries(
+            workspaceIds
+              .filter((workspaceId) => workspaceId in persisted)
+              .map((workspaceId) => [
+                workspaceId,
+                structuredClone(
+                  persisted[workspaceId as keyof typeof persisted],
+                ),
+              ]),
+          ),
+      );
+
+      let runCount = 0;
+      let finishLaterRun: (() => void) | undefined;
+      backend.runFabricSync.mockImplementation(
+        async (
+          _isPreview: boolean,
+          _user: unknown,
+          _report: unknown,
+          _signal: AbortSignal,
+          targetWorkspaceId: string,
+        ) => {
+          expect(targetWorkspaceId).toBe(SECOND);
+          runCount += 1;
+          if (runCount === 2) {
+            await new Promise<void>((resolve) => {
+              finishLaterRun = resolve;
+            });
+          }
+          const snapshotAt =
+            runCount === 1 ? firstSecondSnapshotAt : laterSecondSnapshotAt;
+          const fresh = structuredClone(SAMPLE_DATA);
+          fresh.workspace.fabricId = SECOND;
+          fresh.workspace.snapshotId =
+            runCount === 1
+              ? "bbbbbbbb-cccc-4ddd-8eee-ffffffffffff"
+              : "cccccccc-dddd-4eee-8fff-aaaaaaaaaaaa";
+          fresh.workspace.syncedAt = snapshotAt;
+          persisted[SECOND] = {
+            snapshotId: fresh.workspace.snapshotId,
+            snapshotAt,
+            lastRunStatus: "completed",
+            lastRunStartedAt: snapshotAt,
+            lastRunFinishedAt: snapshotAt,
+          };
+          return fresh;
+        },
+      );
+      await renderReady();
+      await waitFor(() =>
+        expect(screen.getByTestId("workspace-statuses")).toHaveTextContent(
+          `11111111:completed:${primarySnapshotAt}|aaaaaaaa:completed:${previousSecondSnapshotAt}`,
+        ),
+      );
+
+      fireEvent.click(screen.getByRole("button", { name: "Sync second" }));
+      await waitFor(() =>
+        expect(screen.getByTestId("workspace-statuses")).toHaveTextContent(
+          `11111111:completed:${primarySnapshotAt}|aaaaaaaa:completed:${firstSecondSnapshotAt}`,
+        ),
+      );
+      expect(screen.getByTestId("active-workspace")).toHaveTextContent(
+        ATLAS_CONFIG.workspaceId,
+      );
+
+      fireEvent.click(screen.getByRole("button", { name: "Switch workspace" }));
+      await waitFor(() =>
+        expect(screen.getByTestId("active-workspace")).toHaveTextContent(SECOND),
+      );
+      expect(screen.getByTestId("workspace-statuses")).toHaveTextContent(
+        `11111111:completed:${primarySnapshotAt}|aaaaaaaa:completed:${firstSecondSnapshotAt}`,
+      );
+
+      backend.loadWorkspaceSyncStatuses.mockResolvedValueOnce({
+        [ATLAS_CONFIG.workspaceId]: structuredClone(
+          persisted[ATLAS_CONFIG.workspaceId],
+        ),
+      });
+      fireEvent.click(screen.getByRole("button", { name: "Reload scopes" }));
+      await waitFor(() =>
+        expect(screen.getByTestId("workspace-statuses")).toHaveTextContent(
+          `11111111:completed:${primarySnapshotAt}|aaaaaaaa:completed:${firstSecondSnapshotAt}`,
+        ),
+      );
+
+      fireEvent.click(screen.getByRole("button", { name: "Sync" }));
+      await waitFor(() =>
+        expect(screen.getByTestId("workspace-statuses")).toHaveTextContent(
+          `11111111:completed:${primarySnapshotAt}|aaaaaaaa:running:${firstSecondSnapshotAt}`,
+        ),
+      );
+      await act(async () => {
+        finishLaterRun?.();
+      });
+      await waitFor(() =>
+        expect(screen.getByTestId("workspace-statuses")).toHaveTextContent(
+          `11111111:completed:${primarySnapshotAt}|aaaaaaaa:completed:${laterSecondSnapshotAt}`,
+        ),
+      );
     });
   });
 

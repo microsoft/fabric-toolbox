@@ -133,6 +133,7 @@ const AUTHORITATIVE_DIRECTION_RELATIONS = new Set([
   "report",
   "dashboard report",
   "dashboard dataset",
+  "notebook reads",
 ]);
 const PROVENANCE_DIRECTION_RELATIONS = new Set([
   "onelake-shortcut", "mirroring-landing-zone", "mirrored-sql-endpoint",

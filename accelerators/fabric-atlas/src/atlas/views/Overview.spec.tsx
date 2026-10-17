@@ -1,7 +1,5 @@
 import { act, fireEvent, render, screen, within } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import type { VegaVisualProps } from "@microsoft/fabric-visuals";
-import { lightThemeColors } from "@microsoft/fabric-visuals-core";
 import { AtlasProvider, useAtlas } from "../store";
 import { OverviewView } from "./Overview";
 import { SAMPLE_DATA, type AtlasData } from "../model";
@@ -10,7 +8,6 @@ import { snapshotCatalogFromData } from "../history";
 
 const harness = vi.hoisted(() => ({
   overrides: {} as Partial<ReturnType<typeof useAtlas>>,
-  visualProps: undefined as VegaVisualProps | undefined,
 }));
 
 vi.mock("../store", async (importOriginal) => {
@@ -21,17 +18,8 @@ vi.mock("../store", async (importOriginal) => {
   };
 });
 
-vi.mock("@microsoft/fabric-visuals", () => ({
-  useCssTheme: () => lightThemeColors,
-  VegaVisual: (props: VegaVisualProps) => {
-    harness.visualProps = props;
-    return <div data-testid="overview-radar" className={props.className} />;
-  },
-}));
-
 afterEach(() => {
   harness.overrides = {};
-  harness.visualProps = undefined;
 });
 
 function setFixture(data: AtlasData) {
@@ -78,7 +66,13 @@ describe("OverviewView", () => {
     expect(within(header as HTMLElement).queryByRole("button", { name: "Open Governance Center" })).not.toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "Governance posture" })).toBeVisible();
     expect(await screen.findByRole("figure", { name: "Governance posture radar" })).toBeVisible();
-    expect(screen.getByTestId("overview-radar").parentElement).toHaveClass("atlas-posture-chart");
+    expect(
+      screen
+        .getByRole("img", {
+          name: "Six governance posture pillars on a zero to one hundred scale",
+        })
+        .parentElement,
+    ).toHaveClass("atlas-posture-chart");
     expect(screen.getByRole("heading", { name: "Workspace health" })).toBeVisible();
     expect(screen.getByRole("heading", { name: "Priority signals" })).toBeVisible();
     expect(screen.getAllByRole("button", { name: "Open Governance Center" })).toHaveLength(1);
@@ -92,19 +86,14 @@ describe("OverviewView", () => {
 
   it("opens the same filtered posture from radar interactions and focusable pillar controls", async () => {
     const onOpen = await renderOverview();
-    await screen.findByRole("figure", { name: "Governance posture radar" });
-    act(() => harness.visualProps?.onInteraction?.([{
-      action: "select",
-      selections: [{ predicates: [{ type: "set", name: "pillar", values: ["lineage"] }] }],
-    }]));
-    expect(onOpen).toHaveBeenLastCalledWith(expect.objectContaining({
-      tab: "governance", focus: expect.objectContaining({ governanceSection: "posture", filters: { pillar: "lineage" } }),
-    }));
-    const lineage = screen.getByRole("button", { name: /lineage: \d+%/i });
+    const figure = await screen.findByRole("figure", { name: "Governance posture radar" });
+    const lineage = within(figure).getByRole("button", {
+      name: /lineage: \d+%/i,
+    });
     lineage.focus();
     expect(lineage).toHaveFocus();
     expect(lineage).toHaveAttribute("type", "button");
-    fireEvent.click(screen.getByRole("button", { name: /lineage: \d+%/i }));
+    fireEvent.click(lineage);
     expect(onOpen).toHaveBeenLastCalledWith(expect.objectContaining({
       tab: "governance", focus: expect.objectContaining({ governanceSection: "posture", filters: { pillar: "lineage" } }),
     }));

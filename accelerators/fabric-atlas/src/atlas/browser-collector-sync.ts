@@ -48,7 +48,12 @@ export interface BrowserCollectorDependencies {
 }
 const COLLECTOR_BATCH_SIZE = 4;
 const COMPATIBILITY_BATCH_SIZE = 4;
-const DEFINITIONS = new Set(["Ontology", "GraphModel", "DataAgent"]);
+const DEFINITIONS = new Set([
+  "Ontology",
+  "GraphModel",
+  "DataAgent",
+  "Notebook",
+]);
 const SQL = new Set([
   "SQLDatabase",
   "Warehouse",
@@ -366,10 +371,24 @@ export async function collectBrowserWorkspace(
       const result = await call("workspaceCollectPowerBi", { protocolVersion: 1, workspaceId, items: powerBi, includeAdminEvidence: false, correlationId });
       validateStage(result, "powerbi-metadata", workspaceId, correlationId, powerBi);
       const schema: NonNullable<RawSync["schema"]> = {};
+      const semanticModelEvidence: NonNullable<
+        RawSync["semanticModelEvidence"]
+      > = {};
       const config: NonNullable<RawSync["config"]> = [];
       for (const item of result.items) {
         if (item.type === "SemanticModel") {
-          if (successful(item.schema)) { schema[item.id] = result.schema[item.id] ?? []; active(item, "powerBiDefinition"); }
+          if (successful(item.schema)) {
+            schema[item.id] = result.schema[item.id] ?? [];
+            const model = result.models[item.id];
+            if (model) {
+              semanticModelEvidence[item.id] = {
+                relationships: model.relationships,
+                dependencies: model.dependencies,
+                expressionsOmitted: model.expressionsOmitted,
+              };
+            }
+            active(item, "powerBiDefinition");
+          }
           else { schemaFallbackIds.push(item.id); sources[`powerBiDefinition:${item.id}`] = { source: "python-compatibility", code: item.schema.code ?? "definition-unavailable" }; }
         } else {
           if (successful(item.pages)) {
@@ -381,7 +400,7 @@ export async function collectBrowserWorkspace(
           } else fallback(item, "reportPages", item.pages.code ?? "pbir-legacy-pages-unsupported");
         }
       }
-      merge({ schema, config, sections: result.sections ? { schema: result.sections.schema } : undefined,
+      merge({ schema, semanticModelEvidence, config, sections: result.sections ? { schema: result.sections.schema } : undefined,
         capabilities: result.capabilities });
     }
   }

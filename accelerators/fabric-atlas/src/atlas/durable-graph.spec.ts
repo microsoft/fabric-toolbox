@@ -553,7 +553,7 @@ describe('internal publisher and storage boundary', () => {
     expect(entry).not.toMatch(/process\.env|accessToken|\.Tokens|fetch\(/);
     for (const entity of ['SyncRootRun', 'SyncJob', 'SyncTask', 'SyncCommand']) {
       const source = readFileSync(resolve(`rayfin/data/${entity}.ts`), 'utf8');
-      expect(source).toContain('claims.sub.eq(SYNC_WRITER_SUBJECT)');
+      expect(source).toContain('syncWriterPolicy(claims)');
       expect(source).not.toMatch(/(?:accessToken|endpoint|payloadJson|url)\??!?:/i);
       for (const text of source.matchAll(/@text\(([^)]*)\)/g)) expect(text[1]).toMatch(/max:\s*\d+/);
     }

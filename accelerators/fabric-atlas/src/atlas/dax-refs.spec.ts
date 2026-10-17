@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { staticDaxReferences } from "../../rayfin/functions/src/powerbi-projections";
 import { extractDaxRefs } from "./dax-refs";
 
 describe("extractDaxRefs", () => {
@@ -47,6 +48,46 @@ describe("extractDaxRefs", () => {
       { kind: "column", table: "Sales", name: "Amount" },
       { kind: "measure", name: "Active" },
     ]);
+  });
+
+  it("does not treat DAX keywords as table names", () => {
+    expect(
+      extractDaxRefs(`
+        VAR total = [Total]
+        RETURN [Margin] + NOT [Inactive]
+      `),
+    ).toEqual([
+      { kind: "measure", name: "Total" },
+      { kind: "measure", name: "Margin" },
+      { kind: "measure", name: "Inactive" },
+    ]);
+    expect(extractDaxRefs("RETURN[Total]")).toEqual([
+      { kind: "measure", name: "Total" },
+    ]);
+  });
+
+  it("requires an unquoted table name to touch the opening bracket", () => {
+    expect(extractDaxRefs("Sales[Amount] + Sales [Margin]")).toEqual([
+      { kind: "column", table: "Sales", name: "Amount" },
+      { kind: "measure", name: "Margin" },
+    ]);
+  });
+
+  it("keeps browser and Functions tokenization in parity", () => {
+    const expressions = [
+      "RETURN [Total]",
+      "NOT[Inactive]",
+      "Sales[Amount] + 'Sales Data'[Margin]",
+      "VAR value = [Base]\nRETURN DIVIDE([Result], value)",
+    ];
+    for (const expression of expressions) {
+      expect(
+        extractDaxRefs(expression).map(({ table, name }) => ({
+          ...(table ? { table } : {}),
+          name,
+        })),
+      ).toEqual(staticDaxReferences(expression));
+    }
   });
 
   it("continues after quoted table arguments", () => {

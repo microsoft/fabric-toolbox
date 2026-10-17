@@ -30,6 +30,8 @@ import {
   type ConfigKV,
   type AccessLevel,
   type ModelTableSchema,
+  type ModelExpressionStatus,
+  type SemanticModelEvidence,
 } from "./model";
 
 /* -------------------------------- MSAL --------------------------------- */
@@ -541,6 +543,7 @@ export interface RawSync {
     }
   >;
   artifactMetadata?: Record<string, unknown>;
+  semanticModelEvidence?: Record<string, SemanticModelEvidence>;
   objectEdges?: unknown;
   objectLineage?: unknown;
   enrichmentItemIds?: string[];
@@ -564,6 +567,9 @@ export interface RawSync {
         objectType?: string;
         description?: string;
         isHidden?: boolean;
+        expression?: string;
+        expr?: string;
+        expressionStatus?: ModelExpressionStatus;
       }>;
       measures?: Array<{
         name?: string;
@@ -572,6 +578,7 @@ export interface RawSync {
         objectType?: string;
         description?: string;
         isHidden?: boolean;
+        expressionStatus?: ModelExpressionStatus;
       }>;
       metadata?: unknown;
     }>
@@ -802,6 +809,10 @@ export function mergeSyncEnrichment(
       current.itemMetadata,
       enrichment.itemMetadata,
     ),
+    semanticModelEvidence: {
+      ...(current.semanticModelEvidence ?? {}),
+      ...(enrichment.semanticModelEvidence ?? {}),
+    },
     itemFailures: {
       ...(current.itemFailures ?? {}),
       ...(enrichment.itemFailures ?? {}),
@@ -2323,12 +2334,15 @@ export function mapSyncToAtlas(raw: RawSync, fallback: WorkspaceInfo): AtlasData
         objectType: c.objectType,
         description: c.description,
         isHidden: c.isHidden,
+        expr: c.expression ?? c.expr,
+        expressionStatus: c.expressionStatus,
       })),
       measures: (t.measures ?? []).map((m) => ({
         name: String(m.name ?? ""),
         expr: m.expression ?? m.expr,
         description: m.description,
         isHidden: m.isHidden,
+        expressionStatus: m.expressionStatus,
       })),
       metadata:
         item && t.metadata != null
@@ -2373,6 +2387,22 @@ export function mapSyncToAtlas(raw: RawSync, fallback: WorkspaceInfo): AtlasData
   const suppliedObjectEdges =
     parseObjectLineagePayload(raw.objectEdges ?? raw.objectLineage)
       ?.objectEdges ?? [];
+  const semanticModelEvidence = Object.fromEntries(
+    Object.entries(raw.semanticModelEvidence ?? {})
+      .filter(([itemId]) => itemIds.has(itemId))
+      .map(([itemId, evidence]) => [
+        itemId,
+        {
+          relationships: evidence.relationships.map((relationship) => ({
+            ...relationship,
+          })),
+          dependencies: evidence.dependencies.map((dependency) => ({
+            ...dependency,
+          })),
+          expressionsOmitted: evidence.expressionsOmitted,
+        },
+      ]),
+  );
   const allObjectEdges = [...suppliedObjectEdges, ...derivedObjectEdges]
     .sort((left, right) =>
       [
@@ -2429,6 +2459,7 @@ export function mapSyncToAtlas(raw: RawSync, fallback: WorkspaceInfo): AtlasData
     jobs,
     config,
     schema,
+    semanticModelEvidence,
     itemMetadata,
     objectEdges: allObjectEdges,
     comments: [],

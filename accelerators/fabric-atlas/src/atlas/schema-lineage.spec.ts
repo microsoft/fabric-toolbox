@@ -141,4 +141,30 @@ describe("buildSchemaDependencies", () => {
       ]),
     );
   });
+
+  it("uses the shared dependency index for calculated columns", () => {
+    const value = data();
+    value.schema!.model[0].columns.push({
+      name: "Adjusted",
+      dataType: "double",
+      expr: "[Amount] * 2",
+      expressionStatus: "sanitized",
+    });
+
+    expect(buildSchemaDependencies(value)).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          from: expect.objectContaining({
+            kind: "column",
+            name: "Adjusted",
+          }),
+          to: expect.objectContaining({
+            kind: "column",
+            name: "Amount",
+          }),
+          confidence: "verified",
+        }),
+      ]),
+    );
+  });
 });

@@ -188,7 +188,7 @@ describe("App", () => {
         expect(window.location.hash).toBe("#access");
     });
 
-    it("restores and updates routed job filters", () => {
+    it("restores and updates routed job filters", async () => {
         window.history.replaceState(
             null,
             "",
@@ -196,7 +196,7 @@ describe("App", () => {
         );
         renderApp();
 
-        expect(screen.getByLabelText("Filter jobs by status")).toHaveValue(
+        expect(await screen.findByLabelText("Filter jobs by status")).toHaveValue(
             "failed",
         );
         fireEvent.change(screen.getByLabelText("Search job history"), {

@@ -1,5 +1,5 @@
 import { entity, authenticated, uuid, text, set, boolean } from '@microsoft/rayfin-core';
-import { SYNC_WRITER_SUBJECT } from './sync-policy.js';
+import { syncWriterEmailPolicy, syncWriterPolicy } from './sync-policy.js';
 
 export type PrincipalKind = 'user' | 'group' | 'servicePrincipal' | 'guest';
 export type WorkspaceRole = 'Admin' | 'Member' | 'Contributor' | 'Viewer';
@@ -11,13 +11,11 @@ export type WorkspaceRole = 'Admin' | 'Member' | 'Contributor' | 'Viewer';
 @entity()
 @authenticated('read')
 @authenticated('delete', {
-  policy: (claims) => claims.sub.eq(SYNC_WRITER_SUBJECT),
+  policy: (claims) => syncWriterPolicy(claims),
 })
 @authenticated('create', {
   policy: (claims, item) =>
-    claims.email
-      .eq(item.writerEmail)
-      .and(claims.sub.eq(SYNC_WRITER_SUBJECT)),
+    syncWriterEmailPolicy(claims, item.writerEmail),
 })
 export class Principal {
   @uuid() id!: string;

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { GRANT_ONLY_NOTICE, buildAccessEvidenceCoverage } from "./access-coverage";
-import { accessRowsToCsv } from "./access-export";
+import { accessRowsToCsv, csvCell } from "./access-export";
 import { buildAccessReviewRows } from "./governance";
 import { SAMPLE_DATA } from "./model";
 
@@ -74,6 +74,11 @@ describe("access review CSV evidence", () => {
     expect(csv).toContain("\"'=HYPERLINK(\"\"https://example.com\"\")\"");
     expect(csv).toContain("\"'+SUM(1,1)\"");
     expect(csv).toContain('Role ""review""');
+  });
+
+  it("neutralizes leading tab and carriage-return cells", () => {
+    expect(csvCell("\tformula")).toBe("\"'\tformula\"");
+    expect(csvCell("\rformula")).toBe("\"'\rformula\"");
   });
 
   it("exports only the header for an empty filtered set", () => {

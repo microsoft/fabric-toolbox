@@ -231,7 +231,12 @@ function uniqueNames(values: { name: string }[]): void {
   if (new Set(names).size !== names.length) throw new PowerBiProjectionError("invalid-definition");
 }
 
-function staticDaxReferences(expression: string): { table?: string; name: string }[] {
+const DAX_RESERVED_WORDS = new Set([
+  "and", "asc", "at", "by", "define", "desc", "evaluate", "false", "in",
+  "measure", "not", "or", "order", "return", "start", "true", "var",
+]);
+
+export function staticDaxReferences(expression: string): { table?: string; name: string }[] {
   const references: { table?: string; name: string }[] = [];
   const read = (start: number, opening: string, closing: string) => {
     if (expression[start] !== opening) return undefined;
@@ -260,9 +265,19 @@ function staticDaxReferences(expression: string): { table?: string; name: string
     const identifier = quotedTable ? undefined : /^[\p{L}_][\p{L}\p{N}_.]*/u.exec(expression.slice(index));
     const table = quotedTable ?? (identifier ? { value: identifier[0], end: index + identifier[0].length } : undefined);
     if (table) {
-      const bracket = read(whitespace(table.end), "[", "]");
-      if (bracket) references.push({ table: table.value, name: bracket.value });
-      index = bracket?.end ?? table.end;
+      const bracket = read(
+        quotedTable ? whitespace(table.end) : table.end,
+        "[",
+        "]",
+      );
+      const reserved =
+        !quotedTable && DAX_RESERVED_WORDS.has(table.value.toLowerCase());
+      if (bracket && !reserved) {
+        references.push({ table: table.value, name: bracket.value });
+        index = bracket.end;
+        continue;
+      }
+      index = table.end;
       continue;
     }
     const bracket = read(index, "[", "]");

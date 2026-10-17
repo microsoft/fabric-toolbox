@@ -83,7 +83,7 @@ synchronizing.
 | Evidence | Primary collector | Compatibility path |
 |---|---|---|
 | Workspaces, items, roles and jobs | `workspaceCollectCore` | Explicit rollback only |
-| Ontology, Graph Model and Data Agent definitions | `workspaceCollectDefinitions` | None |
+| Ontology, Graph Model, Data Agent and Notebook definitions | `workspaceCollectDefinitions` | None |
 | Power BI model and PBIR structure | `workspaceCollectPowerBi` | Scanner fallback where definition evidence is unsupported |
 | Item Relations Preview | `workspaceCollectItemRelations` | None; remains Beta and non-authoritative |
 | KQL structural metadata | `workspaceCollectKqlMetadata` | Kusto live schema where required |
@@ -93,6 +93,21 @@ synchronizing.
 | Power BI admin scanner and scanner lineage | Python `sync_compatibility` | Retained until Rayfin exposes a documented Power BI audience |
 | PBIR-Legacy pages | Python `sync_compatibility` | Retained until the supported definition path covers legacy reports |
 | Kusto live metadata | Python `sync_compatibility` | Retained until Rayfin exposes a documented Kusto audience |
+
+Ontology collection accepts both the legacy JSON definition layout and the
+Ontology 2.0 TMDL layout. The TMDL projection keeps bounded entity, property,
+key, time-series and relationship metadata. Supporting model, table, metric,
+namespace, rule and expression parts are recognized but their executable or
+business content is not returned.
+
+Notebook collection uses the documented
+[Get Notebook Definition](https://learn.microsoft.com/en-us/rest/api/fabric/notebook/items/get-notebook-definition)
+API in `fabricGitSource` format and extracts bounded direct literal table or
+`Tables/...` references. Fabric requires read and write permission for this
+endpoint. Atlas records read and write direction plus the documented default
+Lakehouse ID when available. Source code, cells, SQL text, arbitrary paths,
+credentials and dynamically constructed references are discarded before the
+Function returns.
 
 Rayfin collector output is not published directly. The browser accepts a
 snapshot only after the complete required contract passes validation.
@@ -225,9 +240,10 @@ object, lineage, access and operations coverage independently.
 to consumer. The initial graph layout is stable and staged from orchestration
 through storage, endpoints, models and consumers.
 
-Impact mode filters the graph to the selected upstream and downstream
-component. Reset restores the computed layout and clears selection, focus,
-drag state and Preview expansion.
+Item-type filters retain matching items plus their connected upstream and
+downstream context. Impact mode hides unrelated nodes without recalculating the
+base layout, so the selected node and viewport stay fixed. Reset restores the
+computed layout and clears selection, focus, drag state and Preview expansion.
 
 ### Item Relations Preview
 

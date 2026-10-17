@@ -1,6 +1,6 @@
 # Installation and deployment
 
-Fabric Atlas 2.0 is a Rayfin Data App deployed inside Microsoft Fabric.
+Fabric Atlas 2.1 is a Rayfin Data App deployed inside Microsoft Fabric.
 `rayfin up` publishes the app, applies the MSSQL schema and deploys typed Rayfin
 Functions. A small Python User Data Function remains for documented
 compatibility gaps.
@@ -67,10 +67,16 @@ Set these values in the deployment shell:
 ```powershell
 $env:RAYFIN_PUBLIC_ATLAS_SYNC_ADMIN_EMAIL = "<authorized-sync-user>"
 $env:RAYFIN_PUBLIC_ATLAS_SYNC_ADMIN_SUBJECT = "<entra-object-id>"
+
+# Optional emergency publisher. Configure both values or neither.
+$env:RAYFIN_PUBLIC_ATLAS_BREAK_GLASS_SYNC_ADMIN_EMAIL = "<break-glass-user>"
+$env:RAYFIN_PUBLIC_ATLAS_BREAK_GLASS_SYNC_ADMIN_SUBJECT = "<entra-object-id>"
 ```
 
 Use the immutable Entra subject as the authorization key. The email remains the
-visible contact and historical writer label.
+visible contact and historical writer label. The break-glass identity can
+publish and maintain snapshot rows, but the primary synchronizer remains the
+visible contact and workspace-scope administrator.
 
 ## 5. Deploy Fabric Atlas
 
@@ -93,9 +99,11 @@ This command:
 - records the hosting origin in `rayfin/.deployments.json`;
 - adds the hosting origin to `allowedRedirectUris` in `rayfin/rayfin.yml`.
 
-The committed manifest contains only local development redirects. Each
-deployment adds its own hosting origin locally, which keeps repository
-templates independent from the maintainer's deployed app.
+`rayfin.yml` reads its initial redirect from `RAYFIN_AUTH_REDIRECT_URI`.
+Local development defaults to `http://localhost:5173`. Set the variable to
+the deployed `https://<atlas-host>.webapp.fabricapps.net` origin in the same
+shell as `rayfin up` so the deployed auth configuration contains no localhost
+redirect.
 
 If the old Fabric App was deleted, remove the stale local deployment registry
 before creating the replacement:
@@ -116,7 +124,6 @@ Register these redirect URIs:
 ```text
 https://<atlas-host>.webapp.fabricapps.net
 http://localhost:5173
-http://127.0.0.1:5173
 ```
 
 The delegated compatibility path requires the reviewed Power BI and Fabric
@@ -147,6 +154,8 @@ RAYFIN_PUBLIC_ATLAS_UDF_URL=https://<host>/functions/sync_all/invoke
 RAYFIN_PUBLIC_ATLAS_WORKSPACE_NAME=<workspace-display-name>
 RAYFIN_PUBLIC_ATLAS_SYNC_ADMIN_EMAIL=<authorized-sync-user>
 RAYFIN_PUBLIC_ATLAS_SYNC_ADMIN_SUBJECT=<entra-object-id>
+RAYFIN_PUBLIC_ATLAS_BREAK_GLASS_SYNC_ADMIN_EMAIL=<optional-break-glass-user>
+RAYFIN_PUBLIC_ATLAS_BREAK_GLASS_SYNC_ADMIN_SUBJECT=<optional-entra-object-id>
 RAYFIN_PUBLIC_ATLAS_SNAPSHOT_RETENTION_COUNT=12
 VITE_ATLAS_COLLECTOR_ROLLBACK=false
 ```

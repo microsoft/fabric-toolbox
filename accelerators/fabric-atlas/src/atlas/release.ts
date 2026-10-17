@@ -16,7 +16,7 @@ export const REPOSITORY_URL =
 
 export const APP_VERSION =
   (import.meta.env.VITE_APP_VERSION as string | undefined) ??
-  "2.0.0";
+  "2.1.3";
 
 export const BUILD_COMMIT =
   (import.meta.env.VITE_APP_BUILD_COMMIT as string | undefined) ?? "development";
@@ -56,6 +56,109 @@ export function sameDeploymentGeneration(
 }
 
 export const RELEASES: AtlasRelease[] = [
+  {
+    version: "2.1.3",
+    date: "2026-10-17",
+    title: "Notebook lineage fallback",
+    sections: [
+      {
+        title: "Object Lineage",
+        items: [
+          "Notebooks with resolved literal references keep their detailed object graph.",
+          "Notebooks whose object names are built dynamically now show their verified item-level upstream and downstream lineage instead of an empty canvas.",
+          "The UI states when direct notebook object references were not resolved and never guesses dynamic objects.",
+        ],
+      },
+    ],
+  },
+  {
+    version: "2.1.2",
+    date: "2026-10-17",
+    title: "Stable lineage and notebook dependencies",
+    sections: [
+      {
+        title: "Lineage interaction",
+        items: [
+          "Item-type filters retain matching items with their connected upstream and downstream context.",
+          "Impact mode keeps the complete layout as its coordinate source, so the selected node and viewport no longer jump.",
+        ],
+      },
+      {
+        title: "Governance posture",
+        items: [
+          "The six radar pillars always form one closed green polygon.",
+          "Unavailable scores remain labelled N/A and are anchored at zero instead of breaking the shape.",
+        ],
+      },
+      {
+        title: "Notebook object lineage",
+        items: [
+          "Rayfin Functions project direct literal notebook table and OneLake table-path references with read and write direction.",
+          "Object Lineage displays the verified references while source code, cells, SQL text, secrets and dynamic expressions remain outside the snapshot.",
+        ],
+      },
+    ],
+  },
+  {
+    version: "2.1.1",
+    date: "2026-10-17",
+    title: "Reliable offboarding and workspace evidence",
+    sections: [
+      {
+        title: "Departure Pack",
+        items: [
+          "Workspace-wide ownership coverage now separates documented ownership from items that still require manual review.",
+          "Owner or Edit access and configured-by or modified-by references appear as distinct review evidence without being relabelled as business ownership.",
+          "Markdown, reassignment and access exports retain evidence categories, limitations and downstream consumers.",
+        ],
+      },
+      {
+        title: "Ontology metadata",
+        items: [
+          "Ontology 2.0 TMDL definitions project bounded entity, property, key, time-series and relationship metadata.",
+          "The collector recognizes supporting TMDL parts without returning expressions, rules, source rows or secrets.",
+        ],
+      },
+      {
+        title: "Workspace operations",
+        items: [
+          "Workspace Hub derives every scoped workspace status from persisted manifests and SyncRun evidence instead of the latest browser queue alone.",
+          "Failed and unfinished runs retain the last valid snapshot, and known status survives workspace switches, later batches and partial refreshes.",
+        ],
+      },
+    ],
+  },
+  {
+    version: "2.1.0",
+    date: "2026-10-17",
+    title: "Complete Semantic Model object lineage",
+    sections: [
+      {
+        title: "Lineage correctness",
+        items: [
+          "Semantic Model Object Lineage exposes the complete table inventory through bounded multi-table blocks, whole-model search and stable table-qualified object identities.",
+          "Browser and Function DAX parsing now preserve common RETURN and NOT measure references, while X-Ray and impact analysis share one dependency index.",
+          "Calculated-column expressions, expression coverage, model relationships and static dependency evidence survive synchronization and snapshot hydration.",
+        ],
+      },
+      {
+        title: "Navigation and performance",
+        items: [
+          "Object Lineage, X-Ray, Asset Catalog and global search cross-link to the same selected measure or column.",
+          "The governance radar uses an accessible SVG instead of the Vega runtime, and application views load by route with snapshot-derived result caching.",
+          "Local diagnostics report hydration, synchronization and lineage build timings without external telemetry.",
+        ],
+      },
+      {
+        title: "Operations and security",
+        items: [
+          "Snapshot hydration uses larger cursor pages and starts independent marker and SyncRun reads together.",
+          "An optional break-glass synchronizer can publish snapshots through the same database-enforced policy boundary.",
+          "CSV export neutralizes leading tab and carriage-return cells, and deployment redirect configuration is environment-scoped.",
+        ],
+      },
+    ],
+  },
   {
     version: "2.0.0",
     date: "2026-10-03",

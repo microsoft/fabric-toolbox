@@ -1,20 +1,34 @@
 import * as Dialog from "@radix-ui/react-dialog";
 import {
   AlertTriangle,
+  CircleHelp,
   Download,
+  Fingerprint,
+  KeyRound,
   ShieldAlert,
   UserRoundX,
   X,
 } from "lucide-react";
 import { useMemo, useRef } from "react";
-import { accessRowsToCsv } from "../access-export";
 import {
+  offboardingAccessToCsv,
   offboardingReassignmentToCsv,
   offboardingReportToMarkdown,
 } from "../offboarding-export";
 import { buildOffboardingReport } from "../offboarding";
 import type { AtlasData } from "../model";
 import { Card, TypeGlyph, cn } from "../ui";
+
+const EVIDENCE_LABELS = {
+  "documented-owner": "Documented owner",
+  "direct-owner-access": "Direct Owner access",
+  "workspace-owner-access": "Workspace Owner access",
+  "direct-edit-access": "Direct Edit access",
+  "workspace-edit-access": "Workspace Edit access",
+  "configured-by": "Configured by",
+  "modified-by": "Modified by",
+  "ownership-unknown": "Ownership unknown",
+} as const;
 
 function safeFileName(value: string): string {
   return (
@@ -58,10 +72,7 @@ export function OffboardingDialog({
     report.kind === "person-offboarding"
       ? report.owned
       : report.effectiveOwnerItems;
-  const ownershipCoverageValue =
-    report.ownershipCoverage.percentage == null
-      ? "Not applicable"
-      : `${report.ownershipCoverage.percentage}%`;
+  const workspaceCoverage = report.workspaceOwnershipCoverage;
 
   return (
     <Dialog.Root
@@ -105,8 +116,8 @@ export function OffboardingDialog({
                       {subjectName}
                     </Dialog.Title>
                     <Dialog.Description className="mt-xs text-200 text-muted-foreground">
-                      Ownership, urgent orphan risks, downstream blast radius
-                      and reassignment evidence.
+                      Documented ownership, privileged access, identity
+                      dependencies, unknown coverage and downstream impact.
                     </Dialog.Description>
                   </div>
                   <div className="flex flex-wrap items-center gap-s">
@@ -129,7 +140,7 @@ export function OffboardingDialog({
                       type="button"
                       onClick={() =>
                         download(
-                          accessRowsToCsv(report.access),
+                          offboardingAccessToCsv(report),
                           "text/csv;charset=utf-8",
                           `${baseName}-access.csv`,
                         )
@@ -189,29 +200,34 @@ export function OffboardingDialog({
                   <Card className="mt-l flex flex-col gap-m p-m sm:flex-row sm:items-center">
                     <div className="min-w-0 flex-1">
                       <div className="text-300 font-semibold">
-                        Ownership metadata coverage
+                        Workspace ownership evidence
                       </div>
                       <p className="mt-xs text-200 text-muted-foreground">
-                        Sole-owner and reassignment conclusions are limited to
-                        items with documented ownership evidence.
+                        Documented ownership is kept separate from access and
+                        identity review signals.
                       </p>
                     </div>
                     <div className="shrink-0 text-left sm:text-right">
                       <div
                         className={cn(
                           "font-numeric text-500 font-bold",
-                          report.ownershipCoverage.percentage == null
+                          workspaceCoverage.percentage == null
                             ? "text-muted-foreground"
-                            : report.ownershipCoverage.percentage >= 80
+                            : workspaceCoverage.unknown === 0
                               ? "text-status-healthy"
                               : "text-status-warning",
                         )}
                       >
-                        {ownershipCoverageValue}
+                        {workspaceCoverage.documented}/
+                        {workspaceCoverage.total}
                       </div>
                       <div className="text-100 text-muted-foreground">
-                        {report.ownershipCoverage.numerator} of{" "}
-                        {report.ownershipCoverage.denominator} applicable items
+                        documented · {workspaceCoverage.unknown} not evaluated
+                      </div>
+                      <div className="mt-xxs text-100 text-muted-foreground">
+                        {report.ownershipCoverage.percentage == null
+                          ? "No applicable type-specific evidence"
+                          : `${report.ownershipCoverage.percentage}% of applicable items`}
                       </div>
                     </div>
                   </Card>
@@ -225,6 +241,12 @@ export function OffboardingDialog({
                         ownershipRoots.length,
                       ],
                       ["Sole owned", report.soleOwned.length],
+                      ["Privileged review", report.privilegedReview.length],
+                      [
+                        "Identity references",
+                        report.identityDependencies.length,
+                      ],
+                      ["Ownership unknown", report.ownershipUnknown.length],
                       ["Urgent risks", report.orphanRisk.length],
                       ["Blast radius", report.blastRadius.length],
                     ].map(([label, value]) => (
@@ -306,6 +328,69 @@ export function OffboardingDialog({
                       </Card>
                     </div>
                   )}
+
+                  {!report.blocked && (
+                    <div className="mt-l grid gap-l xl:grid-cols-2">
+                      <ReviewCard
+                        title="Privileged items requiring review"
+                        icon={KeyRound}
+                        entries={report.privilegedReview}
+                        empty="No additional Owner or Edit access requires review."
+                      />
+                      <ReviewCard
+                        title="Observed identity dependencies"
+                        icon={Fingerprint}
+                        entries={report.identityDependencies}
+                        empty="No configured-by or modified-by identity reference was collected."
+                      />
+                    </div>
+                  )}
+
+                  {!report.blocked && (
+                    <Card className="mt-l overflow-hidden">
+                      <div className="flex items-center gap-s border-b border-border bg-status-warning/10 px-l py-m">
+                        <CircleHelp className="icon-size-200 text-status-warning" />
+                        <h3 className="text-300 font-semibold">
+                          Ownership unknown · {report.ownershipUnknown.length}
+                        </h3>
+                      </div>
+                      {report.ownershipUnknown.length === 0 ? (
+                        <p className="p-l text-200 text-muted-foreground">
+                          Every workspace item has documented ownership
+                          evidence.
+                        </p>
+                      ) : (
+                        <>
+                          <div className="divide-y divide-border">
+                            {report.ownershipUnknown
+                              .slice(0, 30)
+                              .map((item) => (
+                                <div
+                                  key={item.fabricId}
+                                  className="flex items-center gap-m p-m"
+                                >
+                                  <TypeGlyph type={item.itemType} />
+                                  <div className="min-w-0">
+                                    <div className="truncate text-200 font-semibold">
+                                      {item.displayName}
+                                    </div>
+                                    <div className="text-100 text-muted-foreground">
+                                      {item.itemType} · manual review required
+                                    </div>
+                                  </div>
+                                </div>
+                              ))}
+                          </div>
+                          {report.ownershipUnknown.length > 30 && (
+                            <p className="border-t border-border p-m text-200 text-muted-foreground">
+                              {report.ownershipUnknown.length - 30} additional
+                              items are included in the exports.
+                            </p>
+                          )}
+                        </>
+                      )}
+                    </Card>
+                  )}
                 </div>
               </section>
             </Dialog.Content>
@@ -313,5 +398,60 @@ export function OffboardingDialog({
         </Dialog.Portal>
       )}
     </Dialog.Root>
+  );
+}
+
+function ReviewCard({
+  title,
+  icon: Icon,
+  entries,
+  empty,
+}: {
+  title: string;
+  icon: typeof KeyRound;
+  entries: Array<{
+    item: AtlasData["items"][number];
+    evidence: Array<keyof typeof EVIDENCE_LABELS>;
+  }>;
+  empty: string;
+}) {
+  return (
+    <Card className="overflow-hidden">
+      <div className="flex items-center gap-s border-b border-border bg-secondary px-l py-m">
+        <Icon className="icon-size-200 text-brand-foreground" />
+        <h3 className="text-300 font-semibold">
+          {title} · {entries.length}
+        </h3>
+      </div>
+      {entries.length === 0 ? (
+        <p className="p-l text-200 text-muted-foreground">{empty}</p>
+      ) : (
+        <div className="divide-y divide-border">
+          {entries.map((entry) => (
+            <div
+              key={entry.item.fabricId}
+              className="flex items-start gap-m p-l"
+            >
+              <TypeGlyph type={entry.item.itemType} />
+              <div className="min-w-0">
+                <div className="text-300 font-semibold">
+                  {entry.item.displayName}
+                </div>
+                <div className="mt-xs flex flex-wrap gap-xs">
+                  {entry.evidence.map((evidence) => (
+                    <span
+                      key={evidence}
+                      className="rounded-md border border-border bg-card px-s py-xxs text-100 font-semibold text-muted-foreground"
+                    >
+                      {EVIDENCE_LABELS[evidence]}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </Card>
   );
 }

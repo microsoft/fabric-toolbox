@@ -1,6 +1,11 @@
 import { extractDaxRefs, type DaxRef } from "./dax-refs";
+import { diagnosticStart, recordDiagnostic } from "./diagnostics";
 import { markdownCodeBlock, markdownText } from "./markdown";
-import type { ModelTableSchema } from "./model";
+import type {
+  ModelExpressionStatus,
+  ModelTableSchema,
+  SemanticModelEvidence,
+} from "./model";
 
 // Model-level DAX dependency evidence for one semantic model. Edges use only
 // references that resolve to exactly one synchronized column or measure,
@@ -17,6 +22,7 @@ export interface XRayObject {
   name: string;
   dataType?: string;
   expression?: string;
+  expressionStatus?: ModelExpressionStatus;
   isHidden?: boolean;
 }
 
@@ -45,6 +51,10 @@ export interface SemanticModelXRay {
   cycles: string[][];
   measureCount: number;
   columnCount: number;
+  expressionCount: number;
+  collectedExpressionCount: number;
+  unsupportedExpressionCount: number;
+  expressionsOmitted: number;
 }
 
 export interface XRayImpact {
@@ -53,7 +63,7 @@ export interface XRayImpact {
 }
 
 function normalize(value: string | undefined): string {
-  return value?.trim().toLocaleLowerCase() ?? "";
+  return value?.trim().toLowerCase() ?? "";
 }
 
 export function xrayObjectKey(kind: XRayObjectKind, table: string, name: string): string {
@@ -119,10 +129,16 @@ function stronglyConnected(keys: readonly string[], edges: ReadonlyMap<string, s
 export function buildSemanticModelXRay(
   itemId: string,
   tables: readonly ModelTableSchema[],
+  evidence?: SemanticModelEvidence,
 ): SemanticModelXRay {
+  const diagnosticStartedAt = diagnosticStart();
   const objects = new Map<string, XRayObject>();
   const measuresByName = new Map<string, string[]>();
+  const tablesByName = new Map<string, ModelTableSchema[]>();
   const xrayTables: XRayTable[] = tables.map((table) => {
+    const namedTables = tablesByName.get(normalize(table.name)) ?? [];
+    namedTables.push(table);
+    tablesByName.set(normalize(table.name), namedTables);
     const objectKeys: string[] = [];
     for (const measure of table.measures) {
       const key = xrayObjectKey("measure", table.name, measure.name);
@@ -133,6 +149,7 @@ export function buildSemanticModelXRay(
           table: table.name,
           name: measure.name,
           expression: measure.expr,
+          expressionStatus: measure.expressionStatus,
           isHidden: measure.isHidden,
         });
         objectKeys.push(key);
@@ -150,6 +167,8 @@ export function buildSemanticModelXRay(
         table: table.name,
         name: column.name,
         dataType: column.dataType,
+        expression: column.expr,
+        expressionStatus: column.expressionStatus,
         isHidden: column.isHidden,
       });
       objectKeys.push(key);
@@ -166,21 +185,47 @@ export function buildSemanticModelXRay(
     if (targets.includes(to)) return;
     targets.push(to);
     dependsOn.set(from, targets);
-    usedBy.set(to, [...(usedBy.get(to) ?? []), from]);
+    const consumers = usedBy.get(to) ?? [];
+    consumers.push(from);
+    usedBy.set(to, consumers);
     edgeCount += 1;
   };
 
   for (const table of tables) {
-    for (const measure of table.measures) {
-      if (!measure.expr?.trim()) continue;
-      const from = xrayObjectKey("measure", table.name, measure.name);
-      for (const reference of extractDaxRefs(measure.expr)) {
+    const expressionObjects: XRayObject[] = [
+      ...table.measures.map((measure) =>
+        objects.get(xrayObjectKey("measure", table.name, measure.name)),
+      ),
+      ...table.columns.map((column) =>
+        objects.get(xrayObjectKey("column", table.name, column.name)),
+      ),
+    ].filter((object): object is XRayObject => !!object?.expression?.trim());
+    for (const source of expressionObjects) {
+      for (const reference of extractDaxRefs(source.expression ?? "")) {
         if (!reference.table) {
-          const candidates = measuresByName.get(normalize(reference.name)) ?? [];
-          if (candidates.length === 1) link(from, candidates[0]);
+          const localColumns =
+            source.kind === "column"
+              ? table.columns
+                  .filter(
+                    (column) =>
+                      normalize(column.name) === normalize(reference.name),
+                  )
+                  .map((column) =>
+                    xrayObjectKey(
+                      "column",
+                      table.name,
+                      column.name,
+                    ),
+                  )
+              : [];
+          const candidates =
+            localColumns.length > 0
+              ? localColumns
+              : measuresByName.get(normalize(reference.name)) ?? [];
+          if (candidates.length === 1) link(source.key, candidates[0]);
           else {
             references.push({
-              from,
+              from: source.key,
               reference: referenceText(reference),
               status: candidates.length ? "ambiguous" : "unresolved",
               candidates,
@@ -188,9 +233,8 @@ export function buildSemanticModelXRay(
           }
           continue;
         }
-        const targetTables = tables.filter(
-          (candidate) => normalize(candidate.name) === normalize(reference.table),
-        );
+        const targetTables =
+          tablesByName.get(normalize(reference.table)) ?? [];
         const candidates =
           targetTables.length === 1
             ? [
@@ -202,10 +246,10 @@ export function buildSemanticModelXRay(
                   .map((candidate) => xrayObjectKey("measure", targetTables[0].name, candidate.name)),
               ]
             : [];
-        if (candidates.length === 1) link(from, candidates[0]);
+        if (candidates.length === 1) link(source.key, candidates[0]);
         else {
           references.push({
-            from,
+            from: source.key,
             reference: referenceText(reference),
             status: candidates.length > 1 || targetTables.length > 1 ? "ambiguous" : "unresolved",
             candidates,
@@ -216,7 +260,16 @@ export function buildSemanticModelXRay(
   }
 
   const keys = [...objects.keys()];
-  return {
+  const expressionObjects = [...objects.values()].filter(
+    (object) =>
+      object.kind === "measure" ||
+      object.expressionStatus !== undefined ||
+      !!object.expression,
+  );
+  const unsupportedExpressionCount = expressionObjects.filter(
+    (object) => object.expressionStatus === "unsupported",
+  ).length;
+  const result: SemanticModelXRay = {
     itemId,
     tables: xrayTables,
     objects,
@@ -227,7 +280,16 @@ export function buildSemanticModelXRay(
     cycles: stronglyConnected(keys, dependsOn),
     measureCount: [...objects.values()].filter((entry) => entry.kind === "measure").length,
     columnCount: [...objects.values()].filter((entry) => entry.kind === "column").length,
+    expressionCount: expressionObjects.length,
+    collectedExpressionCount: expressionObjects.filter(
+      (object) => !!object.expression?.trim(),
+    ).length,
+    unsupportedExpressionCount,
+    expressionsOmitted:
+      evidence?.expressionsOmitted ?? unsupportedExpressionCount,
   };
+  recordDiagnostic("atlas.xray.build", diagnosticStartedAt);
+  return result;
 }
 
 /** Direct or transitive dependencies or consumers; cycles terminate safely. */
@@ -294,7 +356,7 @@ export function xrayEvidenceMarkdown(
     `## Used by in this model (${consumers.keys.size})`,
     ...(consumers.keys.size
       ? describe(consumers.keys, consumers)
-      : ["- No DAX consumers in this model. Report and visual usage is not exposed by Fabric APIs."]),
+      : ["- No DAX consumers among collected expressions. Report and visual usage is not exposed by Fabric APIs."]),
     "",
     `## Unresolved or ambiguous references (${unresolved.length})`,
     ...(unresolved.length ? unresolved.map((entry) => `- ${markdownText(entry.reference)}: ${entry.status}`) : ["- None"]),

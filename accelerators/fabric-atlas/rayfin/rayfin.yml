@@ -1,6 +1,6 @@
 id: fabric-atlas
 name: Fabric Atlas
-version: 2.0.0
+version: 2.1.3
 secrets:
   - name: ATLAS_POWERBI_SCANNER_ENABLED
     description: Optional scanner adapter switch. Missing or false keeps it disabled.
@@ -21,8 +21,7 @@ services:
       enabled: true
       externalEntraExchange: false
     allowedRedirectUris:
-      - http://localhost:5173
-      - http://127.0.0.1:5173
+      - ${RAYFIN_AUTH_REDIRECT_URI:-http://localhost:5173}
   data:
     enabled: true
     dialect: mssql

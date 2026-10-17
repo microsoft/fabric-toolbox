@@ -75,7 +75,7 @@ describe('durable synchronization data policies', () => {
       const rules = permissions.filter((call) => actions(call).includes(action));
       expect(rules).toHaveLength(1);
       const policy = option(rules[0], 'policy', 1) as ts.ArrowFunction;
-      expect(policy.body.getText(source)).toBe('claims.sub.eq(SYNC_WRITER_SUBJECT)');
+      expect(policy.body.getText(source)).toBe('syncWriterPolicy(claims)');
     }
   });
 
@@ -87,8 +87,22 @@ describe('durable synchronization data policies', () => {
       expect(rules).toHaveLength(1);
       const policy = option(rules[0], 'policy', 1) as ts.ArrowFunction | undefined;
       if (name === 'SyncJob') expect(policy).toBeUndefined();
-      else expect(policy!.body.getText(source)).toBe('claims.sub.eq(SYNC_WRITER_SUBJECT)');
+      else expect(policy!.body.getText(source)).toBe('syncWriterPolicy(claims)');
     }
+  });
+
+  it('allows an optional break-glass subject without weakening the primary policy', () => {
+    const source = readFileSync(
+      resolve('rayfin', 'data', 'sync-policy.ts'),
+      'utf8',
+    );
+    expect(source).toContain('claims.sub.eq(SYNC_WRITER_SUBJECT)');
+    expect(source).toContain(
+      'primary.or(claims.sub.eq(BREAK_GLASS_SYNC_WRITER_SUBJECT))',
+    );
+    expect(source).toContain(
+      'syncWriterPolicy(claims).and(claims.email.eq(writerEmail))',
+    );
   });
 
   it.each(ENTITIES)('bounds every text field and uses UUID workspace references in %s', (name) => {

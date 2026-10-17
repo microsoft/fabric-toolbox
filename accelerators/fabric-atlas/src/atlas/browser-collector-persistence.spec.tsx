@@ -2,11 +2,16 @@ import { act, fireEvent, render, screen, waitFor, within } from "@testing-librar
 import { useState } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { ATLAS_CONFIG } from "./config";
-import { loadFromDb, runFabricSync } from "./backend";
+import {
+  loadFromDb,
+  loadWorkspaceSyncStatuses,
+  runFabricSync,
+} from "./backend";
 import { createItemRelationsEvidence } from "./item-relations-evidence";
 import type { CompatibilityPlan, RawSync } from "./live-sync";
 import { AtlasProvider, useAtlas } from "./store";
 import { MapView } from "./views/Map";
+import { loadWorkspaceScopes } from "./workspace-scope";
 
 const fixture = vi.hoisted(() => ({
   client: {} as { data: Record<string, unknown>; functions: Record<string, unknown> },
@@ -217,6 +222,7 @@ function Harness() {
     <button onClick={() => void atlas.addComment("Foreign target", estate(FIRST).lake).catch((error: Error) => setNoteError(error.message))}>Post foreign target</button>
     <output data-testid="hydrating">{String(atlas.hydrating)}</output>
     <output data-testid="workspace">{atlas.data.workspace.fabricId}</output>
+    <output data-testid="workspace-scope-count">{atlas.workspaceScopes.length}</output>
     <output data-testid="schema">{JSON.stringify(atlas.data.schema)}</output>
     <output data-testid="grants">{JSON.stringify(atlas.data.grants)}</output>
     <output data-testid="note-error">{noteError}</output>
@@ -243,6 +249,13 @@ describe("two-workspace collection, publication and hydration", () => {
     const data = installBoundaries();
     await runFabricSync(false, user, undefined, undefined, FIRST);
     await runFabricSync(false, user, undefined, undefined, SECOND);
+    await expect(loadWorkspaceScopes(false)).resolves.toHaveLength(2);
+    await expect(
+      loadWorkspaceSyncStatuses(false, [FIRST, SECOND]),
+    ).resolves.toMatchObject({
+      [FIRST]: { lastRunStatus: "completed" },
+      [SECOND]: { lastRunStatus: "completed" },
+    });
     const reloaded = await loadFromDb(false, SECOND);
     expect(reloaded?.schema?.[estate(SECOND).lake]).toEqual(expect.arrayContaining([
       lakeTable(SECOND),
@@ -279,6 +292,7 @@ describe("two-workspace collection, publication and hydration", () => {
 
     render(<AtlasProvider isPreview={false} currentUser={user}><Harness /></AtlasProvider>);
     await waitFor(() => expect(screen.getByTestId("hydrating")).toHaveTextContent("false"));
+    await waitFor(() => expect(screen.getByTestId("workspace-scope-count")).toHaveTextContent("2"));
     expect(screen.getByTestId("schema")).toHaveTextContent("gold.FirstSales");
     fireEvent.click(screen.getByRole("button", { name: /^First lake, Lakehouse/ }));
     fireEvent.click(screen.getByRole("button", { name: "objects" }));
