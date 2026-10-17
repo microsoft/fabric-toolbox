@@ -1,0 +1,147 @@
+table 'Timepoint Interactive Item Detail'
+	lineageTag: 65903597-c1ba-4349-8110-80ca12859549
+	sourceLineageTag: 032491eb-6d51-4b96-a6db-69fdaaa9e374
+
+	column 'Operation Id'
+		dataType: string
+		lineageTag: ca8fe126-92fb-4d4d-8731-eb67a62dd64c
+		sourceLineageTag: 8584d7e9-031f-4922-8c5e-4f33940b6435
+		dataCategory: Uncategorized
+		summarizeBy: none
+		sourceColumn: Operation Id
+
+		annotation SummarizationSetBy = User
+
+	column User
+		dataType: string
+		lineageTag: f07570a6-09b7-4965-ad59-b798d74780c3
+		sourceLineageTag: 9e769e37-0993-406b-b627-0cde04ea635c
+		dataCategory: Uncategorized
+		summarizeBy: none
+		sourceColumn: User
+
+		annotation SummarizationSetBy = User
+
+	column 'Billing type'
+		dataType: string
+		lineageTag: da17549f-e377-4d85-a196-1dd1d84f34cf
+		sourceLineageTag: 653794d7-994f-4616-946c-de5e427ff837
+		dataCategory: Uncategorized
+		summarizeBy: none
+		sourceColumn: Billing type
+
+		annotation SummarizationSetBy = User
+
+	column 'Operation start time'
+		dataType: dateTime
+		formatString: General Number
+		lineageTag: 5ef26424-ad56-4812-a895-916423a26eee
+		sourceLineageTag: cdadc00f-4d1f-46fa-a07f-d0019dab58f3
+		dataCategory: Uncategorized
+		summarizeBy: none
+		sourceColumn: Operation start time
+
+		annotation SummarizationSetBy = User
+
+	column Start
+		dataType: dateTime
+		formatString: General Number
+		lineageTag: 766008ab-c9f6-4d78-91b1-4cdb3c2e6d4e
+		sourceLineageTag: 0c3af9e1-ebfa-407d-9c6b-9321682c2adc
+		dataCategory: Uncategorized
+		summarizeBy: none
+		sourceColumn: Start
+
+		annotation SummarizationSetBy = User
+
+	column End
+		dataType: dateTime
+		formatString: General Number
+		lineageTag: 55194761-34be-4bd0-9a79-0a282ed49b13
+		sourceLineageTag: 8244ee8a-ac2d-4f29-8b7a-dee9b606802f
+		dataCategory: Uncategorized
+		summarizeBy: none
+		sourceColumn: End
+
+		annotation SummarizationSetBy = User
+
+	column 'Total CU (s)'
+		dataType: double
+		lineageTag: 963da697-5242-4230-bf13-291e7f956564
+		sourceLineageTag: 74f102dd-d01e-4e23-a455-ccb3d84d795f
+		dataCategory: Uncategorized
+		summarizeBy: sum
+		sourceColumn: Total CU (s)
+
+		annotation SummarizationSetBy = User
+
+	column 'Timepoint CU (s)'
+		dataType: double
+		lineageTag: 86b8f3b1-151b-41b9-b9da-8230f0312648
+		sourceLineageTag: cd169926-196c-4884-b9e2-c04381b3f5dc
+		dataCategory: Uncategorized
+		summarizeBy: sum
+		sourceColumn: Timepoint CU (s)
+
+		annotation SummarizationSetBy = User
+
+	column 'Duration (s)'
+		dataType: int64
+		formatString: 0
+		lineageTag: cb78c059-23f9-4bd3-bfad-5362bbe997d0
+		sourceLineageTag: f6a2dfe0-2cf0-4f2a-93ce-1dc15378117f
+		dataCategory: Uncategorized
+		summarizeBy: sum
+		sourceColumn: Duration (s)
+
+		annotation SummarizationSetBy = User
+
+	column 'Throttling (s)'
+		dataType: int64
+		formatString: 0
+		lineageTag: 53a8fefe-34e8-4ff6-85e3-d9ee79913227
+		sourceLineageTag: 0be9671a-3829-4c03-8304-34d60c634188
+		dataCategory: Uncategorized
+		summarizeBy: sum
+		sourceColumn: Throttling (s)
+
+		annotation SummarizationSetBy = User
+
+	column Status
+		dataType: string
+		lineageTag: cd638ff0-128c-42e9-9a83-818184b62219
+		sourceLineageTag: fa896226-debf-49be-baea-5c928ea5df3d
+		dataCategory: Uncategorized
+		summarizeBy: none
+		sourceColumn: Status
+
+		annotation SummarizationSetBy = User
+
+	column '% of base capacity'
+		dataType: double
+		formatString: 0.00%;-0.00%;0.00%
+		lineageTag: 2c852e70-b948-4478-89ef-5001a9d82575
+		sourceLineageTag: ab7794bb-98cd-42ac-8b1c-3192b2cfbeae
+		dataCategory: Uncategorized
+		summarizeBy: sum
+		sourceColumn: % of base capacity
+
+		annotation SummarizationSetBy = User
+
+	column 'Operation end time'
+		dataType: dateTime
+		formatString: General Number
+		lineageTag: 453b25db-7099-4e41-af8e-24e250d59b42
+		sourceLineageTag: aeceb165-241f-4867-848f-4b678d71f6bc
+		dataCategory: Uncategorized
+		summarizeBy: none
+		sourceColumn: Operation end time
+
+		annotation SummarizationSetBy = User
+
+	partition 'Timepoint Interactive Item Detail' = entity
+		mode: directQuery
+		source
+			entityName: Timepoint Interactive Item Detail
+			expressionSource: 'DirectQuery to AS - Fabric Capacity Metrics'
+

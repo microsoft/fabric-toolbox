@@ -1,0 +1,39 @@
+table 'Item History Workspace List'
+	lineageTag: 81cd128b-c23c-4f6a-b9cd-58c0520ca9d4
+	sourceLineageTag: a4edfa19-13ee-4582-9288-8373fc108e37
+
+	column WorkspaceId
+		dataType: string
+		isNullable: false
+		lineageTag: 8e280b61-3189-4725-b2d1-65bcd2ec4794
+		sourceLineageTag: e5f14b3e-46b9-4fd3-8e7f-7de5d436adbf
+		dataCategory: Uncategorized
+		summarizeBy: none
+		sourceColumn: WorkspaceId
+
+		extendedProperty ParameterMetadata =
+				{
+				  "version": 2,
+				  "kind": 1,
+				  "supportsMultipleValues": true,
+				  "selectAllValue": "Default"
+				}
+
+		annotation SummarizationSetBy = User
+
+	column WorkspaceName
+		dataType: string
+		lineageTag: 1c13c82d-3b72-4bf5-aa3b-a7e3a8442b83
+		sourceLineageTag: 946d734b-f24e-4e3f-aa01-49a917150764
+		dataCategory: Uncategorized
+		summarizeBy: none
+		sourceColumn: WorkspaceName
+
+		annotation SummarizationSetBy = User
+
+	partition 'Item History Workspace List' = entity
+		mode: directQuery
+		source
+			entityName: Item History Workspace List
+			expressionSource: 'DirectQuery to AS - Fabric Capacity Metrics'
+

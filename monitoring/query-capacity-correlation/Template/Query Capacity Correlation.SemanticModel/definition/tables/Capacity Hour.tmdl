@@ -1,0 +1,56 @@
+/// Capacity utilization imported for each hour in the latest seven-day Capacity Metrics range.
+table 'Capacity Hour'
+	lineageTag: b72d58ba-cc87-45e5-aea6-63db57becbc7
+
+	/// configured local hourly timestamp shared by capacity utilization and interval-expanded query executions.
+	column Timestamp
+		dataType: dateTime
+		lineageTag: ab293792-d8b4-427d-9dda-504f7f155284
+		summarizeBy: none
+		sourceColumn: Timestamp
+
+	/// Average capacity utilization for the hour.
+	column 'Average CU %'
+		dataType: double
+		lineageTag: b4e35691-6792-4706-a1d9-ce723c124534
+		summarizeBy: average
+		sourceColumn: Average CU %
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	partition 'Capacity Hour' = m
+		mode: import
+		source =
+				let
+				    Source = AnalysisServices.Database(
+				        "{{CAPACITY_METRICS_ENDPOINT}}",
+				        "{{CAPACITY_METRICS_MODEL}}",
+				        [
+				            Query =
+				                "EVALUATE
+				                SELECTCOLUMNS(
+				                    SUMMARIZECOLUMNS(
+				                        'Usage Summary (Last 7 days)'[Timestamp],
+				                        TREATAS(
+				                            {""{{CAPACITY_ID}}""},
+				                            'Usage Summary (Last 7 days)'[Capacity Id]
+				                        ),
+				                        ""Average CU %"", MAX('Usage Summary (Last 7 days)'[Average CU %])
+				                    ),
+				                    ""CapacityTime"", 'Usage Summary (Last 7 days)'[Timestamp],
+				                    ""CapacityValue"", [Average CU %]
+				                )",
+				            Implementation = "2.0"
+				        ]
+				    ),
+				    FlatSource = Table.FromRows(
+				        Table.ToRows(Source),
+				        {"Timestamp", "CapacityValue"}
+				    ),
+				    Grouped = Table.Group(
+				        FlatSource,
+				        {"Timestamp"},
+				        {{"Average CU %", each List.Average([CapacityValue]), type number}}
+				    )
+				in
+				    Grouped

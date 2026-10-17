@@ -1,0 +1,23 @@
+table 'Top N Selector'
+	isHidden
+	lineageTag: 521abd7f-f414-41dd-9e35-0d8def72ae47
+	sourceLineageTag: 884cbd40-dc25-4a9f-9f8c-698564f1fbf4
+
+	column 'Top N'
+		dataType: int64
+		isHidden
+		formatString: #,0
+		lineageTag: efe1cc05-2043-4ae1-8aed-62d225d4164e
+		sourceLineageTag: d44a1429-4d01-4157-b7b6-5740338f6745
+		dataCategory: Uncategorized
+		summarizeBy: sum
+		sourceColumn: Top N
+
+		annotation SummarizationSetBy = User
+
+	partition 'Top N Selector' = entity
+		mode: directQuery
+		source
+			entityName: Top N Selector
+			expressionSource: 'DirectQuery to AS - Fabric Capacity Metrics'
+

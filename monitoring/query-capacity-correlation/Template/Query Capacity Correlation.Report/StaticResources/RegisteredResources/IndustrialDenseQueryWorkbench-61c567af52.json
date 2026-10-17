@@ -1,0 +1,44 @@
+{
+  "name": "IndustrialDenseQueryWorkbench-61c567af52.json",
+  "dataColors": [
+    "#3B6E91",
+    "#C8742A",
+    "#52606D",
+    "#2F5D7C",
+    "#D99A2B",
+    "#A85D1F",
+    "#D13438"
+  ],
+  "good": "#3B6E91",
+  "neutral": "#D99A2B",
+  "bad": "#D13438",
+  "maximum": "#3B6E91",
+  "center": "#D99A2B",
+  "minimum": "#DCE8F0",
+  "null": "#B8C0C7",
+  "foreground": "#262626",
+  "background": "#FFFFFF",
+  "tableAccent": "#3B6E91",
+  "textClasses": {
+    "title": {
+      "fontFace": "Segoe UI Semibold",
+      "fontSize": 15,
+      "color": "#262626"
+    },
+    "header": {
+      "fontFace": "Segoe UI Semibold",
+      "fontSize": 12,
+      "color": "#262626"
+    },
+    "label": {
+      "fontFace": "Segoe UI",
+      "fontSize": 10,
+      "color": "#66717A"
+    },
+    "callout": {
+      "fontFace": "Segoe UI Semibold",
+      "fontSize": 32,
+      "color": "#262626"
+    }
+  }
+}

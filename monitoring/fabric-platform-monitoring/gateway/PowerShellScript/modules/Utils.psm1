@@ -167,15 +167,8 @@ function Connect-Lakehouse {
         $SecretText
     )
 
-    $sp = @{
-        $TenantId           = $TenantId
-        AppId               = $AppId
-        PasswordCredentials = $SecretText
-    }
-
-    $pscredential = New-Object -TypeName System.Management.Automation.PSCredential -ArgumentList $sp.AppId, $sp.PasswordCredentials
-    Connect-AzAccount -ServicePrincipal -Credential $pscredential -TenantId $sp.$TenantId
-    
+    $pscredential = [System.Management.Automation.PSCredential]::new($AppId, $SecretText)
+    Connect-AzAccount -ServicePrincipal -Credential $pscredential -TenantId $TenantId | Out-Null
 }
 
 function Add-FileToLakehouse {
@@ -222,7 +215,7 @@ function Split-EventHubConnectionString {
     $ehNameValues = $connectionString -split ";"
 
     $value = @{
-        "ehNameSpace" = $ehNameValues[0] -replace "sb://", "" -split "=", 2  | Select-Object -Index 1
+        "ehNameSpace" = $ehNameValues[0] -replace "sb://", "" -split "=", 2 -replace "/", ""  | Select-Object -Index 1
         "keyName"     = $ehNameValues[1] -split "=", 2 |  Select-Object -Index 1
         "key"         = $ehNameValues[2] -split "=", 2 |  Select-Object -Index 1
         "ehName"      = $ehNameValues[3] -split "=", 2 |  Select-Object -Index 1
@@ -236,14 +229,12 @@ function Add-LogToEventHub {
     [cmdletbinding()]
     param
     (
-        [string]
-        $connectionString,
+        [psobject]
+        $config,
         [string]
         $logPath,
         [string]
-        $logType,
-        [psobject]
-        $ConnectionProperties
+        $logType
     )
 
     # create Request Body
@@ -292,7 +283,7 @@ function Add-LogToEventHub {
 
             } while (-Not $correctSize) 
 
-            Add-MsgEventHub -connectionString $connectionString -msg $body -connectionProperties $ConnectionProperties
+            Add-MsgEventHub -msg $body -connectionType "Reports" -config $config
 
             $minIndex = $maxIndex + 1
             $maxIndex = $minIndex + $chunckSize
@@ -306,51 +297,110 @@ function Add-MsgEventHub {
     param
     (
         [string]
-        $connectionString,
-        [string]
         $msg,
+        [string]
+        $connectionType,
         [psobject]
-        $connectionProperties
-    )
+        $config
+    )    
 
-    $connectionStringSplited = Split-EventHubConnectionString -connectionString $connectionString
+    $ehConfig = ($config.EventHubs.ConnectionStrings | Where-Object { $_.Report -eq $connectionType })
 
-    $ehName = $connectionStringSplited.ehName # hub name    
-    $ehNameSpace = $connectionStringSplited.ehNameSpace # namespace    
-    $keyName = $connectionStringSplited.keyName     
-    $key = $connectionStringSplited.key
+    if ($config.EventHubs.UseSPN -eq $true) {
+        $ehNameSpace = $ehConfig.EventHubNamespace # hub name    
+        $ehName = $ehConfig.EventHubName # namespace   
 
+        $URI = "{0}/{1}" -f @($ehNameSpace, $ehName)
 
-    # Load the System.Web assembly to enable UrlEncode
-    [Reflection.Assembly]::LoadWithPartialName("System.Web") | Out-Null
+        $accessToken = Get-EventHubServicePrincipalToken -TenantId $config.ServicePrincipal.TenantId -AppId $config.ServicePrincipal.AppId -SecretText $config.ServicePrincipal.SecretText
 
-    $URI = "{0}{1}" -f @($ehNameSpace, $ehName)
-    $encodedURI = [System.Web.HttpUtility]::UrlEncode($URI)
+        # API headers
+        $headers = @{
+            "Authorization" = "Bearer $accessToken"
+        }
+    } else {
+        $eventStreamConnection = $ehConfig.EventHubConnectionString
 
-    # Calculate expiry value one hour ahead
-    $expiry = [string](([DateTimeOffset]::Now.ToUnixTimeSeconds()) + 3600)
+        $connectionStringSplited = Split-EventHubConnectionString -connectionString $eventStreamConnection
 
-    # Create the signature
-    $stringToSign = [System.Web.HttpUtility]::UrlEncode($URI) + "`n" + $expiry
+        $ehName = $connectionStringSplited.ehName # hub name    
+        $ehNameSpace = $connectionStringSplited.ehNameSpace # namespace    
+        $keyName = $connectionStringSplited.keyName     
+        $key = $connectionStringSplited.key
 
-    $hmacsha = New-Object System.Security.Cryptography.HMACSHA256
-    $hmacsha.key = [Text.Encoding]::ASCII.GetBytes($key)
+        $URI = "{0}/{1}" -f @($ehNameSpace, $ehName)
 
-    $signature = $hmacsha.ComputeHash([Text.Encoding]::ASCII.GetBytes($stringToSign))
-    $signature = [System.Web.HttpUtility]::UrlEncode([Convert]::ToBase64String($signature))
+        # Load the System.Web assembly to enable UrlEncode
+        [Reflection.Assembly]::LoadWithPartialName("System.Web") | Out-Null
 
-    # API headers
-    #
-    $headers = @{
-        "Authorization" = "SharedAccessSignature sr=" + $encodedURI + "&sig=" + $signature + "&se=" + $expiry + "&skn=" + $keyName;
-    }
+        # Calculate expiry value one hour ahead
+        $expiry = [string](([DateTimeOffset]::Now.ToUnixTimeSeconds()) + 3600)
+
+        # Create the signature
+        $stringToSign = [System.Web.HttpUtility]::UrlEncode($URI) + "`n" + $expiry
+
+        $hmacsha = New-Object System.Security.Cryptography.HMACSHA256
+        $hmacsha.key = [Text.Encoding]::ASCII.GetBytes($key)
+
+        $signature = $hmacsha.ComputeHash([Text.Encoding]::ASCII.GetBytes($stringToSign))
+        $signature = [System.Web.HttpUtility]::UrlEncode([Convert]::ToBase64String($signature))
+        
+        $encodedURI = [System.Web.HttpUtility]::UrlEncode($URI)
+
+        # API headers
+        #
+        $headers = @{
+            "Authorization" = "SharedAccessSignature sr=" + $encodedURI + "&sig=" + $signature + "&se=" + $expiry + "&skn=" + $keyName;
+        }
+    }    
 
     # execute the Azure REST API
     $method = "POST"
     $dest = "https://" + $URI + '/messages?timeout=60&api-version=2014-01'
 
-    Invoke-RestMethod -Uri $dest -Method $method -Headers $headers -Body $msg -Verbose -ContentType "application/atom+xml;type=entry;charset=utf-8" -MaximumRetryCount $connectionProperties.MaximumRetryCount -RetryIntervalSec $connectionProperties.RetryIntervalSec
 
+    Invoke-RestMethod -Uri $dest `
+        -Method $method `
+        -Headers $headers `
+        -Body $msg `
+        -Verbose `
+        -ContentType "application/atom+xml;type=entry;charset=utf-8" `
+        -MaximumRetryCount $config.ConnectionProperties.MaximumRetryCount `
+        -RetryIntervalSec $config.ConnectionProperties.RetryIntervalSec
+
+}
+
+function Get-EventHubServicePrincipalToken {
+    [cmdletbinding()]
+    param
+    (
+        [string]
+        $TenantId,
+        [string]
+        $AppId,
+        [string]
+        $SecretText
+    )
+
+    $Secret = (ConvertFrom-SecureWithMachineKey  $SecretText) | ConvertTo-SecureString -AsPlainText -Force
+    $BSTR = [System.Runtime.InteropServices.Marshal]::SecureStringToBSTR($Secret)
+
+    $tokenBody = @{
+        grant_type    = "client_credentials"
+        client_id     = $AppId
+        client_secret = [System.Runtime.InteropServices.Marshal]::PtrToStringAuto($BSTR)
+        scope         = "https://eventhubs.azure.net/.default"
+    }
+
+    $URL = "https://login.microsoftonline.com/$TenantId/oauth2/v2.0/token"
+
+    $tokenResponse = Invoke-RestMethod `
+        -Uri $URL `
+        -Method Post `
+        -ContentType "application/x-www-form-urlencoded" `
+        -Body $tokenBody
+
+    return $tokenResponse.access_token
 }
 
 function Merge-ReportFiles {
@@ -395,22 +445,21 @@ function Remove-OldReportFiles {
     param (
         [string]
         $logFile,
+        [string]
+        $report,
         [int]
         $daysToKeep
     )
-        
-    $logPath = Split-Path $logFile -Parent
 
+    $logPath = Split-Path $logFile -Parent
 
     $date = ([datetime]::UtcNow).AddDays(-$daysToKeep)
 
     $historyFolder = New-Item -Path ("$(Split-Path $logPath -Parent)\History") -ItemType Directory -Force -ErrorAction SilentlyContinue 
 
-    $packFiles = Get-ChildItem -Path $historyFolder -Filter "$report*_f.log" -Recurse -ErrorAction SilentlyContinue | where-object { ($date -gt $_.LastWriteTimeUtc.Date) } | Remove-Item
+    $packFiles = Get-ChildItem -Path $historyFolder -Filter "$report*_f.log" -Recurse -ErrorAction SilentlyContinue | Where-Object { $date -gt $_.LastWriteTimeUtc.Date } | Remove-Item
 
-    Return $packFiles
-
-
+    return $packFiles
 }
 Function ConvertTo-SecureWithMachineKey($s) {
     Add-Type -AssemblyName System.Security

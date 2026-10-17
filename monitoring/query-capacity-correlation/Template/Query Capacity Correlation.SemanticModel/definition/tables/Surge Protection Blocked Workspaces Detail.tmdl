@@ -1,0 +1,144 @@
+table 'Surge Protection Blocked Workspaces Detail'
+	lineageTag: 004656e7-ff9b-4e49-a704-e4d0e1815724
+	sourceLineageTag: 635c49d1-2de9-4d87-9e0a-5c7f8935d421
+
+	column 'Workspace Id'
+		dataType: string
+		lineageTag: 98efe55c-cf78-4128-a8d4-a28f6581e4e8
+		sourceLineageTag: d878b54b-fedd-42d6-a402-eb7eee25b5eb
+		dataCategory: Uncategorized
+		summarizeBy: none
+		sourceColumn: Workspace Id
+
+		extendedProperty ParameterMetadata =
+				{
+				  "version": 2,
+				  "kind": 1,
+				  "selectAllValue": "__SelectAll__"
+				}
+
+		annotation SummarizationSetBy = User
+
+	column 'Blocked date'
+		dataType: dateTime
+		formatString: General Number
+		lineageTag: 6e202c2c-22c8-405f-89e2-2e24ae6d0b0a
+		sourceLineageTag: 69d0ae1d-ad4e-4b41-ba75-af40172f36cb
+		dataCategory: Uncategorized
+		summarizeBy: none
+		sourceColumn: Blocked date
+
+		annotation SummarizationSetBy = User
+
+	column 'Affected users'
+		dataType: int64
+		formatString: 0
+		lineageTag: 6f34bee4-81b1-4bec-90cd-dd2b581771ad
+		sourceLineageTag: 52297087-9f24-4bbe-9a55-bb468e409483
+		dataCategory: Uncategorized
+		summarizeBy: sum
+		sourceColumn: Affected users
+
+		annotation SummarizationSetBy = User
+
+	column 'Blocked end'
+		dataType: dateTime
+		formatString: General Number
+		lineageTag: 840fbb6b-7482-49aa-a861-248adb64e309
+		sourceLineageTag: 835291f4-f93b-408f-af7a-c129227f179a
+		dataCategory: Uncategorized
+		summarizeBy: none
+		sourceColumn: Blocked end
+
+		annotation SummarizationSetBy = User
+
+	column 'Blocked duration (hours)'
+		dataType: int64
+		formatString: 0
+		lineageTag: 7a4b89fd-634a-4a02-bc69-dc7fde0fe5ea
+		sourceLineageTag: e047deb4-e144-43c3-bfe9-80636e59c16e
+		dataCategory: Uncategorized
+		summarizeBy: sum
+		sourceColumn: Blocked duration (hours)
+
+		annotation SummarizationSetBy = User
+
+	column 'How blocked'
+		dataType: string
+		lineageTag: dcc818eb-1a1e-4781-b0da-c506a6f65323
+		sourceLineageTag: ceea5e55-a38e-44e6-bf2d-a126d1c98869
+		dataCategory: Uncategorized
+		summarizeBy: none
+		sourceColumn: How blocked
+
+		annotation SummarizationSetBy = User
+
+	column 'Workspace name'
+		dataType: string
+		lineageTag: d11c588f-871a-4e93-a38f-5a0a9d344efd
+		sourceLineageTag: e4866bd1-1a81-4221-a861-0b26aabfc098
+		dataCategory: Uncategorized
+		summarizeBy: none
+		sourceColumn: Workspace name
+
+		annotation SummarizationSetBy = User
+
+	column 'Timepoint start'
+		dataType: dateTime
+		formatString: General Number
+		lineageTag: 843793f0-d578-45b0-8e4b-1b7d026e4f1b
+		sourceLineageTag: ac1b50e2-77d0-4d0f-b872-935fd28bd16d
+		dataCategory: Uncategorized
+		summarizeBy: none
+		sourceColumn: Timepoint start
+
+		annotation SummarizationSetBy = User
+
+	column 'Capacity Id'
+		dataType: string
+		lineageTag: 0a433b88-54b3-41b3-81fb-6fbabcd9a96d
+		sourceLineageTag: 7e716ad6-c2de-4eeb-bd4f-ccdebfb6ab6e
+		dataCategory: Uncategorized
+		summarizeBy: none
+		sourceColumn: Capacity Id
+
+		annotation SummarizationSetBy = User
+
+	column 'Interactive rejected operations'
+		dataType: int64
+		formatString: 0
+		lineageTag: c528b4b4-9528-418f-90d8-3fc2b29d9fe2
+		sourceLineageTag: 0bc74e8e-1ae7-4368-94ca-05f31e8d50c8
+		dataCategory: Uncategorized
+		summarizeBy: sum
+		sourceColumn: Interactive rejected operations
+
+		annotation SummarizationSetBy = User
+
+	column 'Background rejected operations'
+		dataType: int64
+		formatString: 0
+		lineageTag: 583087d8-db8b-4b62-8fe3-b7524723a631
+		sourceLineageTag: c08e88d7-be62-4020-9aba-2cdb7d1491ce
+		dataCategory: Uncategorized
+		summarizeBy: sum
+		sourceColumn: Background rejected operations
+
+		annotation SummarizationSetBy = User
+
+	column 'How Blocked Category'
+		dataType: string
+		lineageTag: ad15fa0b-4aef-4201-bf2d-2ddf8e90cdfa
+		sourceLineageTag: ed5f358c-77c3-44b4-9499-536c6c766ccc
+		dataCategory: Uncategorized
+		summarizeBy: none
+		sourceColumn: How Blocked Category
+
+		annotation SummarizationSetBy = User
+
+	partition 'Surge Protection Blocked Workspaces Detail' = entity
+		mode: directQuery
+		source
+			entityName: Surge Protection Blocked Workspaces Detail
+			expressionSource: 'DirectQuery to AS - Fabric Capacity Metrics'
+

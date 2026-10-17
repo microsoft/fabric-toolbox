@@ -1,0 +1,191 @@
+table 'Metrics By Item For Workload Autoscale'
+	lineageTag: d501f7c7-0980-4b98-a212-95aa4c82f611
+	sourceLineageTag: 47054562-eaf3-468a-84aa-9f8d3894c6c6
+
+	column 'Workspace Id'
+		dataType: string
+		lineageTag: 684eb47d-052b-48fd-a624-59dcafa1be81
+		sourceLineageTag: 54f7ad8d-ae45-41d2-a757-11bdfd96a1b7
+		dataCategory: Uncategorized
+		summarizeBy: none
+		sourceColumn: Workspace Id
+
+		annotation SummarizationSetBy = User
+
+	column 'Capacity Id'
+		dataType: string
+		lineageTag: 221b4f69-c21d-49d7-b2e0-35c668dd13e3
+		sourceLineageTag: 3e06274b-8ddc-45d1-87b1-c87806e3d1b0
+		dataCategory: Uncategorized
+		summarizeBy: none
+		sourceColumn: Capacity Id
+
+		annotation SummarizationSetBy = User
+
+	column 'Duration (s)'
+		dataType: double
+		isNullable: false
+		lineageTag: e5d5abc0-f3bb-40d3-96a3-1b46fc03291d
+		sourceLineageTag: 99878458-54be-4863-970e-0f6d48d81e99
+		dataCategory: Uncategorized
+		summarizeBy: sum
+		sourceColumn: Duration (s)
+
+		annotation SummarizationSetBy = User
+
+	column Users
+		dataType: int64
+		formatString: 0
+		lineageTag: 5116849f-abb4-41ee-b511-aff9d6cc8772
+		sourceLineageTag: 6cc1de51-c654-4bdb-a963-75037dbc13fd
+		dataCategory: Uncategorized
+		summarizeBy: sum
+		sourceColumn: Users
+
+		annotation SummarizationSetBy = User
+
+	column 'Billing type'
+		dataType: string
+		lineageTag: a02c6f9c-4de2-4256-ab59-44ed9bf7e531
+		sourceLineageTag: ad387408-c0ef-4845-b530-25eb1452cbfb
+		dataCategory: Uncategorized
+		summarizeBy: none
+		sourceColumn: Billing type
+
+		annotation SummarizationSetBy = User
+
+	column Operations
+		dataType: int64
+		formatString: 0
+		lineageTag: d391b4ff-b28f-4cd1-be11-13495d34ea2e
+		sourceLineageTag: c3689ef7-b38c-4633-8af3-1cd268af70df
+		dataCategory: Uncategorized
+		summarizeBy: sum
+		sourceColumn: Operations
+
+		annotation SummarizationSetBy = User
+
+	column 'Rejected operations'
+		dataType: int64
+		formatString: 0
+		lineageTag: 2a3b240e-98af-4eef-8989-6cc3d431296e
+		sourceLineageTag: 9c683b1d-f6d5-4b97-bcc3-0a772d694465
+		dataCategory: Uncategorized
+		summarizeBy: sum
+		sourceColumn: Rejected operations
+
+		annotation SummarizationSetBy = User
+
+	column 'Successful operations'
+		dataType: int64
+		formatString: 0
+		lineageTag: 9bb84b91-f287-4c96-8425-cd661ee036d1
+		sourceLineageTag: 0f75c0bb-97fd-46cb-8b3c-657606db4b4a
+		dataCategory: Uncategorized
+		summarizeBy: sum
+		sourceColumn: Successful operations
+
+		annotation SummarizationSetBy = User
+
+	column 'Failed operations'
+		dataType: int64
+		formatString: 0
+		lineageTag: 0ff2f172-8651-4d3a-985e-5f6b5b487e11
+		sourceLineageTag: de1b50aa-9654-4cd6-a9f3-11fb690a2bc0
+		dataCategory: Uncategorized
+		summarizeBy: sum
+		sourceColumn: Failed operations
+
+		annotation SummarizationSetBy = User
+
+	column 'Inprogress operations'
+		dataType: int64
+		formatString: 0
+		lineageTag: 22ac906c-91e6-4502-a507-417891626817
+		sourceLineageTag: 6d5eb196-2e23-4648-b05b-b3e9628dd27f
+		dataCategory: Uncategorized
+		summarizeBy: sum
+		sourceColumn: Inprogress operations
+
+		annotation SummarizationSetBy = User
+
+	column 'Cancelled operations'
+		dataType: int64
+		formatString: 0
+		lineageTag: 4e36fd2f-0e31-4bd7-83b9-031c465dc09e
+		sourceLineageTag: 29b9dbe7-694c-4c13-982a-bc152c7a1c16
+		dataCategory: Uncategorized
+		summarizeBy: sum
+		sourceColumn: Cancelled operations
+
+		annotation SummarizationSetBy = User
+
+	column 'Invalid operations'
+		dataType: int64
+		formatString: 0
+		lineageTag: 426148d3-6f94-4f82-8ed7-f1bec0745d40
+		sourceLineageTag: 189caea4-8e27-4894-99d0-b78a3e2e09ea
+		dataCategory: Uncategorized
+		summarizeBy: sum
+		sourceColumn: Invalid operations
+
+		annotation SummarizationSetBy = User
+
+	column 'Unique key'
+		dataType: string
+		isHidden
+		lineageTag: e2f5224e-4511-4531-8df0-7bd6f28efe3b
+		sourceLineageTag: 435e09e2-c2b2-4370-8203-4ba84bffef74
+		dataCategory: Uncategorized
+		summarizeBy: none
+		sourceColumn: Unique key
+
+		annotation SummarizationSetBy = User
+
+	column 'Item Id'
+		dataType: string
+		lineageTag: e43e78c7-4dab-4f30-8c93-625dcfcd1689
+		sourceLineageTag: 7240c8ca-e0a1-4e97-be36-0ade5ccf25c7
+		dataCategory: Uncategorized
+		summarizeBy: none
+		sourceColumn: Item Id
+
+		annotation SummarizationSetBy = User
+
+	column 'CU (s)'
+		dataType: double
+		lineageTag: 567d56ea-1978-41e6-afa7-e54b9c8f58c7
+		sourceLineageTag: bfd7ea45-a133-470d-b353-2af1a8e058aa
+		dataCategory: Uncategorized
+		summarizeBy: sum
+		sourceColumn: CU (s)
+
+		annotation SummarizationSetBy = User
+
+	column 'Item kind'
+		dataType: string
+		lineageTag: 8c16ee3e-c3b8-418e-ae05-1159dfc59b9b
+		sourceLineageTag: 05cd9e8b-4353-43e0-8ce4-bd60d7c7cbe8
+		dataCategory: Uncategorized
+		summarizeBy: none
+		sourceColumn: Item kind
+
+		annotation SummarizationSetBy = User
+
+	column 'Stopped operations'
+		dataType: int64
+		formatString: 0
+		lineageTag: ce3a27b8-dec6-4e6d-a591-87b4315eb73e
+		sourceLineageTag: f55845bb-d5fd-42f0-a419-349f6bfd74ff
+		dataCategory: Uncategorized
+		summarizeBy: sum
+		sourceColumn: Stopped operations
+
+		annotation SummarizationSetBy = User
+
+	partition 'Metrics By Item For Workload Autoscale' = entity
+		mode: directQuery
+		source
+			entityName: Metrics By Item For Workload Autoscale
+			expressionSource: 'DirectQuery to AS - Fabric Capacity Metrics'
+

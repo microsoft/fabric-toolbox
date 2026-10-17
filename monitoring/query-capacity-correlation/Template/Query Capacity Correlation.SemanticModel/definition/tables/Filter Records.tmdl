@@ -1,0 +1,22 @@
+table 'Filter Records'
+	isHidden
+	lineageTag: ffdf1f05-e3f8-46bd-8a06-3760c694494b
+	sourceLineageTag: b95d443f-4f01-497a-bc2e-ea247d35984d
+
+	column 'Filter paused events'
+		dataType: string
+		isHidden
+		lineageTag: 97f923cb-6851-4db9-aeef-def20d0d26a1
+		sourceLineageTag: 0e6eda1a-6ef9-4d40-80aa-04f39bf55f28
+		dataCategory: Uncategorized
+		summarizeBy: none
+		sourceColumn: Filter paused events
+
+		annotation SummarizationSetBy = User
+
+	partition 'Filter Records' = entity
+		mode: directQuery
+		source
+			entityName: Filter Records
+			expressionSource: 'DirectQuery to AS - Fabric Capacity Metrics'
+

@@ -1,0 +1,107 @@
+table 'Timepoint2 Overages By Workloads'
+	lineageTag: c14de8cc-6099-44aa-8aa7-eafe9be76c2f
+	sourceLineageTag: 9e5c92ea-a665-48c7-834f-2fdbdca0c26a
+
+	column 'Window Start time'
+		dataType: dateTime
+		formatString: General Number
+		lineageTag: 993b1528-9ad6-4cf4-9ea9-4d07eb1c5d26
+		sourceLineageTag: dd39e7ab-ee47-4359-b1f5-02fc4d8422f1
+		dataCategory: Uncategorized
+		summarizeBy: none
+		sourceColumn: Window Start time
+
+		annotation SummarizationSetBy = User
+
+	column 'Start of hour'
+		dataType: dateTime
+		formatString: General Number
+		lineageTag: aed0c002-a0b5-4e77-a31b-b329b4f372af
+		sourceLineageTag: 1992cc26-d17c-445c-8bb8-ad83e16ab617
+		dataCategory: Uncategorized
+		summarizeBy: none
+		sourceColumn: Start of hour
+
+		annotation SummarizationSetBy = User
+
+	column 'Workload kind'
+		dataType: string
+		lineageTag: 2eb77b48-b36f-4e56-bb52-5dc43a83fe7a
+		sourceLineageTag: ebed91d2-85d1-4c09-9403-fc95ed9ad119
+		dataCategory: Uncategorized
+		summarizeBy: none
+		sourceColumn: Workload kind
+
+		annotation SummarizationSetBy = User
+
+	column 'Cumulative carry forward'
+		dataType: double
+		isNullable: false
+		lineageTag: c78083ad-bb9c-4e8f-9450-ac77e5055fc2
+		sourceLineageTag: ee933e6e-2aab-400b-b4ac-a2f28befe14d
+		dataCategory: Uncategorized
+		summarizeBy: sum
+		sourceColumn: Cumulative carry forward
+
+		annotation SummarizationSetBy = User
+
+	column 'Carry forward add'
+		dataType: double
+		isNullable: false
+		lineageTag: b2a7a80e-fe2a-4a9e-9255-586e8829ceda
+		sourceLineageTag: 183369ec-64f5-4406-9735-60fc284079a1
+		dataCategory: Uncategorized
+		summarizeBy: sum
+		sourceColumn: Carry forward add
+
+		annotation SummarizationSetBy = User
+
+	column 'Carryforward burndown'
+		dataType: double
+		isNullable: false
+		lineageTag: dda2c4a6-e653-49ce-868e-03cf1539770d
+		sourceLineageTag: 5a54b138-829e-4aa8-b16b-e7d7a30efac0
+		dataCategory: Uncategorized
+		summarizeBy: sum
+		sourceColumn: Carryforward burndown
+
+		annotation SummarizationSetBy = User
+
+	column 'Base capacity units'
+		dataType: int64
+		formatString: 0
+		lineageTag: 6be1c0ee-3988-49f6-86f2-efd9847035c2
+		sourceLineageTag: 56cc65bf-eaab-438f-bdb4-c6367f8ba634
+		dataCategory: Uncategorized
+		summarizeBy: sum
+		sourceColumn: Base capacity units
+
+		annotation SummarizationSetBy = User
+
+	column 'Auto scale capacity units'
+		dataType: int64
+		formatString: 0
+		lineageTag: 31fccd0d-f018-46a8-9e58-356c6d64731e
+		sourceLineageTag: 5c69b944-6aed-47de-964d-c5bc202e388f
+		dataCategory: Uncategorized
+		summarizeBy: sum
+		sourceColumn: Auto scale capacity units
+
+		annotation SummarizationSetBy = User
+
+	column 'Capacity Id'
+		dataType: string
+		lineageTag: 4fad08af-bb93-4950-8503-199bdef4a22a
+		sourceLineageTag: 5b209015-794c-47b9-b330-2c4356f414dd
+		dataCategory: Uncategorized
+		summarizeBy: none
+		sourceColumn: Capacity Id
+
+		annotation SummarizationSetBy = User
+
+	partition 'Timepoint2 Overages By Workloads' = entity
+		mode: directQuery
+		source
+			entityName: Timepoint2 Overages By Workloads
+			expressionSource: 'DirectQuery to AS - Fabric Capacity Metrics'
+

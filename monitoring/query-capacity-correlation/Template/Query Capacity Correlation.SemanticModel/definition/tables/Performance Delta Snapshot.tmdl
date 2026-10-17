@@ -1,0 +1,84 @@
+table 'Performance Delta Snapshot'
+	isHidden
+	lineageTag: 35d367e8-85dc-49c6-981d-3ff50d8a8e55
+	sourceLineageTag: 7ff63740-80b3-4c64-b688-d0066032d680
+
+	column 'Item Id'
+		dataType: string
+		isHidden
+		lineageTag: 74ced581-939e-4b9c-a9d9-82a527be034b
+		sourceLineageTag: 68131fe5-cee8-49c9-ab18-098d10dfebfb
+		dataCategory: Uncategorized
+		summarizeBy: none
+		sourceColumn: Item Id
+
+		annotation SummarizationSetBy = User
+
+	column 'Performance delta'
+		dataType: double
+		lineageTag: fc2f336a-ddaa-44f7-94c6-6c8d66a3c5de
+		sourceLineageTag: b50c3226-039c-44d8-b063-92188380bc1e
+		dataCategory: Uncategorized
+		summarizeBy: sum
+		sourceColumn: Performance delta
+
+		annotation SummarizationSetBy = User
+
+	column 'Operation start time'
+		dataType: dateTime
+		formatString: General Number
+		lineageTag: adedc30b-a4ba-4e35-89a1-26e7d87c2589
+		sourceLineageTag: a0024ae0-5dc9-463c-a7a0-538b908ffda2
+		dataCategory: Uncategorized
+		summarizeBy: none
+		sourceColumn: Operation start time
+
+		annotation SummarizationSetBy = User
+
+	column 'Workspace Id'
+		dataType: string
+		lineageTag: a503031e-a8b8-4b74-adb0-9d0a2cd73333
+		sourceLineageTag: 20d11a9a-0b26-425b-a360-d41b059b0857
+		dataCategory: Uncategorized
+		summarizeBy: none
+		sourceColumn: Workspace Id
+
+		annotation SummarizationSetBy = User
+
+	column 'Capacity Id'
+		dataType: string
+		lineageTag: 427c8d22-cb69-43a2-8ecb-6446358666b5
+		sourceLineageTag: deb87d7e-109d-403d-be6c-5d1f01b497c3
+		dataCategory: Uncategorized
+		summarizeBy: none
+		sourceColumn: Capacity Id
+
+		annotation SummarizationSetBy = User
+
+	column 'Unique key'
+		dataType: string
+		isHidden
+		lineageTag: b5382b32-5e56-4590-a711-db33868a757a
+		sourceLineageTag: feae74d8-7da3-4567-8500-28880f0ff90c
+		dataCategory: Uncategorized
+		summarizeBy: none
+		sourceColumn: Unique key
+
+		annotation SummarizationSetBy = User
+
+	column Color
+		dataType: string
+		lineageTag: 73bea810-4beb-4962-a9f7-dc02fc41bf4c
+		sourceLineageTag: c0d70662-1666-4445-97c1-7385657cdbcb
+		dataCategory: Uncategorized
+		summarizeBy: none
+		sourceColumn: Color
+
+		annotation SummarizationSetBy = User
+
+	partition 'Performance Delta Snapshot' = entity
+		mode: directQuery
+		source
+			entityName: Performance Delta Snapshot
+			expressionSource: 'DirectQuery to AS - Fabric Capacity Metrics'
+

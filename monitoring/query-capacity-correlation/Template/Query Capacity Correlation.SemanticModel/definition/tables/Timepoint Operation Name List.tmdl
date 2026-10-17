@@ -1,0 +1,28 @@
+table 'Timepoint Operation Name List'
+	lineageTag: 586f10e1-ef0e-4d60-a75f-b3924fbc1efb
+	sourceLineageTag: 1136d0c5-7e68-4255-8b7e-5e7f05b12e89
+
+	column 'Operation name'
+		dataType: string
+		lineageTag: 4c5ec2d1-e4c8-4f31-ba67-9d4692e2d1b5
+		sourceLineageTag: ea50b897-af84-4821-9e6c-31d37cdcced0
+		dataCategory: Uncategorized
+		summarizeBy: none
+		sourceColumn: Operation name
+
+		extendedProperty ParameterMetadata =
+				{
+				  "version": 2,
+				  "kind": 1,
+				  "supportsMultipleValues": true,
+				  "selectAllValue": "__SelectAll__"
+				}
+
+		annotation SummarizationSetBy = User
+
+	partition 'Timepoint Operation Name List' = entity
+		mode: directQuery
+		source
+			entityName: Timepoint Operation Name List
+			expressionSource: 'DirectQuery to AS - Fabric Capacity Metrics'
+

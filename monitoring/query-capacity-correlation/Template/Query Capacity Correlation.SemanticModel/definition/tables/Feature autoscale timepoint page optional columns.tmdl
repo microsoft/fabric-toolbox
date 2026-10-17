@@ -1,0 +1,50 @@
+table 'Feature autoscale timepoint page optional columns'
+	isHidden
+	lineageTag: 6bd72ba4-cc0a-4e01-aa18-ba7def9edb5c
+	sourceLineageTag: e3d6e4eb-8e9b-4c6f-b79c-03241688dc4f
+
+	column DynamicColumnsFeatureAutoScaleTimepointOperations
+		dataType: string
+		isHidden
+		lineageTag: 9da793c6-bfbc-4fca-a3e9-cdac46de8740
+		sourceLineageTag: c4423698-422a-40ad-980f-8c83b60ca847
+		dataCategory: Uncategorized
+		summarizeBy: none
+		sourceColumn: DynamicColumnsFeatureAutoScaleTimepointOperations
+		sortByColumn: 'DynamicColumnsFeatureAutoScaleTimepointOperations Order'
+
+		relatedColumnDetails
+			groupByColumn: 'DynamicColumnsFeatureAutoScaleTimepointOperations Fields'
+
+		annotation SummarizationSetBy = User
+
+	column 'DynamicColumnsFeatureAutoScaleTimepointOperations Fields'
+		dataType: string
+		isHidden
+		lineageTag: cd077fbf-f7df-4dee-b885-87f76689360d
+		sourceLineageTag: a6001f6c-c0c2-4055-88e2-614d7d698af8
+		dataCategory: Uncategorized
+		summarizeBy: none
+		sourceColumn: DynamicColumnsFeatureAutoScaleTimepointOperations Fields
+		sortByColumn: 'DynamicColumnsFeatureAutoScaleTimepointOperations Order'
+
+		annotation SummarizationSetBy = User
+
+	column 'DynamicColumnsFeatureAutoScaleTimepointOperations Order'
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: a28deef7-f966-4ef6-a429-c500786ba0d6
+		sourceLineageTag: 8cd90ce0-adf2-4339-82ee-37e8075d4671
+		dataCategory: Uncategorized
+		summarizeBy: sum
+		sourceColumn: DynamicColumnsFeatureAutoScaleTimepointOperations Order
+
+		annotation SummarizationSetBy = User
+
+	partition 'Feature autoscale timepoint page optional columns' = entity
+		mode: directQuery
+		source
+			entityName: Feature autoscale timepoint page optional columns
+			expressionSource: 'DirectQuery to AS - Fabric Capacity Metrics'
+

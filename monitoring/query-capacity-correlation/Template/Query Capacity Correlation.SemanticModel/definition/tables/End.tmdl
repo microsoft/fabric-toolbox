@@ -1,0 +1,30 @@
+table End
+	isHidden
+	lineageTag: 631672bd-9ead-4b8f-a054-1766eea7fb88
+	sourceLineageTag: 673b7ce7-3b38-48e3-9f28-05a6edce14a2
+
+	column BucketEndTime
+		dataType: dateTime
+		isHidden
+		formatString: General Number
+		lineageTag: 007c3bc0-f63f-494e-9d78-950224c23e4a
+		sourceLineageTag: 30b27760-f751-4de4-9315-5b66052cb05c
+		dataCategory: Uncategorized
+		summarizeBy: none
+		sourceColumn: BucketEndTime
+
+		extendedProperty ParameterMetadata =
+				{
+				  "version": 2,
+				  "kind": 1,
+				  "selectAllValue": "__SelectAll__"
+				}
+
+		annotation SummarizationSetBy = User
+
+	partition End = entity
+		mode: directQuery
+		source
+			entityName: End
+			expressionSource: 'DirectQuery to AS - Fabric Capacity Metrics'
+

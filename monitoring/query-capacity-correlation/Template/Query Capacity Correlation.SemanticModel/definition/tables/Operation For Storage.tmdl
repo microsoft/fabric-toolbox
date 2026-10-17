@@ -1,0 +1,31 @@
+table 'Operation For Storage'
+	lineageTag: 3508245e-a646-4f73-83b4-887ace4e9d7b
+	sourceLineageTag: 667d251d-a92d-4903-bd18-cb598ba8c4f1
+
+	column 'Operation name'
+		dataType: string
+		isNullable: false
+		lineageTag: 4316c436-a9b4-4674-982b-b68e92168d88
+		sourceLineageTag: 827987c0-009b-4084-960f-dad96b727a77
+		dataCategory: Uncategorized
+		summarizeBy: none
+		sourceColumn: Operation name
+
+		annotation SummarizationSetBy = User
+
+	column 'Storage type'
+		dataType: string
+		lineageTag: 4830b933-0ebf-41ab-a93a-c5c94d677f04
+		sourceLineageTag: 365d622f-c389-4b23-9dea-5c62e33e862c
+		dataCategory: Uncategorized
+		summarizeBy: none
+		sourceColumn: Storage type
+
+		annotation SummarizationSetBy = User
+
+	partition 'Operation For Storage' = entity
+		mode: directQuery
+		source
+			entityName: Operation For Storage
+			expressionSource: 'DirectQuery to AS - Fabric Capacity Metrics'
+

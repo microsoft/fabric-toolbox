@@ -1,0 +1,30 @@
+table Start
+	isHidden
+	lineageTag: c2deeafb-c94b-4e3c-b8e1-ded12b1ec28b
+	sourceLineageTag: 69a582e8-8d09-48fa-9091-11ec4c53295f
+
+	column BucketStartTime
+		dataType: dateTime
+		isHidden
+		formatString: General Number
+		lineageTag: 83d5050d-83db-4fb1-a04b-c24f13b25306
+		sourceLineageTag: a2d4d0fe-da63-4cd4-b694-113e3f9bbaf9
+		dataCategory: Uncategorized
+		summarizeBy: none
+		sourceColumn: BucketStartTime
+
+		extendedProperty ParameterMetadata =
+				{
+				  "version": 2,
+				  "kind": 1,
+				  "selectAllValue": "__SelectAll__"
+				}
+
+		annotation SummarizationSetBy = User
+
+	partition Start = entity
+		mode: directQuery
+		source
+			entityName: Start
+			expressionSource: 'DirectQuery to AS - Fabric Capacity Metrics'
+

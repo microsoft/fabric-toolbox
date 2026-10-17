@@ -1,0 +1,28 @@
+table 'Timepoint Operation Id List'
+	lineageTag: a5c81e72-cfeb-42e7-bb50-06d3bbe11458
+	sourceLineageTag: f74bf9e1-d410-4793-abe9-df2f8415a19f
+
+	column 'Operation Id'
+		dataType: string
+		lineageTag: 300bc99b-bb84-4f3a-b83b-d2df20d73874
+		sourceLineageTag: bd862754-0103-480a-b883-40b56b28ce7f
+		dataCategory: Uncategorized
+		summarizeBy: none
+		sourceColumn: Operation Id
+
+		extendedProperty ParameterMetadata =
+				{
+				  "version": 2,
+				  "kind": 1,
+				  "supportsMultipleValues": true,
+				  "selectAllValue": "__SelectAll__"
+				}
+
+		annotation SummarizationSetBy = User
+
+	partition 'Timepoint Operation Id List' = entity
+		mode: directQuery
+		source
+			entityName: Timepoint Operation Id List
+			expressionSource: 'DirectQuery to AS - Fabric Capacity Metrics'
+

@@ -1,0 +1,50 @@
+table 'Item history workspace details optional columns'
+	isHidden
+	lineageTag: 7c44d475-c259-4db8-a94c-f06d5096dc01
+	sourceLineageTag: 66059b1b-e803-4ef3-8801-1ea7e7fe116f
+
+	column 'Item history workspace details optional columns'
+		dataType: string
+		isHidden
+		lineageTag: 522221af-67ad-47fb-b7c0-0131dafded11
+		sourceLineageTag: b1e03fa2-47c8-483f-8114-79f4e8b750e8
+		dataCategory: Uncategorized
+		summarizeBy: none
+		sourceColumn: Item history workspace details optional columns
+		sortByColumn: 'Item history workspace details optional columns Order'
+
+		relatedColumnDetails
+			groupByColumn: 'Item history workspace details optional columns Fields'
+
+		annotation SummarizationSetBy = User
+
+	column 'Item history workspace details optional columns Fields'
+		dataType: string
+		isHidden
+		lineageTag: 55692d1a-ae06-4b12-a25a-81eeb50be18a
+		sourceLineageTag: 423b8116-d9f7-43ba-aa83-975f497102c4
+		dataCategory: Uncategorized
+		summarizeBy: none
+		sourceColumn: Item history workspace details optional columns Fields
+		sortByColumn: 'Item history workspace details optional columns Order'
+
+		annotation SummarizationSetBy = User
+
+	column 'Item history workspace details optional columns Order'
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: 3cd64862-d24f-4294-bc28-83c01a1417c5
+		sourceLineageTag: 0bce105b-43ee-4cc0-b247-73516a3fdf3c
+		dataCategory: Uncategorized
+		summarizeBy: sum
+		sourceColumn: Item history workspace details optional columns Order
+
+		annotation SummarizationSetBy = User
+
+	partition 'Item history workspace details optional columns' = entity
+		mode: directQuery
+		source
+			entityName: Item history workspace details optional columns
+			expressionSource: 'DirectQuery to AS - Fabric Capacity Metrics'
+

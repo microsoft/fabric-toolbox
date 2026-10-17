@@ -1,0 +1,39 @@
+table 'Timepoint Workspace List'
+	lineageTag: a951e8aa-4c89-489c-931b-9d9a45067550
+	sourceLineageTag: 1173b0b9-c83c-4972-9e38-1c61453cd4ff
+
+	column 'Workspace Id'
+		dataType: string
+		isNullable: false
+		lineageTag: 4f2bc4ac-6c07-4d58-acfe-b123548dcb17
+		sourceLineageTag: 582d817b-a498-4e5c-95c8-62cf93f37eb7
+		dataCategory: Uncategorized
+		summarizeBy: none
+		sourceColumn: Workspace Id
+
+		extendedProperty ParameterMetadata =
+				{
+				  "version": 2,
+				  "kind": 1,
+				  "supportsMultipleValues": true,
+				  "selectAllValue": "__SelectAll__"
+				}
+
+		annotation SummarizationSetBy = User
+
+	column 'Workspace name'
+		dataType: string
+		lineageTag: 07c949d0-ecbe-4d89-adfb-dc21c3a2f9ab
+		sourceLineageTag: cbd6fce8-bd36-4089-b275-9d64cb8684df
+		dataCategory: Uncategorized
+		summarizeBy: none
+		sourceColumn: Workspace name
+
+		annotation SummarizationSetBy = User
+
+	partition 'Timepoint Workspace List' = entity
+		mode: directQuery
+		source
+			entityName: Timepoint Workspace List
+			expressionSource: 'DirectQuery to AS - Fabric Capacity Metrics'
+

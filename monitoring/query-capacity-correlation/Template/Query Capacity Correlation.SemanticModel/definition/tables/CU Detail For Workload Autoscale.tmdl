@@ -1,0 +1,93 @@
+table 'CU Detail For Workload Autoscale'
+	lineageTag: b98780a6-6c95-47ab-bd4f-942cd13b0dd9
+	sourceLineageTag: e01a120b-d55b-46ce-b6a7-18119567b4c3
+
+	column 'Window start time'
+		dataType: dateTime
+		formatString: General Number
+		lineageTag: 536a5b4d-a1af-43eb-be8b-be4391314496
+		sourceLineageTag: 8a4d854c-ae3d-42b5-93f5-f33130ee4ea5
+		dataCategory: Uncategorized
+		summarizeBy: none
+		sourceColumn: Window start time
+
+		annotation SummarizationSetBy = User
+
+	column 'Capacity Id'
+		dataType: string
+		lineageTag: 8603373b-3d53-42f8-9124-ca54c81b7627
+		sourceLineageTag: f8661415-4294-434e-b870-44fbd4a0e277
+		dataCategory: Uncategorized
+		summarizeBy: none
+		sourceColumn: Capacity Id
+
+		annotation SummarizationSetBy = User
+
+	column 'CU (s)'
+		dataType: double
+		lineageTag: 5551c0c1-b897-49ea-a03a-cf4cee5400b5
+		sourceLineageTag: ef1cba33-5c14-43fc-9a6d-7101a1917585
+		dataCategory: Uncategorized
+		summarizeBy: sum
+		sourceColumn: CU (s)
+
+		annotation SummarizationSetBy = User
+
+	column 'Peak 6min CU'
+		dataType: double
+		lineageTag: e245e077-376c-4aaf-8e30-5b02491f0ecf
+		sourceLineageTag: b5d0bd38-1862-48e1-bfd3-94fe44a683e4
+		dataCategory: Uncategorized
+		summarizeBy: sum
+		sourceColumn: Peak 6min CU
+
+		annotation SummarizationSetBy = User
+
+	column 'Utilization type'
+		dataType: string
+		lineageTag: e8e5252f-7d26-46f2-b8a1-4d73b77b51f7
+		sourceLineageTag: 26bbf5d3-0e09-4472-b4c0-51913a6522d7
+		dataCategory: Uncategorized
+		summarizeBy: none
+		sourceColumn: Utilization type
+
+		annotation SummarizationSetBy = User
+
+	column 'Billing type'
+		dataType: string
+		lineageTag: 0433db93-6392-40b9-abfe-e1e438a3d3c9
+		sourceLineageTag: 054c568a-c69f-4f52-a9ce-da96ac3fefde
+		dataCategory: Uncategorized
+		summarizeBy: none
+		sourceColumn: Billing type
+
+		annotation SummarizationSetBy = User
+
+	column 'Workload autoscale capacity units limit'
+		dataType: int64
+		formatString: 0
+		lineageTag: 949b1658-f430-41b5-9d48-5c7e5ebbbe86
+		sourceLineageTag: 0929ed38-de70-4e85-9be4-30993657e97a
+		dataCategory: Uncategorized
+		summarizeBy: sum
+		sourceColumn: Workload autoscale capacity units limit
+
+		annotation SummarizationSetBy = User
+
+	column ConsumptionStartTime
+		dataType: dateTime
+		formatString: General Number
+		lineageTag: 36c32aa2-2eaf-4b77-8dfb-9541c70a5c61
+		sourceLineageTag: afc42935-9f3e-4d90-acaa-f54d99a14ac0
+		dataCategory: Uncategorized
+		summarizeBy: none
+		sourceColumn: ConsumptionStartTime
+
+		annotation SummarizationSetBy = User
+
+	partition 'CU Detail For Workload Autoscale' = entity
+		mode: directQuery
+		source
+			entityName: CU Detail For Workload Autoscale
+			expressionSource: 'DirectQuery to AS - Fabric Capacity Metrics'
+

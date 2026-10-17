@@ -1,0 +1,48 @@
+table 'Time-Point summary page optional columns'
+	lineageTag: 64e10e11-4194-4e33-97e1-55a1e1306433
+	sourceLineageTag: 6ab04c7e-5fdd-4017-8b90-f5bf92b23861
+
+	column 'Timepoint Background operations - summary'
+		dataType: string
+		lineageTag: 0e9a16fd-5e7b-4750-9eca-012eebb3c3bf
+		sourceLineageTag: 078c11ad-c97e-4498-9e61-036201da7042
+		dataCategory: Uncategorized
+		summarizeBy: none
+		sourceColumn: Timepoint Background operations - summary
+		sortByColumn: 'Timepoint Background operations - summary Order'
+
+		relatedColumnDetails
+			groupByColumn: 'Timepoint Background operations - summary Fields'
+
+		annotation SummarizationSetBy = User
+
+	column 'Timepoint Background operations - summary Fields'
+		dataType: string
+		isHidden
+		lineageTag: 3055d70d-068c-416d-ac57-10f357624aec
+		sourceLineageTag: 5e116985-191f-41e2-b46b-039a6c68d263
+		dataCategory: Uncategorized
+		summarizeBy: none
+		sourceColumn: Timepoint Background operations - summary Fields
+		sortByColumn: 'Timepoint Background operations - summary Order'
+
+		annotation SummarizationSetBy = User
+
+	column 'Timepoint Background operations - summary Order'
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: e0f5a8f7-8973-4de1-a135-82a5bd1dc979
+		sourceLineageTag: b3b773f1-8583-4601-b0f7-84fa6071a482
+		dataCategory: Uncategorized
+		summarizeBy: sum
+		sourceColumn: Timepoint Background operations - summary Order
+
+		annotation SummarizationSetBy = User
+
+	partition 'Time-Point summary page optional columns' = entity
+		mode: directQuery
+		source
+			entityName: Time-Point summary page optional columns
+			expressionSource: 'DirectQuery to AS - Fabric Capacity Metrics'
+

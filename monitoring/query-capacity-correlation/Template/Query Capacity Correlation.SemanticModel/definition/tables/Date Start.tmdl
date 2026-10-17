@@ -1,0 +1,28 @@
+table 'Date Start'
+	lineageTag: d5ce65e0-b678-4c9c-b604-1eb18401ccd5
+	sourceLineageTag: 4ba507c1-87bd-4064-8853-71412bbca4c2
+
+	column Date
+		dataType: dateTime
+		formatString: General Number
+		lineageTag: 6fe65192-70ee-4066-adeb-d794b753497d
+		sourceLineageTag: 29467015-7ac8-435e-be18-4ce78a475ecb
+		dataCategory: Uncategorized
+		summarizeBy: none
+		sourceColumn: Date
+
+		extendedProperty ParameterMetadata =
+				{
+				  "version": 2,
+				  "kind": 1,
+				  "selectAllValue": "__SelectAll__"
+				}
+
+		annotation SummarizationSetBy = User
+
+	partition 'Date Start' = entity
+		mode: directQuery
+		source
+			entityName: Date Start
+			expressionSource: 'DirectQuery to AS - Fabric Capacity Metrics'
+

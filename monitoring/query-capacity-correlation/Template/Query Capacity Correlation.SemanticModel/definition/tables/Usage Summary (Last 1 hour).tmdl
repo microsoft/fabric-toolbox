@@ -1,0 +1,207 @@
+table 'Usage Summary (Last 1 hour)'
+	lineageTag: 5114a70c-4358-435e-9662-ef7b2c53561e
+	sourceLineageTag: aabc359a-e9b8-49c8-acd0-47822601de0e
+
+	column Timestamp
+		dataType: dateTime
+		formatString: General Number
+		lineageTag: f98fec29-d083-4851-a526-cb0a26327bd4
+		sourceLineageTag: f7528243-493f-4959-b0b3-9f129ee483a5
+		dataCategory: Uncategorized
+		summarizeBy: none
+		sourceColumn: Timestamp
+
+		annotation SummarizationSetBy = User
+
+	column 'Capacity Id'
+		dataType: string
+		lineageTag: 5b1e5058-81b8-40cb-932a-75bfadae68b4
+		sourceLineageTag: 7a013015-3dca-438f-81b5-f35369d85931
+		dataCategory: Uncategorized
+		summarizeBy: none
+		sourceColumn: Capacity Id
+
+		annotation SummarizationSetBy = User
+
+	column 'CU (s)'
+		dataType: double
+		lineageTag: d2a53a70-558c-4ed0-993d-f988746e7924
+		sourceLineageTag: f8ade070-48e6-4299-84bb-67bb3e5d3607
+		dataCategory: Uncategorized
+		summarizeBy: sum
+		sourceColumn: CU (s)
+
+		annotation SummarizationSetBy = User
+
+	column 'Average CU %'
+		dataType: double
+		lineageTag: d5cbe272-cc82-458b-b78f-0747241f5592
+		sourceLineageTag: 6557eb97-0d54-4ec5-a1bd-b28c64fb4c68
+		dataCategory: Uncategorized
+		summarizeBy: sum
+		sourceColumn: Average CU %
+
+		annotation SummarizationSetBy = User
+
+	column 'Maximum CU %'
+		dataType: double
+		lineageTag: d7e420ef-e4f7-43d9-929b-7d6bcc369d99
+		sourceLineageTag: 9754ff71-24ad-4f3c-86d3-7b48a3c60472
+		dataCategory: Uncategorized
+		summarizeBy: sum
+		sourceColumn: Maximum CU %
+
+		annotation SummarizationSetBy = User
+
+	column 'Interactive rejection (s)'
+		dataType: int64
+		formatString: 0
+		lineageTag: 0cd4ca9c-0337-4eeb-83be-6b5cce11bf67
+		sourceLineageTag: 732ab49e-974f-4c0f-89c4-8d774d0cc213
+		dataCategory: Uncategorized
+		summarizeBy: sum
+		sourceColumn: Interactive rejection (s)
+
+		annotation SummarizationSetBy = User
+
+	column 'Background rejection (s)'
+		dataType: int64
+		formatString: 0
+		lineageTag: 450f415a-42de-4025-b900-6211cb052993
+		sourceLineageTag: 8c71e309-19c8-4a2a-96a5-03afde878be4
+		dataCategory: Uncategorized
+		summarizeBy: sum
+		sourceColumn: Background rejection (s)
+
+		annotation SummarizationSetBy = User
+
+	column 'Interactive delay (s)'
+		dataType: int64
+		formatString: 0
+		lineageTag: 313c27cd-a00c-4c89-9d5b-5f58a4731a47
+		sourceLineageTag: a71455ed-0d8d-4fc3-badd-a8c64e88c9ac
+		dataCategory: Uncategorized
+		summarizeBy: sum
+		sourceColumn: Interactive delay (s)
+
+		annotation SummarizationSetBy = User
+
+	column 'Cumulative debt'
+		dataType: double
+		lineageTag: 8c771b71-cc58-454b-9e6f-b4a3a7b4aac8
+		sourceLineageTag: fba8b85e-6dfa-43d4-ac6a-c931c82029ca
+		dataCategory: Uncategorized
+		summarizeBy: sum
+		sourceColumn: Cumulative debt
+
+		annotation SummarizationSetBy = User
+
+	column 'P95 interactive delay'
+		dataType: double
+		lineageTag: 8d4a4a2c-8bb4-430a-a0ce-f2c3ebe236e9
+		sourceLineageTag: 0c12e069-e4a8-454b-883c-bfa231315730
+		dataCategory: Uncategorized
+		summarizeBy: sum
+		sourceColumn: P95 interactive delay
+
+		annotation SummarizationSetBy = User
+
+	column 'P95 interactive rejection'
+		dataType: double
+		lineageTag: 3d414126-5b74-4680-b716-c756bfe00df7
+		sourceLineageTag: c55dd60f-3859-46e1-8282-f7b0e2261306
+		dataCategory: Uncategorized
+		summarizeBy: sum
+		sourceColumn: P95 interactive rejection
+
+		annotation SummarizationSetBy = User
+
+	column 'P95 background rejection'
+		dataType: double
+		lineageTag: deb0ab26-5991-4007-ad2a-3a68d2de53a9
+		sourceLineageTag: dc3a6778-3975-4d1f-a7cd-58f162864a53
+		dataCategory: Uncategorized
+		summarizeBy: sum
+		sourceColumn: P95 background rejection
+
+		annotation SummarizationSetBy = User
+
+	column 'Usage variance'
+		dataType: double
+		lineageTag: 51d3a8ad-418b-45bc-b6be-761287b75606
+		sourceLineageTag: 7b11ab40-4bb7-49cc-a47e-e99a8903c135
+		dataCategory: Uncategorized
+		summarizeBy: sum
+		sourceColumn: Usage variance
+
+		annotation SummarizationSetBy = User
+
+	column 'Average utilization'
+		dataType: double
+		lineageTag: bc3fd460-324c-4f65-bd87-21347d2c4f34
+		sourceLineageTag: 9c31c563-261c-4721-833d-2f8eb6cf7199
+		dataCategory: Uncategorized
+		summarizeBy: sum
+		sourceColumn: Average utilization
+
+		annotation SummarizationSetBy = User
+
+	column 'Processed overage'
+		dataType: double
+		lineageTag: fde1f41b-a0ea-4e5f-a27a-75f6ac4aaac5
+		sourceLineageTag: 405d683c-5e97-4c2c-b36b-d42668dc2690
+		dataCategory: Uncategorized
+		summarizeBy: sum
+		sourceColumn: Processed overage
+
+		annotation SummarizationSetBy = User
+
+	column 'Overage billing limit'
+		dataType: double
+		lineageTag: 0e6a8cb4-0481-4175-85c4-19386ef30aac
+		sourceLineageTag: b08edb70-aa22-4668-832a-8b69ddd659a8
+		dataCategory: Uncategorized
+		summarizeBy: sum
+		sourceColumn: Overage billing limit
+
+		annotation SummarizationSetBy = User
+
+	column 'Background rejection risk'
+		dataType: int64
+		formatString: 0
+		lineageTag: 299be3ff-e7e6-4d78-b6ad-ad38fbe3e67f
+		sourceLineageTag: 5be6e927-3a0c-4b2e-855d-4c12ce6c5352
+		dataCategory: Uncategorized
+		summarizeBy: sum
+		sourceColumn: Background rejection risk
+
+		annotation SummarizationSetBy = User
+
+	column 'Interactive rejection risk'
+		dataType: int64
+		formatString: 0
+		lineageTag: 2c305460-692d-4a60-9ede-c524f411cde2
+		sourceLineageTag: 26992ff8-615a-47b8-b132-2b9db959e321
+		dataCategory: Uncategorized
+		summarizeBy: sum
+		sourceColumn: Interactive rejection risk
+
+		annotation SummarizationSetBy = User
+
+	column 'Interactive delay risk'
+		dataType: int64
+		formatString: 0
+		lineageTag: b318a66c-63dd-475d-9620-12d9b8621022
+		sourceLineageTag: 65610699-895f-40ba-bae5-12694e879e08
+		dataCategory: Uncategorized
+		summarizeBy: sum
+		sourceColumn: Interactive delay risk
+
+		annotation SummarizationSetBy = User
+
+	partition 'Usage Summary (Last 1 hour)' = entity
+		mode: directQuery
+		source
+			entityName: Usage Summary (Last 1 hour)
+			expressionSource: 'DirectQuery to AS - Fabric Capacity Metrics'
+

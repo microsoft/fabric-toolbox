@@ -1,0 +1,31 @@
+table 'Surge Protection By Day'
+	lineageTag: af940aa4-07af-4995-b5fa-ecdd270c41a9
+	sourceLineageTag: d037367c-1589-4b78-a244-0a616464833e
+
+	column 'Capacity Id'
+		dataType: string
+		lineageTag: 5054e93a-c33f-47cc-a765-8c71147a80fd
+		sourceLineageTag: 3d20b4fe-b3cc-4503-9032-6a63f8622c8c
+		dataCategory: Uncategorized
+		summarizeBy: none
+		sourceColumn: Capacity Id
+
+		annotation SummarizationSetBy = User
+
+	column 'Blocked workspaces'
+		dataType: int64
+		formatString: 0
+		lineageTag: 55b9d8bc-c734-4507-b98f-2b0d831dac0e
+		sourceLineageTag: c2949118-040f-4d2f-9acd-f7a2b979b6f9
+		dataCategory: Uncategorized
+		summarizeBy: sum
+		sourceColumn: Blocked workspaces
+
+		annotation SummarizationSetBy = User
+
+	partition 'Surge Protection By Day' = entity
+		mode: directQuery
+		source
+			entityName: Surge Protection By Day
+			expressionSource: 'DirectQuery to AS - Fabric Capacity Metrics'
+

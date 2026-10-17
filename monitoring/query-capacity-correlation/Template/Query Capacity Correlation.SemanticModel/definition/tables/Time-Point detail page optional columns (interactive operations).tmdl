@@ -1,0 +1,48 @@
+table 'Time-Point detail page optional columns (interactive operations)'
+	lineageTag: 0ee78e95-e295-4159-a532-17cbb41590af
+	sourceLineageTag: ea478648-2ff6-4643-a91d-426a63f10961
+
+	column 'Time-point Interactive operations details'
+		dataType: string
+		lineageTag: 91aa7d9d-e5b6-4605-a359-611111e1ffab
+		sourceLineageTag: caa6ed91-654e-4604-8334-9e056467b63a
+		dataCategory: Uncategorized
+		summarizeBy: none
+		sourceColumn: Time-point Interactive operations details
+		sortByColumn: 'Time-point Interactive operations details Order'
+
+		relatedColumnDetails
+			groupByColumn: 'Time-point Interactive operations details Fields'
+
+		annotation SummarizationSetBy = User
+
+	column 'Time-point Interactive operations details Fields'
+		dataType: string
+		isHidden
+		lineageTag: 90893bc2-5163-4e3e-9f2a-227f5315aa8c
+		sourceLineageTag: 897be195-c98a-4abe-8f6b-c83c87879c0b
+		dataCategory: Uncategorized
+		summarizeBy: none
+		sourceColumn: Time-point Interactive operations details Fields
+		sortByColumn: 'Time-point Interactive operations details Order'
+
+		annotation SummarizationSetBy = User
+
+	column 'Time-point Interactive operations details Order'
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: 26e7ce05-7409-4887-8de4-84cf6513e790
+		sourceLineageTag: 7d621ec4-80f3-4f1a-8ccb-3134e4ae0db7
+		dataCategory: Uncategorized
+		summarizeBy: sum
+		sourceColumn: Time-point Interactive operations details Order
+
+		annotation SummarizationSetBy = User
+
+	partition 'Time-Point detail page optional columns (interactive operations)' = entity
+		mode: directQuery
+		source
+			entityName: Time-Point detail page optional columns (interactive operations)
+			expressionSource: 'DirectQuery to AS - Fabric Capacity Metrics'
+
