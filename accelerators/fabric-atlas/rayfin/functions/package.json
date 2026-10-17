@@ -1,0 +1,26 @@
+{
+  "name": "rayfin-functions",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "main": "dist/src/function_app.js",
+  "scripts": {
+    "build": "tsc --build",
+    "build:watch": "tsc --build --watch",
+    "clean": "rimraf dist"
+  },
+  "dependencies": {
+    "@microsoft/fabric-user-data-functions": "1.36.2",
+    "@microsoft/rayfin-data": "1.36.2",
+    "mssql": "^12.7.2"
+  },
+  "devDependencies": {
+    "@types/mssql": "^12.3.0",
+    "@types/node": "^24.0.0",
+    "typescript": "^5.8.0",
+    "rimraf": "^6.0.0"
+  },
+  "overrides": {
+    "tedious": "^19.2.2"
+  }
+}
