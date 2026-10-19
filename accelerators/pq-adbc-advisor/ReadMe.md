@@ -68,7 +68,7 @@ If you have admin permissions and want to inventory every workspace in the tenan
 ## Where to file
 
 - **Bugs and feature requests:** https://github.com/microsoft/fabric-toolbox/issues (tag with `pq-adbc-advisor`)
-- **Corner cases the tool flags but the standard connector doesn't cover:** adbcmigration@microsoft.com
+- **Corner cases the tool flags but the standard connector doesn't cover:** adbc-migration-updates@microsoft.com
 
 ## Related resources
 
