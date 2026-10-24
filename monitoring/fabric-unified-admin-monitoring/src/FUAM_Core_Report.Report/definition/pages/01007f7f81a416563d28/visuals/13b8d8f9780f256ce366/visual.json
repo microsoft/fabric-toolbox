@@ -37,11 +37,11 @@
                                             "Entity": "item_users"
                                         }
                                     },
-                                    "Property": "Identifier"
+                                    "Property": "DisplayName"
                                 }
                             },
-                            "queryRef": "item_users.Identifier",
-                            "nativeQueryRef": "Identifier"
+                            "queryRef": "item_users.DisplayName",
+                            "nativeQueryRef": "DisplayName"
                         },
                         {
                             "field": {
@@ -51,11 +51,11 @@
                                             "Entity": "item_users"
                                         }
                                     },
-                                    "Property": "DisplayName"
+                                    "Property": "Identifier"
                                 }
                             },
-                            "queryRef": "item_users.DisplayName",
-                            "nativeQueryRef": "DisplayName"
+                            "queryRef": "item_users.Identifier",
+                            "nativeQueryRef": "Identifier"
                         }
                     ]
                 }

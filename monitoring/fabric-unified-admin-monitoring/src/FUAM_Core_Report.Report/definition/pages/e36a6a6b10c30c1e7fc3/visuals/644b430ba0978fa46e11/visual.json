@@ -38,10 +38,10 @@
                                             "Entity": "workspaces_scanned_users"
                                         }
                                     },
-                                    "Property": "Identifier"
+                                    "Property": "DisplayName"
                                 }
                             },
-                            "queryRef": "workspaces_scanned_users.Identifier",
+                            "queryRef": "workspaces_scanned_users.DisplayName",
                             "nativeQueryRef": "Search for User based on Workspace Access",
                             "active": false,
                             "displayName": "Search for User based on Workspace Access"
@@ -77,7 +77,7 @@
                     },
                     {
                         "queryRefs": [
-                            "workspaces_scanned_users.Identifier"
+                            "workspaces_scanned_users.DisplayName"
                         ],
                         "isCollapsed": true,
                         "isPinned": true

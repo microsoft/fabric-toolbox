@@ -57,11 +57,11 @@
                                             "Entity": "item_users"
                                         }
                                     },
-                                    "Property": "Identifier"
+                                    "Property": "DisplayName"
                                 }
                             },
-                            "queryRef": "item_users.Identifier",
-                            "nativeQueryRef": "Identifier",
+                            "queryRef": "item_users.DisplayName",
+                            "nativeQueryRef": "DisplayName",
                             "active": true
                         },
                         {
@@ -128,7 +128,7 @@
                     },
                     {
                         "queryRefs": [
-                            "item_users.Identifier"
+                            "item_users.DisplayName"
                         ],
                         "isCollapsed": true,
                         "identityKeys": [
@@ -139,7 +139,7 @@
                                             "Entity": "item_users"
                                         }
                                     },
-                                    "Property": "Identifier"
+                                    "Property": "DisplayName"
                                 }
                             }
                         ],
@@ -464,7 +464,7 @@
                         }
                     },
                     "selector": {
-                        "metadata": "item_users.Identifier"
+                        "metadata": "item_users.DisplayName"
                     }
                 }
             ]
@@ -587,7 +587,7 @@
                                 "Entity": "item_users"
                             }
                         },
-                        "Property": "Identifier"
+                        "Property": "DisplayName"
                     }
                 },
                 "type": "Categorical"
