@@ -7,13 +7,14 @@ and retrieving educational content.
 
 from fastmcp import FastMCP
 import json
+from typing import Optional
 from tools.microsoft_learn import search_microsoft_learn, get_microsoft_learn_paths, get_microsoft_learn_modules, get_microsoft_learn_content
 
 def register_microsoft_learn_tools(mcp: FastMCP):
     """Register all Microsoft Learn related MCP tools"""
 
     @mcp.tool
-    def search_learn_microsoft_content(query: str, locale: str = "en-us", top: int = 10, content_type: str = None) -> str:
+    def search_learn_microsoft_content(query: str, locale: str = "en-us", top: int = 10, content_type: Optional[str] = None) -> str:
         """Search Microsoft Learn documentation and content.
 
         Args:
@@ -57,7 +58,7 @@ def register_microsoft_learn_tools(mcp: FastMCP):
             })
 
     @mcp.tool
-    def get_learn_microsoft_modules(locale: str = "en-us", top: int = 20, learning_path_id: str = None) -> str:
+    def get_learn_microsoft_modules(locale: str = "en-us", top: int = 20, learning_path_id: Optional[str] = None) -> str:
         """Get Microsoft Learn modules.
 
         Args:
