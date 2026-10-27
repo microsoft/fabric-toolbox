@@ -7,6 +7,7 @@ and analyzing local Power BI Desktop instances.
 
 from fastmcp import FastMCP
 import json
+from typing import Optional
 from tools.powerbi_desktop_detector import detect_powerbi_desktop_instances, test_powerbi_desktop_connection
 from tools.fast_powerbi_detector import detect_powerbi_desktop_instances_fast
 from tools.ultra_fast_powerbi_detector import detect_powerbi_desktop_instances_ultra_fast
@@ -92,7 +93,7 @@ def register_powerbi_desktop_tools(mcp: FastMCP):
             })
 
     @mcp.tool
-    def explore_local_powerbi_columns(connection_string: str, table_name: str = None) -> str:
+    def explore_local_powerbi_columns(connection_string: str, table_name: Optional[str] = None) -> str:
         """Explore columns in a local Power BI Desktop model.
         
         Args:

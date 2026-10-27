@@ -668,7 +668,7 @@ def list_fabric_lakehouses(workspace_id: str) -> str:
     return list_lakehouses(workspace_id)
 
 @mcp.tool
-def list_fabric_delta_tables(workspace_id: str, lakehouse_id: str = None) -> str:
+def list_fabric_delta_tables(workspace_id: str, lakehouse_id: Optional[str] = None) -> str:
     """Lists all Delta Tables in a specified Fabric Lakehouse.
     If lakehouse_id is not provided, will use the first lakehouse found in the workspace.
     This function now supports both regular lakehouses and schema-enabled lakehouses by automatically
@@ -677,13 +677,13 @@ def list_fabric_delta_tables(workspace_id: str, lakehouse_id: str = None) -> str
     return list_delta_tables(workspace_id, lakehouse_id)
 
 @mcp.tool
-def debug_lakehouse_contents(workspace_id: str, lakehouse_id: str = None) -> str:
+def debug_lakehouse_contents(workspace_id: str, lakehouse_id: Optional[str] = None) -> str:
     """Debug function to check various API endpoints for lakehouse contents including files and items.
     """
     return list_lakehouse_files(workspace_id, lakehouse_id)
 
 @mcp.tool
-def get_lakehouse_sql_connection_string(workspace_id: str, lakehouse_id: str = None, lakehouse_name: str = None) -> str:
+def get_lakehouse_sql_connection_string(workspace_id: str, lakehouse_id: Optional[str] = None, lakehouse_name: Optional[str] = None) -> str:
     """Gets the SQL endpoint connection string for a specified Fabric Lakehouse.
     You can specify either lakehouse_id or lakehouse_name to identify the lakehouse.
     Returns connection information including server name and connection string templates.
@@ -724,7 +724,7 @@ def get_azure_token_status() -> str:
     return json.dumps(status, indent=2)
 
 @mcp.tool
-def execute_dax_query(workspace_name:str, dataset_name: str, dax_query: str, dataset_id: str = None) -> list[dict]:
+def execute_dax_query(workspace_name:str, dataset_name: str, dax_query: str, dataset_id: Optional[str] = None) -> list[dict]:
     """Executes a DAX query against the Power BI model.
     This tool connects to the specified Power BI workspace and dataset name, executes the provided DAX query,
     Use the dataset_name to specify the model to query and NOT the dataset ID.
@@ -987,7 +987,7 @@ def _internal_query_lakehouse_sql_endpoint(workspace_id: str, sql_query: str, la
         }, indent=2)
 
 @mcp.tool
-def query_lakehouse_sql_endpoint(workspace_id: str, sql_query: str, lakehouse_id: str = None, lakehouse_name: str = None) -> str:
+def query_lakehouse_sql_endpoint(workspace_id: str, sql_query: str, lakehouse_id: Optional[str] = None, lakehouse_name: Optional[str] = None) -> str:
     """Executes a SQL query against a Fabric Lakehouse SQL Analytics Endpoint to validate table schemas and data.
     This tool connects to the specified Fabric Lakehouse SQL Analytics Endpoint and executes the provided SQL query.
     Use this tool to:
@@ -1013,7 +1013,7 @@ def query_lakehouse_sql_endpoint(workspace_id: str, sql_query: str, lakehouse_id
     return _internal_query_lakehouse_sql_endpoint(workspace_id, sql_query, lakehouse_id, lakehouse_name)
 
 @mcp.tool
-def generate_directlake_tmsl_template(workspace_id: str, lakehouse_id: str = None, lakehouse_name: str = None, table_names: Optional[List[str]] = None, model_name: str = "NewDirectLakeModel") -> str:
+def generate_directlake_tmsl_template(workspace_id: str, lakehouse_id: Optional[str] = None, lakehouse_name: Optional[str] = None, table_names: Optional[List[str]] = None, model_name: str = "NewDirectLakeModel") -> str:
     """Generates a valid DirectLake TMSL template with proper structure and validated schemas.
     
     This helper tool automatically creates a complete DirectLake TMSL definition by:
@@ -1404,7 +1404,7 @@ def update_model_using_tmsl(workspace_name: str, dataset_name: str, tmsl_definit
             pass  # Ignore errors during cleanup
     
 @mcp.tool
-def get_model_definition(workspace_name:str = None, dataset_name:str=None) -> str:
+def get_model_definition(workspace_name:Optional[str] = None, dataset_name:Optional[str]=None) -> str:
     """Gets TMSL definition for an Analysis Services Model.
     This tool connects to the specified Power BI workspace and dataset name, retrieves the model definition,
     and returns the TMSL definition as a string.
