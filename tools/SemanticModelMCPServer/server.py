@@ -1412,7 +1412,8 @@ def get_model_definition(workspace_name:Optional[str] = None, dataset_name:Optio
     and returns the result.
     Note: The workspace_name and dataset_name should be valid names in the Power BI service.
     """
-    
+    if not workspace_name or not dataset_name:
+        return "Error: workspace_name and dataset_name are both required"
 
     script_dir = os.path.dirname(os.path.abspath(__file__))
     dotnet_dir = os.path.join(script_dir, "dotnet")
