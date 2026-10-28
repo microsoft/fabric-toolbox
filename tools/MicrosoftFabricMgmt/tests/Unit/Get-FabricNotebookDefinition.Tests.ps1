@@ -5,6 +5,7 @@ $expectedParams = @(
     "WorkspaceId"
     "NotebookId"
     "NotebookFormat"
+    "Raw"
     "ProgressAction"
     "Verbose"
     "Debug"

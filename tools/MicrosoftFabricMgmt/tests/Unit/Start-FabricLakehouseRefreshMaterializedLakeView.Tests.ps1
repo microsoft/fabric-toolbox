@@ -47,3 +47,48 @@ Describe "Start-FabricLakehouseRefreshMaterializedLakeView" -Tag "UnitTests" {
         }
     }
 }
+
+Describe "Start-FabricLakehouseRefreshMaterializedLakeView behavior" -Tag "UnitTests" {
+
+    BeforeAll {
+        Get-Module MicrosoftFabricMgmt | Remove-Module -Force -ErrorAction SilentlyContinue
+        $BuiltModule   = "$PSScriptRoot/../../output/module/MicrosoftFabricMgmt"
+        $ModuleVersion = (Get-ChildItem $BuiltModule -Directory | Sort-Object { [version]$_.Name } -Descending | Select-Object -First 1).Name
+        Import-Module (Join-Path $BuiltModule "$ModuleVersion/MicrosoftFabricMgmt.psd1") -Force -ErrorAction Stop
+
+        InModuleScope MicrosoftFabricMgmt {
+            $script:FabricAuthContext = [pscustomobject]@{
+                BaseUrl       = 'https://api.fabric.microsoft.com/v1'
+                FabricHeaders = @{ Authorization = 'Bearer test' }
+            }
+        }
+        Mock -ModuleName MicrosoftFabricMgmt Invoke-FabricAuthCheck {}
+        Mock -ModuleName MicrosoftFabricMgmt Write-FabricLog {}
+        Mock -ModuleName MicrosoftFabricMgmt Invoke-FabricAPIRequest {
+            $global:__capUri    = $BaseURI
+            $global:__capMethod = $Method
+            [pscustomobject]@{ id = 'job-1' }
+        }
+    }
+
+    AfterAll {
+        Remove-Variable -Name __capUri, __capMethod -Scope Global -ErrorAction SilentlyContinue
+    }
+
+    It "POSTs to the job-type-in-path instances endpoint (/jobs/RefreshMaterializedLakeViews/instances)" {
+        $null = Start-FabricLakehouseRefreshMaterializedLakeView -WorkspaceId 'ws-1' -LakehouseId 'lh-1' -Confirm:$false
+        $global:__capUri    | Should -Be 'https://api.fabric.microsoft.com/v1/workspaces/ws-1/lakehouses/lh-1/jobs/RefreshMaterializedLakeViews/instances'
+        $global:__capMethod | Should -Be 'Post'
+    }
+
+    It "does not use the legacy ?jobType= query form" {
+        $null = Start-FabricLakehouseRefreshMaterializedLakeView -WorkspaceId 'ws-1' -LakehouseId 'lh-1' -Confirm:$false
+        $global:__capUri | Should -Not -Match '\?jobType='
+    }
+
+    It "-WhatIf makes no API call" {
+        $global:__capUri = $null
+        Start-FabricLakehouseRefreshMaterializedLakeView -WorkspaceId 'ws-1' -LakehouseId 'lh-1' -WhatIf
+        $global:__capUri | Should -BeNullOrEmpty
+    }
+}

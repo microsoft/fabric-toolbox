@@ -1,0 +1,193 @@
+table 'Items Operations'
+	lineageTag: 74dc140d-1713-4975-a78b-2481042912c3
+	sourceLineageTag: 3120e143-2498-4e43-931f-a8e4aa73f0ff
+
+	column 'Item Id'
+		dataType: string
+		lineageTag: afac2195-64d9-49e8-8961-3e3f2e70484c
+		sourceLineageTag: 9f277cb4-b842-4f11-aba8-e173ac11c86a
+		dataCategory: Uncategorized
+		summarizeBy: none
+		sourceColumn: Item Id
+
+		annotation SummarizationSetBy = User
+
+	column 'Workspace Id'
+		dataType: string
+		lineageTag: 9c27c731-8c78-4710-964c-be870127d572
+		sourceLineageTag: f9c5b77a-192b-4134-af0c-7d27ce9d277c
+		dataCategory: Uncategorized
+		summarizeBy: none
+		sourceColumn: Workspace Id
+
+		annotation SummarizationSetBy = User
+
+	column 'Capacity Id'
+		dataType: string
+		lineageTag: 673efb4d-45c7-46ab-b76c-82cb00e6dc88
+		sourceLineageTag: 31fd9e09-1a5a-4a8b-a637-e8ef78d36443
+		dataCategory: Uncategorized
+		summarizeBy: none
+		sourceColumn: Capacity Id
+
+		annotation SummarizationSetBy = User
+
+	column 'Operation name'
+		dataType: string
+		lineageTag: b2a3e6f6-ab44-4ec4-abe1-985ddf0ce335
+		sourceLineageTag: a94678e3-8e8d-4fc0-81e6-3f18b52780cc
+		dataCategory: Uncategorized
+		summarizeBy: none
+		sourceColumn: Operation name
+
+		annotation SummarizationSetBy = User
+
+	column Timestamp
+		dataType: dateTime
+		formatString: General Number
+		lineageTag: 6ac47460-c7be-44e3-ad32-f1b50f4aff54
+		sourceLineageTag: 5a5cdf18-6c50-4d8f-b36e-def6876c59e5
+		dataCategory: Uncategorized
+		summarizeBy: none
+		sourceColumn: Timestamp
+
+		annotation SummarizationSetBy = User
+
+	column 'Item name'
+		dataType: string
+		lineageTag: 5e7eabaa-e807-4e3a-9c05-ee6bc5d30c6e
+		sourceLineageTag: 8b28003c-5e7a-4a8b-8ccf-99d392a51451
+		dataCategory: Uncategorized
+		summarizeBy: none
+		sourceColumn: Item name
+
+		annotation SummarizationSetBy = User
+
+	column 'Virtualised item'
+		dataType: string
+		lineageTag: 0e84fe94-b9f3-4f18-8b44-88c8a81fbcc8
+		sourceLineageTag: 13c3e8c9-b28b-4d12-aa2d-bf2d5c633d55
+		dataCategory: Uncategorized
+		summarizeBy: none
+		sourceColumn: Virtualised item
+
+		annotation SummarizationSetBy = User
+
+	column 'Virtualised workspace'
+		dataType: string
+		lineageTag: 60ea7f25-aa5f-48ea-a9c4-ec2a66fb9432
+		sourceLineageTag: 29f91e99-f171-415f-876a-9d0b51a45feb
+		dataCategory: Uncategorized
+		summarizeBy: none
+		sourceColumn: Virtualised workspace
+
+		annotation SummarizationSetBy = User
+
+	column 'Workspace name'
+		dataType: string
+		lineageTag: 475d568a-171b-4b29-b0df-173d793789bf
+		sourceLineageTag: 38b03faa-00bd-42c8-a08d-f472959f715e
+		dataCategory: Uncategorized
+		summarizeBy: none
+		sourceColumn: Workspace name
+
+		annotation SummarizationSetBy = User
+
+	column 'Item kind'
+		dataType: string
+		lineageTag: 69c957e5-4759-47c0-aefa-20f25178bf0f
+		sourceLineageTag: a6453fff-dc1e-4ad4-be87-f561cf3258c8
+		dataCategory: Uncategorized
+		summarizeBy: none
+		sourceColumn: Item kind
+
+		annotation SummarizationSetBy = User
+
+	column Users
+		dataType: int64
+		formatString: 0
+		lineageTag: 9c8a5f27-84fb-479c-b06a-35052dcc15d4
+		sourceLineageTag: 93b8cf34-f4ad-4009-ba06-0fd13f509ac5
+		dataCategory: Uncategorized
+		summarizeBy: sum
+		sourceColumn: Users
+
+		annotation SummarizationSetBy = User
+
+	column 'TIMESTAMP 2'
+		dataType: dateTime
+		formatString: General Number
+		lineageTag: 236656cc-efb4-41a0-85c8-47e073a100f6
+		sourceLineageTag: f80c8ccb-0985-43e4-b5a6-b508cefe7925
+		dataCategory: Uncategorized
+		summarizeBy: none
+		sourceColumn: TIMESTAMP 2
+
+		annotation SummarizationSetBy = User
+
+	column 'Release type'
+		dataType: string
+		lineageTag: 83bb69f6-8d6e-465b-a5e4-8cce73012eb8
+		sourceLineageTag: 93a2ab4a-805a-4218-a3ed-441554d35d19
+		dataCategory: Uncategorized
+		summarizeBy: none
+		sourceColumn: Release type
+
+		annotation SummarizationSetBy = User
+
+	column 'Distinct count release type'
+		dataType: int64
+		formatString: 0
+		lineageTag: b2afc01c-e681-4f53-a660-fd53b9c45bfb
+		sourceLineageTag: 1478f4d3-a6b0-4caf-9062-065ebf78e21a
+		dataCategory: Uncategorized
+		summarizeBy: sum
+		sourceColumn: Distinct count release type
+
+		annotation SummarizationSetBy = User
+
+	column 'Operation unique key'
+		dataType: string
+		isHidden
+		isNullable: false
+		lineageTag: f851b9ae-beb0-4adb-9376-dcaae10ca1c7
+		sourceLineageTag: 9c0b553f-a42e-4610-b8fe-bccce34ac7cc
+		dataCategory: Uncategorized
+		summarizeBy: none
+		sourceColumn: Operation unique key
+
+		extendedProperty ParameterMetadata =
+				{
+				  "version": 2,
+				  "kind": 1,
+				  "selectAllValue": "__SelectAll__"
+				}
+
+		annotation SummarizationSetBy = User
+
+	column 'Billing type'
+		dataType: string
+		lineageTag: de49ff4b-d315-453f-94f7-3fcbc725f5bd
+		sourceLineageTag: b8995976-c20e-4d80-b5e5-1ac9b00e347c
+		dataCategory: Uncategorized
+		summarizeBy: none
+		sourceColumn: Billing type
+
+		annotation SummarizationSetBy = User
+
+	column 'Operation name V2'
+		dataType: string
+		lineageTag: f2ee826e-b27e-4688-8c75-17c937925bb0
+		sourceLineageTag: adba25d7-8317-4e08-ab01-9b596a33c34e
+		dataCategory: Uncategorized
+		summarizeBy: none
+		sourceColumn: Operation name V2
+
+		annotation SummarizationSetBy = User
+
+	partition 'Items Operations' = entity
+		mode: directQuery
+		source
+			entityName: Items Operations
+			expressionSource: 'DirectQuery to AS - Fabric Capacity Metrics'
+

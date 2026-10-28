@@ -14,6 +14,9 @@
 .PARAMETER MountedDataFactoryFormat
     The format for the Data Factory definition (e.g., 'json'). Optional.
 
+.PARAMETER Raw
+    If specified, returns the untouched API response.
+
 .EXAMPLE
     Get-FabricMountedDataFactoryDefinition -WorkspaceId "workspace-12345" -MountedDataFactoryId "factory-67890"
     Retrieves the definition for the specified mounted Data Factory.
@@ -42,34 +45,43 @@ function Get-FabricMountedDataFactoryDefinition {
 
         [Parameter(Mandatory = $false)]
         [ValidateNotNullOrEmpty()]
-        [string]$MountedDataFactoryFormat
+        [string]$MountedDataFactoryFormat,
+
+        [Parameter()]
+        [switch]$Raw
     )
-    try {
-        Invoke-FabricAuthCheck -ThrowOnFailure
+    process {
+        try {
+            Invoke-FabricAuthCheck -ThrowOnFailure
 
 
-        # Construct the API endpoint URI with filtering logic
-        $apiEndpointURI = "{0}/workspaces/{1}/mountedDataFactories/{2}/getDefinition" -f $script:FabricAuthContext.BaseUrl, $WorkspaceId, $MountedDataFactoryId
-        if ($MountedDataFactoryFormat) {
-            $apiEndpointURI = "{0}?format={1}" -f $apiEndpointURI, $MountedDataFactoryFormat
+            # Construct the API endpoint URI with filtering logic
+            $apiEndpointURI = "{0}/workspaces/{1}/mountedDataFactories/{2}/getDefinition" -f $script:FabricAuthContext.BaseUrl, $WorkspaceId, $MountedDataFactoryId
+            if ($MountedDataFactoryFormat) {
+                $apiEndpointURI = "{0}?format={1}" -f $apiEndpointURI, $MountedDataFactoryFormat
+            }
+            Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+
+            # Make the API request
+            $apiParams = @{
+                BaseURI = $apiEndpointURI
+                Headers = $script:FabricAuthContext.FabricHeaders
+                Method  = 'Post'
+            }
+            $response = Invoke-FabricAPIRequest @apiParams
+
+            if ($Raw) {
+                return $response
+            }
+
+            # Return the API response
+            Write-FabricLog -Message "Mounted Data Factory '$MountedDataFactoryId' definition retrieved successfully!" -Level Debug
+            return $response
         }
-        Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
-
-        # Make the API request
-        $apiParams = @{
-            BaseURI = $apiEndpointURI
-            Headers = $script:FabricAuthContext.FabricHeaders
-            Method  = 'Post'
+        catch {
+            # Capture and log error details
+            $errorDetails = $_.Exception.Message
+            Write-FabricLog -Message "Failed to retrieve Mounted Data Factory. Error: $errorDetails" -Level Error
         }
-        $response = Invoke-FabricAPIRequest @apiParams
-
-        # Return the API response
-        Write-FabricLog -Message "Mounted Data Factory '$MountedDataFactoryId' definition retrieved successfully!" -Level Debug
-        return $response
-    }
-    catch {
-        # Capture and log error details
-        $errorDetails = $_.Exception.Message
-        Write-FabricLog -Message "Failed to retrieve Mounted Data Factory. Error: $errorDetails" -Level Error
     }
  }

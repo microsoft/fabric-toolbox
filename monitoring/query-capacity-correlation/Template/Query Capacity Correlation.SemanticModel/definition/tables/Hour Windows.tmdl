@@ -1,0 +1,15 @@
+/// Complete hourly windows for the latest seven days represented by Capacity Metrics.
+table 'Hour Windows'
+	lineageTag: db9fa1b4-7965-47d1-b056-504313e0a347
+
+	/// Start of the hourly interval used for capacity and active-query correlation.
+	column Timestamp
+		dataType: dateTime
+		lineageTag: 30c005e6-20b6-4740-99ce-4582b0c87db8
+		summarizeBy: none
+		sourceColumn: timestamp
+
+	partition 'Hour Windows' = m
+		mode: import
+		source =
+{{HOUR_WINDOWS_M}}

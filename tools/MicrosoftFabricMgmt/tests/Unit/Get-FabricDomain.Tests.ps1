@@ -5,6 +5,7 @@ $expectedParams = @(
     "DomainId"
     "DomainName"
     "NonEmptyDomainsOnly"
+    "Raw"
     "ProgressAction"
     "Verbose"
     "Debug"

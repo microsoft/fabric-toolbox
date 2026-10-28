@@ -5,6 +5,9 @@ Retrieves tenant setting overrides for all workspaces in the Fabric tenant.
 .DESCRIPTION
 The `Get-FabricWorkspaceTenantSettingOverrides` function retrieves tenant setting overrides for all workspaces in the Fabric tenant by making a GET request to the appropriate API endpoint. The function validates the authentication token before making the request and handles the response accordingly.
 
+.PARAMETER Raw
+If specified, returns the untouched API response.
+
 .EXAMPLE
 Get-FabricWorkspaceTenantSettingOverrides
 
@@ -18,7 +21,10 @@ Author: Tiago Balabuch
 #>
 function Get-FabricWorkspaceTenantSettingOverrides {
     [CmdletBinding()]
-    param ( )
+    param (
+        [Parameter()]
+        [switch]$Raw
+    )
     try {
         Invoke-FabricAuthCheck -ThrowOnFailure
 
@@ -35,6 +41,10 @@ function Get-FabricWorkspaceTenantSettingOverrides {
             Method = 'Get'
         }
         $dataItems = Invoke-FabricAPIRequest @apiParams
+
+        if ($Raw) {
+            return $dataItems
+        }
 
         # Immediately handle empty response
         if (-not $dataItems) {

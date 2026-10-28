@@ -4,6 +4,7 @@ param(
 $expectedParams = @(
     "TagId"
     "TagName"
+    "Raw"
     "ProgressAction"
     "Verbose"
     "Debug"

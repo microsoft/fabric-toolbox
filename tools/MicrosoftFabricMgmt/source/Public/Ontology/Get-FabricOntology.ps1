@@ -36,6 +36,7 @@
     Returns the raw API response for all Ontology items in the workspace without any formatting or type decoration.
 
 .NOTES
+Author: Tiago Balabuch, Jess Pomfret, Rob Sewell
     Requires the $FabricConfig global variable with BaseUrl and FabricHeaders properties.
     Calls Invoke-FabricAuthCheck to ensure the authentication token is valid before making the API request.
 

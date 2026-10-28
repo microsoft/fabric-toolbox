@@ -1,0 +1,48 @@
+table 'Time-Point summary page optional columns (interactive operations)'
+	lineageTag: 8f2d9eed-c687-467a-a157-8dfac9518e01
+	sourceLineageTag: 04241e43-26e1-4e50-8850-3d49da2e27a9
+
+	column 'Timepoint Interactive operations - summary'
+		dataType: string
+		lineageTag: 72ded73f-d99f-4fed-9d5b-cc1b62d18d9d
+		sourceLineageTag: b3add97c-43fa-4404-a106-0bf034e45b45
+		dataCategory: Uncategorized
+		summarizeBy: none
+		sourceColumn: Timepoint Interactive operations - summary
+		sortByColumn: 'Timepoint Interactive operations - summary Order'
+
+		relatedColumnDetails
+			groupByColumn: 'Timepoint Interactive operations - summary Fields'
+
+		annotation SummarizationSetBy = User
+
+	column 'Timepoint Interactive operations - summary Fields'
+		dataType: string
+		isHidden
+		lineageTag: 08ac9a07-2796-48c7-a7e6-5ebf92bc29c5
+		sourceLineageTag: 3881bf05-88cb-427b-b69d-fb162ea8ac48
+		dataCategory: Uncategorized
+		summarizeBy: none
+		sourceColumn: Timepoint Interactive operations - summary Fields
+		sortByColumn: 'Timepoint Interactive operations - summary Order'
+
+		annotation SummarizationSetBy = User
+
+	column 'Timepoint Interactive operations - summary Order'
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: 57684346-92e1-433d-9db6-24a2d02d690c
+		sourceLineageTag: 9c0e97cb-f10f-454d-8365-0f0c15358039
+		dataCategory: Uncategorized
+		summarizeBy: sum
+		sourceColumn: Timepoint Interactive operations - summary Order
+
+		annotation SummarizationSetBy = User
+
+	partition 'Time-Point summary page optional columns (interactive operations)' = entity
+		mode: directQuery
+		source
+			entityName: Time-Point summary page optional columns (interactive operations)
+			expressionSource: 'DirectQuery to AS - Fabric Capacity Metrics'
+

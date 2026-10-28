@@ -15,6 +15,9 @@
 .PARAMETER EventhouseFormat
     The format in which to retrieve the Eventhouse definition. This parameter is optional.
 
+.PARAMETER Raw
+    If specified, returns the untouched API response.
+
 .EXAMPLE
      Get-FabricEventhouseDefinition -WorkspaceId "workspace-12345" -EventhouseId "eventhouse-67890"
     This example retrieves the definition of the Eventhouse with ID "eventhouse-67890" in the workspace with ID "workspace-12345".
@@ -44,32 +47,41 @@ function Get-FabricEventhouseDefinition {
 
         [Parameter(Mandatory = $false)]
         [ValidateNotNullOrEmpty()]
-        [string]$EventhouseFormat
+        [string]$EventhouseFormat,
+
+        [Parameter()]
+        [switch]$Raw
     )
-    try {
-        # Validate authentication
-        Invoke-FabricAuthCheck -ThrowOnFailure
+    process {
+        try {
+            # Validate authentication
+            Invoke-FabricAuthCheck -ThrowOnFailure
 
-        # Construct the API endpoint URI with filtering logic
-        $queryParams = if ($EventhouseFormat) { @{ format = $EventhouseFormat } } else { $null }
-        $apiEndpointURI = New-FabricAPIUri -Resource 'workspaces' -WorkspaceId $WorkspaceId -Subresource "eventhouses/$EventhouseId/getDefinition" -QueryParameters $queryParams
+            # Construct the API endpoint URI with filtering logic
+            $queryParams = if ($EventhouseFormat) { @{ format = $EventhouseFormat } } else { $null }
+            $apiEndpointURI = New-FabricAPIUri -Resource 'workspaces' -WorkspaceId $WorkspaceId -Subresource "eventhouses/$EventhouseId/getDefinition" -QueryParameters $queryParams
 
-        # Make the API request
-        $apiParams = @{
-            BaseURI = $apiEndpointURI
-            Headers = $script:FabricAuthContext.FabricHeaders
-            Method = 'Post'
+            # Make the API request
+            $apiParams = @{
+                BaseURI = $apiEndpointURI
+                Headers = $script:FabricAuthContext.FabricHeaders
+                Method = 'Post'
+            }
+            $response = Invoke-FabricAPIRequest @apiParams
+
+            if ($Raw) {
+                return $response
+            }
+
+            # Return the API response
+            Write-FabricLog -Message "Eventhouse '$EventhouseId' definition retrieved successfully!" -Level Debug
+            $response
         }
-        $response = Invoke-FabricAPIRequest @apiParams
+        catch {
+            # Capture and log error details
+            $errorDetails = $_.Exception.Message
+            Write-FabricLog -Message "Failed to retrieve Eventhouse definition. Error: $errorDetails" -Level Error
+        }
 
-        # Return the API response
-        Write-FabricLog -Message "Eventhouse '$EventhouseId' definition retrieved successfully!" -Level Debug
-        $response
     }
-    catch {
-        # Capture and log error details
-        $errorDetails = $_.Exception.Message
-        Write-FabricLog -Message "Failed to retrieve Eventhouse definition. Error: $errorDetails" -Level Error
-    }
-
 }

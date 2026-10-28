@@ -154,6 +154,7 @@ function Get-FabricOneLakeDataAccessRole {
                 }
                 catch {
                     # Not valid JSON - fall through to $script:FabricLastAPIError
+                    Write-FabricLog -Message "Response body is not valid JSON; using structured API error." -Level Debug
                 }
             }
             if (-not $errorSource) {

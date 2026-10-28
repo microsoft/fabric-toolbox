@@ -5,6 +5,7 @@ $expectedParams = @(
     "WorkspaceId"
     "SparkCustomPoolId"
     "SparkCustomPoolName"
+    "Raw"
     "ProgressAction"
     "Verbose"
     "Debug"

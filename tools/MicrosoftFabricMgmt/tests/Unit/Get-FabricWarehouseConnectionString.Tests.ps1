@@ -6,6 +6,7 @@ $expectedParams = @(
     "WarehouseId"
     "GuestTenantId"
     "PrivateLinkType"
+    "Raw"
     "ProgressAction"
     "Verbose"
     "Debug"

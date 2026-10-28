@@ -5,6 +5,7 @@ $expectedParams = @(
     "WorkspaceId"
     "KQLQuerysetId"
     "KQLQuerysetName"
+    "Raw"
     "ProgressAction"
     "Verbose"
     "Debug"

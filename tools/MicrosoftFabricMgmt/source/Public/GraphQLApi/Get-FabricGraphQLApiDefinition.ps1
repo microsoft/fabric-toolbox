@@ -14,6 +14,9 @@
 .PARAMETER GraphQLApiFormat
     The desired format for the API definition (e.g., 'json'). Optional.
 
+.PARAMETER Raw
+    If specified, returns the untouched API response.
+
 .EXAMPLE
     Get-FabricGraphQLApiDefinition -WorkspaceId "workspace-12345" -GraphQLApiId "GraphQLApi-67890"
     Retrieves the definition for the specified GraphQL API in the given workspace.
@@ -42,37 +45,46 @@ function Get-FabricGraphQLApiDefinition {
 
         [Parameter(Mandatory = $false)]
         [ValidateNotNullOrEmpty()]
-        [string]$GraphQLApiFormat
+        [string]$GraphQLApiFormat,
+
+        [Parameter()]
+        [switch]$Raw
     )
-    try {
-        # Validate authentication
-        Invoke-FabricAuthCheck -ThrowOnFailure
+    process {
+        try {
+            # Validate authentication
+            Invoke-FabricAuthCheck -ThrowOnFailure
 
-        # Construct the API endpoint URI with optional format parameter
-        $queryParams = if ($GraphQLApiFormat) {
-            @{ format = $GraphQLApiFormat }
-        } else {
-            $null
+            # Construct the API endpoint URI with optional format parameter
+            $queryParams = if ($GraphQLApiFormat) {
+                @{ format = $GraphQLApiFormat }
+            } else {
+                $null
+            }
+
+            $apiEndpointURI = New-FabricAPIUri -Resource 'workspaces' -WorkspaceId $WorkspaceId -Subresource 'GraphQLApis' -ItemId $GraphQLApiId -QueryParameters $queryParams
+            $apiEndpointURI = $apiEndpointURI -replace '/GraphQLApis/([^/]+)$', '/GraphQLApis/$1/getDefinition'
+
+            # Make the API request
+            $apiParams = @{
+                BaseURI = $apiEndpointURI
+                Headers = $script:FabricAuthContext.FabricHeaders
+                Method  = 'Post'
+            }
+            $response = Invoke-FabricAPIRequest @apiParams
+
+            if ($Raw) {
+                return $response
+            }
+
+            # Return the API response
+            Write-FabricLog -Message "GraphQLApi '$GraphQLApiId' definition retrieved successfully!" -Level Debug
+            $response
         }
-
-        $apiEndpointURI = New-FabricAPIUri -Resource 'workspaces' -WorkspaceId $WorkspaceId -Subresource 'GraphQLApis' -ItemId $GraphQLApiId -QueryParameters $queryParams
-        $apiEndpointURI = $apiEndpointURI -replace '/GraphQLApis/([^/]+)$', '/GraphQLApis/$1/getDefinition'
-
-        # Make the API request
-        $apiParams = @{
-            BaseURI = $apiEndpointURI
-            Headers = $script:FabricAuthContext.FabricHeaders
-            Method  = 'Post'
+        catch {
+            # Capture and log error details
+            $errorDetails = $_.Exception.Message
+            Write-FabricLog -Message "Failed to retrieve GraphQLApi. Error: $errorDetails" -Level Error
         }
-        $response = Invoke-FabricAPIRequest @apiParams
-
-        # Return the API response
-        Write-FabricLog -Message "GraphQLApi '$GraphQLApiId' definition retrieved successfully!" -Level Debug
-        $response
-    }
-    catch {
-        # Capture and log error details
-        $errorDetails = $_.Exception.Message
-        Write-FabricLog -Message "Failed to retrieve GraphQLApi. Error: $errorDetails" -Level Error
     }
  }

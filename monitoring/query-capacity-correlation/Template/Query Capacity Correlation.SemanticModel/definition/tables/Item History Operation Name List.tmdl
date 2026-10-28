@@ -1,0 +1,28 @@
+table 'Item History Operation Name List'
+	lineageTag: 64fe7058-8d33-4bbe-b6c8-3271fe85682c
+	sourceLineageTag: 63ed7ef0-41f9-4786-bc03-1f634a6c676b
+
+	column OperationName
+		dataType: string
+		lineageTag: 8c03e62d-d4bc-4582-8ff7-9dae9380e5b8
+		sourceLineageTag: dc0d0711-0194-4d8e-b2ec-5f36479a4dca
+		dataCategory: Uncategorized
+		summarizeBy: none
+		sourceColumn: OperationName
+
+		extendedProperty ParameterMetadata =
+				{
+				  "version": 2,
+				  "kind": 1,
+				  "supportsMultipleValues": true,
+				  "selectAllValue": "Default"
+				}
+
+		annotation SummarizationSetBy = User
+
+	partition 'Item History Operation Name List' = entity
+		mode: directQuery
+		source
+			entityName: Item History Operation Name List
+			expressionSource: 'DirectQuery to AS - Fabric Capacity Metrics'
+

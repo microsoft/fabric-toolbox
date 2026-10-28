@@ -5,6 +5,7 @@ $expectedParams = @(
     "WorkspaceId"
     "ReflexId"
     "ReflexName"
+    "Raw"
     "ProgressAction"
     "Verbose"
     "Debug"

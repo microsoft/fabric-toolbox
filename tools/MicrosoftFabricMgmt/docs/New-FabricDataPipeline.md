@@ -40,7 +40,7 @@ New-FabricDataPipeline -WorkspaceId "workspace-12345" -DataPipelineName "New Dat
 This example creates a DataPipeline named "AnalyticsPipeline" in the workspace with ID "workspace-67890" and assigns it a description.
 
 ## Prerequisites
-- Use the command `Set-FabricApiHeaders` to set global configuration variable `$FabricConfig` , containing:
+- Use the command `Connect-FabricAccount` to set global configuration variable `$FabricConfig` , containing:
   - `BaseUrl`: Base API endpoint for Fabric.
   - `FabricHeaders`: Authentication headers for API requests.
 - Token validation requires the `Test-TokenExpired` helper function.

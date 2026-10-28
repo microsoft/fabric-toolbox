@@ -147,21 +147,9 @@ function Invoke-FabricAPIRequest {
                 if ($isTransientFailure -and $retryCount -lt $MaxRetries) {
                     $retryCount++
 
-                    # Check for Retry-After header
-                    $retryAfterSeconds = if ($responseHeader -and $responseHeader['Retry-After']) {
-                        $retryAfterValue = $responseHeader['Retry-After']
-                        # Handle case where Retry-After might be an array
-                        if ($retryAfterValue -is [array]) {
-                            [int]$retryAfterValue[0]
-                        } else {
-                            [int]$retryAfterValue
-                        }
-                    } else {
-                        # Calculate exponential backoff with jitter
-                        $baseDelay = [Math]::Pow($RetryBackoffMultiplier, $retryCount)
-                        $jitter = Get-Random -Minimum 0 -Maximum 1000 -SetSeed ([int](Get-Date).Ticks)
-                        [int]($baseDelay + ($jitter / 1000))
-                    }
+                    # Determine the wait: honors Retry-After when present, else exponential
+                    # backoff with jitter, clamped to a sane range. (Factored out for testing.)
+                    $retryAfterSeconds = Get-FabricRetryDelay -ResponseHeader $responseHeader -RetryCount $retryCount -BackoffMultiplier $RetryBackoffMultiplier
 
                     Write-FabricLog -Message "Transient failure (status $statusCode). Retry $retryCount of $MaxRetries after $retryAfterSeconds seconds..." -Level Warning
                     Start-Sleep -Seconds $retryAfterSeconds

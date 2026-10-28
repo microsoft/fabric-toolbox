@@ -6,6 +6,7 @@ $expectedParams = @(
     "FolderName"
     "RootFolderId"
     "Recursive"
+    "Raw"
     "ProgressAction"
     "Verbose"
     "Debug"

@@ -15,6 +15,9 @@ It supports both synchronous and asynchronous operations, with detailed logging 
 .PARAMETER ApacheAirflowJobFormat
 (Optional) Specifies the format of the Apache Airflow Job definition. For example, 'json' or 'xml'.
 
+.PARAMETER Raw
+If specified, returns the untouched API response.
+
 .EXAMPLE
 Get-FabricApacheAirflowJobDefinition -WorkspaceId "12345" -ApacheAirflowJobId "67890"
 
@@ -42,38 +45,49 @@ function Get-FabricApacheAirflowJobDefinition {
 
         [Parameter(Mandatory = $false)]
         [ValidateNotNullOrEmpty()]
-        [string]$ApacheAirflowJobFormat
+        [string]$ApacheAirflowJobFormat,
+
+        [Parameter()]
+        [switch]$Raw
     )
-    try {
-        # Validate authentication
-        Invoke-FabricAuthCheck -ThrowOnFailure
+    process {
+        try {
+            # Validate authentication
+            Invoke-FabricAuthCheck -ThrowOnFailure
 
-        # Construct the API endpoint URL
-        $queryParams = if ($ApacheAirflowJobFormat) {
-            @{ format = $ApacheAirflowJobFormat }
-        } else {
-            $null
+            # Construct the API endpoint URL
+            $queryParams = if ($ApacheAirflowJobFormat) {
+                @{ format = $ApacheAirflowJobFormat }
+            } else {
+                $null
+            }
+
+            $apiEndpointURI = New-FabricAPIUri -Resource 'workspaces' -WorkspaceId $WorkspaceId -Subresource 'ApacheAirflowJobs' -ItemId $ApacheAirflowJobId
+            $apiEndpointURI = "$apiEndpointURI/getDefinition"
+
+            if ($queryParams) {
+                $queryString = ($queryParams.GetEnumerator() | ForEach-Object { "$($_.Key)=$($_.Value)" }) -join '&'
+                $apiEndpointURI = "$apiEndpointURI`?$queryString"
+            }
+
+            # Make the API request
+            $apiParams = @{
+                BaseURI = $apiEndpointURI
+                Headers = $script:FabricAuthContext.FabricHeaders
+                Method = 'Post'
+            }
+            $response = Invoke-FabricAPIRequest @apiParams
+
+            if ($Raw) {
+                return $response
+            }
+
+            $response
         }
-
-        $apiEndpointURI = New-FabricAPIUri -Resource 'workspaces' -WorkspaceId $WorkspaceId -Subresource 'ApacheAirflowJobs' -ItemId $ApacheAirflowJobId
-        $apiEndpointURI = "$apiEndpointURI/getDefinition"
-
-        if ($queryParams) {
-            $queryString = ($queryParams.GetEnumerator() | ForEach-Object { "$($_.Key)=$($_.Value)" }) -join '&'
-            $apiEndpointURI = "$apiEndpointURI`?$queryString"
+        catch {
+            # Capture and log error details
+            $errorDetails = $_.Exception.Message
+            Write-FabricLog -Message "Failed to retrieve Apache Airflow Job definition. Error: $errorDetails" -Level Error
         }
-
-        # Make the API request
-        $apiParams = @{
-            BaseURI = $apiEndpointURI
-            Headers = $script:FabricAuthContext.FabricHeaders
-            Method = 'Post'
-        }
-        Invoke-FabricAPIRequest @apiParams
-    }
-    catch {
-        # Capture and log error details
-        $errorDetails = $_.Exception.Message
-        Write-FabricLog -Message "Failed to retrieve Apache Airflow Job definition. Error: $errorDetails" -Level Error
     }
 }

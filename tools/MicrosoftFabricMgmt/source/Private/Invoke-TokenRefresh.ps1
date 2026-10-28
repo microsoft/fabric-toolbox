@@ -43,7 +43,7 @@ function Invoke-TokenRefresh {
 
         # User Principal requires interactive login - cannot auto-refresh
         if ($authMethod -eq 'UserPrincipal') {
-            Write-PSFMessage -Level Warning -Message "User Principal authentication requires interactive login. Please run Set-FabricApiHeaders with -TenantId parameter."
+            Write-PSFMessage -Level Warning -Message "User Principal authentication requires interactive login. Please run Connect-FabricAccount with -TenantId parameter."
             return $false
         }
 
@@ -54,7 +54,7 @@ function Invoke-TokenRefresh {
             'ServicePrincipal' {
                 # Service Principal requires stored credentials - cannot auto-refresh
                 # This would require storing the AppSecret which is a security risk
-                Write-PSFMessage -Level Warning -Message "Service Principal authentication cannot be automatically refreshed. Please run Set-FabricApiHeaders again with credentials."
+                Write-PSFMessage -Level Warning -Message "Service Principal authentication cannot be automatically refreshed. Please run Connect-FabricAccount again with credentials."
                 return $false
             }
             'ManagedIdentity' {

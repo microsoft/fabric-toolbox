@@ -1,0 +1,11 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/gitIntegration/platformProperties/2.0.0/schema.json",
+  "metadata": {
+    "type": "Report",
+    "displayName": "Query Capacity Correlation"
+  },
+  "config": {
+    "version": "2.0",
+    "logicalId": "da7c2a49-55b8-4f09-a59c-d20ea2631733"
+  }
+}

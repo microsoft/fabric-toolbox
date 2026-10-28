@@ -1,0 +1,42 @@
+table 'CU Threshold'
+	isHidden
+	lineageTag: 3049ad5b-b528-441b-aa64-416133185275
+	sourceLineageTag: 84fa08a5-ea93-4978-b63e-38985be17ac9
+
+	column 'CU threshold'
+		dataType: string
+		isHidden
+		lineageTag: 9a8689f4-f733-456f-b9c4-749f057daa1c
+		sourceLineageTag: 9bc63544-bf15-43b0-be4a-18b30279467e
+		dataCategory: Uncategorized
+		summarizeBy: none
+		sourceColumn: CU threshold
+		sortByColumn: Sort
+
+		extendedProperty ParameterMetadata =
+				{
+				  "version": 2,
+				  "kind": 1,
+				  "selectAllValue": "__SelectAll__"
+				}
+
+		annotation SummarizationSetBy = User
+
+	column Sort
+		dataType: double
+		isHidden
+		formatString: 0
+		lineageTag: 477712a2-50fc-48b8-b797-907c07e1459b
+		sourceLineageTag: 3ae12968-937a-4926-b146-34b558645c01
+		dataCategory: Uncategorized
+		summarizeBy: sum
+		sourceColumn: Sort
+
+		annotation SummarizationSetBy = User
+
+	partition 'CU Threshold' = entity
+		mode: directQuery
+		source
+			entityName: CU Threshold
+			expressionSource: 'DirectQuery to AS - Fabric Capacity Metrics'
+

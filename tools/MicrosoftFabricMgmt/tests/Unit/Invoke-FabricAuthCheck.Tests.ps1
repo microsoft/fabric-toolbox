@@ -1,21 +1,21 @@
-﻿#Requires -Module @{ ModuleName="Pester"; ModuleVersion="5.0"}
+#Requires -Module @{ ModuleName="Pester"; ModuleVersion="5.0"}
 param(
     $ModuleName = "MicrosoftFabricMgmt",
-    $expectedParams = @(
-        "ThrowOnFailure"
-        "ProgressAction"
-        "Verbose"
-        "Debug"
-        "ErrorAction"
-        "WarningAction"
-        "InformationAction"
-        "InformationVariable"
-        "OutVariable"
-        "OutBuffer"
-        "PipelineVariable"
-        "ErrorVariable"
-        "WarningVariable"
-    )
+$expectedParams = @(
+    "ThrowOnFailure"
+    "ProgressAction"
+    "Verbose"
+    "Debug"
+    "ErrorAction"
+    "WarningAction"
+    "InformationAction"
+    "InformationVariable"
+    "OutVariable"
+    "OutBuffer"
+    "PipelineVariable"
+    "ErrorVariable"
+    "WarningVariable"
+)
 )
 
 Describe "Invoke-FabricAuthCheck" -Tag "UnitTests" {

@@ -15,6 +15,9 @@
 .PARAMETER ReflexFormat
     The format in which to retrieve the Reflex definition. This parameter is optional.
 
+.PARAMETER Raw
+    If specified, returns the untouched API response.
+
 .EXAMPLE
     Get-FabricReflexDefinition -WorkspaceId "workspace-12345" -ReflexId "Reflex-67890"
     This example retrieves the definition of the Reflex with ID "Reflex-67890" in the workspace with ID "workspace-12345".
@@ -44,35 +47,44 @@ function Get-FabricReflexDefinition {
 
         [Parameter(Mandatory = $false)]
         [ValidateNotNullOrEmpty()]
-        [string]$ReflexFormat
+        [string]$ReflexFormat,
+
+        [Parameter()]
+        [switch]$Raw
     )
-    try {
-        Invoke-FabricAuthCheck -ThrowOnFailure
+    process {
+        try {
+            Invoke-FabricAuthCheck -ThrowOnFailure
 
 
-        # Construct the API endpoint URI with filtering logic
-        $apiEndpointURI = "{0}/workspaces/{1}/reflexes/{2}/getDefinition" -f $script:FabricAuthContext.BaseUrl, $WorkspaceId, $ReflexId
-        if ($ReflexFormat) {
-            $apiEndpointURI = "{0}?format={1}" -f $apiEndpointURI, $ReflexFormat
+            # Construct the API endpoint URI with filtering logic
+            $apiEndpointURI = "{0}/workspaces/{1}/reflexes/{2}/getDefinition" -f $script:FabricAuthContext.BaseUrl, $WorkspaceId, $ReflexId
+            if ($ReflexFormat) {
+                $apiEndpointURI = "{0}?format={1}" -f $apiEndpointURI, $ReflexFormat
+            }
+            Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+
+            # Make the API request
+            $apiParams = @{
+                BaseURI = $apiEndpointURI
+                Headers = $script:FabricAuthContext.FabricHeaders
+                Method = 'Post'
+            }
+            $response = Invoke-FabricAPIRequest @apiParams
+
+            if ($Raw) {
+                return $response
+            }
+
+            # Return the API response
+            Write-FabricLog -Message "Reflex '$ReflexId' definition retrieved successfully!" -Level Debug
+            return $response
         }
-        Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
-
-        # Make the API request
-        $apiParams = @{
-            BaseURI = $apiEndpointURI
-            Headers = $script:FabricAuthContext.FabricHeaders
-            Method = 'Post'
+        catch {
+            # Capture and log error details
+            $errorDetails = $_.Exception.Message
+            Write-FabricLog -Message "Failed to retrieve Reflex. Error: $errorDetails" -Level Error
         }
-        $response = Invoke-FabricAPIRequest @apiParams
 
-        # Return the API response
-        Write-FabricLog -Message "Reflex '$ReflexId' definition retrieved successfully!" -Level Debug
-        return $response
     }
-    catch {
-        # Capture and log error details
-        $errorDetails = $_.Exception.Message
-        Write-FabricLog -Message "Failed to retrieve Reflex. Error: $errorDetails" -Level Error
-    }
-
 }

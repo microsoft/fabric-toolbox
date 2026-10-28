@@ -5,6 +5,9 @@ Retrieves capacities tenant settings overrides from the Fabric tenant.
 .DESCRIPTION
 The `Get-FabricTenantSetting` function retrieves capacities tenant settings overrides for a Fabric tenant by making a GET request to the appropriate API endpoint.
 
+.PARAMETER Raw
+If specified, returns the untouched API response.
+
 .EXAMPLE
 Get-FabricTenantSettingOverridesCapacity
 
@@ -21,7 +24,10 @@ Author: Tiago Balabuch
 function Get-FabricTenantSettingOverridesCapacity {
     [CmdletBinding()]
     [OutputType([object[]])]
-    param ()
+    param (
+        [Parameter()]
+        [switch]$Raw
+    )
     try {
         # Step 1: Ensure token validity
         Write-FabricLog -Message "Validating token..." -Level Debug
@@ -79,6 +85,9 @@ function Get-FabricTenantSettingOverridesCapacity {
 
             # Step 8: Add data to the list
             if ($null -ne $response) {
+                if ($Raw) {
+                    return $response
+                }
                 Write-FabricLog -Message "Adding data to the list" -Level Debug
                 $capacitiesOverrides += $response.value
 

@@ -4,6 +4,7 @@ param(
 $expectedParams = @(
     "UserId"
     "Type"
+    "Raw"
     "ProgressAction"
     "Verbose"
     "Debug"

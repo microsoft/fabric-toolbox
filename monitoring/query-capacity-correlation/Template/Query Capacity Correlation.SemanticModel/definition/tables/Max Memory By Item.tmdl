@@ -1,0 +1,63 @@
+table 'Max Memory By Item'
+	lineageTag: cff8d532-3488-4466-8c50-ea130dd6f672
+	sourceLineageTag: 9a99c635-99dd-47fd-9df9-9c8962bf0c92
+
+	column 'Item Id'
+		dataType: string
+		isNullable: false
+		lineageTag: f6bf75b7-e596-4a38-ad38-5229a998f322
+		sourceLineageTag: 3fdf621c-00c7-4e1e-b251-7860b26736c0
+		dataCategory: Uncategorized
+		summarizeBy: none
+		sourceColumn: Item Id
+
+		annotation SummarizationSetBy = User
+
+	column 'Item size (GB)'
+		dataType: double
+		lineageTag: a1b2e691-2902-40c5-a174-f3b826671264
+		sourceLineageTag: afdaa737-5ee0-41c6-bc78-4456bf410a10
+		dataCategory: Uncategorized
+		summarizeBy: sum
+		sourceColumn: Item size (GB)
+
+		annotation SummarizationSetBy = User
+
+	column 'SKU memory'
+		dataType: int64
+		formatString: 0
+		lineageTag: b2d06052-db24-4b97-888f-a0d8807a6ecb
+		sourceLineageTag: 08b4be4e-a6e9-4161-b66c-65ac076c4c5a
+		dataCategory: Uncategorized
+		summarizeBy: sum
+		sourceColumn: SKU memory
+
+		annotation SummarizationSetBy = User
+
+	column 'Capacity Id'
+		dataType: string
+		lineageTag: 369db38e-c60c-46bb-9be7-4896af5ee583
+		sourceLineageTag: ce71b4f5-c671-42f7-9e3e-cd0432928ac0
+		dataCategory: Uncategorized
+		summarizeBy: none
+		sourceColumn: Capacity Id
+
+		annotation SummarizationSetBy = User
+
+	column 'Item key'
+		dataType: string
+		isHidden
+		lineageTag: a25a4c37-adbd-48d6-a642-fa45996ca7ce
+		sourceLineageTag: ae55d070-49b7-4575-882c-35c880766b32
+		dataCategory: Uncategorized
+		summarizeBy: none
+		sourceColumn: Item key
+
+		annotation SummarizationSetBy = User
+
+	partition 'Max Memory By Item' = entity
+		mode: directQuery
+		source
+			entityName: Max Memory By Item
+			expressionSource: 'DirectQuery to AS - Fabric Capacity Metrics'
+

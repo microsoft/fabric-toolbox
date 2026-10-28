@@ -324,6 +324,94 @@ SELECT job_data.job_id,
 FROM databricks_jobs;
 ```
 
+### Most Referenced Notebooks by Jobs
+
+Each job task that runs a notebook includes a `notebook_path` field. You can
+find which notebooks are referenced most frequently across all jobs:
+
+```sql
+-- Create tables
+CREATE TABLE databricks_jobs AS
+SELECT * FROM read_json_auto('/path/to/your/assessment/results/*/resources/jobs/*.json');
+
+-- Unnest tasks and count notebook references
+SELECT task.notebook_path,
+       COUNT(DISTINCT job_data.job_id) AS referenced_by_jobs,
+       COUNT(*) AS total_task_references
+FROM databricks_jobs,
+     UNNEST(job_data.tasks.tasks) AS task
+WHERE task.notebook_path IS NOT NULL
+GROUP BY task.notebook_path
+ORDER BY referenced_by_jobs DESC
+LIMIT 20;
+```
+
+Alternatively, each notebook in the export includes `executed_by_jobs` (list of
+job IDs that reference it) and `last_job_execution` (timestamp of the most
+recent run):
+
+```sql
+-- Create table from notebook files
+CREATE TABLE databricks_notebooks AS
+SELECT * FROM read_json_auto('/path/to/your/assessment/results/*/resources/notebooks/*.json');
+
+-- Notebooks most referenced by jobs
+SELECT notebook_data.path,
+       len(notebook_data.executed_by_jobs) AS job_count,
+       notebook_data.last_job_execution
+FROM databricks_notebooks
+WHERE notebook_data.executed_by_jobs IS NOT NULL
+ORDER BY job_count DESC
+LIMIT 20;
+```
+
+### Active vs Stale Jobs
+
+A job is considered **active** if its most recent run started less than one
+month before the assessment extraction time. Otherwise it is **stale**.
+
+```sql
+CREATE TABLE databricks_jobs AS
+SELECT * FROM read_json_auto('/path/to/your/assessment/results/*/resources/jobs/*.json');
+
+-- Classify jobs as active or stale based on last run within 30 days of extraction
+SELECT
+    CASE
+        WHEN latest_run_time >= (exported_at::TIMESTAMP - INTERVAL '30 days')
+        THEN 'active'
+        ELSE 'stale'
+    END AS job_status,
+    COUNT(*) AS job_count
+FROM (
+    SELECT job_data.job_id,
+           job_data.settings.name AS job_name,
+           MAX(run.start_time::TIMESTAMP) AS latest_run_time,
+           exported_at::TIMESTAMP AS exported_at
+    FROM databricks_jobs,
+         UNNEST(job_data.latest_runs.runs) AS run
+    GROUP BY job_data.job_id, job_data.settings.name, exported_at
+)
+GROUP BY job_status;
+
+-- List stale jobs (no execution in the last 30 days before extraction)
+SELECT job_data.job_id,
+       job_data.settings.name AS job_name,
+       MAX(run.start_time::TIMESTAMP) AS last_run,
+       exported_at::TIMESTAMP AS extracted_at
+FROM databricks_jobs,
+     UNNEST(job_data.latest_runs.runs) AS run
+GROUP BY job_data.job_id, job_data.settings.name, exported_at
+HAVING MAX(run.start_time::TIMESTAMP) < (exported_at::TIMESTAMP - INTERVAL '30 days')
+ORDER BY last_run ASC;
+
+-- Jobs with no runs at all (also considered stale)
+SELECT job_data.job_id,
+       job_data.settings.name AS job_name,
+       'no_runs' AS reason
+FROM databricks_jobs
+WHERE len(job_data.latest_runs.runs) = 0;
+```
+
 ## More examples
 
 

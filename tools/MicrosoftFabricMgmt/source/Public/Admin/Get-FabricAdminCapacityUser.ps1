@@ -95,8 +95,18 @@ function Get-FabricAdminCapacityUser {
                 return $response
             }
 
+            # Resolve the capacity display name once (cached after first lookup)
+            $capacityName = $CapacityId
+            try {
+                $capacityName = Resolve-FabricCapacityName -CapacityId $CapacityId
+            }
+            catch {
+                Write-FabricLog -Message "Failed to resolve capacity name for ID '$CapacityId': $($_.Exception.Message)" -Level Debug
+            }
+
             foreach ($user in $response) {
                 $user | Add-Member -NotePropertyName 'capacityId' -NotePropertyValue $CapacityId -Force
+                $user | Add-Member -NotePropertyName 'CapacityName' -NotePropertyValue $capacityName -Force
             }
             $response | Add-FabricTypeName -TypeName 'MicrosoftFabric.AdminCapacityUser'
 

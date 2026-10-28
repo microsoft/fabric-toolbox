@@ -1,0 +1,5 @@
+Configured/
+Configured-*/
+*.zip
+**/.pbi/localSettings.json
+**/.pbi/cache.abf

@@ -8,6 +8,9 @@ The `Get-FabricTenantSetting` function retrieves tenant settings for a Fabric en
 .PARAMETER SettingTitle
 (Optional) The title of a specific tenant setting to filter the results.
 
+.PARAMETER Raw
+If specified, returns the untouched API response.
+
 .EXAMPLE
 Get-FabricTenantSetting
 
@@ -31,7 +34,10 @@ function Get-FabricTenantSetting {
     param (
         [Parameter(Mandatory = $false)]
         [ValidateNotNullOrEmpty()]
-        [string]$SettingTitle
+        [string]$SettingTitle,
+
+        [Parameter()]
+        [switch]$Raw
     )
 
     try {
@@ -55,6 +61,10 @@ function Get-FabricTenantSetting {
         if (-not $dataItems) {
             Write-FabricLog -Message "No data returned from the API." -Level Warning
             return $null
+        }
+
+        if ($Raw) {
+            return $dataItems
         }
 
         # Apply filtering logic efficiently

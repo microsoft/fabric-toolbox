@@ -18,9 +18,16 @@
 .PARAMETER SemanticModelPathDefinition
     An optional path to the SemanticModel definition file to upload.
 
+.PARAMETER FolderId
+    Optional. The folder ID where the SemanticModel will be placed. If omitted, the SemanticModel is created in the workspace root.
+
 .EXAMPLE
     New-FabricSemanticModel -WorkspaceId "workspace-12345" -SemanticModelName "New SemanticModel" -SemanticModelDescription "Description of the new SemanticModel"
     This example creates a new SemanticModel named "New SemanticModel" in the workspace with ID "workspace-12345" with the provided description.
+
+.EXAMPLE
+    New-FabricSemanticModel -WorkspaceId "workspace-12345" -SemanticModelName "New SemanticModel" -SemanticModelPathDefinition "C:\Definitions\Model" -FolderId "folder-67890"
+    This example creates a new SemanticModel from the specified definition files and places it in the folder with ID "folder-67890".
 
 .NOTES
     - Requires `$FabricConfig` global configuration, including `BaseUrl` and `FabricHeaders`.
@@ -47,14 +54,18 @@ function New-FabricSemanticModel {
 
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
-        [string]$SemanticModelPathDefinition
+        [string]$SemanticModelPathDefinition,
+
+        [Parameter(Mandatory = $false)]
+        [ValidateNotNullOrEmpty()]
+        [string]$FolderId
     )
     try {
+        # Validate authentication
         Invoke-FabricAuthCheck -ThrowOnFailure
 
-
         # Construct the API endpoint URI
-        $apiEndpointURI = "{0}/workspaces/{1}/semanticModels" -f $script:FabricAuthContext.BaseUrl, $WorkspaceId
+        $apiEndpointURI = New-FabricAPIUri -Resource 'workspaces' -WorkspaceId $WorkspaceId -Subresource 'semanticModels'
 
         # Construct the request body
         $body = @{
@@ -62,6 +73,10 @@ function New-FabricSemanticModel {
             definition  = @{
                 parts = @()
             }
+        }
+
+        if ($FolderId) {
+            $body.folderId = $FolderId
         }
 
         # As Report has multiple parts, we need to get the definition parts
@@ -74,8 +89,7 @@ function New-FabricSemanticModel {
         }
 
         # Convert the body to JSON
-        $bodyJson = $body | ConvertTo-Json -Depth 10
-        Write-FabricLog -Message "Request Body: $bodyJson" -Level Debug
+        $bodyJson = Convert-FabricRequestBody -InputObject $body
 
         # Make the API request
         if ($PSCmdlet.ShouldProcess("Semantic Model '$SemanticModelName' in workspace '$WorkspaceId'", "Create")) {
@@ -89,7 +103,7 @@ function New-FabricSemanticModel {
 
             # Return the API response
             Write-FabricLog -Message "SemanticModel '$SemanticModelName' created successfully!" -Level Host
-            return $response
+            $response
         }
 
     }

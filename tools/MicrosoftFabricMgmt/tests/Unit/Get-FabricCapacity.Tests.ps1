@@ -4,6 +4,7 @@ param(
 $expectedParams = @(
     "CapacityId"
     "CapacityName"
+    "Raw"
     "ProgressAction"
     "Verbose"
     "Debug"

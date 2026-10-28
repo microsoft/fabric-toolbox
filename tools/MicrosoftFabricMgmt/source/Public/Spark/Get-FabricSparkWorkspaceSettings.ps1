@@ -9,6 +9,9 @@
 .PARAMETER WorkspaceId
     The unique identifier of the workspace from which to retrieve Spark settings. This parameter is mandatory.
 
+.PARAMETER Raw
+    If specified, returns the untouched API response.
+
 .EXAMPLE
     Get-FabricSparkSettings -WorkspaceId "workspace-12345"
     This example retrieves the Spark settings for the workspace with ID "workspace-12345".
@@ -26,39 +29,48 @@ function Get-FabricSparkWorkspaceSettings {
         [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
         [Alias('id')]
-        [string]$WorkspaceId
+        [string]$WorkspaceId,
+
+        [Parameter()]
+        [switch]$Raw
     )
-    try {
-        Invoke-FabricAuthCheck -ThrowOnFailure
+    process {
+        try {
+            Invoke-FabricAuthCheck -ThrowOnFailure
 
 
-        # Construct the API endpoint URI
-        $apiEndpointURI = "{0}/workspaces/{1}/spark/settings" -f $script:FabricAuthContext.BaseUrl, $WorkspaceId
-        Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+            # Construct the API endpoint URI
+            $apiEndpointURI = "{0}/workspaces/{1}/spark/settings" -f $script:FabricAuthContext.BaseUrl, $WorkspaceId
+            Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
 
-        # Make the API request
-        # Make the API request
-        $apiParams = @{
-            BaseURI = $apiEndpointURI
-            Headers = $script:FabricAuthContext.FabricHeaders
-            Method = 'Get'
+            # Make the API request
+            # Make the API request
+            $apiParams = @{
+                BaseURI = $apiEndpointURI
+                Headers = $script:FabricAuthContext.FabricHeaders
+                Method = 'Get'
+            }
+            $dataItems = Invoke-FabricAPIRequest @apiParams
+
+            if ($Raw) {
+                return $dataItems
+            }
+
+            # Immediately handle empty response
+            if (-not $dataItems) {
+                Write-FabricLog -Message "No data returned from the API." -Level Warning
+                return $null
+            }
+            else {
+                # Return all Spark Settings
+                Write-FabricLog -Message " Returning all Workspace Spark Settings." -Level Debug
+                return $dataItems
+            }
         }
-        $dataItems = Invoke-FabricAPIRequest @apiParams
-
-        # Immediately handle empty response
-        if (-not $dataItems) {
-            Write-FabricLog -Message "No data returned from the API." -Level Warning
-            return $null
+        catch {
+            # Capture and log error details
+            $errorDetails = $_.Exception.Message
+            Write-FabricLog -Message "Failed to retrieve SparkSettings. Error: $errorDetails" -Level Error
         }
-        else {
-            # Return all Spark Settings
-            Write-FabricLog -Message " Returning all Workspace Spark Settings." -Level Debug
-            return $dataItems
-        }
-    }
-    catch {
-        # Capture and log error details
-        $errorDetails = $_.Exception.Message
-        Write-FabricLog -Message "Failed to retrieve SparkSettings. Error: $errorDetails" -Level Error
     }
 }

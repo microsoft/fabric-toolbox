@@ -149,7 +149,11 @@
     {% if workspace.resources.notebooks %}
     <div class="col col-6">
         <div class="card">
-            <div class="card-header">📓 Notebooks ({{ workspace.resources.notebooks | length }})</div>
+            <div class="card-header">📓 Notebooks ({{ workspace.resources.notebooks | length }})
+                {% if workspace.resources.notebooks | length > 10 %}
+                <a href="../views/notebooks_page_1.html" style="float:right; font-size:0.85em;">View all →</a>
+                {% endif %}
+            </div>
             <div class="card-body">
                 <div class="table-responsive">
                     <table class="table">
@@ -298,7 +302,11 @@
     {% if workspace.resources.jobs %}
     <div class="col col-6">
         <div class="card">
-            <div class="card-header">📋 Jobs ({{ workspace.resources.jobs | length }})</div>
+            <div class="card-header">📋 Jobs ({{ workspace.resources.jobs | length }})
+                {% if workspace.resources.jobs | length > 10 %}
+                <a href="../views/jobs_page_1.html" style="float:right; font-size:0.85em;">View all →</a>
+                {% endif %}
+            </div>
             <div class="card-body">
                 <div class="table-responsive">
                     <table class="table">
@@ -384,7 +392,11 @@
     {% if workspace.resources.pipelines %}
     <div class="col col-6">
         <div class="card">
-            <div class="card-header">🔄 DLT Pipelines ({{ workspace.resources.pipelines | length }})</div>
+            <div class="card-header">🔄 DLT Pipelines ({{ workspace.resources.pipelines | length }})
+                {% if workspace.resources.pipelines | length > 10 %}
+                <a href="../views/pipelines_page_1.html" style="float:right; font-size:0.85em;">View all →</a>
+                {% endif %}
+            </div>
             <div class="card-body">
                 <div class="table-responsive">
                     <table class="table">
@@ -425,7 +437,11 @@
     {% if workspace.resources.experiments %}
     <div class="col col-6">
         <div class="card">
-            <div class="card-header">🧪 MLflow Experiments ({{ workspace.resources.experiments | length }})</div>
+            <div class="card-header">🧪 MLflow Experiments ({{ workspace.resources.experiments | length }})
+                {% if workspace.resources.experiments | length > 10 %}
+                <a href="../views/experiments_page_1.html" style="float:right; font-size:0.85em;">View all →</a>
+                {% endif %}
+            </div>
             <div class="card-body">
                 <div class="table-responsive">
                     <table class="table">
@@ -462,7 +478,11 @@
     {% if workspace.resources.serving_endpoints %}
     <div class="col col-6">
         <div class="card">
-            <div class="card-header">🚀 Serving Endpoints ({{ workspace.resources.serving_endpoints | length }})</div>
+            <div class="card-header">🚀 Serving Endpoints ({{ workspace.resources.serving_endpoints | length }})
+                {% if workspace.resources.serving_endpoints | length > 10 %}
+                <a href="../views/serving_endpoints_page_1.html" style="float:right; font-size:0.85em;">View all →</a>
+                {% endif %}
+            </div>
             <div class="card-body">
                 <div class="table-responsive">
                     <table class="table">
@@ -499,7 +519,11 @@
     {% if workspace.resources.repos %}
     <div class="col col-6">
         <div class="card">
-            <div class="card-header">📂 Git Repos ({{ workspace.resources.repos | length }})</div>
+            <div class="card-header">📂 Git Repos ({{ workspace.resources.repos | length }})
+                {% if workspace.resources.repos | length > 10 %}
+                <a href="../views/repos_page_1.html" style="float:right; font-size:0.85em;">View all →</a>
+                {% endif %}
+            </div>
             <div class="card-body">
                 <div class="table-responsive">
                     <table class="table">

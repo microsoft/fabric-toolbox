@@ -1,22 +1,22 @@
-﻿#Requires -Module @{ ModuleName="Pester"; ModuleVersion="5.0"}
+#Requires -Module @{ ModuleName="Pester"; ModuleVersion="5.0"}
 param(
     $ModuleName = "MicrosoftFabricMgmt",
-    $expectedParams = @(
-        "InputObject"
-        "Depth"
-        "ProgressAction"
-        "Verbose"
-        "Debug"
-        "ErrorAction"
-        "WarningAction"
-        "InformationAction"
-        "InformationVariable"
-        "OutVariable"
-        "OutBuffer"
-        "PipelineVariable"
-        "ErrorVariable"
-        "WarningVariable"
-    )
+$expectedParams = @(
+    "InputObject"
+    "Depth"
+    "ProgressAction"
+    "Verbose"
+    "Debug"
+    "ErrorAction"
+    "WarningAction"
+    "InformationAction"
+    "InformationVariable"
+    "OutVariable"
+    "OutBuffer"
+    "PipelineVariable"
+    "ErrorVariable"
+    "WarningVariable"
+)
 )
 
 Describe "Convert-FabricRequestBody" -Tag "UnitTests" {

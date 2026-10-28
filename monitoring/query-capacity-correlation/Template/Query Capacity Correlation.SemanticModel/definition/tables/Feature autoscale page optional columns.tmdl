@@ -1,0 +1,50 @@
+table 'Feature autoscale page optional columns'
+	isHidden
+	lineageTag: 5a2ab4ac-e663-454b-8d22-3a4a51145af3
+	sourceLineageTag: f0b9136b-6400-42b5-84a3-e29784ace7a6
+
+	column 'Dynamic Operation Count'
+		dataType: string
+		isHidden
+		lineageTag: 2d68d10b-6d27-4bb1-9c45-a340fa121985
+		sourceLineageTag: 6118c713-1761-46b3-abc7-0df9b6820260
+		dataCategory: Uncategorized
+		summarizeBy: none
+		sourceColumn: Dynamic Operation Count
+		sortByColumn: 'Dynamic Operation Count Order'
+
+		relatedColumnDetails
+			groupByColumn: 'Dynamic Operation Count Fields'
+
+		annotation SummarizationSetBy = User
+
+	column 'Dynamic Operation Count Fields'
+		dataType: string
+		isHidden
+		lineageTag: d1aa3702-3c9d-482e-ba80-5e36b6a9e347
+		sourceLineageTag: 6a964a3b-dabf-4d92-9386-f0818dbd70c2
+		dataCategory: Uncategorized
+		summarizeBy: none
+		sourceColumn: Dynamic Operation Count Fields
+		sortByColumn: 'Dynamic Operation Count Order'
+
+		annotation SummarizationSetBy = User
+
+	column 'Dynamic Operation Count Order'
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: 888f60ac-6b2b-4668-a384-66d7c041bf6f
+		sourceLineageTag: 247475e7-515d-43a2-a297-1ec4d7b4b33c
+		dataCategory: Uncategorized
+		summarizeBy: sum
+		sourceColumn: Dynamic Operation Count Order
+
+		annotation SummarizationSetBy = User
+
+	partition 'Feature autoscale page optional columns' = entity
+		mode: directQuery
+		source
+			entityName: Feature autoscale page optional columns
+			expressionSource: 'DirectQuery to AS - Fabric Capacity Metrics'
+

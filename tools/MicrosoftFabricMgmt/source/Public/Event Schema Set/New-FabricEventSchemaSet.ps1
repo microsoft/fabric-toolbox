@@ -25,6 +25,7 @@
     New-FabricEventSchemaSet -WorkspaceId "workspace-12345" -EventSchemaSetName "New Event Schema Set" -EventSchemaSetDescription "Description of the new Event Schema Set item"
 
 .NOTES
+Author: Tiago Balabuch, Jess Pomfret, Rob Sewell
     - Requires $FabricConfig global configuration, including BaseUrl and FabricHeaders.
     - Calls Invoke-FabricAuthCheck to ensure token validity before making the API request.
 
@@ -54,100 +55,102 @@ function New-FabricEventSchemaSet {
         [ValidateNotNullOrEmpty()]
         [string]$EventSchemaSetPathPlatformDefinition
     )
+    process {
 
-    try {
-        # Validate authentication token before proceeding
-        Invoke-FabricAuthCheck -ThrowOnFailure
+        try {
+            # Validate authentication token before proceeding
+            Invoke-FabricAuthCheck -ThrowOnFailure
 
-        # Construct the API endpoint URL
-        $apiEndpointURI = New-FabricAPIUri -Resource 'workspaces' -WorkspaceId $WorkspaceId -Subresource 'eventSchemaSets'
-        Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+            # Construct the API endpoint URL
+            $apiEndpointURI = New-FabricAPIUri -Resource 'workspaces' -WorkspaceId $WorkspaceId -Subresource 'eventSchemaSets'
+            Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
 
-        # Construct the request body
-        $body = @{
-            displayName = $EventSchemaSetName
-        }
+            # Construct the request body
+            $body = @{
+                displayName = $EventSchemaSetName
+            }
 
-        if ($EventSchemaSetDescription) {
-            $body.description = $EventSchemaSetDescription
-        }
+            if ($EventSchemaSetDescription) {
+                $body.description = $EventSchemaSetDescription
+            }
 
-        # Add Event Schema Set item definition file content if provided
-        if ($EventSchemaSetPathDefinition) {
-            $EventSchemaSetEncodedContent = Convert-ToBase64 -filePath $EventSchemaSetPathDefinition
+            # Add Event Schema Set item definition file content if provided
+            if ($EventSchemaSetPathDefinition) {
+                $EventSchemaSetEncodedContent = Convert-ToBase64 -filePath $EventSchemaSetPathDefinition
 
-            if (-not [string]::IsNullOrEmpty($EventSchemaSetEncodedContent)) {
-                # Initialize definition if it doesn't exist
-                if (-not $body.definition) {
-                    $body.definition = @{
-                        parts = @()
+                if (-not [string]::IsNullOrEmpty($EventSchemaSetEncodedContent)) {
+                    # Initialize definition if it doesn't exist
+                    if (-not $body.definition) {
+                        $body.definition = @{
+                            parts = @()
+                        }
+                    }
+
+                    # Add new part to the parts array
+                    $body.definition.parts += @{
+                        path        = "-content.json"
+                        payload     = $EventSchemaSetEncodedContent
+                        payloadType = "InlineBase64"
                     }
                 }
-
-                # Add new part to the parts array
-                $body.definition.parts += @{
-                    path        = "-content.json"
-                    payload     = $EventSchemaSetEncodedContent
-                    payloadType = "InlineBase64"
+                else {
+                    Write-FabricLog -Message "Invalid or empty content in Event Schema Set definition." -Level Error
+                    return
                 }
             }
-            else {
-                Write-FabricLog -Message "Invalid or empty content in Event Schema Set definition." -Level Error
-                return
-            }
-        }
 
-        # Add platform definition file content if provided
-        if ($EventSchemaSetPathPlatformDefinition) {
-            $EventSchemaSetEncodedPlatformContent = Convert-ToBase64 -filePath $EventSchemaSetPathPlatformDefinition
+            # Add platform definition file content if provided
+            if ($EventSchemaSetPathPlatformDefinition) {
+                $EventSchemaSetEncodedPlatformContent = Convert-ToBase64 -filePath $EventSchemaSetPathPlatformDefinition
 
-            if (-not [string]::IsNullOrEmpty($EventSchemaSetEncodedPlatformContent)) {
-                # Initialize definition if it doesn't exist
-                if (-not $body.definition) {
-                    $body.definition = @{
-                        parts = @()
+                if (-not [string]::IsNullOrEmpty($EventSchemaSetEncodedPlatformContent)) {
+                    # Initialize definition if it doesn't exist
+                    if (-not $body.definition) {
+                        $body.definition = @{
+                            parts = @()
+                        }
+                    }
+
+                    # Add new part to the parts array
+                    $body.definition.parts += @{
+                        path        = ".platform"
+                        payload     = $EventSchemaSetEncodedPlatformContent
+                        payloadType = "InlineBase64"
                     }
                 }
-
-                # Add new part to the parts array
-                $body.definition.parts += @{
-                    path        = ".platform"
-                    payload     = $EventSchemaSetEncodedPlatformContent
-                    payloadType = "InlineBase64"
+                else {
+                    Write-FabricLog -Message "Invalid or empty content in platform definition." -Level Error
+                    return
                 }
             }
-            else {
-                Write-FabricLog -Message "Invalid or empty content in platform definition." -Level Error
-                return
+
+            # Convert the body to JSON
+            $bodyJson = $body | ConvertTo-Json -Depth 10
+            Write-FabricLog -Message "Request Body: $bodyJson" -Level Debug
+
+            # Make the API request when confirmed
+            $target = "Workspace '$WorkspaceId'"
+            $action = "Create Event Schema Set '$EventSchemaSetName'"
+            if ($PSCmdlet.ShouldProcess($target, $action)) {
+                $apiParams = @{
+                    BaseURI = $apiEndpointURI
+                    Headers = $script:FabricAuthContext.FabricHeaders
+                    Method = 'Post'
+                    Body = $bodyJson
+                    WaitForCompletion = $true
+                }
+                $response = Invoke-FabricAPIRequest @apiParams
+
+                # Return the API response
+                Write-FabricLog -Message "Event Schema Set '$EventSchemaSetName' created successfully!" -Level Host
+                return $response
             }
         }
-
-        # Convert the body to JSON
-        $bodyJson = $body | ConvertTo-Json -Depth 10
-        Write-FabricLog -Message "Request Body: $bodyJson" -Level Debug
-
-        # Make the API request when confirmed
-        $target = "Workspace '$WorkspaceId'"
-        $action = "Create Event Schema Set '$EventSchemaSetName'"
-        if ($PSCmdlet.ShouldProcess($target, $action)) {
-            $apiParams = @{
-                BaseURI = $apiEndpointURI
-                Headers = $script:FabricAuthContext.FabricHeaders
-                Method = 'Post'
-                Body = $bodyJson
-                WaitForCompletion = $true
-            }
-            $response = Invoke-FabricAPIRequest @apiParams
-
-            # Return the API response
-            Write-FabricLog -Message "Event Schema Set '$EventSchemaSetName' created successfully!" -Level Host
-            return $response
+        catch {
+            # Capture and log error details
+            $errorDetails = $_.Exception.Message
+            Write-FabricLog -Message "Failed to create Event Schema Set. Error: $errorDetails" -Level Error
         }
-    }
-    catch {
-        # Capture and log error details
-        $errorDetails = $_.Exception.Message
-        Write-FabricLog -Message "Failed to create Event Schema Set. Error: $errorDetails" -Level Error
     }
 }
 

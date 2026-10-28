@@ -2,9 +2,11 @@
 # Licensed under the MIT License.
 
 import json
+import logging
 import platform
 import re
 import time
+import urllib
 from argparse import Namespace
 from typing import Optional
 from urllib.parse import urlparse
@@ -12,12 +14,12 @@ from urllib.parse import urlparse
 import requests
 from requests.adapters import HTTPAdapter, Retry
 from requests.structures import CaseInsensitiveDict
-import urllib
 
 from fabric_assessment_tool.errors.api import AzureAPIError, FATError
 
 GUID_PATTERN = r"([a-f0-9\-]{36})"
 DEBUG = False
+logger = logging.getLogger(__name__)
 
 
 class ApiResponse:
@@ -83,7 +85,7 @@ class ApiClient:
         self.session.mount("https://", adapter)
         self.session.headers.update(
             {
-                "User-Agent": f"fabric_assessment_tool/0.2.0 ({platform.system()}; {platform.machine()}; {platform.release()})",
+                "User-Agent": f"fabric_assessment_tool/0.3.0 ({platform.system()}; {platform.machine()}; {platform.release()})",
             }
         )
         if token:
@@ -131,7 +133,7 @@ class ApiClient:
 
         if continuation_token:
             request_params["continuationToken"] = continuation_token
-        
+
         if skip_token:
             request_params["$skipToken"] = skip_token
 
@@ -139,7 +141,9 @@ class ApiClient:
         url = f"https://{self.base_url}/{uri}"
         if request_params:
             url += f"?{requests.compat.urlencode(request_params)}"
-            url = url.replace("%24skipToken=", "$skipToken=")  # Fix encoding for single quotes
+            url = url.replace(
+                "%24skipToken=", "$skipToken="
+            )  # Fix encoding for single quotes
 
         # Build headers
         headers = {}
@@ -172,12 +176,20 @@ class ApiClient:
 
             for attempt in range(self.retries_count + 1):
 
-                # TODO: Log request
                 start_time = time.time()
                 response = self.session.request(
                     method=method, url=url, **request_params
                 )
-                # TODO: Log Response
+                elapsed_ms = (time.time() - start_time) * 1000
+                logger.debug(
+                    "API call %s %s completed with status=%s in %.2f ms (attempt %s/%s)",
+                    str(method).upper(),
+                    uri,
+                    response.status_code,
+                    elapsed_ms,
+                    attempt + 1,
+                    self.retries_count + 1,
+                )
 
                 api_error_code = response.headers.get(
                     "x-ms-public-api-error-code", None
@@ -209,6 +221,12 @@ class ApiClient:
                         )
                     case 429:
                         retry_after = int(response.headers.get("Retry-After", 5))
+                        logger.warning(
+                            "Rate limit reached for %s %s; retrying in %s seconds",
+                            str(method).upper(),
+                            uri,
+                            retry_after,
+                        )
                         if DEBUG:
                             print(
                                 f"Rate limit exceeded. Retry attempt {attempt} in {retry_after} seconds."
@@ -284,6 +302,10 @@ class ApiClient:
         if DEBUG:
             self._print_response_details(response)
 
+        # Allow callers to disable auto-pagination when they handle it manually
+        if getattr(args, "auto_paginate", True) is False:
+            return response
+
         _continuation_token = None
 
         # In ADLS Gen2 / Onelake, check for x-ms-continuation token in response headers
@@ -308,14 +330,14 @@ class ApiClient:
                 response.status_code = 200
                 response.append_text(_response.text)
             return response
-        
+
         # Synapse nextLink pagination
         if response.text != "" and response.text != "null":
             if "nextLink" in response.text:
                 _text = json.loads(response.text)
                 if _text and "nextLink" in _text:
                     next_link = _text["nextLink"]
-                    skip_token = urllib.parse.parse_qs(next_link)['$skipToken'][0]
+                    skip_token = urllib.parse.parse_qs(next_link)["$skipToken"][0]
                     _response = self.do_request(args, skip_token=skip_token)
                     if _response.status_code == 200:
                         response.status_code = 200

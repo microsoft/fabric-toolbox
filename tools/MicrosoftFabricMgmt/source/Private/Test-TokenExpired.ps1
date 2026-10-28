@@ -47,14 +47,14 @@ function Test-TokenExpired {
 
         # Check if authentication context exists
         if (-not $script:FabricAuthContext) {
-            Write-PSFMessage -Level Warning -Message "Authentication context not initialized. Please run Set-FabricApiHeaders to authenticate."
+            Write-PSFMessage -Level Warning -Message "Authentication context not initialized. Please run Connect-FabricAccount to authenticate."
             return $true  # Token is effectively expired/missing
         }
 
         # Ensure required properties have valid values
         if ([string]::IsNullOrWhiteSpace($script:FabricAuthContext.TenantId) -or
             [string]::IsNullOrWhiteSpace($script:FabricAuthContext.TokenExpiresOn)) {
-            Write-PSFMessage -Level Warning -Message "Token details are missing. Please run Set-FabricApiHeaders to configure authentication."
+            Write-PSFMessage -Level Warning -Message "Token details are missing. Please run Connect-FabricAccount to configure authentication."
             return $true  # Token is effectively expired/missing
         }
 
@@ -67,7 +67,7 @@ function Test-TokenExpired {
 
         # Check if the token is expired
         if ($tokenExpiryDate -le [DateTimeOffset]::Now) {
-            Write-PSFMessage -Level Warning -Message "Authentication token has expired. Please run Set-FabricApiHeaders to refresh your session."
+            Write-PSFMessage -Level Warning -Message "Authentication token has expired. Please run Connect-FabricAccount to refresh your session."
 
             # Attempt auto-refresh if requested
             if ($AutoRefresh.IsPresent) {
@@ -78,7 +78,7 @@ function Test-TokenExpired {
                     return $false  # Token is now valid
                 }
                 else {
-                    Write-PSFMessage -Level Warning -Message "Automatic token refresh failed. Please run Set-FabricApiHeaders to re-authenticate."
+                    Write-PSFMessage -Level Warning -Message "Automatic token refresh failed. Please run Connect-FabricAccount to re-authenticate."
                     return $true  # Token is still expired
                 }
             }

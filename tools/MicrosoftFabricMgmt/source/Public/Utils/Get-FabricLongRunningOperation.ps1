@@ -23,6 +23,9 @@ Defaults to 5 seconds which balances responsiveness with request volume.
 Maximum number of seconds to wait before aborting with a timeout error. The default of 900 seconds (15 minutes) helps
 prevent indefinite polling if the service stops updating status.
 
+.PARAMETER Raw
+If specified, returns the untouched API response.
+
 .EXAMPLE
 Get-FabricLongRunningOperation -operationId "12345-abcd-67890-efgh" -retryAfter 10 -timeoutInSeconds 1200
 
@@ -51,7 +54,10 @@ function Get-FabricLongRunningOperation {
         [int]$retryAfter = 5,
 
         [Parameter(Mandatory = $false)]
-        [int]$timeoutInSeconds = 900
+        [int]$timeoutInSeconds = 900,
+
+        [Parameter()]
+        [switch]$Raw
     )
 
     if (-not ($operationId -or $location)) {
@@ -94,6 +100,10 @@ function Get-FabricLongRunningOperation {
             Write-FabricLog -Message "Operation Status: $($operation.status)" -Level Debug
 
         } while ($operation.status -notin @("Succeeded", "Completed", "Failed"))
+
+        if ($Raw) {
+            return $operation
+        }
 
         # Return the operation result
         return $operation

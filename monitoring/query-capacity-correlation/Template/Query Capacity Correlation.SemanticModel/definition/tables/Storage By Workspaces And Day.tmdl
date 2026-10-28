@@ -1,0 +1,124 @@
+table 'Storage By Workspaces And Day'
+	lineageTag: 1ba47c67-9185-4aad-900c-5047fc43c25d
+	sourceLineageTag: c1aaae37-1f22-4858-b2b1-1056e8e50d37
+
+	column 'Workspace Id'
+		dataType: string
+		lineageTag: 182614fb-1a86-4c95-aa5f-6c938c39cdb9
+		sourceLineageTag: c48242d7-3226-49a1-93b4-a657899ed851
+		dataCategory: Uncategorized
+		summarizeBy: none
+		sourceColumn: Workspace Id
+
+		annotation SummarizationSetBy = User
+
+	column 'Utilization (GB)'
+		dataType: double
+		lineageTag: f93d16d5-179b-4c5c-a8e3-15bc6f56cf20
+		sourceLineageTag: 8832f4a1-c305-4afc-bb96-ef5b32a536c2
+		dataCategory: Uncategorized
+		summarizeBy: sum
+		sourceColumn: Utilization (GB)
+
+		annotation SummarizationSetBy = User
+
+	column PremiumCapacityId
+		dataType: string
+		lineageTag: 1101760f-d9b2-4388-9a28-b4ce4b32b539
+		sourceLineageTag: 0740cf93-2925-4543-b1c6-e360fd32d260
+		dataCategory: Uncategorized
+		summarizeBy: none
+		sourceColumn: PremiumCapacityId
+
+		annotation SummarizationSetBy = User
+
+	column Date
+		dataType: dateTime
+		formatString: General Number
+		lineageTag: 6c468b2e-03f0-40e0-8184-fee845aec399
+		sourceLineageTag: f8bdd7ae-4285-4d5e-8bef-7cc25f7d9ef3
+		dataCategory: Uncategorized
+		summarizeBy: none
+		sourceColumn: Date
+
+		annotation SummarizationSetBy = User
+
+	column WorkspaceKey
+		dataType: string
+		isHidden
+		lineageTag: c0bbff5b-1754-4821-b6c2-851fd6d31d11
+		sourceLineageTag: 35ac77fd-b9c3-4eae-a614-5e7a6c2c9efc
+		dataCategory: Uncategorized
+		summarizeBy: none
+		sourceColumn: WorkspaceKey
+
+		annotation SummarizationSetBy = User
+
+	column Hours
+		dataType: int64
+		formatString: 0
+		lineageTag: ef9650f3-cfa0-411e-9222-1ca66b7e2646
+		sourceLineageTag: c145e53a-5e57-40b8-8f88-5da00f05b0e7
+		dataCategory: Uncategorized
+		summarizeBy: sum
+		sourceColumn: Hours
+
+		annotation SummarizationSetBy = User
+
+	column 'Static storage in GB'
+		dataType: double
+		lineageTag: 0584f163-af4f-44db-9c5a-f9ab41b11edc
+		sourceLineageTag: fab03c63-6338-4108-9e1e-d668be0f0818
+		dataCategory: Uncategorized
+		summarizeBy: sum
+		sourceColumn: Static storage in GB
+
+		annotation SummarizationSetBy = User
+
+	column 'Operation name'
+		dataType: string
+		lineageTag: 63a68ef3-0364-40cd-a473-d83810224cc9
+		sourceLineageTag: 9aff2c1a-d276-43b2-911b-860607103e72
+		dataCategory: Uncategorized
+		summarizeBy: none
+		sourceColumn: Operation name
+
+		annotation SummarizationSetBy = User
+
+	column 'Workload kind'
+		dataType: string
+		lineageTag: b74a7295-2af6-4124-b749-af47c7d9a9a9
+		sourceLineageTag: d5c0ad8e-b863-4125-bb0f-a76acce1cca8
+		dataCategory: Uncategorized
+		summarizeBy: none
+		sourceColumn: Workload kind
+
+		annotation SummarizationSetBy = User
+
+	column 'Billing type'
+		dataType: string
+		lineageTag: c753141e-a19a-4090-82ad-decde2afe86b
+		sourceLineageTag: 78d0a397-16b7-4540-8627-df6c4e507ccb
+		dataCategory: Uncategorized
+		summarizeBy: none
+		sourceColumn: Billing type
+
+		annotation SummarizationSetBy = User
+
+	column WorkloadOperationKey
+		dataType: string
+		isHidden
+		lineageTag: f39eafea-bbe2-4b95-be25-7ffadd2cc478
+		sourceLineageTag: e19a6384-1124-45e1-b3e4-103bb3310663
+		dataCategory: Uncategorized
+		summarizeBy: none
+		sourceColumn: WorkloadOperationKey
+
+		annotation SummarizationSetBy = User
+
+	partition 'Storage By Workspaces And Day' = entity
+		mode: directQuery
+		source
+			entityName: Storage By Workspaces And Day
+			expressionSource: 'DirectQuery to AS - Fabric Capacity Metrics'
+

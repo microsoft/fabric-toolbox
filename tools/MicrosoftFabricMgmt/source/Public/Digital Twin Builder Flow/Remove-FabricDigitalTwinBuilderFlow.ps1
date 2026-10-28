@@ -17,6 +17,7 @@
     Deletes the Digital Twin Builder Flow item with ID "-67890" from the workspace with ID "workspace-12345".
 
 .NOTES
+Author: Tiago Balabuch, Jess Pomfret, Rob Sewell
     - Requires the $FabricConfig global configuration, which must include BaseUrl and FabricHeaders.
     - Ensures token validity by invoking Invoke-FabricAuthCheck before making the API request.
 

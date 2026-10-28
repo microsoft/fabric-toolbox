@@ -47,41 +47,43 @@ function Update-FabricSQLEndpointMetadata {
         [Parameter(Mandatory = $true)]
         [switch]$WaitForCompletion
     )
-    try {
-        Invoke-FabricAuthCheck -ThrowOnFailure
+    process {
+        try {
+            Invoke-FabricAuthCheck -ThrowOnFailure
 
 
-        # Construct the API endpoint URI
-        $apiEndpointURI = "{0}/workspaces/{1}/sqlEndpoints/{2}/refreshMetadata" -f $script:FabricAuthContext.BaseUrl, $WorkspaceId, $SQLEndpointId
-        Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+            # Construct the API endpoint URI
+            $apiEndpointURI = "{0}/workspaces/{1}/sqlEndpoints/{2}/refreshMetadata" -f $script:FabricAuthContext.BaseUrl, $WorkspaceId, $SQLEndpointId
+            Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
 
-        # Make the API request
-        if ($PSCmdlet.ShouldProcess("SQL Endpoint '$SQLEndpointId' in workspace '$WorkspaceId'", "Update metadata")) {
-            $apiParams = @{
-                BaseURI = $apiEndpointURI
-                Headers = $script:FabricAuthContext.FabricHeaders
-                Method  = 'Post'
-            }
-            if ($WaitForCompletion.IsPresent) {
-                $apiParams.WaitForCompletion = $true
-            }
-            $response = Invoke-FabricAPIRequest @apiParams
+            # Make the API request
+            if ($PSCmdlet.ShouldProcess("SQL Endpoint '$SQLEndpointId' in workspace '$WorkspaceId'", "Update metadata")) {
+                $apiParams = @{
+                    BaseURI = $apiEndpointURI
+                    Headers = $script:FabricAuthContext.FabricHeaders
+                    Method  = 'Post'
+                }
+                if ($WaitForCompletion.IsPresent) {
+                    $apiParams.WaitForCompletion = $true
+                }
+                $response = Invoke-FabricAPIRequest @apiParams
 
-            if ($WaitForCompletion) {
-                Write-FabricLog -Message "Refresh SQL Endpoint metadata for SQL Endpoint '$($SQLEndpointId)' has completed." -Level Host
-                Write-FabricLog -Message "Job details: $($response | ConvertTo-Json -Depth 5)" -Level Debug
+                if ($WaitForCompletion) {
+                    Write-FabricLog -Message "Refresh SQL Endpoint metadata for SQL Endpoint '$($SQLEndpointId)' has completed." -Level Host
+                    Write-FabricLog -Message "Job details: $($response | ConvertTo-Json -Depth 5)" -Level Debug
+                }
+                else {
+                    Write-FabricLog -Message "Refresh SQL Endpoint metadata for SQL Endpoint '$($SQLEndpointId)' has been started and is running asynchronously." -Level Host
+                    Write-FabricLog -Message "You can monitor the job status using the job ID from the response." -Level Debug
+                }
+                # Return the API response
+                return $response
             }
-            else {
-                Write-FabricLog -Message "Refresh SQL Endpoint metadata for SQL Endpoint '$($SQLEndpointId)' has been started and is running asynchronously." -Level Host
-                Write-FabricLog -Message "You can monitor the job status using the job ID from the response." -Level Debug
-            }
-            # Return the API response
-            return $response
         }
-    }
-    catch {
-        # Capture and log error details
-        $errorDetails = $_.Exception.Message
-        Write-FabricLog -Message "Failed to update SQL Endpoint metadata. Error: $errorDetails" -Level Error
+        catch {
+            # Capture and log error details
+            $errorDetails = $_.Exception.Message
+            Write-FabricLog -Message "Failed to update SQL Endpoint metadata. Error: $errorDetails" -Level Error
+        }
     }
 }

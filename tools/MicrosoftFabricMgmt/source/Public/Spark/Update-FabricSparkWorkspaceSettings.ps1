@@ -92,83 +92,85 @@ function Update-FabricSparkWorkspaceSettings {
         [ValidateNotNullOrEmpty()]
         [string]$EnvironmentRuntimeVersion
     )
+    process {
 
-    try {
-        Invoke-FabricAuthCheck -ThrowOnFailure
+        try {
+            Invoke-FabricAuthCheck -ThrowOnFailure
 
 
-        # Construct the API endpoint URI with filtering logic
-        $apiEndpointURI = "{0}/workspaces/{1}/spark/settings" -f $script:FabricAuthContext.BaseUrl, $WorkspaceId, $SparkSettingsId
-        Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+            # Construct the API endpoint URI with filtering logic
+            $apiEndpointURI = "{0}/workspaces/{1}/spark/settings" -f $script:FabricAuthContext.BaseUrl, $WorkspaceId, $SparkSettingsId
+            Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
 
-        # Construct the request body
-        $body = @{}
+            # Construct the request body
+            $body = @{}
 
-        if ($PSBoundParameters.ContainsKey('automaticLogEnabled')) {
-            $body.automaticLog = @{
-                enabled = $automaticLogEnabled
-            }
-        }
-
-        if ($PSBoundParameters.ContainsKey('notebookInteractiveRunEnabled')) {
-            $body.highConcurrency = @{
-                notebookInteractiveRunEnabled = $notebookInteractiveRunEnabled
-            }
-        }
-
-        if ($PSBoundParameters.ContainsKey('customizeComputeEnabled') ) {
-            $body.pool = @{
-                customizeComputeEnabled = $customizeComputeEnabled
-            }
-        }
-        if ($PSBoundParameters.ContainsKey('defaultPoolName') -or $PSBoundParameters.ContainsKey('defaultPoolType')) {
-            if ($PSBoundParameters.ContainsKey('defaultPoolName') -and $PSBoundParameters.ContainsKey('defaultPoolType')) {
-                $body.pool = @{
-                    defaultPool = @{
-                        name = $defaultPoolName
-                        type = $defaultPoolType
-                    }
+            if ($PSBoundParameters.ContainsKey('automaticLogEnabled')) {
+                $body.automaticLog = @{
+                    enabled = $automaticLogEnabled
                 }
             }
-            else {
-                Write-FabricLog -Message "Both 'defaultPoolName' and 'defaultPoolType' must be provided together." -Level Error
-                throw
+
+            if ($PSBoundParameters.ContainsKey('notebookInteractiveRunEnabled')) {
+                $body.highConcurrency = @{
+                    notebookInteractiveRunEnabled = $notebookInteractiveRunEnabled
+                }
+            }
+
+            if ($PSBoundParameters.ContainsKey('customizeComputeEnabled') ) {
+                $body.pool = @{
+                    customizeComputeEnabled = $customizeComputeEnabled
+                }
+            }
+            if ($PSBoundParameters.ContainsKey('defaultPoolName') -or $PSBoundParameters.ContainsKey('defaultPoolType')) {
+                if ($PSBoundParameters.ContainsKey('defaultPoolName') -and $PSBoundParameters.ContainsKey('defaultPoolType')) {
+                    $body.pool = @{
+                        defaultPool = @{
+                            name = $defaultPoolName
+                            type = $defaultPoolType
+                        }
+                    }
+                }
+                else {
+                    Write-FabricLog -Message "Both 'defaultPoolName' and 'defaultPoolType' must be provided together." -Level Error
+                    throw
+                }
+            }
+
+            if ($PSBoundParameters.ContainsKey('EnvironmentName') -or $PSBoundParameters.ContainsKey('EnvironmentRuntimeVersion')) {
+                $body.environment = @{
+                    name = $EnvironmentName
+                }
+            }
+            if ($PSBoundParameters.ContainsKey('EnvironmentRuntimeVersion')) {
+                $body.environment = @{
+                    runtimeVersion = $EnvironmentRuntimeVersion
+                }
+            }
+
+            # Convert the body to JSON
+            $bodyJson = $body | ConvertTo-Json
+            Write-FabricLog -Message "Request Body: $bodyJson" -Level Debug
+
+            # Make the API request
+            if ($PSCmdlet.ShouldProcess("Spark Workspace settings '$SparkSettingsName' in workspace '$WorkspaceId'", "Update")) {
+                $apiParams = @{
+                    BaseURI = $apiEndpointURI
+                    Headers = $script:FabricAuthContext.FabricHeaders
+                    Method = 'Patch'
+                    Body = $bodyJson
+                }
+                $response = Invoke-FabricAPIRequest @apiParams
+
+                # Return the API response
+                Write-FabricLog -Message "Spark Workspace Pool '$SparkSettingsName' updated successfully!" -Level Host
+                return $response
             }
         }
-
-        if ($PSBoundParameters.ContainsKey('EnvironmentName') -or $PSBoundParameters.ContainsKey('EnvironmentRuntimeVersion')) {
-            $body.environment = @{
-                name = $EnvironmentName
-            }
+        catch {
+            # Capture and log error details
+            $errorDetails = $_.Exception.Message
+            Write-FabricLog -Message "Failed to update SparkSettings. Error: $errorDetails" -Level Error
         }
-        if ($PSBoundParameters.ContainsKey('EnvironmentRuntimeVersion')) {
-            $body.environment = @{
-                runtimeVersion = $EnvironmentRuntimeVersion
-            }
-        }
-
-        # Convert the body to JSON
-        $bodyJson = $body | ConvertTo-Json
-        Write-FabricLog -Message "Request Body: $bodyJson" -Level Debug
-
-        # Make the API request
-        if ($PSCmdlet.ShouldProcess("Spark Workspace settings '$SparkSettingsName' in workspace '$WorkspaceId'", "Update")) {
-            $apiParams = @{
-                BaseURI = $apiEndpointURI
-                Headers = $script:FabricAuthContext.FabricHeaders
-                Method = 'Patch'
-                Body = $bodyJson
-            }
-            $response = Invoke-FabricAPIRequest @apiParams
-
-            # Return the API response
-            Write-FabricLog -Message "Spark Workspace Pool '$SparkSettingsName' updated successfully!" -Level Host
-            return $response
-        }
-    }
-    catch {
-        # Capture and log error details
-        $errorDetails = $_.Exception.Message
-        Write-FabricLog -Message "Failed to update SparkSettings. Error: $errorDetails" -Level Error
     }
 }

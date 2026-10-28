@@ -1,0 +1,257 @@
+table 'Timepoint CU Detail'
+	lineageTag: c83f443c-1eda-4f6c-ae1d-76cacc0d5b6d
+	sourceLineageTag: d0135dcf-4f13-45d5-8c89-454aee69e2ca
+
+	column 'Window start time'
+		dataType: dateTime
+		formatString: General Number
+		lineageTag: d3932390-97a3-4553-87d0-b9d8be13d5d1
+		sourceLineageTag: 9406a389-5b14-4dd3-85ae-fc29ff64f40c
+		dataCategory: Uncategorized
+		summarizeBy: none
+		sourceColumn: Window start time
+
+		annotation SummarizationSetBy = User
+
+	column Interactive
+		dataType: decimal
+		isNullable: false
+		formatString: "₹"\ #,0.###############;#,0.###############\ -"₹";"₹"\ #,0.###############
+		lineageTag: 310bd8df-9f1e-4915-b071-4fafd67e8f5e
+		sourceLineageTag: eb879fab-4c0a-47e9-bb40-cd737f273670
+		dataCategory: Uncategorized
+		summarizeBy: sum
+		sourceColumn: Interactive
+
+		annotation SummarizationSetBy = User
+
+	column Background
+		dataType: decimal
+		isNullable: false
+		formatString: "₹"\ #,0.###############;#,0.###############\ -"₹";"₹"\ #,0.###############
+		lineageTag: 6ecde949-05de-440c-9e6d-efd1d8bf5c8d
+		sourceLineageTag: b356ba3e-2aca-4152-8ec3-7115178d548b
+		dataCategory: Uncategorized
+		summarizeBy: sum
+		sourceColumn: Background
+
+		annotation SummarizationSetBy = User
+
+	column 'Interactive non billable'
+		dataType: double
+		isNullable: false
+		formatString: 0
+		lineageTag: c37d0ec3-1d94-4409-ad97-72e736da934e
+		sourceLineageTag: eb5c6166-02bc-43a7-84f1-a565939aab8c
+		dataCategory: Uncategorized
+		summarizeBy: sum
+		sourceColumn: Interactive non billable
+
+		annotation SummarizationSetBy = User
+
+	column 'Background non billable'
+		dataType: double
+		isNullable: false
+		formatString: 0
+		lineageTag: ae80d7e1-df21-44cf-acb7-642c8e546b0b
+		sourceLineageTag: 1bdf373d-e9bf-48d1-9347-fd0f6a471d14
+		dataCategory: Uncategorized
+		summarizeBy: sum
+		sourceColumn: Background non billable
+
+		annotation SummarizationSetBy = User
+
+	column 'CU (s)'
+		dataType: decimal
+		isNullable: false
+		formatString: #,0.00
+		lineageTag: dae2a6d0-cf90-4eea-afba-7f5e0b9a4287
+		sourceLineageTag: 7f7cadbc-53cd-4e59-9330-e1f6d23c1326
+		dataCategory: Uncategorized
+		summarizeBy: sum
+		sourceColumn: CU (s)
+
+		annotation SummarizationSetBy = User
+
+	column 'Window end time'
+		dataType: dateTime
+		formatString: General Number
+		lineageTag: d644fc1f-88e1-4ba6-8d73-83910667f6bd
+		sourceLineageTag: ece3b768-176b-43f3-9fc2-ad8925b439f2
+		dataCategory: Uncategorized
+		summarizeBy: none
+		sourceColumn: Window end time
+
+		annotation SummarizationSetBy = User
+
+	column 'Start of hour'
+		dataType: dateTime
+		formatString: General Number
+		lineageTag: 1362243c-bc56-47b7-959f-23681444658f
+		sourceLineageTag: 10cd6e11-3464-4ced-a41d-03c3fefa4053
+		dataCategory: Uncategorized
+		summarizeBy: none
+		sourceColumn: Start of hour
+
+		annotation SummarizationSetBy = User
+
+	column 'Auto scale capacity units'
+		dataType: int64
+		formatString: 0
+		lineageTag: 5d70f497-c3ad-4d29-aa53-9e73797020da
+		sourceLineageTag: daadfb77-0286-444e-b284-e434b0db0900
+		dataCategory: Uncategorized
+		summarizeBy: sum
+		sourceColumn: Auto scale capacity units
+
+		annotation SummarizationSetBy = User
+
+	column 'CU limit'
+		dataType: double
+		formatString: 0.00%;-0.00%;0.00%
+		lineageTag: 412dfcc6-711c-4ec1-bf4b-5c509a5ba577
+		sourceLineageTag: 3cb74804-298c-4a23-ac1c-14d8f889f0cb
+		dataCategory: Uncategorized
+		summarizeBy: sum
+		sourceColumn: CU limit
+
+		annotation SummarizationSetBy = User
+
+	column 'Interactive delay %'
+		dataType: double
+		lineageTag: 520fd5e2-c08a-49a6-87f1-1726b50345a6
+		sourceLineageTag: a31a369e-d43c-4b40-ba17-7ef048cb4503
+		dataCategory: Uncategorized
+		summarizeBy: sum
+		sourceColumn: Interactive delay %
+
+		annotation SummarizationSetBy = User
+
+	column 'Interactive rejection %'
+		dataType: double
+		lineageTag: 46154e2b-a018-4d8b-9f6a-9e7264a63904
+		sourceLineageTag: fb221998-7c80-48ac-81cb-fc890319fbd9
+		dataCategory: Uncategorized
+		summarizeBy: sum
+		sourceColumn: Interactive rejection %
+
+		annotation SummarizationSetBy = User
+
+	column 'Background rejection %'
+		dataType: double
+		lineageTag: 119e8d50-d9b1-45b9-a4a1-c06b61db5521
+		sourceLineageTag: 9c578c10-6718-47e9-baa2-c1c872275e60
+		dataCategory: Uncategorized
+		summarizeBy: sum
+		sourceColumn: Background rejection %
+
+		annotation SummarizationSetBy = User
+
+	column 'Base capacity units'
+		dataType: int64
+		formatString: 0
+		lineageTag: 13841cda-3023-4807-8196-619be5787913
+		sourceLineageTag: 03361016-0f05-4a8b-ad89-28adbac351d3
+		dataCategory: Uncategorized
+		summarizeBy: sum
+		sourceColumn: Base capacity units
+
+		annotation SummarizationSetBy = User
+
+	column StartOf6min
+		dataType: dateTime
+		formatString: General Number
+		lineageTag: b81fc66d-3577-4650-abde-6d924358a01c
+		sourceLineageTag: fc8fe176-065e-4882-845a-83585c44f175
+		dataCategory: Uncategorized
+		summarizeBy: none
+		sourceColumn: StartOf6min
+
+		annotation SummarizationSetBy = User
+
+	column Peak6minInteractive
+		dataType: double
+		lineageTag: ffc5170a-e79c-4f4b-ac08-48aa9f78ae21
+		sourceLineageTag: 2c61d710-8a4f-481c-969a-d8952da29cd5
+		dataCategory: Uncategorized
+		summarizeBy: sum
+		sourceColumn: Peak6minInteractive
+
+		annotation SummarizationSetBy = User
+
+	column Peak6minBackground
+		dataType: double
+		lineageTag: 618c8ce2-386d-4d42-9d70-a62e65800fe3
+		sourceLineageTag: a8bf5b33-a967-43b8-b070-817260ed6142
+		dataCategory: Uncategorized
+		summarizeBy: sum
+		sourceColumn: Peak6minBackground
+
+		annotation SummarizationSetBy = User
+
+	column Peak6minInteractivePreview
+		dataType: double
+		lineageTag: fc2c957c-719a-4678-b0e6-83a7b7a2d120
+		sourceLineageTag: ae785d30-1574-4bac-a876-1acee9c95db2
+		dataCategory: Uncategorized
+		summarizeBy: sum
+		sourceColumn: Peak6minInteractivePreview
+
+		annotation SummarizationSetBy = User
+
+	column Peak6minBackgroundPreview
+		dataType: double
+		lineageTag: c9e3d81f-6645-4636-bf1c-fd2d7fef9b94
+		sourceLineageTag: d76ec2a8-47f0-4209-9edf-aef28d2c9b85
+		dataCategory: Uncategorized
+		summarizeBy: sum
+		sourceColumn: Peak6minBackgroundPreview
+
+		annotation SummarizationSetBy = User
+
+	column 'Peak6min Interactive Delay %'
+		dataType: double
+		lineageTag: 7127b091-aed3-4b76-8cc1-50c7c32f52de
+		sourceLineageTag: 2a76cce6-fa11-4652-8fb6-5f56f8e91228
+		dataCategory: Uncategorized
+		summarizeBy: sum
+		sourceColumn: Peak6min Interactive Delay %
+
+		annotation SummarizationSetBy = User
+
+	column 'Peak6min Interactive Rejection %'
+		dataType: double
+		lineageTag: 60ff7da3-8150-414d-bc36-9512e4d6146c
+		sourceLineageTag: e5ab7eab-cf84-47d3-a460-696b5e3b9a17
+		dataCategory: Uncategorized
+		summarizeBy: sum
+		sourceColumn: Peak6min Interactive Rejection %
+
+		annotation SummarizationSetBy = User
+
+	column 'Peak6min Background Rejection %'
+		dataType: double
+		lineageTag: 63c0151a-2093-43a1-ab33-15064c20bdb7
+		sourceLineageTag: 2b92c439-5882-4d9e-b9cc-13d0af6b2a07
+		dataCategory: Uncategorized
+		summarizeBy: sum
+		sourceColumn: Peak6min Background Rejection %
+
+		annotation SummarizationSetBy = User
+
+	column SKU
+		dataType: string
+		lineageTag: dcc31b94-a583-4d8f-a0fb-2192a8d88a5e
+		sourceLineageTag: b796e4cc-a83e-488a-8cb7-0f916a0ae469
+		dataCategory: Uncategorized
+		summarizeBy: none
+		sourceColumn: SKU
+
+		annotation SummarizationSetBy = User
+
+	partition 'Timepoint CU Detail' = entity
+		mode: directQuery
+		source
+			entityName: Timepoint CU Detail
+			expressionSource: 'DirectQuery to AS - Fabric Capacity Metrics'
+

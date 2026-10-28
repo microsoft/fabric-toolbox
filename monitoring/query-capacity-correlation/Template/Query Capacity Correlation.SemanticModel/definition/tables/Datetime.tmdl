@@ -1,0 +1,55 @@
+table Datetime
+	lineageTag: b6f4e20c-979c-41b3-a762-a4324ab882c2
+	sourceLineageTag: 23b04518-523b-43bf-b743-e8e861ef8efa
+
+	column Date
+		dataType: dateTime
+		formatString: General Number
+		lineageTag: 577e2d5e-d63e-45e4-8a62-9aee77410419
+		sourceLineageTag: dc2c605d-f7f8-4c4a-b46f-92331d579a96
+		dataCategory: Uncategorized
+		summarizeBy: none
+		sourceColumn: Date
+
+		annotation SummarizationSetBy = User
+
+	column 'Hour Start'
+		dataType: dateTime
+		isNullable: false
+		formatString: %\H
+		lineageTag: 7ba685eb-852b-4efe-9978-6b56288cda47
+		sourceLineageTag: ea7fa41c-29d6-4b64-a2e7-479c165a5e17
+		dataCategory: Uncategorized
+		summarizeBy: none
+		sourceColumn: Hour Start
+
+		annotation SummarizationSetBy = User
+
+	column 'Hour End'
+		dataType: dateTime
+		formatString: General Number
+		lineageTag: 4482c3a6-bc72-424e-8992-23dd8a2bf9fc
+		sourceLineageTag: 8758cb35-3d7d-43cb-ab27-759f7f905a65
+		dataCategory: Uncategorized
+		summarizeBy: none
+		sourceColumn: Hour End
+
+		annotation SummarizationSetBy = User
+
+	column 'Hour Start Long'
+		dataType: dateTime
+		formatString: yyyy\-mm\-dd hh:nn
+		lineageTag: e7b12c93-8431-4fa5-b82e-ad6e16e0b579
+		sourceLineageTag: 38d5bc47-f353-4767-8a41-b07820b63035
+		dataCategory: Uncategorized
+		summarizeBy: none
+		sourceColumn: Hour Start Long
+
+		annotation SummarizationSetBy = User
+
+	partition Datetime = entity
+		mode: directQuery
+		source
+			entityName: Datetime
+			expressionSource: 'DirectQuery to AS - Fabric Capacity Metrics'
+

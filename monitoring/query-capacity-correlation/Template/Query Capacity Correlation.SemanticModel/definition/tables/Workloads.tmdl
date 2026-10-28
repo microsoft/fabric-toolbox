@@ -1,0 +1,21 @@
+table Workloads
+	lineageTag: df2e7b69-5b8a-4ae9-b6b7-ca274475b53a
+	sourceLineageTag: fc93c290-da52-4f3e-bb69-fa50f291831d
+
+	column 'Workload kind'
+		dataType: string
+		isNullable: false
+		lineageTag: 80dfdcc5-c627-4709-8769-98faac784b94
+		sourceLineageTag: 45974d51-1518-49c6-b925-3f2ae7fa7c94
+		dataCategory: Uncategorized
+		summarizeBy: none
+		sourceColumn: Workload kind
+
+		annotation SummarizationSetBy = User
+
+	partition Workloads = entity
+		mode: directQuery
+		source
+			entityName: Workloads
+			expressionSource: 'DirectQuery to AS - Fabric Capacity Metrics'
+

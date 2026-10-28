@@ -1,0 +1,8 @@
+{
+  "capacityNames": [],
+  "dataflowStorageAccountName": "",
+  "workspaceFilter": [],
+  "excludeWorkspaces": [],
+  "datasetFilter": [],
+  "logDirectory": "./logs"
+}

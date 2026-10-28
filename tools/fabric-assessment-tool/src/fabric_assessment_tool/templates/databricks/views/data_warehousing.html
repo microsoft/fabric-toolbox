@@ -3,7 +3,7 @@
 {% block content %}
 <div class="page-header">
     <h1>🏭 Data Warehousing View</h1>
-    <p>SQL warehouses and tables</p>
+    <p>SQL warehouses, catalogs, schemas, and tables</p>
 </div>
 
 <!-- Summary Stats -->
@@ -12,6 +12,18 @@
         <div class="stat-card databricks">
             <div class="stat-value" id="stat-sqlwh">{{ warehousing.sql_warehouses | length }}</div>
             <div class="stat-label">SQL Warehouses</div>
+        </div>
+    </div>
+    <div class="col">
+        <div class="stat-card">
+            <div class="stat-value" id="stat-catalogs">{{ warehousing.catalogs | length if warehousing.catalogs else 0 }}</div>
+            <div class="stat-label">Catalogs</div>
+        </div>
+    </div>
+    <div class="col">
+        <div class="stat-card">
+            <div class="stat-value" id="stat-schemas">{{ warehousing.schemas | length if warehousing.schemas else 0 }}</div>
+            <div class="stat-label">Schemas</div>
         </div>
     </div>
     <div class="col">
@@ -69,11 +81,191 @@
         </div>
     </div>
 </div>
-{% else %}
+{% endif %}
+
+<!-- Catalogs -->
+{% if warehousing.catalogs %}
 <div class="card mt-2">
+    <div class="card-header">📦 Unity Catalogs
+        {% if warehousing.catalogs | length > 10 %}
+        <a href="catalogs_page_1.html" style="float:right; font-size:0.85em;">View all {{ warehousing.catalogs | length }} →</a>
+        {% endif %}
+    </div>
     <div class="card-body">
-        <div class="empty-state">
-            <p>No SQL warehouses found.</p>
+        <div class="table-responsive">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th class="text-right">Schemas</th>
+                        <th class="text-right">Managed Tables</th>
+                        <th class="text-right">External Tables</th>
+                        <th class="text-right">Volumes</th>
+                        <th class="text-right">Functions</th>
+                        <th>Workspace</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for cat in warehousing.catalogs[:10] %}
+                    <tr data-workspace="{{ cat.workspace | default('N/A') }}">
+                        <td><strong>{{ cat.name | default('Unknown') }}</strong></td>
+                        <td class="text-right">{{ cat.schemas | default(0) }}</td>
+                        <td class="text-right">{{ cat.managed_tables | default(0) | format_number }}</td>
+                        <td class="text-right">{{ cat.external_tables | default(0) | format_number }}</td>
+                        <td class="text-right">{{ cat.volumes | default(0) }}</td>
+                        <td class="text-right">{{ cat.functions | default(0) }}</td>
+                        <td>{{ cat.workspace | default('N/A') }}</td>
+                    </tr>
+                    {% endfor %}
+                    {% if warehousing.catalogs | length > 10 %}
+                    <tr>
+                        <td colspan="7" class="text-muted">
+                            <a href="catalogs_page_1.html">... and {{ warehousing.catalogs | length - 10 }} more catalogs →</a>
+                        </td>
+                    </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Schemas -->
+{% if warehousing.schemas %}
+<div class="card mt-2">
+    <div class="card-header">📂 Schemas
+        {% if warehousing.schemas | length > 10 %}
+        <a href="schemas_page_1.html" style="float:right; font-size:0.85em;">View all {{ warehousing.schemas | length }} →</a>
+        {% endif %}
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Schema</th>
+                        <th>Catalog</th>
+                        <th class="text-right">Managed Tables</th>
+                        <th class="text-right">External Tables</th>
+                        <th class="text-right">Volumes</th>
+                        <th class="text-right">Functions</th>
+                        <th>Workspace</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for s in warehousing.schemas[:10] %}
+                    <tr data-workspace="{{ s.workspace | default('N/A') }}">
+                        <td>{{ s.name | default('Unknown') }}</td>
+                        <td>{{ s.catalog | default('N/A') }}</td>
+                        <td class="text-right">{{ s.managed_tables | default(0) | format_number }}</td>
+                        <td class="text-right">{{ s.external_tables | default(0) | format_number }}</td>
+                        <td class="text-right">{{ s.volumes | default(0) }}</td>
+                        <td class="text-right">{{ s.functions | default(0) }}</td>
+                        <td>{{ s.workspace | default('N/A') }}</td>
+                    </tr>
+                    {% endfor %}
+                    {% if warehousing.schemas | length > 10 %}
+                    <tr>
+                        <td colspan="7" class="text-muted">
+                            <a href="schemas_page_1.html">... and {{ warehousing.schemas | length - 10 }} more schemas →</a>
+                        </td>
+                    </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Tables -->
+{% if warehousing.tables %}
+<div class="card mt-2">
+    <div class="card-header">📋 Tables
+        {% if warehousing.tables | length > 10 %}
+        <a href="tables_page_1.html" style="float:right; font-size:0.85em;">View all {{ warehousing.tables | length }} →</a>
+        {% endif %}
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Table</th>
+                        <th>Catalog.Schema</th>
+                        <th>Type</th>
+                        <th>Format</th>
+                        <th class="text-right">Columns</th>
+                        <th>Workspace</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for t in warehousing.tables[:10] %}
+                    <tr data-workspace="{{ t.workspace | default('N/A') }}">
+                        <td>{{ t.name | default('Unknown') }}</td>
+                        <td><code>{{ t.catalog }}.{{ t.schema }}</code></td>
+                        <td>
+                            <span class="badge {% if t.type == 'MANAGED' %}badge-success{% else %}badge-secondary{% endif %}">
+                                {{ t.type | default('N/A') }}
+                            </span>
+                        </td>
+                        <td>{{ t.format | default('N/A') }}</td>
+                        <td class="text-right">{{ t.columns | default('N/A') }}</td>
+                        <td>{{ t.workspace | default('N/A') }}</td>
+                    </tr>
+                    {% endfor %}
+                    {% if warehousing.tables | length > 10 %}
+                    <tr>
+                        <td colspan="6" class="text-muted">
+                            <a href="tables_page_1.html">... and {{ warehousing.tables | length - 10 }} more tables →</a>
+                        </td>
+                    </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Views -->
+{% if warehousing.views %}
+<div class="card mt-2">
+    <div class="card-header">👁️ Views
+        {% if warehousing.views | length > 10 %}
+        <a href="views_page_1.html" style="float:right; font-size:0.85em;">View all {{ warehousing.views | length }} →</a>
+        {% endif %}
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>View</th>
+                        <th>Catalog.Schema</th>
+                        <th class="text-right">Columns</th>
+                        <th>Workspace</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for v in warehousing.views[:10] %}
+                    <tr data-workspace="{{ v.workspace | default('N/A') }}">
+                        <td>{{ v.name | default('Unknown') }}</td>
+                        <td><code>{{ v.catalog }}.{{ v.schema }}</code></td>
+                        <td class="text-right">{{ v.columns | default('N/A') }}</td>
+                        <td>{{ v.workspace | default('N/A') }}</td>
+                    </tr>
+                    {% endfor %}
+                    {% if warehousing.views | length > 10 %}
+                    <tr>
+                        <td colspan="4" class="text-muted">
+                            <a href="views_page_1.html">... and {{ warehousing.views | length - 10 }} more views →</a>
+                        </td>
+                    </tr>
+                    {% endif %}
+                </tbody>
+            </table>
         </div>
     </div>
 </div>

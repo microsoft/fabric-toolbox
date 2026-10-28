@@ -1,0 +1,21 @@
+table 'Billing Type'
+	lineageTag: 84bcf1d3-12b6-44dc-8449-eba8cc24813c
+	sourceLineageTag: 8df822de-24b8-4891-a85b-9fe98c477f3a
+
+	column 'Billing type'
+		dataType: string
+		isNullable: false
+		lineageTag: 71ed88b2-0f73-4347-8053-307307813f8a
+		sourceLineageTag: 96135157-072a-4963-97c1-b9cb55af6b9f
+		dataCategory: Uncategorized
+		summarizeBy: none
+		sourceColumn: Billing type
+
+		annotation SummarizationSetBy = User
+
+	partition 'Billing Type' = entity
+		mode: directQuery
+		source
+			entityName: Billing Type
+			expressionSource: 'DirectQuery to AS - Fabric Capacity Metrics'
+

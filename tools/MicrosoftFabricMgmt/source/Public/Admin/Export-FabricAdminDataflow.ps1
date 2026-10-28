@@ -29,6 +29,7 @@
 #>
 function Export-FabricAdminDataflow {
     [CmdletBinding()]
+    [OutputType([string], [byte[]])]
     param (
         [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]

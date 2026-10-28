@@ -15,6 +15,9 @@
 .PARAMETER ReportFormat
     The format in which to retrieve the Report definition. This parameter is optional.
 
+.PARAMETER Raw
+    If specified, returns the untouched API response.
+
 .EXAMPLE
     Get-FabricReportDefinition -WorkspaceId "workspace-12345" -ReportId "Report-67890"
     This example retrieves the definition of the Report with ID "Report-67890" in the workspace with ID "workspace-12345".
@@ -44,35 +47,44 @@ function Get-FabricReportDefinition {
 
         [Parameter(Mandatory = $false)]
         [ValidateNotNullOrEmpty()]
-        [string]$ReportFormat
+        [string]$ReportFormat,
+
+        [Parameter()]
+        [switch]$Raw
     )
-    try {
-        Invoke-FabricAuthCheck -ThrowOnFailure
+    process {
+        try {
+            Invoke-FabricAuthCheck -ThrowOnFailure
 
 
-        # Construct the API endpoint URI with filtering logic
-        $apiEndpointURI = "{0}/workspaces/{1}/reports/{2}/getDefinition" -f $script:FabricAuthContext.BaseUrl, $WorkspaceId, $ReportId
-        if ($ReportFormat) {
-            $apiEndpointURI = "{0}?format={1}" -f $apiEndpointURI, $ReportFormat
+            # Construct the API endpoint URI with filtering logic
+            $apiEndpointURI = "{0}/workspaces/{1}/reports/{2}/getDefinition" -f $script:FabricAuthContext.BaseUrl, $WorkspaceId, $ReportId
+            if ($ReportFormat) {
+                $apiEndpointURI = "{0}?format={1}" -f $apiEndpointURI, $ReportFormat
+            }
+            Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+
+            # Make the API request
+            # Make the API request
+            $apiParams = @{
+                BaseURI = $apiEndpointURI
+                Headers = $script:FabricAuthContext.FabricHeaders
+                Method = 'Post'
+            }
+            $response = Invoke-FabricAPIRequest @apiParams
+
+            if ($Raw) {
+                return $response
+            }
+
+            # Return the API response
+            Write-FabricLog -Message "Report '$ReportId' definition retrieved successfully!" -Level Debug
+            return $response
         }
-        Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
-
-        # Make the API request
-        # Make the API request
-        $apiParams = @{
-            BaseURI = $apiEndpointURI
-            Headers = $script:FabricAuthContext.FabricHeaders
-            Method = 'Post'
+        catch {
+            # Capture and log error details
+            $errorDetails = $_.Exception.Message
+            Write-FabricLog -Message "Failed to retrieve Report. Error: $errorDetails" -Level Error
         }
-        $response = Invoke-FabricAPIRequest @apiParams
-
-        # Return the API response
-        Write-FabricLog -Message "Report '$ReportId' definition retrieved successfully!" -Level Debug
-        return $response
-    }
-    catch {
-        # Capture and log error details
-        $errorDetails = $_.Exception.Message
-        Write-FabricLog -Message "Failed to retrieve Report. Error: $errorDetails" -Level Error
     }
 }

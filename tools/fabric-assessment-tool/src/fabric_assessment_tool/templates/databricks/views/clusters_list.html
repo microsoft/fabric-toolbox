@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="page-header">
+    <h1>🖥️ All Clusters</h1>
+    <p>{{ items | length }} clusters across all workspaces</p>
+</div>
+
+<div class="card">
+    <div class="card-header">
+        Clusters (Page {{ current_page }} of {{ total_pages }})
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>State</th>
+                        <th>Source</th>
+                        <th>Node Type</th>
+                        <th class="text-right">Cores</th>
+                        <th class="text-right">Memory (MB)</th>
+                        <th>Spark Version</th>
+                        <th>Workspace</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for cl in page_items %}
+                    <tr data-workspace="{{ cl.workspace | default('N/A') }}">
+                        <td>{{ cl.cluster_name | default('Unknown') }}</td>
+                        <td>
+                            <span class="badge {% if cl.state == 'RUNNING' %}badge-success{% elif cl.state == 'TERMINATED' %}badge-secondary{% else %}badge-warning{% endif %}">
+                                {{ cl.state | default('Unknown') }}
+                            </span>
+                        </td>
+                        <td>{{ cl.cluster_source | default('N/A') }}</td>
+                        <td>{{ cl.node_type_id | default('N/A') }}</td>
+                        <td class="text-right">{{ cl.cluster_cores | default('N/A') }}</td>
+                        <td class="text-right">{{ cl.cluster_memory_mb | default('N/A') | format_number }}</td>
+                        <td><span class="badge badge-secondary">{{ cl.spark_version | default('N/A') }}</span></td>
+                        <td>{{ cl.workspace | default('N/A') }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Pagination -->
+        {% if total_pages > 1 %}
+        <nav class="pagination-nav">
+            {% if current_page > 1 %}
+            <a href="clusters_page_{{ current_page - 1 }}.html">← Previous</a>
+            {% endif %}
+            <span class="pagination-info">Page {{ current_page }} of {{ total_pages }}</span>
+            {% if current_page < total_pages %}
+            <a href="clusters_page_{{ current_page + 1 }}.html">Next →</a>
+            {% endif %}
+        </nav>
+        {% endif %}
+    </div>
+</div>
+
+<div class="mt-2">
+    <a href="data_engineering.html">← Back to Data Engineering</a>
+</div>
+{% endblock %}

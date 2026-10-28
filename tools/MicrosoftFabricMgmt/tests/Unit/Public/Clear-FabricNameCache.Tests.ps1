@@ -56,9 +56,12 @@ Describe 'Clear-FabricNameCache' {
         }
 
         It 'Should clear all cache entries at once' {
-            # Verify cache exists
+            # Verify cache exists. PSFramework config is global to the session, so other
+            # test files may have registered additional MicrosoftFabricMgmt.Cache.* entries;
+            # assert at least the 4 this test set (2 capacity + 2 workspace) rather than an
+            # exact count. The post-clear "all values null" check below proves the clear.
             $beforeCount = (Get-PSFConfig -FullName "MicrosoftFabricMgmt.Cache.*" | Measure-Object).Count
-            $beforeCount | Should -Be 4  # 2 capacity + 2 workspace
+            $beforeCount | Should -BeGreaterOrEqual 4
 
             # Clear cache
             Clear-FabricNameCache -Force

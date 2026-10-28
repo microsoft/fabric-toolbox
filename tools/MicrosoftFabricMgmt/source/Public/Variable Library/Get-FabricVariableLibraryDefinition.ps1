@@ -14,6 +14,9 @@
 .PARAMETER VariableLibraryFormat
     The format for the variable library definition (e.g., 'json'). Optional.
 
+.PARAMETER Raw
+    If specified, returns the untouched API response.
+
 .EXAMPLE
     Get-FabricVariableLibraryDefinition -WorkspaceId "workspace-12345" -VariableLibraryId "library-67890"
     Retrieves the definition for the specified variable library in the given workspace.
@@ -42,34 +45,43 @@ function Get-FabricVariableLibraryDefinition {
 
         [Parameter(Mandatory = $false)]
         [ValidateNotNullOrEmpty()]
-        [string]$VariableLibraryFormat
+        [string]$VariableLibraryFormat,
+
+        [Parameter()]
+        [switch]$Raw
     )
-    try {
-        Invoke-FabricAuthCheck -ThrowOnFailure
+    process {
+        try {
+            Invoke-FabricAuthCheck -ThrowOnFailure
 
 
-        # Construct the API endpoint URI with filtering logic
-        $apiEndpointURI = "{0}/workspaces/{1}/VariableLibraries/{2}/getDefinition" -f $script:FabricAuthContext.BaseUrl, $WorkspaceId, $VariableLibraryId
-        if ($VariableLibraryFormat) {
-            $apiEndpointURI = "{0}?format={1}" -f $apiEndpointURI, $VariableLibraryFormat
+            # Construct the API endpoint URI with filtering logic
+            $apiEndpointURI = "{0}/workspaces/{1}/VariableLibraries/{2}/getDefinition" -f $script:FabricAuthContext.BaseUrl, $WorkspaceId, $VariableLibraryId
+            if ($VariableLibraryFormat) {
+                $apiEndpointURI = "{0}?format={1}" -f $apiEndpointURI, $VariableLibraryFormat
+            }
+            Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+
+            # Make the API request
+            $apiParams = @{
+                BaseURI = $apiEndpointURI
+                Headers = $script:FabricAuthContext.FabricHeaders
+                Method  = 'Post'
+            }
+            $response = Invoke-FabricAPIRequest @apiParams
+
+            if ($Raw) {
+                return $response
+            }
+
+            # Return the API response
+            Write-FabricLog -Message "Variable Library '$VariableLibraryId' definition retrieved successfully!" -Level Debug
+            return $response
         }
-        Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
-
-        # Make the API request
-        $apiParams = @{
-            BaseURI = $apiEndpointURI
-            Headers = $script:FabricAuthContext.FabricHeaders
-            Method  = 'Post'
+        catch {
+            # Capture and log error details
+            $errorDetails = $_.Exception.Message
+            Write-FabricLog -Message "Failed to retrieve Variable Library. Error: $errorDetails" -Level Error
         }
-        $response = Invoke-FabricAPIRequest @apiParams
-
-        # Return the API response
-        Write-FabricLog -Message "Variable Library '$VariableLibraryId' definition retrieved successfully!" -Level Debug
-        return $response
-    }
-    catch {
-        # Capture and log error details
-        $errorDetails = $_.Exception.Message
-        Write-FabricLog -Message "Failed to retrieve Variable Library. Error: $errorDetails" -Level Error
     }
 }

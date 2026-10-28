@@ -5,6 +5,7 @@ $expectedParams = @(
     "WorkspaceId"
     "GraphQLApiId"
     "GraphQLApiName"
+    "Raw"
     "ProgressAction"
     "Verbose"
     "Debug"

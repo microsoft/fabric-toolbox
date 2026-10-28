@@ -51,11 +51,6 @@ if (Test-Path $configFilePath) {
         $config | Add-Member -NotePropertyName "VerboseLogSendInterval" -NotePropertyValue 60 -Force
         ConvertTo-Json $config -Depth 5 | Out-File $configFilePath -force -Encoding utf8
     }
-    
-    if ($config.ServicePrincipal.SecretText) {
-        $config.ServicePrincipal.SecretText = (ConvertFrom-SecureWithMachineKey  $config.ServicePrincipal.SecretText) | ConvertTo-SecureString -AsPlainText -Force
-    }
-
 
 }
 else {

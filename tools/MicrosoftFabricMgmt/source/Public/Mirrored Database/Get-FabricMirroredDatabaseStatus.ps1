@@ -13,6 +13,9 @@ workspace and is required.
 .PARAMETER MirroredDatabaseId
 The Id of the mirrored database to check. Provide the resource Id so the API can return status for that specific item.
 
+.PARAMETER Raw
+If specified, returns the untouched API response with no added properties or type decoration.
+
 .EXAMPLE
 Get-FabricMirroredDatabaseStatus -WorkspaceId 11111111-2222-3333-4444-555555555555 -MirroredDatabaseId aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee
 
@@ -30,32 +33,76 @@ function Get-FabricMirroredDatabaseStatus {
 
         [Parameter(Mandatory = $false)]
         [ValidateNotNullOrEmpty()]
-        [string]$MirroredDatabaseId
+        [string]$MirroredDatabaseId,
+
+        [Parameter()]
+        [switch]$Raw
     )
-    try {
-        Invoke-FabricAuthCheck -ThrowOnFailure
+    process {
+        try {
+            Invoke-FabricAuthCheck -ThrowOnFailure
 
 
-        # Construct the API endpoint URI
-        $apiEndpointURI = "{0}/workspaces/{1}/mirroredDatabases/{2}/getMirroringStatus" -f $script:FabricAuthContext.BaseUrl, $WorkspaceId, $MirroredDatabaseId
-        Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+            # Construct the API endpoint URI
+            $apiEndpointURI = "{0}/workspaces/{1}/mirroredDatabases/{2}/getMirroringStatus" -f $script:FabricAuthContext.BaseUrl, $WorkspaceId, $MirroredDatabaseId
+            Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
 
-        # Make the API request
-        $apiParams = @{
-            BaseURI = $apiEndpointURI
-            Headers = $script:FabricAuthContext.FabricHeaders
-            Method = 'Post'
+            # Make the API request
+            $apiParams = @{
+                BaseURI = $apiEndpointURI
+                Headers = $script:FabricAuthContext.FabricHeaders
+                Method = 'Post'
+            }
+            $response = Invoke-FabricAPIRequest @apiParams
+
+            if (-not $response) {
+                Write-FabricLog -Message "No data returned from the API." -Level Warning
+                return $null
+            }
+
+            if ($Raw) {
+                return $response
+            }
+
+            Write-FabricLog -Message "Mirrored Database '$MirroredDatabaseId' status retrieved successfully!" -Level Debug
+
+            # Enrich with resolved workspace and capacity names
+            $workspaceName = $null
+            try {
+                $workspaceName = Resolve-FabricWorkspaceName -WorkspaceId $WorkspaceId
+            }
+            catch {
+                $workspaceName = $WorkspaceId
+                Write-FabricLog -Message "Failed to resolve workspace name for ID '$WorkspaceId': $($_.Exception.Message)" -Level Debug
+            }
+
+            $capacityName = $null
+            try {
+                $capacityId = Resolve-FabricCapacityIdFromWorkspace -WorkspaceId $WorkspaceId
+                if ($capacityId) {
+                    $capacityName = Resolve-FabricCapacityName -CapacityId $capacityId
+                }
+            }
+            catch {
+                Write-FabricLog -Message "Failed to resolve capacity name for workspace ID '$WorkspaceId': $($_.Exception.Message)" -Level Debug
+            }
+
+            foreach ($item in $response) {
+                $item | Add-Member -NotePropertyName 'workspaceId'   -NotePropertyValue $WorkspaceId   -Force
+                $item | Add-Member -NotePropertyName 'WorkspaceName' -NotePropertyValue $workspaceName -Force
+                if ($null -ne $capacityName) {
+                    $item | Add-Member -NotePropertyName 'CapacityName' -NotePropertyValue $capacityName -Force
+                }
+            }
+
+            $response | Add-FabricTypeName -TypeName 'MicrosoftFabric.MirroredDatabaseStatus'
+            return $response
         }
-        $response = Invoke-FabricAPIRequest @apiParams
+        catch {
+            # Capture and log error details
+            $errorDetails = $_.Exception.Message
+            Write-FabricLog -Message "Failed to retrieve MirroredDatabase. Error: $errorDetails" -Level Error
+        }
 
-        # Return the API response
-        Write-FabricLog -Message "Mirrored Database '$MirroredDatabaseId' status retrieved successfully!" -Level Debug
-        return $response
     }
-    catch {
-        # Capture and log error details
-        $errorDetails = $_.Exception.Message
-        Write-FabricLog -Message "Failed to retrieve MirroredDatabase. Error: $errorDetails" -Level Error
-    }
-
 }

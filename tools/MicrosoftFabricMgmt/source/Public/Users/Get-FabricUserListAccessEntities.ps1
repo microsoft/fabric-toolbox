@@ -12,6 +12,9 @@
 .PARAMETER Type
     The type of access entity to filter the results by. This parameter is optional and supports predefined values such as 'CopyJob', 'Dashboard', 'DataPipeline', etc.
 
+.PARAMETER Raw
+    If specified, returns the untouched API response.
+
 .EXAMPLE
     Get-FabricUserListAccessEntities -UserId "user-12345"
     This example retrieves all access entities associated with the user having ID "user-12345".
@@ -36,7 +39,10 @@ function Get-FabricUserListAccessEntities {
         [Parameter(Mandatory = $false)]
         [ValidateNotNullOrEmpty()]
         [ValidateSet('CopyJob', ' Dashboard', 'DataPipeline', 'Datamart', 'Environment', 'Eventhouse', 'Eventstream', 'GraphQLApi', 'KQLDashboard', 'KQLDatabase', 'KQLQueryset', 'Lakehouse', 'MLExperiment', 'MLModel', 'MirroredDatabase', 'MountedDataFactory', 'Notebook', 'PaginatedReport', 'Reflex', 'Report', 'SQLDatabase', 'SQLEndpoint', 'SemanticModel', 'SparkJobDefinition', 'VariableLibrary', 'Warehouse')]
-        [string]$Type
+        [string]$Type,
+
+        [Parameter()]
+        [switch]$Raw
     )
     try {
         Invoke-FabricAuthCheck -ThrowOnFailure
@@ -63,11 +69,13 @@ function Get-FabricUserListAccessEntities {
             Write-FabricLog -Message "No data returned from the API." -Level Warning
             return $null
         }
-        else {
-            # Return all workspace tenant setting overrides
-            Write-FabricLog -Message "Successfully retrieved access entities for user ID '$UserId'. Entity count: $($dataItems.Count)" -Level Debug
+
+        if ($Raw) {
             return $dataItems
         }
+
+        Write-FabricLog -Message "Successfully retrieved access entities for user ID '$UserId'. Entity count: $($dataItems.Count)" -Level Debug
+        return $dataItems
     }
     catch {
         # Capture and log error details

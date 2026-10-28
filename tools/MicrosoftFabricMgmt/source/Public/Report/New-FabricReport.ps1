@@ -18,10 +18,16 @@
 .PARAMETER ReportPathDefinition
     A mandatory path to the folder that contains Report definition files to upload.
 
+.PARAMETER FolderId
+    Optional. The folder ID where the Report will be placed. If omitted, the Report is created in the workspace root.
 
 .EXAMPLE
     New-FabricReport -WorkspaceId "workspace-12345" -ReportName "New Report" -ReportDescription "Description of the new Report"
     This example creates a new Report named "New Report" in the workspace with ID "workspace-12345" with the provided description.
+
+.EXAMPLE
+    New-FabricReport -WorkspaceId "workspace-12345" -ReportName "New Report" -ReportPathDefinition "C:\Definitions\Report" -FolderId "folder-67890"
+    This example creates a new Report from the specified definition files and places it in the folder with ID "folder-67890".
 
 .NOTES
     - Requires `$FabricConfig` global configuration, including `BaseUrl` and `FabricHeaders`.
@@ -48,19 +54,26 @@ function New-FabricReport {
 
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
-        [string]$ReportPathDefinition
+        [string]$ReportPathDefinition,
+
+        [Parameter(Mandatory = $false)]
+        [ValidateNotNullOrEmpty()]
+        [string]$FolderId
     )
     try {
+        # Validate authentication
         Invoke-FabricAuthCheck -ThrowOnFailure
 
-
         # Construct the API endpoint URI
-        $apiEndpointURI = "{0}/workspaces/{1}/reports" -f $script:FabricAuthContext.BaseUrl, $WorkspaceId
-        Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+        $apiEndpointURI = New-FabricAPIUri -Resource 'workspaces' -WorkspaceId $WorkspaceId -Subresource 'reports'
 
         # Construct the request body
         $body = @{
             displayName = $ReportName
+        }
+
+        if ($FolderId) {
+            $body.folderId = $FolderId
         }
 
         if ($ReportDescription) {
@@ -80,8 +93,7 @@ function New-FabricReport {
         }
 
         # Convert the body to JSON
-        $bodyJson = $body | ConvertTo-Json -Depth 10
-        Write-FabricLog -Message "Request Body: $bodyJson" -Level Debug
+        $bodyJson = Convert-FabricRequestBody -InputObject $body
 
         # Make the API request
         if ($PSCmdlet.ShouldProcess("Report '$ReportName' in workspace '$WorkspaceId'", "Create")) {
@@ -95,7 +107,7 @@ function New-FabricReport {
 
             # Return the API response
             Write-FabricLog -Message "Report '$ReportName' created successfully!" -Level Host
-            return $response
+            $response
         }
     }
     catch {

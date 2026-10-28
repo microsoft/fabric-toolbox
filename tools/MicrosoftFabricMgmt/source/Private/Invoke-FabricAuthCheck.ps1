@@ -50,7 +50,7 @@ function Invoke-FabricAuthCheck {
     $isExpired = Test-TokenExpired -AutoRefresh
 
     if ($isExpired) {
-        $message = "Authentication token has expired. Please run Set-FabricApiHeaders to authenticate."
+        $message = "Authentication token has expired. Please run Connect-FabricAccount to authenticate."
         Write-FabricLog -Message $message -Level Error
 
         if ($ThrowOnFailure) {

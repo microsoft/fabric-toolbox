@@ -1,0 +1,62 @@
+table Workspaces
+	lineageTag: 64428bb7-fcbd-4890-aa64-d8b020d1bd1c
+	sourceLineageTag: 89fe97cf-8d35-404e-9804-8c5a9de3a0db
+
+	column 'Workspace Id'
+		dataType: string
+		lineageTag: 3e0c53d1-a598-4914-a5c8-e2e104569322
+		sourceLineageTag: a63e5b3e-e841-4f15-9750-8b3ba5359219
+		dataCategory: Uncategorized
+		summarizeBy: none
+		sourceColumn: Workspace Id
+
+		annotation SummarizationSetBy = User
+
+	column 'Workspace key'
+		dataType: string
+		isHidden
+		isNullable: false
+		lineageTag: 948470fa-f535-4ea2-96e4-55f4ce027a8a
+		sourceLineageTag: 8fd1202a-8dbc-4c8f-9e43-b35e35098f62
+		dataCategory: Uncategorized
+		summarizeBy: none
+		sourceColumn: Workspace key
+
+		annotation SummarizationSetBy = User
+
+	column 'Workspace name'
+		dataType: string
+		lineageTag: 3683682c-06e9-4655-bec7-b6bdf7558e1f
+		sourceLineageTag: 0ba34bdc-85e8-4dbb-9248-bd4230c4bb10
+		dataCategory: Uncategorized
+		summarizeBy: none
+		sourceColumn: Workspace name
+
+		annotation SummarizationSetBy = User
+
+	column 'Capacity Id'
+		dataType: string
+		lineageTag: fc86011b-3bbe-4969-89d5-8c655db0408b
+		sourceLineageTag: 722afddd-dbef-440a-b94d-896edcdb0781
+		dataCategory: Uncategorized
+		summarizeBy: none
+		sourceColumn: Capacity Id
+
+		annotation SummarizationSetBy = User
+
+	column 'Workspace provision state'
+		dataType: string
+		lineageTag: 26aef921-d505-42b9-942b-933136122bd6
+		sourceLineageTag: 40f26adc-58e4-4124-8f89-19b2d010a99b
+		dataCategory: Uncategorized
+		summarizeBy: none
+		sourceColumn: Workspace provision state
+
+		annotation SummarizationSetBy = User
+
+	partition Workspaces = entity
+		mode: directQuery
+		source
+			entityName: Workspaces
+			expressionSource: 'DirectQuery to AS - Fabric Capacity Metrics'
+

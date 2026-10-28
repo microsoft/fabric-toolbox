@@ -26,10 +26,10 @@ This tool allows to scan one or multiple workspaces in order to get all the info
 
 ## Installation
 
-You can use the [prebuilt wheel file](./resources/fabric_assessment_tool-0.2.2-py3-none-any.whl) in the resources folder.
+You can use the [prebuilt wheel file](./resources/fabric_assessment_tool-0.3.0-py3-none-any.whl) in the resources folder.
 
 ```bash
-pip install resources/fabric_assessment_tool-0.2.2-py3-none-any.whl
+pip install resources/fabric_assessment_tool-0.3.0-py3-none-any.whl
 ```
 
 ## Authentication
@@ -133,6 +133,21 @@ When using Entra ID authentication modes (`entra-interactive`, `entra-spn`, or `
 
 > **Note:** Ensure that the Azure Synapse workspace has Entra ID authentication enabled with an Entra ID admin configured. See [Microsoft documentation](https://learn.microsoft.com/en-us/azure/synapse-analytics/sql/active-directory-authentication) for details.
 
+### Databricks Service Principal Permissions
+
+When using a service principal for Databricks assessments (via `DATABRICKS_CLIENT_ID` / `DATABRICKS_CLIENT_SECRET`), the following permissions are required for complete extraction:
+
+| Resource | Required Permission | Notes |
+|----------|-------------------|-------|
+| Clusters | Workspace Admin or `CAN_ATTACH_TO` on each cluster | Without this, the clusters API returns empty with no error |
+| SQL Warehouses | `CAN_USE` or `CAN_MANAGE` | Service principal must have explicit warehouse access |
+| Notebooks | Workspace-level read access | Usually granted via workspace admin role |
+| Jobs | `CAN_VIEW` or `IS_OWNER` | Jobs the SPN cannot access are not returned |
+| Unity Catalog | `USE CATALOG` + `USE SCHEMA` | Required to list schemas, tables, volumes, and functions |
+| Cluster Policies | Workspace Admin | Required to list all policies |
+
+> **Tip:** For the most complete assessment, grant the service principal **Workspace Admin** role on each workspace. Without this, some resources may silently return empty results.
+
 
 ## CLI Commands
 
@@ -142,8 +157,10 @@ Fabric Assessment Tool provides two main commands:
 
 ```bash
 fat assess --source <synapse|databricks> \
+          [--cloud <azure|aws>] \
           --mode <full> \
           --ws <workspace1_name,workspace2_name> \
+          [--resources <resource1,resource2>] \
           -o/--output <output_path>
 ```
 
@@ -153,9 +170,12 @@ fat assess --source <synapse|databricks> \
 
 **Optional Parameters:**
 - `--mode`: Assessment mode (currently supports: full)
+- `--cloud`: Cloud provider for the source platform (`azure` or `aws`). Default: `azure`. Use `aws` with `--source databricks` for AWS Databricks workspaces.
 - `--ws`: Comma-separated list of workspace names to assess 
   - *For Databricks, use the **workspace name** (not the workspace ID)*
-  - *If not provided, it will prompt the list of reachable workspaces to select*
+  - *For Azure sources, if not provided, it will prompt the list of reachable workspaces to select*
+  - *For AWS Databricks, if not provided, it lists selectable workspaces through the Databricks account API. Set `DATABRICKS_ACCOUNT_ID`, `DATABRICKS_CLIENT_ID`, and `DATABRICKS_CLIENT_SECRET` for this mode*
+  - *For multiple AWS Databricks workspaces, set `DATABRICKS_CLIENT_ID` and `DATABRICKS_CLIENT_SECRET`; `DATABRICKS_TOKEN` is only valid for a single workspace context*
 - `--subscription-id`: Azure subscription ID (if not provided, will use default credentials). **Required** when using `--auth-method fabric`
 - `--auth-method`: Authentication method (`azure-cli` or `fabric`). Default: auto-detect based on environment
 - `--sql-admin-password`: SQL admin password for dedicated SQL pools (bypasses interactive prompt)
@@ -168,6 +188,11 @@ fat assess --source <synapse|databricks> \
 - `--sql-client-id`: Service principal client ID (required with `--sql-auth-mode entra-spn`)
 - `--sql-client-secret`: Service principal client secret (required with `--sql-auth-mode entra-spn`)
 - `--sql-tenant-id`: Azure tenant ID (optional, defaults to 'common')
+- `--resources`: Comma-separated list of resource types to extract. When omitted, all resources are extracted. Use this to re-extract only specific resources without repeating a full assessment. Previously exported data for other resources is preserved and summaries are recalculated accurately.
+  - Valid Databricks resources: `clusters`, `sql_warehouses`, `notebooks`, `jobs`, `catalogs`, `external_locations`, `connections`, `secret_scopes`, `pipelines`, `repos`, `experiments`, `serving_endpoints`, `alerts`, `genie_spaces`, `cluster_policies`, `instance_pools`
+- `--download-notebooks`: Download and export full Databricks notebook source content. When omitted, notebook extraction is metadata-first, skips workspace/export calls, and falls back to `workspace/get-status` only when list metadata is missing.
+- `--max-parallel-api-calls`: Maximum concurrent Databricks API calls used by notebook/job extraction and catalog schema fan-out (default: `8`; catalog fan-out is internally capped to avoid excessive throttling).
+- `--log-file`: Optional path to write logs. Logging is configured only when this option is set (no console logging handlers are configured). Uses standard logging format (`%(asctime)s - %(name)s - %(levelname)s - %(message)s`).
 
 **Examples:**
 ```bash
@@ -192,7 +217,33 @@ fat assess --source synapse --ws workspace1 -o ./results \
 fat assess --source synapse --ws workspace1 -o ./results --sql-auth-mode entra-default
 
 # Assess Databricks workspace
+# Note: Job run-history calls are skipped for jobs without notebook tasks.
 fat assess --source databricks --ws my-workspace --output results_folder
+
+# Assess AWS Databricks workspace using environment-variable authentication
+export DATABRICKS_HOST="https://dbc-xxxxxxxx-xxxx.cloud.databricks.com"
+export DATABRICKS_TOKEN="<your-token>"
+fat assess --source databricks --cloud aws --ws my-workspace --output results_folder
+
+# Assess multiple AWS Databricks workspaces using OAuth client credentials
+export DATABRICKS_ACCOUNT_ID="<your-account-id>"
+export DATABRICKS_CLIENT_ID="<your-client-id>"
+export DATABRICKS_CLIENT_SECRET="<your-client-secret>"
+fat assess --source databricks --cloud aws --ws workspace1,workspace2 --output results_folder
+
+# Re-extract only jobs from previously assessed workspaces (partial mode)
+fat assess --source databricks --cloud aws --ws dev,prod --resources jobs -o results_folder
+
+# Re-extract jobs and notebooks without repeating the full assessment
+fat assess --source databricks --cloud aws --ws dev --resources jobs,notebooks -o results_folder
+
+# Increase API parallelism for Databricks extraction
+fat assess --source databricks --ws jdc-adb -o results_folder \
+    --max-parallel-api-calls 12
+
+# Write detailed logs to a file (includes API elapsed-time debug logs)
+fat assess --source databricks --ws jdc-adb -o results_folder \
+    --log-file ./fat-assess.log
 ```
 
 ### `fat visualize` - Generate interactive HTML reports

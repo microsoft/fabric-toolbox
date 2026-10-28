@@ -1,0 +1,163 @@
+table Items
+	lineageTag: e34b15c0-287c-4a0f-a86d-83ca06ac1ad6
+	sourceLineageTag: 7317169a-1593-419e-a03d-bf60db9f0ce2
+
+	column 'Capacity Id'
+		dataType: string
+		lineageTag: 0d5b09fd-bd30-419f-9f78-157eba004c17
+		sourceLineageTag: 22646a78-46a4-4f2c-82ca-c58462ffaf70
+		dataCategory: Uncategorized
+		summarizeBy: none
+		sourceColumn: Capacity Id
+
+		annotation SummarizationSetBy = User
+
+	column 'Item Id'
+		dataType: string
+		lineageTag: 784001db-ee28-4a10-a584-8ec82e1ef662
+		sourceLineageTag: 914afcfd-dfdc-44cf-8a04-41b7e91c9fa0
+		dataCategory: Uncategorized
+		summarizeBy: none
+		sourceColumn: Item Id
+
+		annotation SummarizationSetBy = User
+
+	column 'Item Type'
+		dataType: string
+		lineageTag: 6b514f67-55ed-43d8-9aa8-f8a3d6b57c2a
+		sourceLineageTag: 16cd314b-bd24-4e9f-840b-24f9e6eb6cb6
+		dataCategory: Uncategorized
+		summarizeBy: none
+		sourceColumn: Item kind
+
+		annotation SummarizationSetBy = User
+
+	column 'Item name'
+		dataType: string
+		lineageTag: 6f8d85e8-800f-48f3-b5a5-39aeb33acc1a
+		sourceLineageTag: fe1abed3-c109-44a5-a9c1-7f57cce665d5
+		dataCategory: Uncategorized
+		summarizeBy: none
+		sourceColumn: Item name
+
+		annotation SummarizationSetBy = User
+
+	column Users
+		dataType: string
+		lineageTag: 7e90a2dd-fb64-4cca-b8bd-5305b308a812
+		sourceLineageTag: 882d6ab5-64a5-4591-b31e-4c5d6ffae48c
+		dataCategory: Uncategorized
+		summarizeBy: none
+		sourceColumn: Users
+
+		annotation SummarizationSetBy = User
+
+	column Timestamp
+		dataType: dateTime
+		formatString: General Number
+		lineageTag: 4471d419-619c-4e14-ae5c-f7d6511286bf
+		sourceLineageTag: 96d77170-3dfb-4c24-be7b-d6b6936997c3
+		dataCategory: Uncategorized
+		summarizeBy: none
+		sourceColumn: Timestamp
+
+		annotation SummarizationSetBy = User
+
+	column 'Workspace Id'
+		dataType: string
+		lineageTag: 696f20a3-9065-430a-a936-43a26cc20a9a
+		sourceLineageTag: 31a8d162-0621-4810-ba22-6536080cc9b5
+		dataCategory: Uncategorized
+		summarizeBy: none
+		sourceColumn: Workspace Id
+
+		annotation SummarizationSetBy = User
+
+	column 'Workspace name'
+		dataType: string
+		lineageTag: 5227866c-e2ce-44fd-8f22-99fffaea3bca
+		sourceLineageTag: f1b1722b-10fc-497d-915d-4543ee65abe4
+		dataCategory: Uncategorized
+		summarizeBy: none
+		sourceColumn: Workspace name
+
+		annotation SummarizationSetBy = User
+
+	column 'Billable type'
+		dataType: string
+		lineageTag: 216c118b-095c-4f23-8a0a-682abb169a09
+		sourceLineageTag: 00821afb-3a4b-4f4a-89d3-4afe2411cd36
+		dataCategory: Uncategorized
+		summarizeBy: none
+		sourceColumn: Billable type
+
+		annotation SummarizationSetBy = User
+
+	column 'Virtualised item'
+		dataType: string
+		lineageTag: 88b4956e-0e6f-4698-a7a5-cd6ae4f59cf1
+		sourceLineageTag: 08bfdaed-5f4c-43ac-b97e-4c999f93e503
+		dataCategory: Uncategorized
+		summarizeBy: none
+		sourceColumn: Virtualised item
+
+		annotation SummarizationSetBy = User
+
+	column 'Virtualised workspace'
+		dataType: string
+		lineageTag: c60cdebc-1d69-4b5d-acc3-d5bbc1a8c06d
+		sourceLineageTag: fd39ceab-8ea8-4671-9e96-19d38537faa7
+		dataCategory: Uncategorized
+		summarizeBy: none
+		sourceColumn: Virtualised workspace
+
+		annotation SummarizationSetBy = User
+
+	column 'Is virtual  item status'
+		dataType: string
+		lineageTag: 0dcf32b0-29c1-4f0d-a5cf-6a027c74df4b
+		sourceLineageTag: d8b73e54-3ef9-4b3f-8147-366918ea92c6
+		dataCategory: Uncategorized
+		summarizeBy: none
+		sourceColumn: Is virtual  item status
+
+		annotation SummarizationSetBy = User
+
+	column 'Is virtual workspace status'
+		dataType: string
+		lineageTag: 7fdfad8f-21d3-4fc7-9047-dc92fb595f63
+		sourceLineageTag: 1e093a1b-731a-416d-8f60-5b110861bb18
+		dataCategory: Uncategorized
+		summarizeBy: none
+		sourceColumn: Is virtual workspace status
+
+		annotation SummarizationSetBy = User
+
+	column 'Unique key'
+		dataType: string
+		isHidden
+		isNullable: false
+		lineageTag: 438e59a1-707c-422c-874c-8b995e50b9b9
+		sourceLineageTag: 52d34618-6a98-4a82-b3f2-a89d9d5ed9c4
+		dataCategory: Uncategorized
+		summarizeBy: none
+		sourceColumn: Unique key
+
+		annotation SummarizationSetBy = User
+
+	column 'Item key'
+		dataType: string
+		isHidden
+		lineageTag: 4aa22cc2-47ca-437e-8600-315586c6f298
+		sourceLineageTag: 0404f8dc-b686-454e-8b2b-e3f979a594a9
+		dataCategory: Uncategorized
+		summarizeBy: none
+		sourceColumn: Item key
+
+		annotation SummarizationSetBy = User
+
+	partition Items = entity
+		mode: directQuery
+		source
+			entityName: Items
+			expressionSource: 'DirectQuery to AS - Fabric Capacity Metrics'

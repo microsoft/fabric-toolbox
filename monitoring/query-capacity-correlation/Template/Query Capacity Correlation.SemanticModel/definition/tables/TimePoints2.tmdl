@@ -1,0 +1,82 @@
+table TimePoints2
+	lineageTag: b30335e4-2d89-4c0d-a8f0-5648516d4aa0
+	sourceLineageTag: bab675a0-3aae-46d6-88de-09eed4ef0e42
+
+	measure 'End Time 2' = EXTERNALMEASURE("End Time 2", DATETIME, "DirectQuery to AS - Fabric Capacity Metrics")
+		formatString: General Number
+		lineageTag: 5c794416-29f8-4a4e-bd05-4498913fb380
+		sourceLineageTag: dd8f8b4e-ed2d-4996-92c6-dd58d6754df0
+		dataCategory: Uncategorized
+
+	measure 'End Time Autoscale 2' = EXTERNALMEASURE("End Time Autoscale 2", DATETIME, "DirectQuery to AS - Fabric Capacity Metrics")
+		formatString: General Number
+		lineageTag: e13f0690-fe2b-4da3-826d-7360321ecb6d
+		sourceLineageTag: 9de86662-c647-48b4-9e48-2fcf9a8e1632
+		dataCategory: Uncategorized
+
+	column Timepoint
+		dataType: dateTime
+		isNullable: false
+		formatString: General Number
+		lineageTag: c4c520d8-2c77-404f-be4d-228c4a320476
+		sourceLineageTag: 36567577-2a39-498f-b08d-5eb3b5115462
+		dataCategory: Uncategorized
+		summarizeBy: none
+		sourceColumn: Timepoint
+
+		extendedProperty ParameterMetadata =
+				{
+				  "version": 2,
+				  "kind": 1,
+				  "selectAllValue": ""
+				}
+
+		annotation SummarizationSetBy = User
+
+	column Date
+		dataType: dateTime
+		formatString: Long Date
+		lineageTag: 5519883e-b5e5-42e7-93fe-1a4458681947
+		sourceLineageTag: 52ca72ca-1400-4dac-a660-c3f823853125
+		dataCategory: Uncategorized
+		summarizeBy: none
+		sourceColumn: Date
+
+		annotation SummarizationSetBy = User
+
+	column 'Start of hour'
+		dataType: dateTime
+		formatString: General Number
+		lineageTag: 5f65b43e-dbe5-444f-a7a8-09c8fdf7d261
+		sourceLineageTag: e3ed9b36-542b-49f8-865e-b03c39e75843
+		dataCategory: Uncategorized
+		summarizeBy: none
+		sourceColumn: Start of hour
+
+		annotation SummarizationSetBy = User
+
+	column Time-point
+		dataType: dateTime
+		isNullable: false
+		formatString: General Number
+		lineageTag: b27c7bbe-449a-49bf-9f3a-2fefa8ad4577
+		sourceLineageTag: 6c36ae3f-e73e-4f62-962c-caabcce90ed9
+		dataCategory: Uncategorized
+		summarizeBy: none
+		sourceColumn: Time-point
+
+		extendedProperty ParameterMetadata =
+				{
+				  "version": 2,
+				  "kind": 1,
+				  "selectAllValue": "__SelectAll__"
+				}
+
+		annotation SummarizationSetBy = User
+
+	partition TimePoints2 = entity
+		mode: directQuery
+		source
+			entityName: TimePoints2
+			expressionSource: 'DirectQuery to AS - Fabric Capacity Metrics'
+

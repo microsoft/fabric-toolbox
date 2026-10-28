@@ -13,6 +13,9 @@ Handles both synchronous and asynchronous operations, with detailed logging and 
 .PARAMETER MirroredDatabaseId
 (Optional)The unique identifier of the MirroredDatabase whose definition needs to be retrieved.
 
+.PARAMETER Raw
+If specified, returns the untouched API response.
+
 .EXAMPLE
 Get-FabricMirroredDatabaseDefinition -WorkspaceId "12345" -MirroredDatabaseId "67890"
 
@@ -39,32 +42,41 @@ function Get-FabricMirroredDatabaseDefinition {
 
         [Parameter(Mandatory = $false)]
         [ValidateNotNullOrEmpty()]
-        [string]$MirroredDatabaseId
+        [string]$MirroredDatabaseId,
+
+        [Parameter()]
+        [switch]$Raw
     )
-    try {
-        Invoke-FabricAuthCheck -ThrowOnFailure
+    process {
+        try {
+            Invoke-FabricAuthCheck -ThrowOnFailure
 
 
-        # Construct the API endpoint URI
-        $apiEndpointURI = "{0}/workspaces/{1}/mirroredDatabases/{2}/getDefinition" -f $script:FabricAuthContext.BaseUrl, $WorkspaceId, $MirroredDatabaseId
-        Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+            # Construct the API endpoint URI
+            $apiEndpointURI = "{0}/workspaces/{1}/mirroredDatabases/{2}/getDefinition" -f $script:FabricAuthContext.BaseUrl, $WorkspaceId, $MirroredDatabaseId
+            Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
 
-        # Make the API request
-        $apiParams = @{
-            BaseURI = $apiEndpointURI
-            Headers = $script:FabricAuthContext.FabricHeaders
-            Method = 'Post'
+            # Make the API request
+            $apiParams = @{
+                BaseURI = $apiEndpointURI
+                Headers = $script:FabricAuthContext.FabricHeaders
+                Method = 'Post'
+            }
+            $response = Invoke-FabricAPIRequest @apiParams
+
+            if ($Raw) {
+                return $response
+            }
+
+            # Return the API response
+            Write-FabricLog -Message "Mirrored Database '$MirroredDatabaseId' definition retrieved successfully!" -Level Debug
+            return $response
         }
-        $response = Invoke-FabricAPIRequest @apiParams
+        catch {
+            # Capture and log error details
+            $errorDetails = $_.Exception.Message
+            Write-FabricLog -Message "Failed to retrieve MirroredDatabase. Error: $errorDetails" -Level Error
+        }
 
-        # Return the API response
-        Write-FabricLog -Message "Mirrored Database '$MirroredDatabaseId' definition retrieved successfully!" -Level Debug
-        return $response
     }
-    catch {
-        # Capture and log error details
-        $errorDetails = $_.Exception.Message
-        Write-FabricLog -Message "Failed to retrieve MirroredDatabase. Error: $errorDetails" -Level Error
-    }
-
 }

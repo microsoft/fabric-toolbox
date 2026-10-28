@@ -4,6 +4,7 @@ param(
 $expectedParams = @(
     "GatewayId"
     "ShowAllCreationMethods"
+    "Raw"
     "ProgressAction"
     "Verbose"
     "Debug"

@@ -1,0 +1,55 @@
+table Dates
+	lineageTag: 57f7b18f-7b41-42f6-aa1a-56be3c3ec0ca
+	sourceLineageTag: ff19353e-9891-4eee-b7fd-46d2dc9f7bc9
+
+	column Date
+		dataType: dateTime
+		isNullable: false
+		formatString: ddd d
+		lineageTag: 97a0d1bc-4240-4b47-a484-53394e4d37d4
+		sourceLineageTag: ee241133-245b-43c3-bd5f-f10b1d0f78c1
+		dataCategory: Uncategorized
+		summarizeBy: none
+		sourceColumn: Date
+
+		annotation SummarizationSetBy = User
+
+	column 'Start of month'
+		dataType: string
+		formatString: mmm yyyy
+		lineageTag: 6325a863-ba0f-4014-a6dc-d9f9950ce562
+		sourceLineageTag: 531da88a-fa2d-42c0-bffd-f9861e9efe62
+		dataCategory: Uncategorized
+		summarizeBy: none
+		sourceColumn: Start of month
+
+		annotation SummarizationSetBy = User
+
+	column 'First day of week'
+		dataType: dateTime
+		formatString: Short Date
+		lineageTag: 7367d21c-737f-46ed-9cc8-a24d1fe5ccd8
+		sourceLineageTag: 0f202c66-faca-4ff0-a398-89ebceb21e26
+		dataCategory: Uncategorized
+		summarizeBy: none
+		sourceColumn: First day of week
+
+		annotation SummarizationSetBy = User
+
+	column Day
+		dataType: dateTime
+		formatString: Short Date
+		lineageTag: c86d8f72-3f54-4c8b-b74c-1c50871322ea
+		sourceLineageTag: c1df59ad-a82c-427f-ba38-9576dfaf91f9
+		dataCategory: Uncategorized
+		summarizeBy: none
+		sourceColumn: Day
+
+		annotation SummarizationSetBy = User
+
+	partition Dates = entity
+		mode: directQuery
+		source
+			entityName: Dates
+			expressionSource: 'DirectQuery to AS - Fabric Capacity Metrics'
+

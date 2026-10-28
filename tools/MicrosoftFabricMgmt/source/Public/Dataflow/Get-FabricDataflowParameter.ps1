@@ -11,6 +11,9 @@
 .PARAMETER DataflowId
     The unique identifier of the Dataflow.
 
+.PARAMETER Raw
+    If specified, returns the untouched API response with no added properties or type decoration.
+
 .EXAMPLE
     Get-FabricDataflowParameter -WorkspaceId "12345678-1234-1234-1234-123456789012" -DataflowId "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee"
 
@@ -33,7 +36,10 @@ function Get-FabricDataflowParameter {
         [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
         [Alias('id')]
-        [string]$DataflowId
+        [string]$DataflowId,
+
+        [Parameter()]
+        [switch]$Raw
     )
 
     process {
@@ -57,7 +63,42 @@ function Get-FabricDataflowParameter {
                 return $null
             }
 
+            if ($Raw) {
+                return $response
+            }
+
             Write-FabricLog -Message "Dataflow parameters retrieved successfully." -Level Debug
+
+            # Enrich with resolved workspace and capacity names
+            $workspaceName = $null
+            try {
+                $workspaceName = Resolve-FabricWorkspaceName -WorkspaceId $WorkspaceId
+            }
+            catch {
+                $workspaceName = $WorkspaceId
+                Write-FabricLog -Message "Failed to resolve workspace name for ID '$WorkspaceId': $($_.Exception.Message)" -Level Debug
+            }
+
+            $capacityName = $null
+            try {
+                $capacityId = Resolve-FabricCapacityIdFromWorkspace -WorkspaceId $WorkspaceId
+                if ($capacityId) {
+                    $capacityName = Resolve-FabricCapacityName -CapacityId $capacityId
+                }
+            }
+            catch {
+                Write-FabricLog -Message "Failed to resolve capacity name for workspace ID '$WorkspaceId': $($_.Exception.Message)" -Level Debug
+            }
+
+            foreach ($item in $response) {
+                $item | Add-Member -NotePropertyName 'workspaceId'   -NotePropertyValue $WorkspaceId   -Force
+                $item | Add-Member -NotePropertyName 'WorkspaceName' -NotePropertyValue $workspaceName -Force
+                if ($null -ne $capacityName) {
+                    $item | Add-Member -NotePropertyName 'CapacityName' -NotePropertyValue $capacityName -Force
+                }
+            }
+
+            $response | Add-FabricTypeName -TypeName 'MicrosoftFabric.DataflowParameter'
             return $response
         }
         catch {

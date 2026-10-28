@@ -1,0 +1,93 @@
+table 'Timepoint2 CU Detail For Workload Autoscale'
+	lineageTag: 0968a082-41dc-4258-aa4b-fc37f4fd0445
+	sourceLineageTag: 23950c18-45fe-4929-8937-d2a5747cf50e
+
+	column 'Window start time'
+		dataType: dateTime
+		formatString: General Number
+		lineageTag: 740d7cf0-4ae8-4639-8864-a0e387c166f2
+		sourceLineageTag: acd64ae5-66ad-4bce-8fd5-8b688a12702b
+		dataCategory: Uncategorized
+		summarizeBy: none
+		sourceColumn: Window start time
+
+		annotation SummarizationSetBy = User
+
+	column 'CU (s)'
+		dataType: double
+		lineageTag: 73c0a25f-d9ba-497b-8413-192434fae5ef
+		sourceLineageTag: 2e63775e-2a27-4b95-9939-40a84a77ac5c
+		dataCategory: Uncategorized
+		summarizeBy: sum
+		sourceColumn: CU (s)
+
+		annotation SummarizationSetBy = User
+
+	column 'Workload autoscale capacity units limit'
+		dataType: int64
+		formatString: 0
+		lineageTag: 562d74b3-b39e-4d76-ad56-f63710b2dc6b
+		sourceLineageTag: c7f22da8-5b9b-4d30-9004-a32c3a32248b
+		dataCategory: Uncategorized
+		summarizeBy: sum
+		sourceColumn: Workload autoscale capacity units limit
+
+		annotation SummarizationSetBy = User
+
+	column 'Peak 6min CU'
+		dataType: double
+		lineageTag: 4b019753-5ee3-4550-ab33-db4bef047b10
+		sourceLineageTag: 9b05688b-dc22-48ef-af1d-b27a83787f9f
+		dataCategory: Uncategorized
+		summarizeBy: sum
+		sourceColumn: Peak 6min CU
+
+		annotation SummarizationSetBy = User
+
+	column 'Capacity Id'
+		dataType: string
+		lineageTag: ec82c73e-6055-4287-9016-e1e443d81f28
+		sourceLineageTag: bba7af3d-3b95-4cc1-ba10-ee8585b541ac
+		dataCategory: Uncategorized
+		summarizeBy: none
+		sourceColumn: Capacity Id
+
+		annotation SummarizationSetBy = User
+
+	column 'Utilization type'
+		dataType: string
+		lineageTag: ac42d31f-74f2-49f0-939d-c2643b6ad27e
+		sourceLineageTag: 2485c1ad-2ed2-4690-a5ba-9e3f032a56e4
+		dataCategory: Uncategorized
+		summarizeBy: none
+		sourceColumn: Utilization type
+
+		annotation SummarizationSetBy = User
+
+	column 'Billing type'
+		dataType: string
+		lineageTag: b0438ef6-2df2-4644-a110-a486ea580e55
+		sourceLineageTag: 76a474d0-4395-4c06-9b86-9868f57d3f0e
+		dataCategory: Uncategorized
+		summarizeBy: none
+		sourceColumn: Billing type
+
+		annotation SummarizationSetBy = User
+
+	column ConsumptionStartTime
+		dataType: dateTime
+		formatString: General Number
+		lineageTag: 35e33100-7ed2-4827-94b5-e858d629e6fc
+		sourceLineageTag: d0624a4c-6c89-4543-a37e-035b95f5c491
+		dataCategory: Uncategorized
+		summarizeBy: none
+		sourceColumn: ConsumptionStartTime
+
+		annotation SummarizationSetBy = User
+
+	partition 'Timepoint2 CU Detail For Workload Autoscale' = entity
+		mode: directQuery
+		source
+			entityName: Timepoint2 CU Detail For Workload Autoscale
+			expressionSource: 'DirectQuery to AS - Fabric Capacity Metrics'
+

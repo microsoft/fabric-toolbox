@@ -42,14 +42,30 @@ CLI Command → Service Layer → Platform Client → Assessment Dataclasses →
 
 1. **Services** (`services/`) orchestrate the assessment workflow
    - `AssessmentService` - Main entry point, handles workspace iteration
-   - `StructuredExportService` - Exports assessment data to JSON files
-   - `VisualizationService` - Generates HTML reports from assessment data
+     and dispatches to a platform client
+   - `StructuredExportService` - Writes assessment dataclasses to a
+     hierarchical on-disk tree. Today only the JSON exporter is
+     implemented; `CSVExporter` and `ParquetExporter` are scaffolding
+     stubs. See [`json-export-service.md`](./json-export-service.md)
+     for the folder layout, wrapped-JSON shape, and extension points.
+   - `VisualizationService` - Generates HTML reports from assessment
+     data. See [`html-generator.md`](./html-generator.md).
 
 2. **Clients** (`clients/`) handle platform-specific API calls
-   - `SynapseClient` - Azure Synapse Analytics APIs
+   - `SynapseClient` - Azure Synapse Analytics APIs (ARM + dev data plane)
    - `DatabricksClient` - Databricks APIs (uses `databricks-sdk`)
+   - `OdbcClient` - ODBC/TDS access to Synapse dedicated SQL pools via
+     `mssql-python`; supports SQL auth and three Entra ID modes
+     (`entra-interactive`, `entra-spn`, `entra-default`)
    - `ApiClient` - Generic REST client wrapper
    - `TokenProvider` - Authentication (Azure CLI or Fabric notebook)
+
+> **Platform-specific conventions live in dedicated docs**:
+> [`synapse-platform.md`](./synapse-platform.md) for Synapse client /
+> ODBC / dedicated-pool statistics, and
+> [`databricks-platform.md`](./databricks-platform.md) for Databricks
+> API quirks, workspace-type detection, and rate-limiting.
+> Read them before touching the corresponding client.
 
 3. **Assessment Dataclasses** (`assessment/`)
    - `synapse.py` - All Synapse-specific dataclasses (`SynapseAssessment`, `SynapseNotebook`, etc.)
@@ -196,20 +212,51 @@ Custom exceptions in `errors/api.py`:
 - `AzureAPIError` - Parses Azure REST API error responses
 
 ### Authentication
-Two modes supported:
+
+**Azure / Databricks token acquisition** (via `TokenProvider`):
 - `azure-cli` (default) - Uses `az login` credentials
-- `fabric` - Uses `notebookutils.credentials.getToken()` in Fabric notebooks
+- `fabric` - Uses `notebookutils.credentials.getToken()` in Fabric notebooks.
+  Note: Fabric notebook auth **cannot reach `management.azure.com`**
+  (the call hangs), so `DatabricksClient` and Synapse ARM fallbacks
+  skip it in this mode — see `_ensure_azure_client`.
+
+**Synapse dedicated SQL pool auth** (via `OdbcClient.auth_mode`):
+- `sql` (default) - SQL login + password
+- `entra-interactive` - Browser popup with MFA
+- `entra-spn` - Service Principal (needs `--sql-client-id` /
+  `--sql-client-secret`; `--sql-tenant-id` defaults to `common`)
+- `entra-default` - `DefaultAzureCredential` chain (Azure CLI, MI, etc.)
+
+See [`synapse-platform.md`](./synapse-platform.md) for the full auth
+selection flow (including the interactive prompt in
+`_get_sql_admin_credentials`).
 
 ### Output Structure
-Assessment creates a hierarchical folder structure per workspace:
+Assessment creates a hierarchical folder structure per workspace.
+Full layout and the `{ "type": ..., "<kind>_data": {...}, "exported_at": ... }`
+wrapper convention are documented in
+[`json-export-service.md`](./json-export-service.md). Quick sketch:
+
 ```
 output/
-├── workspace1/
-│   ├── summary.json
-│   ├── resources/
-│   │   ├── notebooks/
-│   │   ├── spark_pools/
-│   │   └── pipelines/
-│   └── admin/
-└── assessment_summary.json
+├── <workspace>/
+│   ├── summary.json                 # assessment_data.get_summary()
+│   ├── workspace.json               # Synapse only
+│   ├── resources/                   # flat per-kind folders
+│   │   ├── notebooks/*.json
+│   │   ├── clusters/*.json          # Databricks
+│   │   ├── sql_warehouses/*.json    # Databricks
+│   │   ├── jobs/*.json              # Databricks
+│   │   ├── pipelines/*.json         # Synapse + Databricks (DLT)
+│   │   └── ...
+│   ├── admin/                       # Synapse only
+│   │   ├── integration_runtimes/
+│   │   ├── linked_services/
+│   │   └── datasets/
+│   └── data/                        # nested tree for databases/schemas/tables
+│       ├── serverless_databases/    # Synapse
+│       ├── dedicated_databases/     # Synapse
+│       ├── unity_catalog/           # Databricks
+│       └── legacy_databases/        # Databricks (pre-UC)
+└── assessment_summary.json          # aggregated summary across workspaces
 ```

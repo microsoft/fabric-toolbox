@@ -1,0 +1,74 @@
+table 'Item History Operation'
+	lineageTag: c35623a5-ba60-4b86-9c43-05eea73b01c9
+	sourceLineageTag: 43a66d29-d973-45da-a72b-5129fbbf7cae
+
+	column Day
+		dataType: dateTime
+		formatString: General Number
+		lineageTag: 0233da6f-32aa-454f-a4d2-191d5c865d55
+		sourceLineageTag: 08947a13-2312-415a-a139-41421dbc1977
+		dataCategory: Uncategorized
+		summarizeBy: none
+		sourceColumn: Day
+
+		annotation SummarizationSetBy = User
+
+	column Operations
+		dataType: int64
+		formatString: 0
+		lineageTag: e21efe35-dfda-46b8-8870-b390b056476a
+		sourceLineageTag: e5cc5392-8897-4d66-9d5b-eab9d9501cbc
+		dataCategory: Uncategorized
+		summarizeBy: sum
+		sourceColumn: Operations
+
+		annotation SummarizationSetBy = User
+
+	column 'CU (s)'
+		dataType: double
+		lineageTag: 7c301e33-37b6-484f-b8f9-7b3df128fd48
+		sourceLineageTag: aad511b3-c060-49b2-b7fe-d690fb864bac
+		dataCategory: Uncategorized
+		summarizeBy: sum
+		sourceColumn: CU (s)
+
+		annotation SummarizationSetBy = User
+
+	column 'Duration (s)'
+		dataType: double
+		lineageTag: 31b6a2fe-c008-4829-9d19-a578d50d3f83
+		sourceLineageTag: be939338-20e8-4830-a68d-d54b0ad7eb25
+		dataCategory: Uncategorized
+		summarizeBy: sum
+		sourceColumn: Duration (s)
+
+		annotation SummarizationSetBy = User
+
+	column 'Throttling (s)'
+		dataType: int64
+		formatString: 0
+		lineageTag: 97b321f9-62c7-4649-b363-93eeaaaa2a8e
+		sourceLineageTag: 6b7e075d-6ed9-4da8-88c8-c8570fb65bbf
+		dataCategory: Uncategorized
+		summarizeBy: sum
+		sourceColumn: Throttling (s)
+
+		annotation SummarizationSetBy = User
+
+	column ItemHistoryUniquKey
+		dataType: string
+		isHidden
+		lineageTag: 3b464398-e438-444d-a564-79be1319e09e
+		sourceLineageTag: 8eb33d5b-8d4d-45d5-b2fa-e6314ab5f0fe
+		dataCategory: Uncategorized
+		summarizeBy: none
+		sourceColumn: ItemHistoryUniquKey
+
+		annotation SummarizationSetBy = User
+
+	partition 'Item History Operation' = entity
+		mode: directQuery
+		source
+			entityName: Item History Operation
+			expressionSource: 'DirectQuery to AS - Fabric Capacity Metrics'
+

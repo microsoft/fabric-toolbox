@@ -348,6 +348,10 @@
         .mt-2 { margin-top: 1rem; }
         .mb-1 { margin-bottom: 0.5rem; }
         .mb-2 { margin-bottom: 1rem; }
+        .pagination-nav { display: flex; align-items: center; justify-content: center; gap: 1rem; margin-top: 1rem; padding: 0.5rem 0; }
+        .pagination-nav a { color: #0078d4; text-decoration: none; font-weight: 500; }
+        .pagination-nav a:hover { text-decoration: underline; }
+        .pagination-info { color: #605e5c; font-size: 0.9em; }
     </style>
     <!-- Chart.js CDN - lightweight, works offline after first load -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
@@ -506,6 +510,26 @@
         document.querySelectorAll('[data-workspace]').forEach(row => {
             const workspace = row.getAttribute('data-workspace');
             row.style.display = selected.includes(workspace) ? '' : 'none';
+        });
+
+        // Show/hide empty-filter messages in tables
+        document.querySelectorAll('table.table').forEach(table => {
+            const tbody = table.querySelector('tbody');
+            if (!tbody) return;
+            const rows = tbody.querySelectorAll('tr[data-workspace]');
+            if (rows.length === 0) return;
+            const visibleRows = Array.from(rows).filter(r => r.style.display !== 'none');
+            // Remove existing empty-filter message
+            const existing = tbody.querySelector('.empty-filter-row');
+            if (existing) existing.remove();
+            // Add message if all rows hidden
+            if (visibleRows.length === 0) {
+                const cols = table.querySelector('thead tr').children.length;
+                const msgRow = document.createElement('tr');
+                msgRow.className = 'empty-filter-row';
+                msgRow.innerHTML = `<td colspan="${cols}" class="text-muted" style="text-align:center;padding:1rem;">No items match the selected workspace filter.</td>`;
+                tbody.appendChild(msgRow);
+            }
         });
         
         // Update stat cards if updateStats function is defined on the page

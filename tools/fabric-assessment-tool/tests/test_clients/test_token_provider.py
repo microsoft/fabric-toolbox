@@ -100,9 +100,7 @@ class TestCreateTokenProvider:
         mock_credential = MagicMock()
         mock_credential.get_token.return_value = MagicMock(token="test-token")
         mock_credential_cls.return_value = mock_credential
-        mock_subprocess.run.return_value = MagicMock(
-            stdout=b'{"id": "sub-123"}'
-        )
+        mock_subprocess.run.return_value = MagicMock(stdout=b'{"id": "sub-123"}')
         mock_subprocess.PIPE = -1
 
         provider = create_token_provider("azure-cli")
@@ -121,9 +119,7 @@ class TestCreateTokenProvider:
         mock_credential = MagicMock()
         mock_credential.get_token.return_value = MagicMock(token="test-token")
         mock_credential_cls.return_value = mock_credential
-        mock_subprocess.run.return_value = MagicMock(
-            stdout=b'{"id": "sub-123"}'
-        )
+        mock_subprocess.run.return_value = MagicMock(stdout=b'{"id": "sub-123"}')
         mock_subprocess.PIPE = -1
 
         provider = create_token_provider(None)

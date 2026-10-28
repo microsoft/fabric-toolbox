@@ -14,6 +14,9 @@ Get-FabricEventstreamDestinationConnection issues a GET request to the Fabric AP
 .PARAMETER DestinationId
 [string] (Mandatory) The destination ID whose connection details will be retrieved.
 
+.PARAMETER Raw
+If specified, returns the untouched API response with no added properties or type decoration.
+
 .EXAMPLE
 Get-FabricEventstreamDestinationConnection -WorkspaceId "12345" -EventstreamId "67890" -DestinationId "abcd"
 # Retrieves the connection details for destination "abcd" under eventstream "67890" in workspace "12345".
@@ -43,27 +46,38 @@ function Get-FabricEventstreamDestinationConnection {
 
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
-        [string]$DestinationId
+        [string]$DestinationId,
+
+        [Parameter()]
+        [switch]$Raw
     )
-    try {
-        # Validate authentication
-        Invoke-FabricAuthCheck -ThrowOnFailure
+    process {
+        try {
+            # Validate authentication
+            Invoke-FabricAuthCheck -ThrowOnFailure
 
-        # Construct the API endpoint URI
-        $apiEndpointURI = New-FabricAPIUri -Resource 'workspaces' -WorkspaceId $WorkspaceId -Subresource 'eventstreams' -ItemId $EventstreamId
-        $apiEndpointURI = "$apiEndpointURI/destinations/$DestinationId/connection"
+            # Construct the API endpoint URI
+            $apiEndpointURI = New-FabricAPIUri -Resource 'workspaces' -WorkspaceId $WorkspaceId -Subresource 'eventstreams' -ItemId $EventstreamId
+            $apiEndpointURI = "$apiEndpointURI/destinations/$DestinationId/connection"
 
-        # Make the API request
-        $apiParams = @{
-            BaseURI = $apiEndpointURI
-            Headers = $script:FabricAuthContext.FabricHeaders
-            Method  = 'Get'
+            # Make the API request
+            $apiParams = @{
+                BaseURI = $apiEndpointURI
+                Headers = $script:FabricAuthContext.FabricHeaders
+                Method  = 'Get'
+            }
+            $response = Invoke-FabricAPIRequest @apiParams
+
+            if ($Raw) {
+                return $response
+            }
+
+            $response
         }
-        Invoke-FabricAPIRequest @apiParams
-    }
-    catch {
-        # Capture and log error details
-        $errorDetails = $_.Exception.Message
-        Write-FabricLog -Message "Failed to retrieve Eventstream Destination Connection. Error: $errorDetails" -Level Error
+        catch {
+            # Capture and log error details
+            $errorDetails = $_.Exception.Message
+            Write-FabricLog -Message "Failed to retrieve Eventstream Destination Connection. Error: $errorDetails" -Level Error
+        }
     }
 }

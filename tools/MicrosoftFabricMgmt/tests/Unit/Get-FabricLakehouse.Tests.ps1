@@ -5,6 +5,7 @@ $expectedParams = @(
     "WorkspaceId"
     "LakehouseId"
     "LakehouseName"
+    "Raw"
     "ProgressAction"
     "Verbose"
     "Debug"

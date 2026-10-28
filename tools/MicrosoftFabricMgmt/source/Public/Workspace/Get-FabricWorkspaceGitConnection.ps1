@@ -8,6 +8,9 @@ The `Get-FabricWorkspaceGitConnection` function queries the Fabric API to obtain
 .PARAMETER WorkspaceId
 (Optional) The unique identifier of the workspace to filter Git connection details for. If omitted, all available workspace Git connections are returned.
 
+.PARAMETER Raw
+If specified, returns the untouched API response with no added properties or type decoration.
+
 .EXAMPLE
 Get-FabricWorkspaceGitConnection -WorkspaceId "workspace123"
 
@@ -31,7 +34,10 @@ function Get-FabricWorkspaceGitConnection {
     param (
         [Parameter(Mandatory = $false)]
         [ValidateNotNullOrEmpty()]
-        [string]$WorkspaceId
+        [string]$WorkspaceId,
+
+        [Parameter()]
+        [switch]$Raw
     )
     try {
         # Validate authentication
@@ -47,6 +53,10 @@ function Get-FabricWorkspaceGitConnection {
             Method = 'Get'
         }
         $dataItems = Invoke-FabricAPIRequest @apiParams
+
+        if ($Raw) {
+            return $dataItems
+        }
 
         # Apply filtering - using custom property 'workspaceId' instead of 'Id'
         if ($WorkspaceId) {

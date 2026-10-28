@@ -5,6 +5,7 @@ $expectedParams = @(
     "WorkspaceId"
     "DatamartId"
     "DatamartName"
+    "Raw"
     "ProgressAction"
     "Verbose"
     "Debug"

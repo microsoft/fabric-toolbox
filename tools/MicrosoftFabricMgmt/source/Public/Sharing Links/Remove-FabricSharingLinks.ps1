@@ -1,16 +1,9 @@
 <#
 .SYNOPSIS
-Removes all sharing links in bulk from s        # Make the API request
-        $apiParams = @{
-            BaseURI = $apiEndpointURI
-            Headers = $script:FabricAuthContext.FabricHeaders
-            Method = 'Delete'
-            Body = $bodyJson
-        }
-        $response = Invoke-FabricAPIRequest @apiParamsied items in Microsoft Fabric.
+Removes all organization sharing links for every Fabric item in the tenant.
 
 .DESCRIPTION
-Removes all sharing links of a specified type (e.g., 'OrgLink') from multiple items (such as datasets, reports, etc.) within a Microsoft Fabric workspace. Each item must include 'id' and 'type' properties. The function validates authentication and sends a bulk removal request to the Fabric API.
+Removes all sharing links of a specified type (e.g., 'OrgLink') from every Fabric item in the tenant by sending a POST request to the admin removeAllSharingLinks API. This action affects all items tenant-wide and cannot be undone. Requires Fabric administrator permissions.
 
 .PARAMETER sharingLinkType
 Specifies the type of sharing link to remove. Default is 'OrgLink'. Only supported value is 'OrgLink'.
@@ -19,9 +12,9 @@ Specifies the type of sharing link to remove. Default is 'OrgLink'. Only support
     Remove-FabricSharingLinks -sharingLinkType 'OrgLink'
 
 .NOTES
-- Requires `$FabricConfig` global configuration, including `BaseUrl` and `FabricHeaders`.
-- Calls `Test-TokenExpired` to ensure token validity before making the API request.
-- Each item in `$Items` must have 'id' and 'type' properties.
+- API Endpoint: POST /admin/items/removeAllSharingLinks
+- Requires Fabric administrator permissions and a valid authentication context.
+- Destructive and tenant-wide: supports -WhatIf/-Confirm (ConfirmImpact High).
 
 Author: Tiago Balabuch
 #>
@@ -36,18 +29,10 @@ function Remove-FabricSharingLinks {
 
     process {
         try {
-            # Validate Items structure
-            foreach ($item in $Items) {
-                if (-not ($item.id -and $item.type)) {
-                    throw "Each Item must contain 'id' and 'type' properties. Found: $item"
-                }
-            }
-
             Invoke-FabricAuthCheck -ThrowOnFailure
 
-
             # Construct the API endpoint URI
-            $apiEndpointURI = "{0}/admin/items/removeAllSharingLinks" -f $script:FabricAuthContext.BaseUrl, $WorkspaceId
+            $apiEndpointURI = "{0}/admin/items/removeAllSharingLinks" -f $script:FabricAuthContext.BaseUrl
             Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
 
             # Construct the request body

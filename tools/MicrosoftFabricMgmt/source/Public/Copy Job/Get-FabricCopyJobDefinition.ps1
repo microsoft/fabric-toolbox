@@ -16,6 +16,9 @@ It supports both synchronous and asynchronous operations, with detailed logging 
 .PARAMETER CopyJobFormat
 (Optional) Specifies the format of the Copy Job definition. For example, 'json' or 'xml'.
 
+.PARAMETER Raw
+If specified, returns the untouched API response.
+
 .EXAMPLE
 Get-FabricCopyJobDefinition -WorkspaceId "12345" -CopyJobId "67890"
 
@@ -42,32 +45,43 @@ function Get-FabricCopyJobDefinition {
 
         [Parameter(Mandatory = $false)]
         [ValidateNotNullOrEmpty()]
-        [string]$CopyJobFormat
+        [string]$CopyJobFormat,
+
+        [Parameter()]
+        [switch]$Raw
     )
-    try {
-        # Validate authentication token before proceeding
-        Invoke-FabricAuthCheck -ThrowOnFailure
+    process {
+        try {
+            # Validate authentication token before proceeding
+            Invoke-FabricAuthCheck -ThrowOnFailure
 
-        # Construct the API endpoint URL
-        $segments = @('workspaces', $WorkspaceId, 'copyJobs', $CopyJobId, 'getDefinition')
-        $queryParams = @{}
-        if ($CopyJobFormat) {
-            $queryParams['format'] = $CopyJobFormat
-        }
-        $apiEndpointURI = New-FabricAPIUri -Segments $segments -QueryParameters $queryParams
-        Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
+            # Construct the API endpoint URL
+            $segments = @('workspaces', $WorkspaceId, 'copyJobs', $CopyJobId, 'getDefinition')
+            $queryParams = @{}
+            if ($CopyJobFormat) {
+                $queryParams['format'] = $CopyJobFormat
+            }
+            $apiEndpointURI = New-FabricAPIUri -Segments $segments -QueryParameters $queryParams
+            Write-FabricLog -Message "API Endpoint: $apiEndpointURI" -Level Debug
 
-        # Make the API request
-        $apiParams = @{
-            BaseURI = $apiEndpointURI
-            Headers = $script:FabricAuthContext.FabricHeaders
-            Method = 'Post'
+            # Make the API request
+            $apiParams = @{
+                BaseURI = $apiEndpointURI
+                Headers = $script:FabricAuthContext.FabricHeaders
+                Method = 'Post'
+            }
+            $response = Invoke-FabricAPIRequest @apiParams
+
+            if ($Raw) {
+                return $response
+            }
+
+            $response
         }
-        Invoke-FabricAPIRequest @apiParams
-    }
-    catch {
-        # Capture and log error details
-        $errorDetails = $_.Exception.Message
-        Write-FabricLog -Message "Failed to retrieve Copy Job definition. Error: $errorDetails" -Level Error
+        catch {
+            # Capture and log error details
+            $errorDetails = $_.Exception.Message
+            Write-FabricLog -Message "Failed to retrieve Copy Job definition. Error: $errorDetails" -Level Error
+        }
     }
 }
