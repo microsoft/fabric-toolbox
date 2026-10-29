@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import {
-  collectBrowserWorkspace, pythonCollectorRollbackEnabled, type BrowserCollectorClient,
+  carryForwardDomainNames, collectBrowserWorkspace, pythonCollectorRollbackEnabled, type BrowserCollectorClient,
 } from "./browser-collector-sync";
 import { mapSyncToAtlas, validateRawSync, type CompatibilityPlan, type RawSync } from "./live-sync";
 import { createItemRelationsEvidence } from "./item-relations-evidence";
@@ -193,6 +193,70 @@ function storageHarness(type: "Lakehouse" | "Warehouse", available = true) {
 afterEach(() => vi.unstubAllEnvs());
 
 describe("active browser collector composition", () => {
+  it("re-enriches only modified items on an incremental run and matches the full snapshot for reused ones", async () => {
+    const dates: Record<string, string> = Object.fromEntries(items.map((item) => [item.id, "2026-10-01T00:00:00Z"]));
+    const stored = new Map<string, unknown>();
+    const snapshotCache = {
+      load: vi.fn(async (id: string) => stored.get(id) as never),
+      save: vi.fn(async (entry: { workspaceId: string }) => { stored.set(entry.workspaceId, structuredClone(entry)); }),
+    };
+    const run = async () => {
+      const h = harness();
+      const scanner = h.compatibility.getMockImplementation()!;
+      h.compatibility.mockImplementation(async (plan) => {
+        const result = await scanner(plan);
+        if (plan.stage !== "scanner") return result;
+        return { ...result, itemMetadata: Object.fromEntries(Object.entries(result.itemMetadata ?? {})
+          .map(([id, value]) => [id, { ...value, modifiedDateTime: dates[id] }])) };
+      });
+      const result = await collectBrowserWorkspace(WS, identity, RUN, undefined, undefined, { ...h.deps, snapshotCache });
+      return { h, result };
+    };
+    const full = await run();
+    expect(full.result.summary).toContain("sync=full; refreshed=5; reused=0");
+    const unchanged = await run();
+    expect(unchanged.result.summary).toContain("sync=incremental; refreshed=0; reused=5");
+    for (const name of ["definitions", "sql", "kql", "powerbi"] as const) expect(unchanged.h.sequence).not.toContain(name);
+    const sorted = (raw: RawSync) => JSON.stringify((raw.config ?? []).map((entry) => JSON.stringify(entry)).sort());
+    expect(unchanged.result.raw.schema).toEqual(full.result.raw.schema);
+    expect(unchanged.result.raw.artifactMetadata).toEqual(full.result.raw.artifactMetadata);
+    expect(unchanged.result.raw.semanticModelEvidence).toEqual(full.result.raw.semanticModelEvidence);
+    expect(sorted(unchanged.result.raw)).toBe(sorted(full.result.raw));
+    expect(unchanged.result.raw.collectorSources).toEqual(full.result.raw.collectorSources);
+    validateRawSync(unchanged.result.raw, WS);
+    dates[SQL] = "2026-10-05T00:00:00Z";
+    const changed = await run();
+    expect(changed.result.summary).toContain("sync=incremental; refreshed=1; reused=4");
+    expect(changed.h.sequence).toContain("sql");
+    expect(changed.h.sequence).not.toContain("powerbi");
+    expect(changed.result.raw.schema).toEqual(full.result.raw.schema);
+  });
+
+  it("rescans every item when the user selects a full synchronization despite a cached snapshot", async () => {
+    const stored = new Map<string, unknown>();
+    const snapshotCache = {
+      load: vi.fn(async (id: string) => stored.get(id) as never),
+      save: vi.fn(async (entry: { workspaceId: string }) => { stored.set(entry.workspaceId, structuredClone(entry)); }),
+    };
+    const first = harness();
+    await collectBrowserWorkspace(WS, identity, RUN, undefined, undefined, { ...first.deps, snapshotCache });
+    const forced = harness();
+    const result = await collectBrowserWorkspace(WS, identity, RUN, undefined, undefined, { ...forced.deps, snapshotCache, syncMode: "full" });
+    expect(result.summary).toContain("sync=full; refreshed=5; reused=0");
+    expect(snapshotCache.save).toHaveBeenCalledTimes(2);
+  });
+
+  it("keeps the last known Fabric domain names when the current run cannot read the admin domain list", () => {
+    const named = { status: { status: "complete" }, entries: [{ id: "d1", displayName: "Finance" }] };
+    const missing = { status: { status: "unavailable", code: "forbidden" }, entries: [] };
+    expect(carryForwardDomainNames({ domains: missing }, { domains: named })).toEqual({
+      domains: { status: { status: "complete", code: "carried-forward" }, entries: named.entries },
+    });
+    const fresh = { domains: { status: { status: "complete" }, entries: [{ id: "d2", displayName: "Sales" }] } };
+    expect(carryForwardDomainNames(fresh, { domains: named })).toBe(fresh);
+    expect(carryForwardDomainNames({ domains: missing }, undefined)).toEqual({ domains: missing });
+  });
+
   it("calls all supported Rayfin stages serially and plans only exact Python gaps", async () => {
     const h = harness();
     const result = await collectBrowserWorkspace(WS, identity, RUN, undefined, undefined, h.deps);

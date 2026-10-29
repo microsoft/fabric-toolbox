@@ -40,6 +40,7 @@ function renderGate(scopes: WorkspaceScope[], overrides = {}) {
     hasData: false,
     requiresDeploymentSync: true,
     workspaceScopes: scopes,
+    workspaceSyncStatuses: {},
     workspaceScopesLoading: false,
     workspaceScopesError: undefined,
     activeWorkspaceId: UNSYNCED,

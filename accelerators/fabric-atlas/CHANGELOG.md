@@ -3,6 +3,137 @@
 All notable changes to Fabric Atlas are documented in this file.
 
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+Release dates use the ISO 8601 format (`YYYY-MM-DD`) and record the day the
+release tag was published.
+
+## [2.6.4] - 2026-10-30
+
+### Added
+
+- Governance Center shows the tenant settings baseline captured by the snapshot.
+
+### Changed
+
+- Workspace Hub: scan mode and synchronization start only from Selected workspaces; the validated snapshot banner keeps the last run summary.
+
+### Fixed
+
+- Incremental runs keep object-level lineage (KQL table and column edges) of reused items, so Changes no longer reports hundreds of false added and removed objects.
+- Browser snapshots saved by earlier releases are ignored and the next run is a full scan.
+
+## [2.6.3] - 2026-10-30
+
+### Added
+
+- System → MCP page: how to build and configure the read-only Atlas MCP server, with a ready `mcp.json` to copy.
+- Collection status shows plain section names and the reason for every missing section (token, TDS runtime, schema-enabled Lakehouse, not applicable).
+
+### Fixed
+
+- Full/Incremental is one shared choice for Synchronize now and Sync selected; a notice names the workspaces that must run a full scan (no previous full snapshot in this browser, or 7-day full rescan due).
+- Run duration covers the whole synchronization (it previously stopped at the first stage).
+- Workspace Hub layout: Selected workspaces full width, Recent runs before Schedule, equal-height cards below.
+- Header domain chip no longer squeezed; sidebar My items aligned; coverage percentages rounded.
+- Fabric policies explain why enforcement is unknown without a Fabric administrator sign-in.
+
+## [2.6.2] - 2026-10-29
+
+### Added
+
+- Domain posture: Governance Center coverage by domain, domain directory with parent/child rollups and a domain filter showing domain names.
+- Workspace domain banner, incremental/full scan mode control and snapshot JSON export.
+- My items view, findings explanations, Fabric policies card, network protection card and OneLake role filters aligned with the v2.5/v2.6 mockups.
+- Command palette matches descriptions; suggested object descriptions are drafted for findings on undocumented objects.
+- Posture radar maps Microsoft Health, Protect and Trust pillars to Fabric signal names.
+
+## [2.6.1] - 2026-10-28
+
+### Fixed
+
+- Admin-only governance sections (domains, tags, tenant settings) use the
+  signed-in Fabric administrator's delegated token instead of the app token,
+  so domain names, domain posture and tenant settings drift are collected.
+- Incremental sync is real and selectable: the "Mode" select in Selected
+  workspaces chooses Incremental (default) or Full; incremental runs re-enrich
+  only modified items and carry domain names forward (#76).
+- The global Fabric domain filter appears when every workspace belongs to the
+  same domain; unnamed domains show `Unknown name (xxxxxxxx…)` instead of a
+  full GUID (#61, #64).
+- The posture radar shows Microsoft Health / Protect / Trust pillars and the
+  Fabric signals behind them.
+- Catalog search matches item, table, column and measure descriptions and
+  lists matches with their object path (#82).
+- `atlas_get_governance_findings` returns `domainName`, `domainPath` and
+  `parentDomainName` (#64).
+
+### Security
+
+- UDF URLs are validated, governance tokens are acquired separately and
+  webhook and share payloads are bounded (audit fixes).
+
+### Upgrade
+
+- Run one synchronization as a Fabric administrator to collect domain names.
+
+## [2.6.0] - 2026-10-28
+
+### Added
+
+- Fabric domain names in the overview, catalog and MCP; per-domain posture and
+  coverage tables; global domain filter (#61, #64-#67).
+- Catalog facets, tag scope chips, description snippets in global search and a
+  Request access link (#68, #69, #74, #82).
+- My items scope and snapshot export; governance findings MCP tool (#60, #72).
+- Finding Why panel and deterministic priority score (#71).
+- Access review principal type and role filters; OneLake data access roles with
+  RLS/CLS (#70, #79).
+- Rules: workspace without Admin (#61), unlabeled against the domain default
+  label (#81), inactive items of any type (`VITE_ATLAS_INACTIVE_DAYS`, default
+  90) (#75), public workspace network access (#78), sensitive external shares
+  (#80).
+- Tenant settings drift in Changes (#77).
+- Open in Fabric cards for Govern and Admin monitoring (#73).
+- Incremental sync planner and run mode counters (#76).
+- Optional Teams webhook for new critical findings (`ATLAS_TEAMS_WEBHOOK_URL`)
+  (#62).
+- Optional AI description suggestions (`ATLAS_AI_*` secrets, off by default;
+  names and schema only, no data values) (#63).
+- Read-only Fabric policies (Policies center, preview) card with enforcement
+  Unknown (#83).
+
+### Upgrade
+
+- Run one guided synchronization per workspace to collect the new evidence.
+
+## [2.2.0] - 2026-10-18
+
+### Added
+
+- Fix in Fabric link on every finding, opening the item or its workspace in
+  the Fabric portal.
+- My items filter in the action queue, matched on the recorded owner email.
+- OneLake catalog pillar badge (Health, Protect, Trust) on each finding group.
+- JSON export of the filtered action queue.
+- Teams Adaptive Card download with the posture and the five most severe
+  findings. No webhook or secret is stored.
+- Governance rules `certified-missing-description`,
+  `certified-missing-sensitivity`, `endorsed-inactive`,
+  `missing-object-description` and `workspace-no-domain`.
+- Fabric domain collection (`domainId`, `domainAssigned`) in the workspace
+  collector, persisted as the optional `Workspace.fabricDomainId` column and
+  shown on the workspace page.
+
+### Changed
+
+- Certified items without a sensitivity label now raise
+  `certified-missing-sensitivity` (high) instead of `missing-sensitivity`.
+- The minor version change starts a new deployment generation: run one guided
+  synchronization per workspace. The radar uses it as a new baseline, so the
+  new rules are not reported as regressions.
+
+### Not included
+
+- The generated Power BI posture report (PBIP) planned in #62 is deferred.
 
 ## [2.1.3] - 2026-10-17
 

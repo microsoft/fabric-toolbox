@@ -5,6 +5,8 @@ import {
 } from '@microsoft/fabric-user-data-functions';
 import type { AtlasSchema } from '../../data/schema.js';
 import { createPingResult, type PingResult } from './ping.js';
+import { teamsNotify, type TeamsCardJsonInput, type TeamsNotifyResult } from './teams-notify.js';
+import { suggestDescriptions, type AiSuggestRequestJson, type AiSuggestResult } from './ai-suggest.js';
 import { SyncOrchestrator } from './sync/orchestrator.js';
 import { safeSyncCall, type SyncResponse, type SyncUuidInput } from './sync/protocol.js';
 import { graphStart, graphContinue, graphStatus, graphCancel } from './sync/graph-functions.js';
@@ -15,6 +17,10 @@ import {
   workspaceCollectCore,
   type WorkspaceCoreEnvelope,
 } from './workspace-collector.js';
+import {
+  workspaceCollectGovernance,
+  type WorkspaceGovernanceEnvelope,
+} from './workspace-governance.js';
 import {
   workspaceCollectDefinitions,
   type DefinitionItemsInput,
@@ -77,6 +83,26 @@ udf.func(
   [],
 );
 
+udf.func(
+  'teamsNotify',
+  async (
+    ctx: RayfinContext<AtlasSchema, AudienceType.Fabric>,
+    protocolVersion: 1,
+    cardJson: TeamsCardJsonInput,
+  ): Promise<TeamsNotifyResult> => teamsNotify(ctx, protocolVersion, cardJson),
+  [],
+);
+
+udf.func(
+  'suggestDescriptions',
+  async (
+    ctx: RayfinContext<AtlasSchema, AudienceType.Fabric>,
+    protocolVersion: 1,
+    requestJson: AiSuggestRequestJson,
+  ): Promise<AiSuggestResult> => suggestDescriptions(ctx, protocolVersion, requestJson),
+  [],
+);
+
 udf.func('syncGraphStart', async (ctx: RayfinContext<AtlasSchema>, input: GraphStartInput): Promise<GraphResponse> =>
   graphStart(ctx, input), []);
 udf.func('syncGraphContinue', async (ctx: RayfinContext<AtlasSchema>, input: GraphContinueInput): Promise<GraphResponse> =>
@@ -108,6 +134,21 @@ udf.func(
     correlationId: SyncUuidInput | null = null,
   ): Promise<WorkspaceCoreEnvelope> =>
     workspaceCollectCore(ctx, protocolVersion, workspaceId, correlationId),
+  [],
+);
+
+// Read-only governance evidence (domains, tags, tenant settings, network, external shares, OneLake roles).
+// Every section is optional and degrades to `unsupported` for non-admin callers.
+udf.func(
+  'workspaceCollectGovernance',
+  async (
+    ctx: RayfinContext<AtlasSchema, AudienceType.Fabric>,
+    protocolVersion: 1,
+    workspaceId: SyncUuidInput,
+    correlationId: SyncUuidInput | null = null,
+    delegatedToken: string | null = null,
+  ): Promise<WorkspaceGovernanceEnvelope> =>
+    workspaceCollectGovernance(ctx, protocolVersion, workspaceId, correlationId, delegatedToken),
   [],
 );
 

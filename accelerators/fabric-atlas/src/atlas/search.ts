@@ -40,10 +40,43 @@ export interface SearchIndexEntry {
   target: SearchTarget;
   searchText: string;
   normalizedTitle: string;
+  /** Raw description, kept to explain matches that are not in the title. */
+  description?: string;
+}
+
+export interface SearchSnippet {
+  before: string;
+  match: string;
+  after: string;
 }
 
 export interface SearchResult extends SearchIndexEntry {
   score: number;
+  /** Highlighted description excerpt when the query matched the description. */
+  snippet?: SearchSnippet;
+}
+
+const SNIPPET_CONTEXT = 40;
+
+/** Excerpt around the first query token found in the description. */
+export function descriptionSnippet(
+  description: string | undefined,
+  tokens: readonly string[],
+): SearchSnippet | undefined {
+  if (!description) return undefined;
+  const lower = description.toLowerCase();
+  for (const token of tokens) {
+    const at = lower.indexOf(token);
+    if (at < 0) continue;
+    const start = Math.max(0, at - SNIPPET_CONTEXT);
+    const end = Math.min(description.length, at + token.length + SNIPPET_CONTEXT);
+    return {
+      before: `${start > 0 ? "…" : ""}${description.slice(start, at)}`,
+      match: description.slice(at, at + token.length),
+      after: `${description.slice(at + token.length, end)}${end < description.length ? "…" : ""}`,
+    };
+  }
+  return undefined;
 }
 
 export interface SearchOptions {
@@ -90,6 +123,7 @@ function entry(
   subtitle: string | undefined,
   target: SearchTarget,
   values: unknown[],
+  description?: string,
 ): SearchIndexEntry {
   return {
     id,
@@ -97,6 +131,7 @@ function entry(
     title,
     subtitle,
     target,
+    ...(description ? { description } : {}),
     normalizedTitle: normalizeSearchText(title),
     searchText: normalizeSearchText(
       [title, subtitle, ...values].map(text).filter(Boolean).join(" "),
@@ -192,6 +227,7 @@ export function buildSearchIndex(data: AtlasData): SearchIndexEntry[] {
           ...item.tags,
           ...(item.tagIds ?? []),
         ],
+        item.description,
       ),
     );
   }
@@ -227,6 +263,7 @@ export function buildSearchIndex(data: AtlasData): SearchIndexEntry[] {
           JSON.stringify(object.details),
           object.isHidden ? "hidden" : "",
         ],
+        object.description,
       ),
     );
   }
@@ -363,7 +400,13 @@ export function searchIndex(
         score += 500;
       else if (candidate.normalizedTitle.includes(normalizedQuery))
         score += 200;
-      return { ...candidate, score };
+      const unmatched = tokens.filter(
+        (token) => !candidate.normalizedTitle.includes(token),
+      );
+      const snippet = unmatched.length
+        ? descriptionSnippet(candidate.description, unmatched)
+        : undefined;
+      return snippet ? { ...candidate, score, snippet } : { ...candidate, score };
     })
     .sort(
       (left, right) =>

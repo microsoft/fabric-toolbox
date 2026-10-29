@@ -90,6 +90,7 @@ synchronizing.
 | SQL Database, Warehouse, Lakehouse and Mirrored Database catalogs | `workspaceCollectSqlMetadata` | None |
 | Shortcuts, mirroring and materialized lake view provenance | `workspaceCollectSourceProvenance` | None |
 | Fabric Policies context | `workspaceCollectAccessPolicyEvidence` | Portal-only evidence stays unavailable |
+| Domains, tags, tenant settings, network policy, external shares, OneLake data access roles (2.6) | `workspaceCollectGovernance` | None; each section is optional and degrades to Unknown |
 | Power BI admin scanner and scanner lineage | Python `sync_compatibility` | Retained until Rayfin exposes a documented Power BI audience |
 | PBIR-Legacy pages | Python `sync_compatibility` | Retained until the supported definition path covers legacy reports |
 | Kusto live metadata | Python `sync_compatibility` | Retained until Rayfin exposes a documented Kusto audience |
@@ -129,6 +130,12 @@ Shared protections include:
 - fixed error codes without upstream response bodies;
 - metadata-only allowlists.
 
+Two optional server-side Functions read secrets that never reach the browser:
+`teamsNotify` posts new critical findings to `ATLAS_TEAMS_WEBHOOK_URL`, and
+`suggestDescriptions` sends names, schema and DAX (never data values) to the
+endpoint configured by the `ATLAS_AI_*` secrets. Both stay disabled
+until an administrator sets the secrets.
+
 The generated Function schema and runtime metadata live in
 `rayfin/functions/src/types.ts` and
 `rayfin/functions/runtimemetadata.json`. Regenerate them through the Rayfin
@@ -142,7 +149,7 @@ The Python UDF exposes:
 - `sync_all` and `sync_items` for explicit rollback;
 - `ping` for basic validation.
 
-The normal 2.0 path uses `sync_compatibility`. It cannot rediscover the
+The normal path uses `sync_compatibility`. It cannot rediscover the
 workspace or run an unrequested collector.
 
 The UDF keeps its existing execution deadline, retry bounds, payload limits and

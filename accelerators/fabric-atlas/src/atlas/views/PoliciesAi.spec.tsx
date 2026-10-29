@@ -3,7 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { AtlasData } from "../model";
 import { snapshotFromData } from "../history";
 import { PoliciesAiSection } from "./PoliciesAi";
-import { POLICIES_AI_LIMITATION } from "../policies-ai";
+import { POLICIES_AI_LIMITATION, FABRIC_POLICIES_UNKNOWN, FABRIC_POLICIES_DOCS_URL } from "../policies-ai";
 import type { PolicyEvidenceLoader } from "../access-policy-evidence-source";
 
 const feature = vi.hoisted(() => ({ enabled: false }));
@@ -24,6 +24,27 @@ beforeEach(() => { feature.enabled = false; });
 afterEach(() => { vi.unstubAllGlobals(); vi.restoreAllMocks(); });
 
 describe("PoliciesAiSection", () => {
+  it("shows Fabric policies enforcement as unknown and lists cataloged policy items", () => {
+    const preview = render(<PoliciesAiSection {...props()} />);
+    const sample = screen.getByTestId("fabric-policies");
+    expect(within(sample).getByText(/3 apply to this workspace/)).toBeVisible();
+    expect(within(sample).getByRole("rowheader", { name: "Dataflow Gen2 creation" })).toBeVisible();
+    expect(within(sample).getByRole("link", { name: "Open Policies center" })).toBeVisible();
+    preview.unmount();
+    const { unmount } = render(<PoliciesAiSection {...props()} isPreview={false} />);
+    let card = screen.getByTestId("fabric-policies");
+    expect(within(card).getByText("Enforcement unknown")).toBeVisible();
+    expect(within(card).getByText(FABRIC_POLICIES_UNKNOWN)).toBeVisible();
+    expect(within(card).getByText(/No policy item is cataloged/)).toBeVisible();
+    expect(within(card).getByRole("link", { name: "About Fabric policies" })).toHaveAttribute("href", FABRIC_POLICIES_DOCS_URL);
+    unmount();
+    const base = props();
+    const withPolicy = { ...base.data, items: [...base.data.items, { ...base.data.items[0], fabricId: "pol-1", displayName: "Tenant policy set", itemType: "PolicySet" }] } as AtlasData;
+    render(<PoliciesAiSection {...base} isPreview={false} data={withPolicy} />);
+    card = screen.getByTestId("fabric-policies");
+    expect(within(card).getByRole("list", { name: "Policy items in this workspace" })).toHaveTextContent("Tenant policy set");
+  });
+
   it("shows observed empty definitions as unknown exposure with real provenance and no synthetic score", () => {
     render(<PoliciesAiSection {...props()} />);
     expect(screen.getByText(/Coverage is partial/)).toBeVisible();

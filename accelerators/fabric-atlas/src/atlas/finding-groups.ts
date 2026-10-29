@@ -11,6 +11,7 @@ export interface FindingGroup {
   severity: GovernanceSeverity;
   category: GovernanceCategory;
   recommendation: string;
+  detail?: string;
   findings: GovernanceFinding[];
 }
 
@@ -24,6 +25,19 @@ const RULE_LABEL: Record<string, string> = {
   "stale-item": "Stale items",
   "missing-owner": "Missing owner",
   "missing-sensitivity": "Missing sensitivity label",
+  "certified-missing-description": "Certified without description",
+  "certified-missing-sensitivity": "Certified without sensitivity label",
+  "endorsed-inactive": "Endorsed but inactive",
+  "item-inactive": "Inactive items",
+  "workspace-public-network": "Public network with Highly Confidential data",
+  "workspace-outbound-network": "Outbound access unrestricted",
+  "external-share-sensitive": "Sensitive item shared externally",
+  "missing-object-description": "Undocumented model objects",
+  "domain-default-label-missing": "Unlabeled despite domain default",
+  "domain-default-label-below": "Labels below the domain default",
+  "workspace-no-admin": "Workspace without Admin",
+  "workspace-no-domain": "Workspace without domain",
+  "domain-empty": "Domains without workspace",
   "failed-job": "Failed jobs",
   "broken-lineage": "Broken lineage relationships",
 };
@@ -55,6 +69,7 @@ export function groupFindingsByRule(
         severity: finding.severity,
         category: finding.category,
         recommendation: finding.recommendation,
+        ...(finding.groupDetail ? { detail: finding.groupDetail } : {}),
         findings: [finding],
       });
       continue;

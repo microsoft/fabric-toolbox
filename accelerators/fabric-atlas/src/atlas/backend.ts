@@ -14,6 +14,10 @@
 // Every backend call is wired defensively so a missing/misconfigured backend
 // never breaks the UI — see docs/architecture.md for the full flow.
 
+import { parseGovernanceEvidence, type GovernanceEvidence } from "./governance-evidence";
+import { parseGovernanceSummary, summarizeGovernance } from "./domain-governance";
+import { buildGovernanceFindings } from "./governance";
+import { buildNewCriticalCard, invokeTeamsNotify, newCriticalFindings } from "./teams-notify";
 import { ATLAS_CONFIG, configuredSyncWriters } from "./config";
 import {
   invokeSyncAll,
@@ -83,6 +87,7 @@ const PERSISTED_TEXT_LIMITS = {
     displayName: 200,
     capacity: 120,
     region: 120,
+    fabricDomainId: 64,
   },
   item: {
     displayName: 200,
@@ -372,10 +377,12 @@ const ENTITY_FIELDS: Record<string, readonly string[]> = {
     "writerEmail",
     "deploymentId",
     "syncSectionsJson",
+    "governanceSummaryJson",
     "fabricId",
     "displayName",
     "capacity",
     "region",
+    "fabricDomainId",
     "itemCount",
     "edgeCount",
     "principalCount",
@@ -806,6 +813,29 @@ async function persistItemRelationsCollection(
  * throws: incident evidence is derived and optional, so a missing entity or a
  * failed write must not fail the authoritative synchronization.
  */
+/** One Teams card per sync, only for critical findings absent from the previous snapshot. */
+async function notifyNewCriticalFindings(attempt: SyncAttempt, atlas: AtlasData): Promise<void> {
+  try {
+    const markers = trustedMarkers(
+      await readTrustedWorkspaceMarkers(readerFor(attempt.data), attempt.workspaceId),
+      attempt.workspaceId,
+    );
+    const previous = markers.find((marker) => !sameText(String(marker.snapshotId), attempt.snapshotId));
+    const fresh = newCriticalFindings(buildGovernanceFindings(atlas), previous?.governanceSummaryJson);
+    if (!fresh.length) return;
+    const result = await invokeTeamsNotify(
+      buildNewCriticalCard(atlas, fresh, typeof window === "undefined" ? undefined : window.location.origin),
+    );
+    if (result.status !== "sent" && result.status !== "not-configured") {
+      console.warn("[atlas] Teams notification not delivered", { status: result.status });
+    }
+  } catch (error) {
+    console.warn("[atlas] Teams notification failed", {
+      type: error instanceof Error ? error.name : "unknown",
+    });
+  }
+}
+
 async function persistSnapshotIncidents(
   attempt: SyncAttempt,
   atlas: AtlasData,
@@ -1240,6 +1270,25 @@ async function persistSync(
   if (semanticModelEvidenceRows.length) {
     await insertAll("ConfigEntry", semanticModelEvidenceRows);
   }
+  const governanceEvidenceRows: Row[] = [];
+  if (atlas.governanceEvidence) {
+    const chunks = JSON.stringify(atlas.governanceEvidence).match(/[\s\S]{1,1960}/g) ?? [];
+    for (let part = 0; part < chunks.length; part += 1) {
+      governanceEvidenceRows.push({
+        itemFabricId: requiredExactPersistedText(
+          atlas.workspace.fabricId,
+          PERSISTED_TEXT_LIMITS.reference.fabricId,
+          "Governance evidence workspace ID",
+        ),
+        section: "__governance_evidence__",
+        label: "workspace",
+        value: `v1:${String(part + 1).padStart(4, "0")}:${String(chunks.length).padStart(4, "0")}:${chunks[part]}`,
+      });
+    }
+  }
+  if (governanceEvidenceRows.length) {
+    await insertAll("ConfigEntry", governanceEvidenceRows);
+  }
 
   const snapshotSummary = summarizeSnapshot(
     snapshotFromData(atlas, snapshotId, syncedAt.toISOString()),
@@ -1251,6 +1300,7 @@ async function persistSync(
     syncSectionsJson: atlas.workspace.syncSections
       ? JSON.stringify(atlas.workspace.syncSections)
       : undefined,
+    governanceSummaryJson: JSON.stringify(summarizeGovernance(atlas)),
     fabricId: requiredExactPersistedText(
       atlas.workspace.fabricId,
       PERSISTED_TEXT_LIMITS.reference.fabricId,
@@ -1269,6 +1319,10 @@ async function persistSync(
       atlas.workspace.region,
       PERSISTED_TEXT_LIMITS.workspace.region,
     ),
+    fabricDomainId: persistedText(
+      atlas.workspace.fabricDomainId,
+      PERSISTED_TEXT_LIMITS.workspace.fabricDomainId,
+    ),
     itemCount: atlas.items.length,
     edgeCount: atlas.edges.length,
     principalCount: atlas.principals.length,
@@ -1278,7 +1332,8 @@ async function persistSync(
     schemaEntryCount:
       schemaRows.length +
       objectEdgeRows.length +
-      semanticModelEvidenceRows.length,
+      semanticModelEvidenceRows.length +
+      governanceEvidenceRows.length,
     summaryVersion: 1,
     healthyCount: snapshotSummary.healthyCount,
     staleCount: snapshotSummary.staleCount,
@@ -1318,11 +1373,13 @@ async function persistSync(
     { ...manifest, id: crypto.randomUUID() },
     signal,
   );
+  // The run lasts until the snapshot is published, not until collection ends.
+  const completedAt = new Date();
   try {
     await updateSyncAttempt(
       attempt,
       "completed",
-      syncedAt,
+      completedAt,
       atlas.items.length,
       syncSummary,
     );
@@ -1335,6 +1392,7 @@ async function persistSync(
   }
   reportProgress?.(98, "Recording operational incidents");
   await persistSnapshotIncidents(attempt, atlas, syncedAt);
+  await notifyNewCriticalFindings(attempt, atlas);
   reportProgress?.(99, "Applying snapshot retention");
   try {
     await pruneSnapshots(data, wid, snapshotId, writerEmail);
@@ -1353,12 +1411,12 @@ async function persistSync(
       {
         id: attempt.id,
         startedAt: attempt.startedAt.toISOString(),
-        finishedAt: syncedAt.toISOString(),
+        finishedAt: completedAt.toISOString(),
         status: "completed",
         itemsSynced: atlas.items.length,
         durationMs: Math.max(
           0,
-          syncedAt.getTime() - attempt.startedAt.getTime(),
+          completedAt.getTime() - attempt.startedAt.getTime(),
         ),
         triggeredBy: attempt.user.name,
         summary: syncSummary,
@@ -1593,6 +1651,23 @@ function parseObjectEdgeRows(rows: Row[]): MetadataObjectLineageEdge[] {
   return parsed.objectEdges;
 }
 
+function parseGovernanceEvidenceRows(rows: Row[]): GovernanceEvidence | undefined {
+  if (rows.length === 0) return undefined;
+  if (rows.some((row) => String(row.label) !== "workspace")) {
+    throw new Error("snapshot contains malformed governance evidence chunks");
+  }
+  const serialized = parseChunkedValue(
+    rows.map((row) => String(row.value ?? "")),
+    "snapshot contains a malformed governance evidence chunk",
+    "snapshot contains incomplete governance evidence",
+  );
+  try {
+    return parseGovernanceEvidence(JSON.parse(serialized));
+  } catch {
+    throw new Error("snapshot contains invalid governance evidence");
+  }
+}
+
 function parseSemanticModelEvidenceRows(
   rows: Row[],
   itemIds: Set<string>,
@@ -1737,6 +1812,7 @@ interface SnapshotRows {
   schemaRows: Row[];
   objectEdgeRows: Row[];
   semanticModelEvidenceRows: Row[];
+  governanceEvidenceRows: Row[];
   syncRows: Row[];
 }
 
@@ -1977,7 +2053,8 @@ async function readSnapshotRows(
       (row) =>
         String(row.section) !== "__schema__" &&
         String(row.section) !== "__object_edges__" &&
-        String(row.section) !== "__semantic_model_evidence__",
+        String(row.section) !== "__semantic_model_evidence__" &&
+        String(row.section) !== "__governance_evidence__",
     ),
     schemaRows: configRows.filter(
       (row) => String(row.section) === "__schema__",
@@ -1987,6 +2064,9 @@ async function readSnapshotRows(
     ),
     semanticModelEvidenceRows: configRows.filter(
       (row) => String(row.section) === "__semantic_model_evidence__",
+    ),
+    governanceEvidenceRows: configRows.filter(
+      (row) => String(row.section) === "__governance_evidence__",
     ),
     syncRows: rowsForSnapshot(allSyncRows, wid, snapshotId, writerEmail),
   };
@@ -2035,7 +2115,8 @@ function catalogFromRows(
     schemaEntryCount:
       rows.schemaRows.length +
       rows.objectEdgeRows.length +
-      rows.semanticModelEvidenceRows.length,
+      rows.semanticModelEvidenceRows.length +
+      rows.governanceEvidenceRows.length,
   });
 
   const items: Item[] = rows.itemRows.map((row) => {
@@ -2189,6 +2270,7 @@ function catalogFromRows(
     rows.semanticModelEvidenceRows,
     itemIds,
   );
+  const governanceEvidence = parseGovernanceEvidenceRows(rows.governanceEvidenceRows);
   const snapshotId = String(marker.snapshotId);
   const syncedAt = validDateIso(marker.syncedAt) ?? markerTime;
   const workspace: WorkspaceInfo = {
@@ -2196,6 +2278,7 @@ function catalogFromRows(
     displayName: textOrFallback(marker.displayName, WS_FALLBACK.displayName),
     capacity: textOrFallback(marker.capacity, WS_FALLBACK.capacity),
     region: textOrFallback(marker.region, WS_FALLBACK.region),
+    fabricDomainId: textOrFallback(marker.fabricDomainId, "") || undefined,
     deploymentId: textOrFallback(marker.deploymentId, "") || undefined,
     snapshotId,
     syncedAt,
@@ -2214,6 +2297,7 @@ function catalogFromRows(
     semanticModelEvidence,
     itemMetadata,
     objectEdges,
+    ...(governanceEvidence ? { governanceEvidence } : {}),
   };
 }
 
@@ -2317,6 +2401,7 @@ async function deleteSnapshotContent(
         ...rows.schemaRows,
         ...rows.objectEdgeRows,
         ...rows.semanticModelEvidenceRows,
+        ...rows.governanceEvidenceRows,
       ],
     ],
     ["JobRun", rows.jobRows],
@@ -2394,7 +2479,8 @@ async function cleanupOrphanSnapshots(
         rows.regularConfigRows.length +
         rows.schemaRows.length +
         rows.objectEdgeRows.length +
-        rows.semanticModelEvidenceRows.length;
+        rows.semanticModelEvidenceRows.length +
+        rows.governanceEvidenceRows.length;
       if (rowCount === 0) continue;
       await deleteSnapshotContent(
         data,
@@ -2546,6 +2632,34 @@ function syncRunsFromRows(rows: Row[], fallbackTime: string): AtlasData["syncRun
     .slice(0, 10);
 }
 
+/** Named Fabric domains from a workspace snapshot's governance evidence; never throws. */
+async function readSnapshotDomains(
+  read: ReadEntity,
+  wid: string,
+  marker: Row,
+): Promise<GovernanceEvidence["domains"]["entries"] | undefined> {
+  const snapshotId = realText(marker.snapshotId);
+  const writerEmail = realText(marker.writerEmail);
+  if (!snapshotId || !writerEmail) return undefined;
+  try {
+    const rows = await read("ConfigEntry", {
+      workspace_id: { eq: wid },
+      snapshotId: { eq: snapshotId },
+      writerEmail: { eq: writerEmail },
+      section: { eq: "__governance_evidence__" },
+    });
+    const evidence = parseGovernanceEvidenceRows(
+      rowsForSnapshot(rows, wid, snapshotId, writerEmail).filter(
+        (row) => String(row.section) === "__governance_evidence__",
+      ),
+    );
+    return evidence?.domains.entries.length ? evidence.domains.entries : undefined;
+  } catch (error) {
+    console.warn("[atlas] domain names unavailable", wid, error);
+    return undefined;
+  }
+}
+
 export async function loadWorkspaceSyncStatuses(
   isPreview: boolean,
   workspaceIds: readonly string[],
@@ -2568,11 +2682,18 @@ export async function loadWorkspaceSyncStatuses(
           snapshotAt ?? new Date(0).toISOString(),
         );
         const lastRun = runs[0];
+        const domains = marker ? await readSnapshotDomains(read, id, marker) : undefined;
         return [
           id,
           {
             snapshotId: realText(marker?.snapshotId),
             snapshotAt,
+            displayName: realText(marker?.displayName),
+            fabricDomainId: realText(marker?.fabricDomainId),
+            ...(domains?.length ? { domains } : {}),
+            governanceSummary: parseGovernanceSummary(
+              marker?.governanceSummaryJson,
+            ),
             lastRunStatus: lastRun?.status,
             lastRunStartedAt: lastRun?.startedAt,
             lastRunFinishedAt: lastRun?.finishedAt,

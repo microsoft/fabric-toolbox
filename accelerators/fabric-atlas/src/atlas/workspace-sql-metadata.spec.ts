@@ -18,6 +18,7 @@ import { SYNCHRONIZER_AUTHORITY_ID } from "../../rayfin/functions/src/synchroniz
 import type { AppFunctionsSchema } from "../../rayfin/functions/src/types";
 import {
   collectWorkspaceSqlMetadata,
+  lakehouseCoverageText,
   validateCollectSqlMetadataInput,
   workspaceCollectSqlMetadata,
   type CollectSqlMetadataDependencies,
@@ -626,7 +627,7 @@ describe("SQL metadata trusted coordinates and mixed batches", () => {
         itemId: LAKEHOUSE,
         section: "Inventory",
         label: "Coverage",
-        value: "Lakehouse Tables REST inventory merged with SQL analytics endpoint columns when available.",
+        value: "Lakehouse Tables REST inventory merged with SQL analytics endpoint columns.",
       },
       { itemId: LAKEHOUSE, section: "Tables", label: "dbo.trips", value: "SQL endpoint table" },
     ]);
@@ -1265,5 +1266,25 @@ describe("SQL metadata leakage boundary", () => {
     ]) {
       expect(serialized).not.toContain(forbidden);
     }
+  });
+});
+
+describe("lakehouseCoverageText", () => {
+  it("names the SQL endpoint as the source when a schema-enabled Lakehouse is not listed by REST", () => {
+    expect(
+      lakehouseCoverageText({ status: "unsupported", code: "endpoint-unsupported" }, { status: "complete" }, true),
+    ).toMatch(/Schema-enabled Lakehouse.*SQL analytics endpoint/);
+  });
+
+  it("names both causes when no table inventory was collected", () => {
+    expect(
+      lakehouseCoverageText(
+        { status: "unsupported", code: "endpoint-unsupported" },
+        { status: "unsupported", code: "token-unavailable" },
+        false,
+      ),
+    ).toBe(
+      "No table inventory: Lakehouse Tables REST does not support schema-enabled lakehouses; SQL analytics endpoint catalog token-unavailable.",
+    );
   });
 });

@@ -2,6 +2,27 @@ import { describe, expect, it } from "vitest";
 import { parseAtlasLocation, urlForNavigation } from "./routing";
 
 describe("Atlas routing", () => {
+  it("round-trips the My items governance scope", () => {
+    const url = urlForNavigation(
+      { pathname: "/", search: "" },
+      {
+        tab: "governance",
+        focus: {
+          requestId: "ignored",
+          governanceSection: "findings",
+          filters: { section: "findings", mine: true },
+        },
+      },
+    );
+
+    expect(url).toContain("governance.mine=1");
+    const parsed = parseAtlasLocation({
+      hash: "#governance",
+      search: url.slice(url.indexOf("?"), url.indexOf("#")),
+    });
+    expect(parsed.focus?.filters?.mine).toBe("true");
+  });
+
   it("round-trips the Policies & AI local tab without introducing a new app route", () => {
     const url = urlForNavigation({ pathname: "/", search: "" }, {
       tab: "governance", focus: { requestId: "ignored", governanceSection: "policies-ai",
@@ -198,6 +219,30 @@ describe("Atlas routing", () => {
     });
   });
 
+  it("round-trips the findings domain focus", () => {
+    const url = urlForNavigation(
+      { pathname: "/", search: "" },
+      {
+        tab: "governance",
+        focus: {
+          requestId: "ignored",
+          governanceSection: "findings",
+          filters: { section: "findings", fabricDomain: "unassigned" },
+        },
+      },
+    );
+
+    expect(url).toContain("governance.fabricDomain=unassigned");
+    expect(
+      parseAtlasLocation({
+        hash: "#governance",
+        search: url.slice(url.indexOf("?"), url.indexOf("#")),
+      }),
+    ).toMatchObject({
+      focus: { governanceSection: "findings", filters: { fabricDomain: "unassigned" } },
+    });
+  });
+
   it("round-trips posture filters", () => {
     const url = urlForNavigation(
       { pathname: "/", search: "" },
@@ -222,6 +267,29 @@ describe("Atlas routing", () => {
       focus: {
         governanceSection: "posture",
         filters: { pillar: "ownership" },
+      },
+    });
+  });
+
+  it("round-trips repeated catalog facet values", () => {
+    const url = urlForNavigation(
+      { pathname: "/", search: "?catalog.tag=stale" },
+      {
+        tab: "catalog",
+        focus: {
+          requestId: "ignored",
+          filters: { type: "Report", "facet.tag": ["gold", "rentals kpi"], "facet.endorsement": ["certified"] },
+        },
+      },
+    );
+
+    expect(url).toContain("catalog.tag=gold&catalog.tag=rentals+kpi");
+    expect(url).not.toContain("stale");
+    expect(
+      parseAtlasLocation({ hash: "#catalog", search: url.slice(url.indexOf("?"), url.indexOf("#")) }),
+    ).toMatchObject({
+      focus: {
+        filters: { type: "Report", "facet.tag": ["gold", "rentals kpi"], "facet.endorsement": ["certified"] },
       },
     });
   });

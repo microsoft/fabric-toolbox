@@ -23,6 +23,7 @@ import {
   type AtlasChangeDomain,
   type AtlasHistory,
 } from "../history";
+import { domainReference, itemOneLakeRoles } from "../governance-evidence";
 import { incidentBriefSection } from "../incident-feeds";
 import {
   COVERAGE_DIMENSIONS,
@@ -98,6 +99,7 @@ import {
   type AtlasMcpWorkspaceRef,
 } from "./contract";
 import type { AtlasMcpDataSource } from "./data-source";
+import { exportSnapshot, governanceFindings } from "./governance-tools";
 
 // Deterministic evidence tools. Each evaluator reuses the same helpers as the
 // Atlas UI over one validated snapshot and never writes or calls Fabric.
@@ -263,6 +265,7 @@ function snapshotProvenance(data: AtlasData): ToolOutcome {
       : [];
   return {
     result: {
+      fabricDomain: domainReference(data.governanceEvidence, data.workspace.fabricDomainId),
       counts: {
         items: summary.items,
         lineageEdges: summary.lineage,
@@ -724,6 +727,22 @@ function policyContext(evidence: AccessEvidenceCoverage, state: PolicyContextSta
   };
 }
 
+function oneLakeRolesEvidence(data: AtlasData, itemId: string) {
+  const value = itemOneLakeRoles(data.governanceEvidence, itemId);
+  return {
+    status: value.known ? "complete" : "unknown",
+    roles: value.roles.map((role) => ({
+      roleName: role.roleName,
+      permissions: role.permissions,
+      paths: role.paths,
+      memberCount: role.memberIds.length,
+      itemMemberCount: role.itemMemberCount,
+      rowLevelSecurity: role.rowSecurity,
+      columnLevelSecurity: role.columnSecurity,
+    })),
+  };
+}
+
 function accessEvidence(
   data: AtlasData,
   args: AtlasMcpToolArguments["atlas_get_access_evidence"],
@@ -786,6 +805,7 @@ function accessEvidence(
         item: itemRef(item),
         assessment: assessment(evidence),
         storedPolicyContext: policyContext(evidence, policy),
+        oneLakeRoles: oneLakeRolesEvidence(data, item.fabricId),
         recordedGrants: page.map(accessRow),
         summary: accessSummary(itemRows),
       },
@@ -1432,6 +1452,18 @@ export async function callAtlasMcpTool(
         );
         break;
       }
+      case "atlas_get_governance_findings":
+        outcome = governanceFindings(
+          data,
+          args as AtlasMcpToolArguments["atlas_get_governance_findings"],
+        );
+        break;
+      case "atlas_export_snapshot":
+        outcome = exportSnapshot(
+          data,
+          args as AtlasMcpToolArguments["atlas_export_snapshot"],
+        );
+        break;
     }
     return successEnvelope(tool, retrievedAt, context, outcome);
   } catch (error) {

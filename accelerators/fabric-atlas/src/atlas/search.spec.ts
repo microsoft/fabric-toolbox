@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   buildSearchIndex,
+  descriptionSnippet,
   normalizeSearchText,
   searchAtlas,
   searchIndex,
@@ -181,6 +182,31 @@ describe("global search", () => {
       kind: "job",
       target: { itemId: "model" },
     });
+  });
+
+  it("finds objects by description with their path and a highlighted snippet", () => {
+    const results = searchAtlas(data(), "facts");
+    expect(results[0]).toMatchObject({
+      kind: "table",
+      title: "Sales",
+      target: { itemId: "model", objectName: "Sales" },
+      snippet: { before: "Revenue ", match: "facts", after: "" },
+    });
+    expect(results[0].subtitle).toContain("Revenue Model");
+    expect(searchAtlas(data(), "sales")[0].snippet).toBeUndefined();
+    expect(descriptionSnippet("x".repeat(60) + "needle" + "y".repeat(60), ["needle"])).toMatchObject({
+      before: `…${"x".repeat(40)}`,
+      match: "needle",
+      after: `${"y".repeat(40)}…`,
+    });
+  });
+
+  it("stays responsive on the demo snapshot", async () => {
+    const { SAMPLE_DATA } = await import("./model");
+    const index = buildSearchIndex(SAMPLE_DATA);
+    const started = performance.now();
+    for (const query of ["revenue", "customer id", "pii", "sales amount"]) searchIndex(index, query);
+    expect((performance.now() - started) / 4).toBeLessThan(100);
   });
 
   it("does not invent schema entries when explicit schema is absent", () => {

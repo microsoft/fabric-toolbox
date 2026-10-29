@@ -37,6 +37,7 @@ describe("GovernanceCenterView", () => {
     expect(tabs[0]).toHaveTextContent("Posture");
     expect(tabs[0]).toHaveAttribute("aria-selected", "true");
     expect(await screen.findByRole("button", { name: "Select lineage in radar" })).toBeVisible();
+    expect(within(screen.getByRole("heading", { name: "Workspace network" }).parentElement!).getAllByText("Public access allowed")).toHaveLength(2);
     expect(screen.getByText("Latest priority changes").closest("details")).not.toHaveAttribute("open");
     fireEvent.click(screen.getByText("Latest priority changes"));
     expect(
@@ -50,11 +51,12 @@ describe("GovernanceCenterView", () => {
     expect(screen.getByRole("tab", { name: /Policies & AI/ })).toBeVisible();
     expect(screen.getByRole("tablist", { name: "Governance Center sections" })).toHaveClass("atlas-line-tabs");
     expect(screen.getByRole("button", { name: /Saved views/ })).toBeVisible();
+    // Preview ships a baseline and a current snapshot, so the Radar compares them.
     expect(
-      screen.getByRole("heading", {
+      screen.queryByRole("heading", {
         name: "Your governance baseline is ready",
       }),
-    ).toBeInTheDocument();
+    ).not.toBeInTheDocument();
     expect(screen.getByText("No new priority alert")).toBeInTheDocument();
     expect(
       screen.queryByText("Workspace governance summary"),
@@ -103,6 +105,7 @@ describe("GovernanceCenterView", () => {
       "Item families",
       "Metadata quality",
       "Sensitivity",
+      "By domain",
     ]);
     expect(screen.queryByRole("heading", { name: "Label distribution" })).toBeNull();
 
@@ -128,6 +131,19 @@ describe("GovernanceCenterView", () => {
     }
   });
 
+  it("aggregates posture by domain and focuses findings on a selected domain", async () => {
+    renderView();
+    const table = (await screen.findByRole("heading", { name: "Posture by domain" })).closest("div.overflow-hidden") as HTMLElement;
+    expect(within(table).getByText("Finance")).toBeInTheDocument();
+    expect(within(table).getByText(/Empty in Fabric/)).toBeInTheDocument();
+    fireEvent.click(within(table).getByRole("button", { name: "Filter the app on domain Operations" }));
+    fireEvent.click(screen.getByRole("tab", { name: /Findings/ }));
+    expect(screen.getByText(/^Domain: Operations/)).toBeInTheDocument();
+    expect(screen.queryByText(/Domains without workspace/)).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Clear domain" }));
+    expect(screen.queryByText(/^Domain: Operations/)).not.toBeInTheDocument();
+  });
+
   it("supports arrow-key tab navigation", async () => {
     renderView();
     const findings = screen.getByRole("tab", { name: /Findings/ });
@@ -143,8 +159,8 @@ describe("GovernanceCenterView", () => {
       ),
     );
     expect(
-      screen.getByRole("heading", { name: "A second snapshot is required" }),
-    ).toBeInTheDocument();
+      screen.queryByRole("heading", { name: "A second snapshot is required" }),
+    ).not.toBeInTheDocument();
   });
 
   it("opens evidence from an actionable finding", () => {
@@ -168,15 +184,16 @@ describe("GovernanceCenterView", () => {
     })));
   });
 
-  it("shows the two-snapshot requirement in Change Center preview", async () => {
+  it("compares the preview baseline with the current snapshot in Change Center", async () => {
     renderView();
     fireEvent.click(screen.getByRole("tab", { name: /Changes/ }));
 
+    await waitFor(() => expect(screen.getByRole("tab", { name: /Changes/ })).toHaveAttribute("aria-selected", "true"));
     expect(
-      await screen.findByRole("heading", {
+      screen.queryByRole("heading", {
         name: "A second snapshot is required",
       }),
-    ).toBeInTheDocument();
+    ).not.toBeInTheDocument();
   });
 
   it("saves a personal governance view in preview", async () => {

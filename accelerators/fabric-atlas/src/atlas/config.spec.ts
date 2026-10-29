@@ -12,7 +12,7 @@ const validUrl =
 
 describe("validateUdfUrl", () => {
   it("accepts the configured HTTPS Fabric UDF endpoint", () => {
-    expect(validateUdfUrl(validUrl, workspaceId)).toBe(validUrl);
+    expect(validateUdfUrl(validUrl)).toBe(validUrl);
   });
 
   it.each([
@@ -21,19 +21,11 @@ describe("validateUdfUrl", () => {
     "https://user@workspace.z6b.userdatafunctions.fabric.microsoft.com/v1/workspaces/11111111-1111-4111-8111-111111111111/userDataFunctions/22222222-2222-4222-8222-222222222222/functions/sync_all/invoke",
     `${validUrl}?redirect=https://attacker.example`,
   ])("rejects an untrusted UDF URL before token use: %s", (value) => {
-    expect(() => validateUdfUrl(value, workspaceId)).toThrow(
+    expect(() => validateUdfUrl(value)).toThrow(
       /invalid UDF endpoint/i,
     );
   });
 
-  it("accepts a trusted deployment UDF for another selected workspace", () => {
-    expect(
-      validateUdfUrl(
-        validUrl,
-        "33333333-3333-4333-8333-333333333333",
-      ),
-    ).toBe(validUrl);
-  });
 });
 
 describe("hasValidSyncConfiguration", () => {

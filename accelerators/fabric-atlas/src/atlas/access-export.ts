@@ -8,6 +8,7 @@ import {
   unknownAccessLayerSummary,
   storedPolicySummary,
 } from "./access-coverage";
+import { PRINCIPAL_TYPE_LABELS, ROLE_LABELS, principalTypeOf, rolesOf } from "./access-filters";
 
 const FLAG_LABEL: Record<NonNullable<Grant["flag"]>, string> = {
   external: "External",
@@ -42,6 +43,8 @@ export function accessRowsToCsv(rows: AccessReviewRow[]): string {
     "Principal",
     "Principal ID",
     "Resolution",
+    "Principal type",
+    "Roles",
     "Item",
     "Item ID",
     "Item type",
@@ -67,6 +70,8 @@ export function accessRowsToCsv(rows: AccessReviewRow[]): string {
       row.principalRef,
       row.principalId ?? "",
       row.principalResolution,
+      PRINCIPAL_TYPE_LABELS[principalTypeOf(row)],
+      [...rolesOf(row)].map((role) => ROLE_LABELS[role]).join("; "),
       row.item.displayName,
       row.itemId,
       row.item.itemType,

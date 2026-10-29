@@ -1,8 +1,10 @@
 import * as Dialog from "@radix-ui/react-dialog";
+import * as Popover from "@radix-ui/react-popover";
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
   Activity,
   ChevronDown,
+  Check,
   ChevronRight,
   FilterX,
   Layers,
@@ -18,11 +20,28 @@ import {
 import { motion } from "framer-motion";
 import type { AtlasFocusRequest, AtlasNavigation } from "../navigation";
 import { snapshotCatalogFromData } from "../history";
+import { buildCatalogObjects } from "../catalog-objects";
 import {
   nonConformingPostureItemIds,
   type PosturePillar,
 } from "../posture";
 import { useAtlas } from "../store";
+import { NativeLink } from "../components/NativeLink";
+import { hasRecordedAccess, requestAccessLinks } from "../request-access";
+import { itemOneLakeRoles } from "../governance-evidence";
+import { OneLakeRolesList } from "../components/OneLakeRolesList";
+import {
+  CATALOG_FACETS,
+  CATALOG_FACET_LABELS,
+  applyCatalogFacets,
+  facetSelectionFromFilters,
+  facetSelectionToFilters,
+  hasFacetSelection,
+  resolveItemTags,
+  toggleFacetValue,
+  type CatalogFacetSelection,
+  type TagScope,
+} from "../catalog-facets";
 import { isCatalogLayout, useDisplayPreference } from "../display-preferences";
 import { CatalogTable } from "../components/CatalogTable";
 import { PageHeader } from "../components/PageHeader";
@@ -42,6 +61,12 @@ import {
   type Item,
   type ItemType,
 } from "../model";
+
+const TAG_SCOPE_DOT: Record<TagScope, string> = {
+  tenant: "bg-primary",
+  domain: "bg-status-healthy",
+  unknown: "bg-muted-foreground",
+};
 
 const HEALTH_META: Record<
   Health,
@@ -131,6 +156,36 @@ function DrawerSection({
   );
 }
 
+function RequestAccess({
+  item,
+  workspace,
+  hasAccess,
+}: {
+  item: Item;
+  workspace: Parameters<typeof requestAccessLinks>[1];
+  hasAccess: boolean;
+}) {
+  const links = requestAccessLinks(item, workspace);
+  return (
+    <div className="mt-s flex flex-wrap items-center gap-m rounded-lg border border-border bg-secondary/60 px-s py-xs">
+      <NativeLink href={links.fabricUrl}>Request access in Fabric</NativeLink>
+      <span className="text-200 text-muted-foreground">
+        {hasAccess
+          ? "Opens the item's access request page in Fabric. Atlas grants nothing."
+          : "No access recorded for you according to the last snapshot. Atlas grants nothing."}
+      </span>
+      {links.mailto && (
+        <a
+          href={links.mailto}
+          className="text-200 font-semibold text-brand-foreground underline-offset-4 hover:underline"
+        >
+          Email owner
+        </a>
+      )}
+    </div>
+  );
+}
+
 function toSectionKey(value: string) {
   return value.toLowerCase().replace(/[^a-z0-9]+/g, "-");
 }
@@ -175,6 +230,21 @@ export function CatalogView({
       ? (focus.filters.posturePillar as PosturePillar)
       : undefined,
   );
+  const [facets, setFacets] = useState<CatalogFacetSelection>(() =>
+    facetSelectionFromFilters(focus?.filters),
+  );
+  const facetContext = useMemo(
+    () => ({ workspace: data.workspace, governanceEvidence: data.governanceEvidence }),
+    [data.workspace, data.governanceEvidence],
+  );
+  const workspaceDomainName = useMemo(() => {
+    const evidence = data.governanceEvidence;
+    const names = new Set<string>();
+    for (const item of items) {
+      for (const tag of resolveItemTags(item, evidence)) if (tag.scope === "domain" && tag.domainName) names.add(tag.domainName);
+    }
+    return [...names].sort().join(", ");
+  }, [data.governanceEvidence, items]);
   const postureItemIds = useMemo(
     () =>
       posturePillar
@@ -194,19 +264,55 @@ export function CatalogView({
       return next;
     });
 
-  const visible = useMemo(() => {
+  const describedObjects = useMemo(
+    () =>
+      buildCatalogObjects(data)
+        .filter((object) => object.description?.trim())
+        .map((object) => ({
+          itemFabricId: object.itemFabricId,
+          path: [object.itemName, object.tableName ?? object.parentName, object.name]
+            .filter((part, index, parts) => part && parts.indexOf(part) === index)
+            .join(" › "),
+          kind: object.kind,
+          text: object.description!.trim(),
+          lower: object.description!.toLowerCase(),
+        })),
+    [data],
+  );
+  const descriptionMatches = useMemo(() => {
     const normalizedQuery = query.trim().toLowerCase();
+    if (normalizedQuery.length < 2) return [];
+    const itemMatches = items
+      .filter((item) => item.description?.toLowerCase().includes(normalizedQuery))
+      .map((item) => ({ itemFabricId: item.fabricId, path: item.displayName, kind: "item", text: item.description!.trim() }));
+    return [
+      ...itemMatches,
+      ...describedObjects.filter((object) => object.lower.includes(normalizedQuery)),
+    ];
+  }, [describedObjects, items, query]);
+  const baseVisible = useMemo(() => {
+    const normalizedQuery = query.trim().toLowerCase();
+    const describedItemIds = new Set(descriptionMatches.map((match) => match.itemFabricId));
     return items.filter(
       (item) =>
         (!selType || item.itemType === selType) &&
         (!postureItemIds || postureItemIds.has(item.fabricId)) &&
         (!normalizedQuery ||
           item.displayName.toLowerCase().includes(normalizedQuery) ||
+          describedItemIds.has(item.fabricId) ||
           item.tags.some((tag) =>
             tag.toLowerCase().includes(normalizedQuery),
           )),
     );
-  }, [items, postureItemIds, selType, query]);
+  }, [items, postureItemIds, selType, query, descriptionMatches]);
+  const facetResult = useMemo(
+    () => applyCatalogFacets(baseVisible, facets, facetContext),
+    [baseVisible, facets, facetContext],
+  );
+  const visible = facetResult.items;
+  const activeFacetCount = CATALOG_FACETS.filter((facet) => (facets[facet]?.length ?? 0) > 0).length;
+  const facetFilters = facetSelectionToFilters(facets);
+  const facetKey = JSON.stringify(facetFilters);
   const searching = Boolean(query.trim());
   const visibleIds = useMemo(() => new Set(visible.map((item) => item.fabricId)), [visible]);
 
@@ -227,15 +333,18 @@ export function CatalogView({
         itemId: detailId ?? undefined,
         query: query.trim() || undefined,
         filters:
-          selType || posturePillar
+          selType || posturePillar || hasFacetSelection(facets)
             ? {
                 ...(selType ? { type: selType } : {}),
                 ...(posturePillar ? { posturePillar } : {}),
+                ...(JSON.parse(facetKey) as Record<string, string[]>),
               }
             : undefined,
       },
     });
-  }, [detailId, onStateChange, posturePillar, query, selType]);
+    // facetKey carries the facet selection as a stable string.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [detailId, onStateChange, posturePillar, query, selType, facetKey]);
   const drawerRef = useRef<HTMLElement>(null);
   const detail = items.find((item) => item.fabricId === detailId);
   const dCfgSections = useMemo(() => {
@@ -257,9 +366,12 @@ export function CatalogView({
     .map((edge) => items.find((item) => item.fabricId === edge.target))
     .filter(Boolean) as Item[];
   const dGrants = grants.filter((grant) => grant.itemFabricId === detailId);
+  const dOneLakeRoles = itemOneLakeRoles(data.governanceEvidence, detailId ?? "");
+  const showOneLakeRoles =
+    detail?.itemType === "Lakehouse" || dOneLakeRoles.roles.length > 0;
   const dJobs = jobs.filter((job) => job.itemFabricId === detailId);
   const hasActiveFilters = Boolean(
-    selType || query.trim() || posturePillar,
+    selType || query.trim() || posturePillar || hasFacetSelection(facets),
   );
 
   const drawerSections = detail
@@ -270,6 +382,7 @@ export function CatalogView({
           ? [{ key: "lineage", label: "Lineage" }]
           : []),
         ...(dGrants.length ? [{ key: "access", label: "Access" }] : []),
+        ...(showOneLakeRoles ? [{ key: "onelake-roles", label: "Security roles" }] : []),
         ...dCfgSections.map(([section]) => ({
           key: `config-${toSectionKey(section)}`,
           label: section,
@@ -282,6 +395,7 @@ export function CatalogView({
     setQuery("");
     setSelType(null);
     setPosturePillar(undefined);
+    setFacets({});
   };
 
   const scrollToSection = (sectionKey: string) => {
@@ -306,7 +420,7 @@ export function CatalogView({
         {hasActiveFilters && <div className="atlas-toolbar flex flex-wrap items-center border-t border-border bg-secondary px-l py-s">
           <Search className="icon-size-200 text-muted-foreground" />
           <span className="text-200 text-muted-foreground">
-            Search by item name or tag, then narrow the inventory by type.
+            Search by item name, tag or description (items, tables, columns, measures), then narrow by type.
           </span>
           {selType && (
             <span className="rounded-md border border-primary/30 bg-primary/10 px-s py-xxs text-200 font-semibold text-primary">
@@ -322,6 +436,23 @@ export function CatalogView({
             <span className="rounded-md border border-status-warning/30 bg-status-warning/10 px-s py-xxs text-200 font-semibold text-status-warning">
               Posture: {posturePillar}
             </span>
+          )}
+          {CATALOG_FACETS.flatMap((facet) =>
+            (facets[facet] ?? []).map((value) => {
+              const label = facetResult.facets[facet].find((entry) => entry.value === value)?.label ?? value;
+              return (
+                <button
+                  key={`${facet}:${value}`}
+                  type="button"
+                  onClick={() => setFacets((current) => toggleFacetValue(current, facet, value))}
+                  aria-label={`Remove ${CATALOG_FACET_LABELS[facet]} filter ${label}`}
+                  className="inline-flex items-center gap-xxs rounded-md border border-primary/30 bg-primary/10 px-s py-xxs text-200 font-semibold text-primary"
+                >
+                  {CATALOG_FACET_LABELS[facet]}: {label}
+                  <X className="icon-size-100" />
+                </button>
+              );
+            }),
           )}
           {hasActiveFilters && (
             <button
@@ -352,7 +483,7 @@ export function CatalogView({
                 id="catalog-search"
                 value={query}
                 onChange={(event) => setQuery(event.target.value)}
-                placeholder="Item name or tag"
+                placeholder="Name, tag or description"
                 className="h-9 w-full rounded-lg border border-input bg-background pl-xxxl pr-xxxl text-300 text-foreground placeholder:text-muted-foreground"
               />
               {query && (
@@ -366,6 +497,27 @@ export function CatalogView({
                 </button>
               )}
             </div>
+            {descriptionMatches.length > 0 && (
+              <section aria-label="Description matches" className="mt-s rounded-lg border border-border bg-background p-s">
+                <p className="mb-xxs text-200 font-semibold text-muted-foreground">
+                  Matches in descriptions · {descriptionMatches.length}
+                </p>
+                <ul className="flex max-h-48 flex-col gap-xxs overflow-auto">
+                  {descriptionMatches.slice(0, 20).map((match, index) => (
+                    <li key={`${match.itemFabricId}:${match.path}:${index}`}>
+                      <button
+                        type="button"
+                        onClick={() => openDetail(match.itemFabricId)}
+                        className="w-full rounded-md px-xs py-xxs text-left hover:bg-accent"
+                      >
+                        <span className="block truncate text-200 font-semibold">{match.path}</span>
+                        <span className="block truncate text-100 text-muted-foreground">{match.text}</span>
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              </section>
+            )}
           </div>
 
           <div className="min-h-0 flex-1 overflow-auto py-s">
@@ -477,9 +629,41 @@ export function CatalogView({
         </aside>
 
         <section aria-label="Catalog items">
+          <div className="mb-m flex flex-wrap items-center gap-xs" aria-label="Catalog facets" role="group">
+            {CATALOG_FACETS.map((facet) => (
+              <FacetDropdown
+                key={facet}
+                label={CATALOG_FACET_LABELS[facet]}
+                options={facetResult.facets[facet]}
+                selected={facets[facet] ?? []}
+                onToggle={(value) => setFacets((current) => toggleFacetValue(current, facet, value))}
+                onClear={() => setFacets((current) => ({ ...current, [facet]: [] }))}
+              />
+            ))}
+            <span className="ml-auto inline-flex items-center gap-s text-200 text-muted-foreground">
+              <span>
+                {activeFacetCount} {activeFacetCount === 1 ? "filter" : "filters"} · {visible.length} of {items.length} items
+              </span>
+              {hasFacetSelection(facets) && (
+                <button
+                  type="button"
+                  onClick={() => setFacets({})}
+                  className="rounded-md px-s py-xxs font-semibold text-primary hover:bg-primary/10"
+                >
+                  Clear
+                </button>
+              )}
+            </span>
+          </div>
           <div className="atlas-toolbar mb-m flex flex-wrap items-center justify-between">
             <div>
-              <h2 className="text-400 font-semibold">Governed items</h2>
+              <h2 className="flex flex-wrap items-center gap-m text-400 font-semibold">
+                Governed items
+                <span className="inline-flex items-center gap-m text-200 font-normal text-muted-foreground" aria-label="Tag scope legend">
+                  <span className="inline-flex items-center gap-xxs"><span className={cn("size-xs rounded-full", TAG_SCOPE_DOT.tenant)} aria-hidden="true" />Tenant tag</span>
+                  <span className="inline-flex items-center gap-xxs"><span className={cn("size-xs rounded-full", TAG_SCOPE_DOT.domain)} aria-hidden="true" />Domain tag{workspaceDomainName ? ` (${workspaceDomainName})` : ""}</span>
+                </span>
+              </h2>
               <p className="text-200 text-muted-foreground">
                 {visible.length} {visible.length === 1 ? "result" : "results"}
               </p>
@@ -584,13 +768,19 @@ export function CatalogView({
                       </div>
 
                       <div className="flex flex-wrap gap-xs">
-                        {item.tags.length ? (
-                          item.tags.map((tag) => (
+                        {item.tags.length || item.tagIds?.length ? (
+                          resolveItemTags(item, data.governanceEvidence).map((tag) => (
                             <span
-                              key={tag}
-                              className="rounded-md border border-border bg-muted px-s py-xxs text-200 font-medium text-muted-foreground"
+                              key={tag.key}
+                              title={tag.hint}
+                              className="inline-flex items-center gap-xxs rounded-md border border-border bg-muted px-s py-xxs text-200 font-medium text-muted-foreground"
                             >
-                              {tag}
+                              <span className={cn("size-xs shrink-0 rounded-full", TAG_SCOPE_DOT[tag.scope])} aria-hidden="true" />
+                              {tag.label}
+                              <span className="text-100 opacity-80">
+                                · {tag.scope === "tenant" ? "Tenant" : tag.scope === "domain" ? `Domain · ${tag.domainName ?? "Unknown"}` : "Scope unknown"}
+                              </span>
+                              <span className="sr-only">({tag.hint})</span>
                             </span>
                           ))
                         ) : (
@@ -679,6 +869,11 @@ export function CatalogView({
                         </span>
                       )}
                     </div>
+                    <RequestAccess
+                      item={detail}
+                      workspace={data.workspace}
+                      hasAccess={hasRecordedAccess(data, detail.fabricId, currentUser.email)}
+                    />
                   </div>
                   <Dialog.Close asChild>
                     <button
@@ -771,11 +966,11 @@ export function CatalogView({
                   <DrawerRow
                     label="Tags"
                     value={
-                      detail.tags.length
-                        ? detail.tags.join(", ")
-                        : detail.tagIds?.length
-                          ? `${detail.tagIds.length} tag ID${detail.tagIds.length === 1 ? "" : "s"} collected`
-                          : detail.tagMetadataAvailable === false
+                      detail.tags.length || detail.tagIds?.length
+                        ? resolveItemTags(detail, data.governanceEvidence)
+                            .map((tag) => `${tag.label} (${tag.hint})`)
+                            .join(", ")
+                        : detail.tagMetadataAvailable === false
                             ? "Not collected"
                             : "None"
                     }
@@ -884,6 +1079,18 @@ export function CatalogView({
                   </DrawerSection>
                 )}
 
+                {showOneLakeRoles && (
+                  <DrawerSection
+                    icon={ShieldCheck}
+                    title={`OneLake security roles${dOneLakeRoles.known ? ` • ${dOneLakeRoles.roles.length}` : ""}`}
+                    sectionKey="onelake-roles"
+                  >
+                    <div className="p-l">
+                      <OneLakeRolesList value={dOneLakeRoles} principals={data.principals} />
+                    </div>
+                  </DrawerSection>
+                )}
+
                 {dCfgSections.map(([section, rows]) => (
                   <DrawerSection
                     key={section}
@@ -923,5 +1130,79 @@ export function CatalogView({
         )}
       </Dialog.Root>
     </div>
+  );
+}
+
+function FacetDropdown({
+  label,
+  options,
+  selected,
+  onToggle,
+  onClear,
+}: {
+  label: string;
+  options: ReadonlyArray<{ value: string; label: string; count: number }>;
+  selected: readonly string[];
+  onToggle: (value: string) => void;
+  onClear: () => void;
+}) {
+  const current =
+    selected.length === 0
+      ? "All"
+      : selected.length === 1
+        ? (options.find((option) => option.value === selected[0])?.label ?? selected[0])
+        : `${selected.length} selected`;
+  return (
+    <Popover.Root>
+      <Popover.Trigger asChild>
+        <button
+          type="button"
+          aria-label={`${label} filter: ${current}`}
+          className={cn(
+            "inline-flex items-center gap-xs rounded-md border px-s py-xs text-200",
+            selected.length
+              ? "border-primary/40 bg-primary/10 text-primary"
+              : "border-border bg-card text-foreground hover:bg-accent",
+          )}
+        >
+          <span className="text-muted-foreground">{label}:</span>
+          <span className="max-w-40 truncate font-semibold">{current}</span>
+          <ChevronDown className="icon-size-100" aria-hidden="true" />
+        </button>
+      </Popover.Trigger>
+      <Popover.Portal>
+        <Popover.Content
+          align="start"
+          sideOffset={4}
+          className="z-50 max-h-80 w-64 overflow-auto rounded-lg border border-border bg-popover p-xs text-popover-foreground shadow-fabric-8"
+        >
+          <button
+            type="button"
+            onClick={onClear}
+            className="flex w-full items-center gap-s rounded-md px-s py-xs text-left text-200 hover:bg-accent"
+          >
+            <Check className={cn("icon-size-100", selected.length ? "invisible" : "")} aria-hidden="true" />
+            <span className="flex-1">All {label.toLowerCase()}</span>
+          </button>
+          {options.map((option) => {
+            const pressed = selected.includes(option.value);
+            return (
+              <button
+                key={option.value}
+                type="button"
+                role="menuitemcheckbox"
+                aria-checked={pressed}
+                onClick={() => onToggle(option.value)}
+                className="flex w-full items-center gap-s rounded-md px-s py-xs text-left text-200 hover:bg-accent"
+              >
+                <Check className={cn("icon-size-100", pressed ? "" : "invisible")} aria-hidden="true" />
+                <span className="min-w-0 flex-1 truncate">{option.label}</span>
+                <span className="font-numeric text-muted-foreground">{option.count}</span>
+              </button>
+            );
+          })}
+        </Popover.Content>
+      </Popover.Portal>
+    </Popover.Root>
   );
 }

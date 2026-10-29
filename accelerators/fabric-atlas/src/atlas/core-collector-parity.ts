@@ -41,6 +41,8 @@ export interface CoreWorkspace {
   type?: string;
   capacityId?: string;
   capacityRegion?: string;
+  domainId?: string;
+  domainAssigned?: boolean;
 }
 
 export interface CoreItem {
@@ -245,8 +247,13 @@ function project(raw: unknown, coreOnly: boolean): Projection {
   timestamp(input.syncedAt);
   const workspace = record(input.workspace);
   if (coreOnly) {
-    onlyKeys(workspace, [...WORKSPACE_FIELDS, "description"]);
+    onlyKeys(workspace, [...WORKSPACE_FIELDS, "description", "domainId", "domainAssigned"]);
     if (workspace.description !== undefined) text(workspace.description);
+    // Domain evidence is Rayfin-only, so it is validated but kept out of parity rows.
+    if (workspace.domainId !== undefined) text(workspace.domainId);
+    if (workspace.domainAssigned !== undefined && typeof workspace.domainAssigned !== "boolean") {
+      invalid("invalid-domain");
+    }
   }
   const workspaceId = uuid(workspace.id);
   const workspaceRow = fields(workspace, WORKSPACE_FIELDS, ["id", "capacityId"]);

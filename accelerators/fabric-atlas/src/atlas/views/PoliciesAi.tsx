@@ -4,7 +4,7 @@ import type { AtlasData } from "../model";
 import type { HistoricalSnapshot } from "../history";
 import type { AtlasNavigation } from "../navigation";
 import {
-  buildAiGovernanceInventory, compareAgentSourceSelections, POLICIES_AI_LIMITATION,
+  buildAiGovernanceInventory, compareAgentSourceSelections, POLICIES_AI_LIMITATION, FABRIC_POLICIES_UNKNOWN, FABRIC_POLICIES_DOCS_URL, isFabricPolicyItem,
   type AiInventoryRow,
 } from "../policies-ai";
 import { isFeatureEnabled } from "../feature-flags";
@@ -17,6 +17,13 @@ import {
 import { Card, TypeGlyph, cn } from "../ui";
 import { AccessEvidenceInspector } from "../components/AccessEvidenceInspector";
 import { useDesktopEvidence } from "../use-desktop-evidence";
+
+const FABRIC_POLICIES_CENTER_URL = "https://app.fabric.microsoft.com/admin-portal/policies";
+const SAMPLE_FABRIC_POLICIES = [
+  { policy: "Dataflow Gen2 creation", scope: "Capacity F16", action: "Create item • Dataflow Gen2", rule: "Allow SG-Data-Engineers in workspace \"Data Engineering\"; deny others", state: "Active" },
+  { policy: "Workspace security edits", scope: "Tenant", action: "Edit workspace security settings", rule: "Allow Fabric admins only", state: "Active" },
+  { policy: "Notebook creation", scope: "Capacity F16", action: "Create item • Notebook", rule: "Allow SG-Data-Engineers, SG-Analysts", state: "Draft" },
+] as const;
 
 export function PoliciesAiSection({
   data, previous, current, historyLoading, historyError, isPreview,
@@ -33,6 +40,7 @@ export function PoliciesAiSection({
   policyEvidenceLoader?: PolicyEvidenceLoader;
 }) {
   const rows = useMemo(() => buildAiGovernanceInventory(data), [data]);
+  const policyItems = useMemo(() => data.items.filter(isFabricPolicyItem), [data.items]);
   const comparison = useMemo(() => compareAgentSourceSelections(previous, current), [previous, current]);
   const [search, setSearch] = useState("");
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -67,6 +75,69 @@ export function PoliciesAiSection({
 
   return (
     <div className="grid min-w-0 gap-m">
+      <section aria-labelledby="fabric-policies-heading" data-testid="fabric-policies"
+        className="grid gap-s rounded-lg border border-border bg-card p-m text-200 leading-300">
+        <h3 id="fabric-policies-heading" className="flex flex-wrap items-center gap-s text-300 font-semibold">
+          <ShieldQuestion className="icon-size-200 shrink-0" aria-hidden="true" />
+          Fabric policies (preview)
+          {isPreview
+            ? <span className="font-normal text-muted-foreground">• {SAMPLE_FABRIC_POLICIES.length} apply to this workspace</span>
+            : <span className="rounded bg-secondary px-xs text-100 font-semibold uppercase tracking-wide text-muted-foreground">Enforcement unknown</span>}
+        </h3>
+        <p className="text-muted-foreground">
+          {isPreview
+            ? "Attribute-based policies from the Fabric Policies center, read with the public API. Atlas lists them; edit them in Fabric."
+            : FABRIC_POLICIES_UNKNOWN}
+        </p>
+        {isPreview ? (
+          <div className="overflow-x-auto">
+            <table className="w-full border-collapse text-left text-200">
+              <caption className="sr-only">Fabric policies that apply to this workspace</caption>
+              <thead className="border-b border-border text-100 uppercase tracking-wide text-muted-foreground">
+                <tr>
+                  {["Policy", "Scope", "Governed action", "Rule", "State"].map((label) => (
+                    <th key={label} scope="col" className="px-s py-xs font-semibold">{label}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-border">
+                {SAMPLE_FABRIC_POLICIES.map((row) => (
+                  <tr key={row.policy}>
+                    <th scope="row" className="px-s py-xs font-semibold">{row.policy}</th>
+                    <td className="px-s py-xs">{row.scope}</td>
+                    <td className="px-s py-xs">{row.action}</td>
+                    <td className="px-s py-xs">{row.rule}</td>
+                    <td className="px-s py-xs">
+                      <span className={cn("rounded px-xs text-100 font-semibold",
+                        row.state === "Active" ? "bg-signal-success-background text-signal-success-foreground" : "bg-secondary text-muted-foreground")}>
+                        {row.state}
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        ) : policyItems.length ? (
+          <ul aria-label="Policy items in this workspace" className="flex flex-wrap gap-xs">
+            {policyItems.map((item) => (
+              <li key={item.fabricId} className="rounded border border-border px-xs">{item.displayName}</li>
+            ))}
+          </ul>
+        ) : (
+          <p>No policy item is cataloged in this workspace snapshot.</p>
+        )}
+        <div className="flex flex-wrap gap-s">
+          <a href={FABRIC_POLICIES_CENTER_URL} target="_blank" rel="noreferrer"
+            className="atlas-control inline-flex items-center rounded-lg border border-border px-m font-semibold hover:bg-accent">
+            Open Policies center
+          </a>
+          <a href={FABRIC_POLICIES_DOCS_URL} target="_blank" rel="noreferrer"
+            className="atlas-control inline-flex items-center rounded-lg px-m font-semibold text-primary hover:bg-accent">
+            About Fabric policies
+          </a>
+        </div>
+      </section>
       <div>
         <h2 className="sr-only">Policies &amp; AI evidence</h2>
         <p className="text-300 text-muted-foreground">

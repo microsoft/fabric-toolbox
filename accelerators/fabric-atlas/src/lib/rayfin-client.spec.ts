@@ -120,6 +120,7 @@ describe("Rayfin Functions contract", () => {
       | "ping"
       | "workspaceDiscover"
       | "workspaceCollectCore"
+      | "workspaceCollectGovernance"
       | "workspaceCollectDefinitions"
       | "workspaceCollectItemRelations"
       | "workspaceCollectKqlMetadata"

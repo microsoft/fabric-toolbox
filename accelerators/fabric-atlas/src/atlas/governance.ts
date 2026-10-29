@@ -16,6 +16,7 @@ import { isItemMetadataSchemaEntry } from "./item-metadata";
 import { lineageEdgeKey } from "./lineage";
 import { searchJobId } from "./search";
 import { buildAccessEvidenceCoverage, type AccessEvidenceCoverage } from "./access-coverage";
+import { domainIndex, domainPath, type GovernanceEvidence } from "./governance-evidence";
 
 export type AccessOrigin = "workspace" | "item" | "mixed";
 export type PrincipalResolution = "resolved" | "unresolved" | "ambiguous";
@@ -78,6 +79,8 @@ export interface GovernanceFinding {
   principalId?: string;
   jobId?: string;
   edgeKey?: string;
+  /** Group summary shared by every finding of the same rule. */
+  groupDetail?: string;
 }
 
 export type CoverageState =
@@ -163,6 +166,28 @@ function meaningful(value: string | undefined): boolean {
 
 function itemHasSensitivity(item: Item): boolean {
   return meaningful(item.sensitivity) || meaningful(item.sensitivityLabelId);
+}
+
+/**
+ * Rank of a standard Microsoft Purview label name. Label priorities are not
+ * collected, so only the well-known default taxonomy is compared; custom
+ * names stay unranked and never raise a finding.
+ */
+export function standardLabelRank(name: string | undefined): number | undefined {
+  const value = name?.trim().toLowerCase() ?? "";
+  if (!value) return undefined;
+  if (/highly confidential|restricted|secret/.test(value)) return 3;
+  if (/confidential/.test(value)) return 2;
+  if (/general|internal/.test(value)) return 1;
+  if (/public|personal|non-business/.test(value)) return 0;
+  return undefined;
+}
+
+/** Label name for a label id, read from items that carry both. */
+function labelNameFromItems(items: readonly Item[], labelId: string): string | undefined {
+  const id = labelId.toLowerCase();
+  return items.find((item) => item.sensitivityLabelId?.toLowerCase() === id && meaningful(item.sensitivity))
+    ?.sensitivity;
 }
 
 function eligibleItems(
@@ -400,6 +425,67 @@ function grantEvidence(grant: Grant): string {
   ].join(":");
 }
 
+/**
+ * Default sensitivity label that applies to the workspace domain (own default,
+ * otherwise inherited from the parent domain). Undefined unless the admin
+ * domain list was read completely and exposes a default label.
+ */
+export function workspaceDomainDefaultLabel(
+  evidence: GovernanceEvidence | undefined,
+  domainId: string | undefined,
+): { labelId: string; domainId: string; domainPath: string } | undefined {
+  if (!evidence || evidence.domains.status.status !== "complete") return undefined;
+  if (!domainId || domainId === "unassigned") return undefined;
+  const index = domainIndex(evidence);
+  const domain = index.get(domainId.toLowerCase());
+  if (!domain) return undefined;
+  const parent = domain.parentDomainId ? index.get(domain.parentDomainId) : undefined;
+  const source = domain.defaultSensitivityLabelId ? domain : parent?.defaultSensitivityLabelId ? parent : undefined;
+  if (!source?.defaultSensitivityLabelId) return undefined;
+  return {
+    labelId: source.defaultSensitivityLabelId,
+    domainId: source.id,
+    domainPath: domainPath(evidence, domain.id) ?? domain.displayName,
+  };
+}
+
+export type WorkspaceAdminStatus =
+  | { status: "identified"; admins: string[] }
+  | { status: "missing" }
+  | { status: "unknown"; reason: string };
+
+/**
+ * Whether the workspace has an identified Admin. "missing" is only reported
+ * from a complete access collection; anything else stays Unknown.
+ */
+export function workspaceAdminStatus(
+  data: Pick<AtlasData, "principals" | "grants" | "workspace">,
+): WorkspaceAdminStatus {
+  const admins = new Set<string>();
+  for (const principal of data.principals) {
+    if (principal.workspaceRole === "Admin") admins.add(principal.displayName || principal.principalId);
+  }
+  for (const grant of data.grants) {
+    if (!grant.itemFabricId && grant.source === "workspaceRole" && grant.roleName === "Admin") {
+      admins.add(grant.principalRef);
+    }
+  }
+  if (admins.size) return { status: "identified", admins: [...admins].sort() };
+  const section = data.workspace.syncSections?.access;
+  if (section?.status !== "complete") {
+    return {
+      status: "unknown",
+      reason: section
+        ? `Access collection is ${section.status}; workspace roles may be incomplete.`
+        : "Access collection status is not recorded in this snapshot.",
+    };
+  }
+  if (!data.principals.length && !data.grants.some((grant) => !grant.itemFabricId)) {
+    return { status: "unknown", reason: "No workspace role assignment was returned." };
+  }
+  return { status: "missing" };
+}
+
 function findingId(rule: string, ...parts: string[]): string {
   return [rule, ...parts.map(stablePart)].join(":");
 }
@@ -451,7 +537,8 @@ export function buildGovernanceFindings(
   data: Pick<
     AtlasData,
     "workspace" | "items" | "principals" | "grants" | "jobs" | "edges"
-  >,
+  > &
+    Partial<Pick<AtlasData, "schema" | "governanceEvidence">>,
 ): GovernanceFinding[] {
   const findings: GovernanceFinding[] = [];
   const accessRows = buildAccessReviewRows(data);
@@ -581,6 +668,45 @@ export function buildGovernanceFindings(
     ).map((item) => item.fabricId),
   );
 
+  const domainDefault = workspaceDomainDefaultLabel(
+    data.governanceEvidence,
+    data.workspace.fabricDomainId,
+  );
+
+  const defaultLabelName = domainDefault ? labelNameFromItems(data.items, domainDefault.labelId) : undefined;
+  const defaultLabelRank = standardLabelRank(defaultLabelName);
+  const belowDefault =
+    domainDefault && defaultLabelName && defaultLabelRank !== undefined
+      ? data.items.filter((item) => {
+          if (!sensitivityEligibleItems.has(item.fabricId) || !meaningful(item.sensitivity)) return false;
+          const rank = standardLabelRank(item.sensitivity);
+          return rank !== undefined && rank < defaultLabelRank;
+        })
+      : [];
+  if (domainDefault && defaultLabelName && belowDefault.length > 0) {
+    const carried = [...new Set(belowDefault.map((item) => item.sensitivity!))].join(" or ");
+    const names = belowDefault.map((item) => item.displayName);
+    const listed = names.length > 1 ? `${names.slice(0, -1).join(", ")} and ${names[names.length - 1]}` : names[0];
+    const groupDetail = `Domain ${domainDefault.domainPath} sets default label ${defaultLabelName}. ${listed} ${names.length > 1 ? "carry" : "carries"} ${carried}.`;
+    for (const item of belowDefault) {
+      findings.push({
+        id: findingId("domain-default-label-below", item.fabricId),
+        severity: "high",
+        category: "metadata",
+        title: `Label below domain default: ${item.displayName}`,
+        detail: `Domain ${domainDefault.domainPath} sets default label ${defaultLabelName}; this item carries ${item.sensitivity}.`,
+        recommendation: `Raise the label to ${defaultLabelName} or record a justified exception.`,
+        evidenceIds: [
+          `item:${item.fabricId}:sensitivity`,
+          `domain:${domainDefault.domainId}:defaultLabel:${domainDefault.labelId}`,
+        ],
+        target: { kind: "item", itemId: item.fabricId },
+        itemId: item.fabricId,
+        groupDetail,
+      });
+    }
+  }
+
   for (const item of data.items) {
     if (item.health === "failing" || item.health === "stale") {
       const failing = item.health === "failing";
@@ -619,6 +745,71 @@ export function buildGovernanceFindings(
     }
 
     if (
+      item.endorsement === "certified" &&
+      !meaningful(item.description)
+    ) {
+      findings.push({
+        id: findingId("certified-missing-description", item.fabricId),
+        severity: "medium",
+        category: "metadata",
+        title: `Certified without description: ${item.displayName}`,
+        detail:
+          "This item is certified, but consumers have no description explaining what it contains or how to use it.",
+        recommendation:
+          "Add a description in the item settings before relying on the certification.",
+        evidenceIds: [
+          `item:${item.fabricId}:endorsement:certified`,
+          `item:${item.fabricId}:description`,
+        ],
+        target: { kind: "item", itemId: item.fabricId },
+        itemId: item.fabricId,
+      });
+    }
+
+    if (
+      sensitivityEligibleItems.has(item.fabricId) &&
+      !itemHasSensitivity(item) &&
+      item.endorsement === "certified"
+    ) {
+      findings.push({
+        id: findingId("certified-missing-sensitivity", item.fabricId),
+        severity: "high",
+        category: "metadata",
+        title: `Certified without sensitivity label: ${item.displayName}`,
+        detail:
+          "This item is certified, so it is likely to be widely reused, but it carries no sensitivity label.",
+        recommendation:
+          "Apply the appropriate sensitivity label before the certified item is shared further.",
+        evidenceIds: [
+          `item:${item.fabricId}:endorsement:certified`,
+          `item:${item.fabricId}:sensitivity`,
+        ],
+        target: { kind: "item", itemId: item.fabricId },
+        itemId: item.fabricId,
+      });
+    } else if (
+      domainDefault &&
+      sensitivityEligibleItems.has(item.fabricId) &&
+      !itemHasSensitivity(item)
+    ) {
+      // Label priorities are not collected, so only a missing label is
+      // reported against the domain default, never a "lower" label.
+      findings.push({
+        id: findingId("domain-default-label-missing", item.fabricId),
+        severity: "medium",
+        category: "metadata",
+        title: `No label despite domain default: ${item.displayName}`,
+        detail: `Domain ${domainDefault.domainPath} defines a default sensitivity label, but this item carries no label.`,
+        recommendation:
+          "Apply the domain default sensitivity label, or a more restrictive one, in Fabric.",
+        evidenceIds: [
+          `item:${item.fabricId}:sensitivity`,
+          `domain:${domainDefault.domainId}:defaultLabel:${domainDefault.labelId}`,
+        ],
+        target: { kind: "item", itemId: item.fabricId },
+        itemId: item.fabricId,
+      });
+    } else if (
       sensitivityEligibleItems.has(item.fabricId) &&
       !itemHasSensitivity(item)
     ) {
@@ -637,6 +828,64 @@ export function buildGovernanceFindings(
       });
     }
   }
+
+  findings.push(
+    ...endorsedInactiveFindings(data.items, data.workspace.syncedAt),
+    ...itemInactiveFindings(data.items, data.jobs, data.workspace.syncedAt),
+    ...objectDescriptionFindings(data.items, data.schema),
+  );
+
+  if (workspaceAdminStatus(data).status === "missing") {
+    findings.push({
+      id: findingId("workspace-no-admin", data.workspace.fabricId),
+      severity: "medium",
+      category: "access",
+      title: "Workspace has no identified Admin",
+      detail:
+        "The complete workspace role collection contains no Admin, so no accountable owner is identified for this workspace.",
+      recommendation:
+        "Assign an accountable person or group as workspace Admin in Fabric.",
+      evidenceIds: [`workspace:${data.workspace.fabricId}:roles:no-admin`],
+      target: { kind: "workspace" },
+    });
+  }
+
+  if (data.workspace.fabricDomainId === UNASSIGNED_DOMAIN) {
+    findings.push({
+      id: findingId("workspace-no-domain", data.workspace.fabricId),
+      severity: "low",
+      category: "metadata",
+      title: "Workspace is not assigned to a domain",
+      detail:
+        "The Fabric workspace API reports no domain for this workspace, so it is missing from domain-based discovery in the OneLake catalog.",
+      recommendation:
+        "Ask a Fabric or domain administrator to assign the workspace to its business domain.",
+      evidenceIds: [`workspace:${data.workspace.fabricId}:domain:unassigned`],
+      target: { kind: "workspace" },
+    });
+  }
+
+  // Only raised from a complete admin domain list with a known tenant-wide count of zero.
+  if (data.governanceEvidence?.domains.status.status === "complete") {
+    for (const domain of data.governanceEvidence.domains.entries) {
+      if (domain.workspaceCount !== 0) continue;
+      findings.push({
+        id: findingId("domain-empty", domain.id),
+        severity: "low",
+        category: "metadata",
+        title: `Domain ${domain.displayName} has no workspace`,
+        detail:
+          "The Fabric admin API reports no workspace assigned to this domain tenant-wide, so it adds nothing to domain-based discovery.",
+        recommendation:
+          "Assign the workspaces that belong to this business domain, or retire the domain if it is no longer used.",
+        evidenceIds: [`domain:${domain.id}:workspaces:0`],
+        target: { kind: "workspace" },
+      });
+    }
+  }
+
+  findings.push(...publicNetworkFindings(data));
+  findings.push(...externalShareFindings(data));
 
   for (const job of data.jobs) {
     if (job.status !== "failed") continue;
@@ -698,6 +947,227 @@ export function buildGovernanceFindings(
 }
 
 export const getGovernanceFindings = buildGovernanceFindings;
+
+const UNASSIGNED_DOMAIN = "unassigned";
+export const ENDORSED_INACTIVE_DAYS = 90;
+const DAY_MS = 24 * 60 * 60 * 1000;
+
+function latestActivity(item: Item): number | undefined {
+  const times = [item.updatedAt, item.lastRefresh]
+    .map((value) => (value ? Date.parse(value) : Number.NaN))
+    .filter(Number.isFinite);
+  return times.length > 0 ? Math.max(...times) : undefined;
+}
+
+/** Days without observed activity before `item-inactive` fires (`VITE_ATLAS_INACTIVE_DAYS`). */
+export const ITEM_INACTIVE_DAYS = parseInactiveDays(
+  import.meta.env?.VITE_ATLAS_INACTIVE_DAYS as string | undefined,
+);
+
+export function parseInactiveDays(value: string | undefined): number {
+  const parsed = Number.parseInt(value ?? "", 10);
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : ENDORSED_INACTIVE_DAYS;
+}
+
+/**
+ * Any non-endorsed item whose latest modification, refresh or job run is older
+ * than the threshold. Endorsed items are covered by `endorsed-inactive`; items
+ * without any activity signal stay Unknown and produce no finding. Read
+ * telemetry is not collected, so this never claims an item is unused.
+ */
+const HIGHLY_CONFIDENTIAL = /highly\s+confidential/i;
+
+/** Informational only, and only from a known inbound policy: Unknown never raises it. */
+export function publicNetworkFindings(
+  data: Pick<AtlasData, "workspace" | "items" | "governanceEvidence">,
+): GovernanceFinding[] {
+  const network = data.governanceEvidence?.network;
+  if (network?.status.status !== "complete") return [];
+  const findings: GovernanceFinding[] = [];
+  const confidential = data.items.filter((item) => item.sensitivity && CONFIDENTIAL_OR_ABOVE.test(item.sensitivity));
+  if (network.policy?.outboundPublicAccess === "Allow" && confidential.length > 0) {
+    findings.push({
+      id: findingId("workspace-outbound-network", data.workspace.fabricId),
+      severity: "low",
+      category: "access",
+      title: `Outbound access unrestricted with ${confidential.length} Confidential+ item${confidential.length === 1 ? "" : "s"}`,
+      detail:
+        "Outbound access protection is off: notebooks and pipelines in this workspace can reach any endpoint while it holds items labeled Confidential or above.",
+      recommendation:
+        "Review whether the workspace should enable outbound access protection and allow only approved endpoints.",
+      evidenceIds: [
+        `workspace:${data.workspace.fabricId}:network:outbound:Allow`,
+        ...confidential.slice(0, 20).map((item) => `item:${item.fabricId}:sensitivity`),
+      ],
+      target: { kind: "workspace" },
+    });
+  }
+  if (network.policy?.inboundPublicAccess !== "Allow") return findings;
+  const sensitive = data.items.filter((item) => item.sensitivity && HIGHLY_CONFIDENTIAL.test(item.sensitivity));
+  if (sensitive.length === 0) return findings;
+  return [...findings, {
+    id: findingId("workspace-public-network", data.workspace.fabricId),
+    severity: "low",
+    category: "access",
+    title: `Public network access allowed with ${sensitive.length} Highly Confidential item${sensitive.length === 1 ? "" : "s"}`,
+    detail:
+      "The workspace communication policy allows inbound public access while the workspace holds items labeled Highly Confidential.",
+    recommendation:
+      "Review whether the workspace should restrict inbound public access to private links in its network settings.",
+    evidenceIds: [
+      `workspace:${data.workspace.fabricId}:network:inbound:Allow`,
+      ...sensitive.slice(0, 20).map((item) => `item:${item.fabricId}:sensitivity`),
+    ],
+    target: { kind: "workspace" },
+  }];
+}
+
+const CONFIDENTIAL_OR_ABOVE = /confidential/i;
+
+/** Active external data shares that expose an item labeled Confidential or above. */
+export function externalShareFindings(
+  data: Pick<AtlasData, "items" | "governanceEvidence">,
+): GovernanceFinding[] {
+  const shares = data.governanceEvidence?.externalShares;
+  if (shares?.status.status !== "complete") return [];
+  const byId = new Map(data.items.map((item) => [item.fabricId, item]));
+  const grouped = new Map<string, typeof shares.entries>();
+  for (const share of shares.entries) {
+    if (!/^active$/i.test(share.status)) continue;
+    const item = byId.get(share.itemId);
+    if (!item?.sensitivity || !CONFIDENTIAL_OR_ABOVE.test(item.sensitivity)) continue;
+    grouped.set(share.itemId, [...(grouped.get(share.itemId) ?? []), share]);
+  }
+  return [...grouped].map(([itemId, list]) => {
+    const item = byId.get(itemId)!;
+    const highly = HIGHLY_CONFIDENTIAL.test(item.sensitivity ?? "");
+    return {
+      id: findingId("external-share-sensitive", itemId),
+      severity: highly ? "high" : "medium",
+      category: "access",
+      title: `${item.displayName} (${item.sensitivity}) is shared externally`,
+      detail: `${list.length} active external data share${list.length === 1 ? "" : "s"} expose this item outside the tenant.`,
+      recommendation: "Confirm the external data share is still required, or revoke it in the item's External data sharing settings.",
+      evidenceIds: list.map((share) => `item:${itemId}:external-share:${share.shareId}`),
+      target: { kind: "item", itemId },
+    } satisfies GovernanceFinding;
+  });
+}
+
+function itemInactiveFindings(
+  items: readonly Item[],
+  jobs: AtlasData["jobs"],
+  syncedAt: string | undefined,
+  thresholdDays: number = ITEM_INACTIVE_DAYS,
+): GovernanceFinding[] {
+  const reference = syncedAt ? Date.parse(syncedAt) : Number.NaN;
+  if (!Number.isFinite(reference)) return [];
+  const lastJob = new Map<string, number>();
+  for (const job of jobs) {
+    const started = Date.parse(job.startedAt);
+    if (!Number.isFinite(started)) continue;
+    lastJob.set(job.itemFabricId, Math.max(lastJob.get(job.itemFabricId) ?? started, started));
+  }
+  const findings: GovernanceFinding[] = [];
+  for (const item of items) {
+    if (item.endorsement !== "none") continue;
+    const candidates = [latestActivity(item), lastJob.get(item.fabricId)].filter(
+      (value): value is number => value !== undefined,
+    );
+    if (candidates.length === 0) continue;
+    const days = Math.floor((reference - Math.max(...candidates)) / DAY_MS);
+    if (days <= thresholdDays) continue;
+    findings.push({
+      id: findingId("item-inactive", item.fabricId),
+      severity: "medium",
+      category: "operations",
+      title: `Inactive item: ${item.displayName}`,
+      detail: `No modification, refresh or job run observed on ${item.displayName} for ${days} days (threshold ${thresholdDays}). Read usage is not collected, so the item may still be consumed.`,
+      recommendation:
+        "Confirm the owner still needs it; archive or delete unused items to reduce capacity cost and catalog noise.",
+      evidenceIds: [`item:${item.fabricId}:activity`],
+      target: { kind: "item", itemId: item.fabricId },
+      itemId: item.fabricId,
+    });
+  }
+  return findings;
+}
+
+/**
+ * Endorsed items whose recorded activity is older than the threshold. Items
+ * without any activity timestamp are skipped: absence is not evidence.
+ */
+function endorsedInactiveFindings(
+  items: readonly Item[],
+  syncedAt: string | undefined,
+): GovernanceFinding[] {
+  const reference = syncedAt ? Date.parse(syncedAt) : Number.NaN;
+  if (!Number.isFinite(reference)) return [];
+  const findings: GovernanceFinding[] = [];
+  for (const item of items) {
+    if (item.endorsement === "none") continue;
+    const latest = latestActivity(item);
+    if (latest === undefined) continue;
+    const days = Math.floor((reference - latest) / DAY_MS);
+    if (days <= ENDORSED_INACTIVE_DAYS) continue;
+    findings.push({
+      id: findingId("endorsed-inactive", item.fabricId),
+      severity: "low",
+      category: "metadata",
+      title: `Endorsed but inactive: ${item.displayName}`,
+      detail: `${item.displayName} is ${item.endorsement}, but its last recorded update or refresh is ${days} days old.`,
+      recommendation:
+        "Confirm the item is still maintained; refresh it or remove the endorsement.",
+      evidenceIds: [
+        `item:${item.fabricId}:endorsement:${item.endorsement}`,
+        `item:${item.fabricId}:activity`,
+      ],
+      target: { kind: "item", itemId: item.fabricId },
+      itemId: item.fabricId,
+    });
+  }
+  return findings;
+}
+
+/**
+ * Endorsed semantic models whose visible tables, columns or measures have no
+ * description. One finding per model keeps the queue readable.
+ */
+function objectDescriptionFindings(
+  items: readonly Item[],
+  schema: AtlasData["schema"],
+): GovernanceFinding[] {
+  if (!schema) return [];
+  const findings: GovernanceFinding[] = [];
+  for (const item of items) {
+    if (item.itemType !== "SemanticModel" || item.endorsement === "none") {
+      continue;
+    }
+    const tables = (schema[item.fabricId] ?? []).filter(
+      (table) => !isItemMetadataSchemaEntry(table) && table.isHidden !== true,
+    );
+    const objects = tables.flatMap((table) => [
+      table,
+      ...table.columns.filter((column) => column.isHidden !== true),
+      ...table.measures.filter((measure) => measure.isHidden !== true),
+    ]);
+    const missing = objects.filter((object) => !meaningful(object.description));
+    if (objects.length === 0 || missing.length === 0) continue;
+    findings.push({
+      id: findingId("missing-object-description", item.fabricId),
+      severity: "low",
+      category: "metadata",
+      title: `Undocumented model objects: ${item.displayName}`,
+      detail: `${missing.length} of ${objects.length} visible tables, columns and measures in this ${item.endorsement} model have no description.`,
+      recommendation:
+        "Describe the model objects consumers use most so they appear in the OneLake catalog and Copilot answers.",
+      evidenceIds: [`item:${item.fabricId}:schema:descriptions`],
+      target: { kind: "item", itemId: item.fabricId },
+      itemId: item.fabricId,
+    });
+  }
+  return findings;
+}
 
 function coverageMetric(
   id: CoverageMetricId,

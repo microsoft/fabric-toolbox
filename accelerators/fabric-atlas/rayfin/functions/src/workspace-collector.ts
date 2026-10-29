@@ -103,6 +103,8 @@ export type CollectedWorkspace = {
   type?: string;
   capacityId?: string;
   capacityRegion?: string;
+  domainId?: string;
+  domainAssigned?: boolean;
 };
 
 export type CollectedItem = {
@@ -248,6 +250,11 @@ export function sanitizeWorkspace(
   if (type) workspace.type = type;
   if (capacityId) workspace.capacityId = capacityId;
   if (capacityRegion) workspace.capacityRegion = capacityRegion;
+  // The workspace API only returns domainId when a domain is assigned.
+  const rawDomainId = normalizedId(value.domainId);
+  const domainId = rawDomainId && LOOSE_UUID.test(rawDomainId) ? rawDomainId : undefined;
+  if (domainId) workspace.domainId = domainId;
+  workspace.domainAssigned = Boolean(domainId);
   return workspace;
 }
 

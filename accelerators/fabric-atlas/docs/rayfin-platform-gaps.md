@@ -36,7 +36,7 @@ these gaps.
 
 | Missing public contract | Current Atlas state |
 |---|---|
-| OneLake security role membership and data scope | Unsupported, portal review required |
+| OneLake security role membership and data scope | Partial since 2.6: data access roles, direct members and RLS/CLS presence; group expansion and constraint text are not collected |
 | Purview DLP restriction state | Unsupported, Purview review required |
 | Fabric Policies evaluation operation | Unavailable unless a verified tenant contract is supplied |
 

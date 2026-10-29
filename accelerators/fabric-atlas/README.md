@@ -14,20 +14,20 @@ the last validated snapshot in Fabric so everyone sees the same state.
 
 [Install](docs/installation.md) ·
 [Architecture](docs/architecture.md) ·
-[Whitepaper](https://github.com/fredgis/FabricAtlas/blob/f19b97a/docs/fabric-atlas-whitepaper.pdf) ·
-[Technical presentation](https://github.com/fredgis/FabricAtlas/blob/f19b97a/prez/Fabric-Atlas-Dev-Architecture.pdf) ·
+[Whitepaper](https://github.com/fredgis/FabricAtlas/blob/a614980/docs/fabric-atlas-whitepaper.pdf) ·
+[Technical presentation](https://github.com/fredgis/FabricAtlas/blob/a614980/prez/Fabric-Atlas-Dev-Architecture.pdf) ·
 [Capabilities](#capabilities) ·
 [Status legend](#status-legend) ·
 [Roadmap](#current-limits-and-roadmap) ·
 [Changelog](CHANGELOG.md) ·
-[Contribute](https://github.com/fredgis/FabricAtlas/blob/f19b97a/.github/CONTRIBUTING.md)
+[Contribute](https://github.com/fredgis/FabricAtlas/blob/a614980/.github/CONTRIBUTING.md)
 
 </div>
 
 This Fabric Toolbox copy tracks
-[`fredgis/FabricAtlas@f19b97a`](https://github.com/fredgis/FabricAtlas/commit/f19b97a).
+[`fredgis/FabricAtlas@a614980`](https://github.com/fredgis/FabricAtlas/commit/a614980) (release v2.6.4).
 
-## Fabric Atlas 2.1 demo
+## Fabric Atlas demo
 
 https://github.com/user-attachments/assets/4f34a994-a130-4a74-bce7-d2d2bbab7d65
 
@@ -35,7 +35,7 @@ https://github.com/user-attachments/assets/4f34a994-a130-4a74-bce7-d2d2bbab7d65
 
 ## Whitepaper
 
-The [Fabric Atlas whitepaper](https://github.com/fredgis/FabricAtlas/blob/f19b97a/docs/fabric-atlas-whitepaper.pdf) explains how
+The [Fabric Atlas whitepaper](https://github.com/fredgis/FabricAtlas/blob/a614980/docs/fabric-atlas-whitepaper.pdf) explains how
 the product collects and validates metadata, publishes immutable snapshots,
 traces item and DAX dependencies, reviews effective access, and builds
 principal-centred departure packs. It also covers governance, operations,
@@ -44,12 +44,12 @@ security boundaries, deployment and known API limits.
 The screenshots use FGI-MAIN as one example deployment. Its counts and findings
 are not product defaults or a reference architecture.
 
-<a href="https://github.com/fredgis/FabricAtlas/blob/f19b97a/docs/fabric-atlas-whitepaper.pdf">
-  <img src="https://raw.githubusercontent.com/fredgis/FabricAtlas/f19b97a/docs/assets/fabric-atlas-whitepaper-hero.png" alt="Fabric Atlas 2.0 whitepaper preview with the cover, Lineage Evidence, X-Ray, coverage and multi-workspace pages" width="100%">
+<a href="https://github.com/fredgis/FabricAtlas/blob/a614980/docs/fabric-atlas-whitepaper.pdf">
+  <img src="https://raw.githubusercontent.com/fredgis/FabricAtlas/a614980/docs/assets/fabric-atlas-whitepaper-hero.png" alt="Fabric Atlas 2.0 whitepaper preview with the cover, Lineage Evidence, X-Ray, coverage and multi-workspace pages" width="100%">
 </a>
 
-[Read the PDF](https://github.com/fredgis/FabricAtlas/blob/f19b97a/docs/fabric-atlas-whitepaper.pdf) ·
-[Read the Markdown version](https://github.com/fredgis/FabricAtlas/blob/f19b97a/docs/fabric-atlas-whitepaper.md)
+[Read the PDF](https://github.com/fredgis/FabricAtlas/blob/a614980/docs/fabric-atlas-whitepaper.pdf) ·
+[Read the Markdown version](https://github.com/fredgis/FabricAtlas/blob/a614980/docs/fabric-atlas-whitepaper.md)
 
 ## Read-only Atlas MCP
 
@@ -91,15 +91,16 @@ single-tenant public client, delegated `Item.Execute.All`, a reviewed
 The signed-in user must belong to the Fabric app audience, and tools can read
 only the administrator-selected Atlas workspace scope. No tool changes Fabric,
 permissions or Atlas data. See [Atlas MCP](docs/atlas-mcp.md) for the remaining
-identity gates, tool contracts and limitations.
+identity gates, tool contracts and limitations. Inside the app, **System → MCP**
+walks through the same setup and copies a ready-to-use `.vscode/mcp.json`.
 
 ## Technical presentation
 
-The [Fabric Atlas development and architecture presentation](https://github.com/fredgis/FabricAtlas/blob/f19b97a/prez/Fabric-Atlas-Dev-Architecture.pdf)
+The [Fabric Atlas development and architecture presentation](https://github.com/fredgis/FabricAtlas/blob/a614980/prez/Fabric-Atlas-Dev-Architecture.pdf)
 documents the Rayfin-first collector path, manifest-last publication, current
 entity groups, local MCP and the exact Rayfin platform gaps that keep Python
 compatibility and browser-driven synchronization in place. The editable deck,
-PDF and PlantUML sources are in [`prez/`](prez/).
+PDF and PlantUML sources are in [`prez/`](https://github.com/fredgis/FabricAtlas/tree/a614980/prez).
 
 ## What it does
 
@@ -119,6 +120,15 @@ Fabric Atlas collects that metadata without copying business data.
   references and unknown evidence.
 - Track findings, item-family Coverage, Policies & AI and six governance
   posture pillars.
+- Act on findings: open the item in Fabric, filter to items you own, see the
+  OneLake catalog pillar (Health, Protect, Trust), export the queue as JSON or
+  download a Teams Adaptive Card.
+- Scope governance by Fabric domain, review per-domain posture, and see why a
+  finding was raised with a deterministic priority score.
+- Review read-only Fabric policies (Policies center, preview), tenant settings
+  drift, OneLake data access roles, public network access and external shares.
+- Optionally post new critical findings to Teams and request AI description
+  suggestions (both disabled until configured).
 - Inspect job failures, inferred downstream impact and portal-only monitoring
   boundaries.
 - Keep configuration and append-only team notes beside the active workspace.
@@ -127,19 +137,19 @@ Fabric Atlas collects that metadata without copying business data.
 
 ## Capabilities
 
-| Area | Included in Fabric Atlas 2.1 |
+| Area | Included in Fabric Atlas 2.6 |
 |---|---|
 | Workspaces and sync | Shared workspace scope, independent validated snapshots, persisted per-workspace run status, active-workspace switching, staged progress and last-known-good fallback |
-| Catalog and search | Item Catalog, alphabetized Asset Catalog, `Ctrl+K` search, SQL/KQL/semantic/Ontology 2.0/graph/Data Agent inventory |
+| Catalog and search | Item Catalog with facets and tag scope, Collection status with the reason for each missing section (for example schema-enabled Lakehouses, whose tables come only from the SQL analytics endpoint), alphabetized Asset Catalog, `Ctrl+K` search with description snippets, Request access link, SQL/KQL/semantic/Ontology 2.0/graph/Data Agent inventory |
 | Lineage and impact | Trusted Atlas graph, connected type-filter context, stable Impact mode, Item Relations Preview, Evidence, Changes, X-Ray, notebook and semantic object lineage, and exportable impact reports |
-| Governance | Findings, a closed six-pillar Radar, snapshot comparison, history, item-family Coverage, posture targets and Policies & AI |
-| Access | Effective recorded access, principal review, personal decisions, What-if simulation and evidence-based departure packs |
-| Operations | Job history, observed incidents, inferred downstream impact, monitoring boundaries, configuration and team notes |
+| Governance | Findings with Fix in Fabric links, Why panel and priority score, My items, OneLake catalog pillars (Health, Protect, Trust), JSON and snapshot export, Teams Adaptive Card and optional webhook, Fabric domain names, filter and per-domain posture, tenant settings drift, a closed six-pillar Radar, snapshot comparison, history, item-family Coverage, posture targets, Policies & AI, read-only Fabric policies and optional AI description suggestions |
+| Access | Effective recorded access, principal type and role filters, OneLake data access roles (RLS/CLS), sensitive external shares, personal decisions, What-if simulation and evidence-based departure packs |
+| Operations | Job history, observed incidents, inferred downstream impact, Full or Incremental sync (one shared choice; a notice explains when a full scan is required because this browser holds no previous full snapshot or the 7-day full rescan is due), rescanned/reused counts and real run duration, Open in Fabric cards for Govern and Admin monitoring, configuration and team notes |
 | Security | Fabric brokered authentication, synchronizer-only publication, metadata-only storage and user-scoped personal state |
 | Extensibility | Typed Rayfin Functions, minimal Python compatibility and an optional read-only local Atlas MCP |
 
 Detailed feature and coverage notes are in the
-[whitepaper](https://github.com/fredgis/FabricAtlas/blob/f19b97a/docs/fabric-atlas-whitepaper.pdf),
+[whitepaper](https://github.com/fredgis/FabricAtlas/blob/a614980/docs/fabric-atlas-whitepaper.pdf),
 [architecture](docs/architecture.md) and
 [item-family coverage](docs/item-families.md).
 
@@ -267,6 +277,35 @@ upstream and downstream dependencies instead of an empty graph.
 
 Governance Radar, findings, snapshot changes, history, coverage, posture and
 Policies & AI evidence are grouped into one governance workspace.
+
+Since 2.2 (extended in 2.6), the action queue aligns with the OneLake catalog governance view:
+
+- **Fix in Fabric** opens the affected item, or its workspace when the item
+  type has no direct portal route.
+- **My items** keeps findings whose recorded owner email matches the signed-in
+  account. It is disabled when the account email is unavailable.
+- Each rule group shows its OneLake catalog pillar: **Health**, **Protect** or
+  **Trust**.
+- **Export JSON** downloads the filtered queue for ticketing tools.
+- **Teams card** downloads an Adaptive Card 1.5 with the posture and the five
+  most severe findings. Since 2.6, an optional `ATLAS_TEAMS_WEBHOOK_URL`
+  secret posts new critical findings automatically after a sync.
+- **Why** explains each finding with its evidence and a deterministic
+  priority score; **Export snapshot** downloads the validated snapshot.
+
+| Rule | Severity | Trigger |
+|---|---|---|
+| `certified-missing-description` | Medium | Certified item without a description |
+| `certified-missing-sensitivity` | High | Certified item without a sensitivity label (replaces `missing-sensitivity` for certified items) |
+| `endorsed-inactive` | Low | Endorsed item whose last recorded run is older than 90 days |
+| `item-inactive` | Low | Non-endorsed item with no observed modification, refresh or job run for more than `VITE_ATLAS_INACTIVE_DAYS` (default 90). Read usage is not collected |
+| `workspace-public-network` | Low | Collected inbound policy allows public access while the workspace holds Highly Confidential items. Unknown never raises it |
+| `external-share-sensitive` | Medium / High | Active external data share on an item labeled Confidential (High when Highly Confidential) |
+| `missing-object-description` | Low | Endorsed semantic model with undocumented tables, columns or measures |
+| `workspace-no-domain` | Low | Workspace confirmed without a Fabric domain. Not raised when the domain was not collected |
+| `workspace-no-admin` | Medium | Complete workspace role collection without any Admin. Unknown, not raised, when access collection is incomplete |
+| `domain-empty` | Low | Fabric domain with no workspace tenant-wide (complete admin domain list only) |
+| `domain-default-label-missing` | Medium | Unlabeled item in a domain whose default sensitivity label is known (replaces `missing-sensitivity`). Label priority is not collected, so lower labels are not evaluated |
 
 ![Fabric Atlas Governance Center](docs/screenshots/governance-center-v2.png)
 
@@ -412,10 +451,12 @@ contracts or a separate product decision.
 | Durable server execution | Additive commands and checkpoints are implemented as a fail-closed probe | Distributed claim or transaction primitive plus live browser-closure recovery |
 | Python compatibility | Limited to Power BI scanner, PBIR-Legacy pages, Kusto live metadata and rollback | Documented Power BI and Kusto audiences for Rayfin Functions |
 | Atlas MCP | Read-only stdio server implemented and disabled by default | Public client, `Item.Execute.All`, reviewed token exchange and live validation |
-| OneLake security and Purview DLP | Portal links and explicit unavailable states | Public read APIs for role membership and restriction evidence |
+| OneLake security and Purview DLP | OneLake data access roles (RLS/CLS) collected since 2.6; Purview DLP remains a portal link | Public read APIs for Purview restriction evidence |
+| Fabric policies (preview) | Read-only listing of Policy items; enforcement always Unknown | A public API exposing policy rules and evaluation results |
 | Report visual usage | Not collected | A supported report definition path with sensitivity and permission handling |
-| Shared action plans and notifications | Not implemented | Reviewed team workflow, ownership model and delivery channel |
-| 2.1 maintenance | Version 2.1.3 is the current release line | Patch releases for verified fixes; larger workflows depend on the contracts above |
+| Shared action plans and notifications | Optional Teams webhook for new critical findings; no shared action plans | Reviewed team workflow and ownership model |
+| Generated Power BI posture report (PBIP) | Not implemented; JSON and snapshot export, the Teams card and webhook cover sharing in 2.6 | A reviewed report template fed by the published snapshot |
+| 2.6 release line | Version 2.6.4 is the current release | Patch releases for verified fixes; larger workflows depend on the contracts above |
 
 ## Quickstart
 
@@ -569,7 +610,12 @@ Found a bug, a missing Fabric object type or a useful governance workflow?
 [Open an issue](https://github.com/fredgis/FabricAtlas/issues/new/choose).
 
 Pull requests are welcome. Read
-[the contribution guide](https://github.com/fredgis/FabricAtlas/blob/f19b97a/.github/CONTRIBUTING.md) before starting.
+[the contribution guide](https://github.com/fredgis/FabricAtlas/blob/a614980/.github/CONTRIBUTING.md) before starting.
+
+The application shell (`src/App.tsx`, `src/main.tsx`, the auth and theme hooks,
+`src/lib/rayfin-client.ts`, `src/services/rayfin-auth.service.ts` and a few
+test helpers) comes from the Microsoft Rayfin Data App template and keeps its
+original Microsoft copyright headers. See [NOTICE](NOTICE).
 
 ## Project links
 
@@ -580,8 +626,8 @@ Pull requests are welcome. Read
 - [Data model](docs/data-model.md)
 - [Power BI metadata replacement and blocker](docs/powerbi-scanner-replacement.md)
 - [Optional Power BI scanner Secret Store setup](docs/powerbi-scanner-secret-store.md)
-- [Security policy](https://github.com/fredgis/FabricAtlas/blob/f19b97a/.github/SECURITY.md)
-- [Code of conduct](https://github.com/fredgis/FabricAtlas/blob/f19b97a/.github/CODE_OF_CONDUCT.md)
+- [Security policy](https://github.com/fredgis/FabricAtlas/blob/a614980/.github/SECURITY.md)
+- [Code of conduct](https://github.com/fredgis/FabricAtlas/blob/a614980/.github/CODE_OF_CONDUCT.md)
 
 ## Coverage
 

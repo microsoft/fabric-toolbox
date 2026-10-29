@@ -11,15 +11,20 @@ import {
   GitCompareArrows,
   History,
   Layers3,
+  MessageSquareShare,
   Radar as RadarIcon,
   RotateCcw,
   Search,
   ShieldAlert,
+  UserRound,
+  Settings2,
   ShieldCheck,
   VolumeX,
 } from "lucide-react";
+import { collectionSectionLabel, collectionStatusReason } from "../collection-status-copy";
+import { TeamsTestButton } from "../components/TeamsTestButton";
 import * as Tabs from "@radix-ui/react-tabs";
-import { lazy, Suspense, useEffect, useId, useMemo, useState } from "react";
+import { lazy, Suspense, useEffect, useId, useMemo, useState, type ReactNode } from "react";
 import { SavedViewsMenu } from "../components/SavedViewsMenu";
 import { TrendChart } from "../components/TrendChart";
 import { GovernanceExceptionControl } from "../components/GovernanceExceptionControl";
@@ -42,11 +47,13 @@ import { derivedFromSnapshot } from "../derived";
 import {
   compareSnapshots,
   snapshotCatalogFromData,
+  tenantSettingsComparable,
   type AtlasChange,
   type AtlasChangeDomain,
   type HistoricalSnapshot,
   type SnapshotSummary,
 } from "../history";
+import type { GovernanceEvidence } from "../governance-evidence";
 import type {
   AtlasFocusRequest,
   AtlasNavigation,
@@ -81,7 +88,56 @@ import { SensitivityView } from "./Sensitivity";
 import { PoliciesAiSection } from "./PoliciesAi";
 import { buildAiGovernanceInventory } from "../policies-ai";
 import { groupFindingsByRule } from "../finding-groups";
+import {
+  createFindingExplainer,
+  formatPriority,
+  priorityTier,
+  sortByPriority,
+  type FindingExplanation,
+} from "../finding-priority";
 import { PageHeader } from "../components/PageHeader";
+import { NativeLink } from "../components/NativeLink";
+import {
+  FABRIC_GOVERNANCE_SURFACES,
+  fabricGovernanceSurfaceUrl,
+  findingFixUrl,
+} from "../fabric-portal";
+import {
+  MICROSOFT_PILLAR_DESCRIPTION,
+  MICROSOFT_PILLAR_LABEL,
+  microsoftPillarForFinding,
+  microsoftPillarForPosture,
+  type MicrosoftGovernancePillar,
+} from "../ms-pillars";
+import {
+  buildFindingsExport,
+  buildTeamsPostureCard,
+} from "../governance-share";
+import {
+  findingOwnership,
+  inMyScope,
+  myItemsScope,
+  myScopedItems,
+  radarEntryOwnership,
+  summarizeMyItems,
+  type Ownership,
+} from "../my-items";
+import { downloadText, fileSlug } from "../download";
+import { DomainGovernanceTable } from "../components/DomainGovernanceTable";
+import { DescriptionDraftsPanel } from "../components/DescriptionDraftsPanel";
+import { draftObjectDescriptions } from "../description-drafts";
+import { useDomainFilter } from "../domain-filter";
+import {
+  aggregateByDomain,
+  domainGovernanceInputs,
+  domainKey,
+  domainScopeKeys,
+  findingDomainKey,
+  NO_DOMAIN_KEY,
+  UNKNOWN_DOMAIN_KEY,
+  type DomainGovernanceRow,
+} from "../domain-governance";
+import { relativeTime, type AtlasData } from "../model";
 
 const PostureRadar = lazy(() => import("../components/PostureRadar").then(
   (module) => ({ default: module.PostureRadar }),
@@ -144,6 +200,7 @@ const CHANGE_DOMAIN_LABEL: Record<AtlasChangeDomain, string> = {
   sensitivity: "Sensitivity",
   lineage: "Lineage",
   job: "Jobs",
+  tenant: "Tenant settings",
 };
 
 type HistoryMetric =
@@ -263,6 +320,7 @@ export function GovernanceCenterView({
 }) {
   const {
     data,
+    currentUser,
     isPreview,
     history,
     historyLoading,
@@ -281,6 +339,7 @@ export function GovernanceCenterView({
     saveFindingAcknowledgement,
     removeFindingAcknowledgement,
     governanceTargets,
+    workspaceSyncStatuses,
     governancePolicyLoading,
     governancePolicyError,
     governanceExceptions,
@@ -313,6 +372,14 @@ export function GovernanceCenterView({
     typeof focus?.filters?.category === "string"
       ? (focus.filters.category as GovernanceCategory)
       : "all",
+  );
+  const [mineOnly, setMineOnly] = useState(
+    focus?.filters?.mine === true || focus?.filters?.mine === "true",
+  );
+  const [findingDomain, setFindingDomain] = useState(
+    initialSection === "findings" && typeof focus?.filters?.fabricDomain === "string"
+      ? focus.filters.fabricDomain
+      : "",
   );
   const [findingPillar, setFindingPillar] = useState(
     initialSection === "findings" ? findingPillarFilter(focus?.filters?.pillar) : "",
@@ -374,11 +441,51 @@ export function GovernanceCenterView({
     "governance-findings",
     buildGovernanceFindings,
   );
-  const coverage = derivedFromSnapshot(
+  const allCoverage = derivedFromSnapshot(
     data,
     "coverage-diagnostics",
     getCoverageDiagnostics,
   );
+  const myScope = useMemo(
+    () => myItemsScope(data.items, data.principals, currentUser.email),
+    [currentUser.email, data.items, data.principals],
+  );
+  const myItemsSummary = useMemo(
+    () => summarizeMyItems(data.items, currentUser.email),
+    [currentUser.email, data.items],
+  );
+  const myItems = useMemo(
+    () => (mineOnly ? myScopedItems(data.items, currentUser.email) : data.items),
+    [currentUser.email, data.items, mineOnly],
+  );
+  const coverage = useMemo(
+    () =>
+      mineOnly
+        ? getCoverageDiagnostics({ items: myItems, schema: data.schema })
+        : allCoverage,
+    [allCoverage, data.schema, mineOnly, myItems],
+  );
+  const domainRows = useMemo(
+    () =>
+      aggregateByDomain(
+        domainGovernanceInputs(workspaceSyncStatuses, data, governanceTargets),
+        data.governanceEvidence,
+      ),
+    [data, governanceTargets, workspaceSyncStatuses],
+  );
+  const [globalDomain, setGlobalDomain] = useDomainFilter();
+  const visibleDomainRows = domainRows;
+  const findingScope = useMemo(
+    () => domainScopeKeys(findingDomain || globalDomain, data.governanceEvidence),
+    [data.governanceEvidence, findingDomain, globalDomain],
+  );
+  const labelName = useMemo(() => {
+    const names = new Map<string, string>();
+    for (const item of data.items) {
+      if (item.sensitivityLabelId && item.sensitivity) names.set(item.sensitivityLabelId.toLowerCase(), item.sensitivity);
+    }
+    return (id: string) => names.get(id.toLowerCase());
+  }, [data.items]);
   const filteredFindings = useMemo(() => {
     const query = findingSearch.trim().toLowerCase();
     return findings.filter(
@@ -386,12 +493,25 @@ export function GovernanceCenterView({
         (severity === "all" || finding.severity === severity) &&
         (category === "all" || finding.category === category) &&
         (!findingPillar || finding.category === findingPillar) &&
+        (findingScope.size === 0 ||
+          findingScope.has(findingDomainKey(finding, data.workspace.fabricDomainId))) &&
+        (!mineOnly || inMyScope(findingOwnership(finding, myScope))) &&
         (!query ||
           finding.title.toLowerCase().includes(query) ||
           finding.detail.toLowerCase().includes(query) ||
           finding.recommendation.toLowerCase().includes(query)),
     );
-  }, [category, findingPillar, findingSearch, findings, severity]);
+  }, [
+    category,
+    data.workspace.fabricDomainId,
+    findingScope,
+    findingPillar,
+    findingSearch,
+    findings,
+    mineOnly,
+    myScope,
+    severity,
+  ]);
 
   const historyIsCurrent =
     !data.workspace.snapshotId ||
@@ -478,6 +598,7 @@ export function GovernanceCenterView({
   const radarEntries = useMemo(
     () =>
       allRadarEntries.filter((entry) => {
+      if (mineOnly && !inMyScope(radarEntryOwnership(entry, myScope))) return false;
       const acknowledgement = acknowledgementByFinding.get(entry.id);
       return !(
         acknowledgement?.status === "muted" ||
@@ -486,7 +607,7 @@ export function GovernanceCenterView({
             entry.occurrenceSnapshotId)
       );
       }),
-    [acknowledgementByFinding, allRadarEntries],
+    [acknowledgementByFinding, allRadarEntries, mineOnly, myScope],
   );
   const suppressedRadarAcks = findingAcks.filter((acknowledgement) => {
     const entry = allRadarEntries.find(
@@ -584,6 +705,16 @@ export function GovernanceCenterView({
     );
   }, [changeDomain, changeSearch, snapshotChanges]);
 
+  const tenantDrift = useMemo(
+    () =>
+      history.changes
+        .filter((change) => change.domain === "tenant")
+        .sort((a, b) => b.syncedAt.localeCompare(a.syncedAt)),
+    [history.changes],
+  );
+  const tenantDriftCurrent = tenantDrift.filter(
+    (change) => change.snapshotId === history.current?.snapshotId,
+  ).length;
   const currentChanges =
     history.current == null
       ? 0
@@ -653,6 +784,13 @@ export function GovernanceCenterView({
       count: buildAiGovernanceInventory(data).length,
       icon: ShieldCheck,
     },
+    {
+      id: "tenant-settings",
+      label: `Tenant settings (${tenantDrift.length})`,
+      detail: "Tenant setting drift between snapshots",
+      count: tenantDrift.length,
+      icon: Settings2,
+    },
   ];
 
   const currentFilters = useMemo<SavedViewFilters>(
@@ -663,6 +801,7 @@ export function GovernanceCenterView({
         filters.severity = severity;
         filters.category = category;
         filters.pillar = findingPillar;
+        if (findingDomain) filters.fabricDomain = findingDomain;
       } else if (section === "changes") {
         filters.changeSearch = changeSearch;
         filters.domain = changeDomain;
@@ -673,15 +812,18 @@ export function GovernanceCenterView({
       } else if (section === "posture") {
         filters.pillar = postureMetric;
       }
+      if (mineOnly) filters.mine = true;
       return filters;
     },
     [
       category,
       changeDomain,
       changeSearch,
+      findingDomain,
       findingSearch,
       findingPillar,
       historyMetric,
+      mineOnly,
       postureMetric,
       effectiveCurrentSnapshotId,
       effectivePreviousSnapshotId,
@@ -746,6 +888,7 @@ export function GovernanceCenterView({
     if ((filters.section ?? section) === "posture" && typeof filters.pillar === "string") {
       setPostureMetric(filters.pillar as PosturePillar);
     }
+    setMineOnly(filters.mine === true || filters.mine === "true");
   };
 
   const priorityChanges = (
@@ -859,8 +1002,20 @@ export function GovernanceCenterView({
     <Tabs.Root value={section} onValueChange={(value) => setSection(value as GovernanceSection)} asChild>
     <div className="atlas-content-frame flex flex-col gap-l p-l sm:p-xxl">
       <Card className="min-w-0 overflow-hidden">
-        <PageHeader title="Governance Center" purpose="Posture, findings and changes in this workspace."
+        <PageHeader
+          title={mineOnly ? "My items" : "Governance Center"}
+          purpose={
+            mineOnly
+              ? "Findings, posture and coverage for the items you own or administer."
+              : "Posture, findings and changes in this workspace."
+          }
           actions={<>
+              <NativeLink href={fabricGovernanceSurfaceUrl(FABRIC_GOVERNANCE_SURFACES[0].path)}>
+                Govern report in Fabric
+              </NativeLink>
+              <NativeLink href={fabricGovernanceSurfaceUrl(FABRIC_GOVERNANCE_SURFACES[1].path)}>
+                Admin monitoring
+              </NativeLink>
               <SavedViewsMenu
                 views={savedViews.filter(
                   (view) => view.section === "governance",
@@ -908,6 +1063,28 @@ export function GovernanceCenterView({
           ))}
         </Tabs.List>
       <div className="p-m sm:p-l">
+      {mineOnly && (
+        <div
+          role="status"
+          className="mb-m flex flex-wrap items-center justify-between gap-s rounded-lg border border-primary/30 bg-primary/5 px-m py-s text-200"
+        >
+          <span className="inline-flex items-center gap-xs">
+            <UserRound className="icon-size-100" aria-hidden="true" />
+            <span>
+              <strong>Owner: you</strong> • {myItemsSummary.mine} of {myItemsSummary.total} items
+              {myItemsSummary.unknown > 0 &&
+                ` • ${myItemsSummary.unknown} item${myItemsSummary.unknown === 1 ? "" : "s"} with ownership Unknown (shown, not hidden)`}
+            </span>
+          </span>
+          <button
+            type="button"
+            className="font-semibold text-brand-foreground hover:underline"
+            onClick={() => setMineOnly(false)}
+          >
+            Show whole workspace
+          </button>
+        </div>
+      )}
       {historyError && radarFailedSnapshotIds.length === 0 && (
         <div
           role="alert"
@@ -926,10 +1103,28 @@ export function GovernanceCenterView({
             severity={severity}
             category={category}
             pillar={findingPillar}
+            data={data}
+            posture={currentPosture}
+            mineOnly={mineOnly}
+            ownershipOf={(finding) => findingOwnership(finding, myScope)}
+            canFilterMine={Boolean(currentUser.email?.trim())}
+            onMineOnly={setMineOnly}
             onSearch={setFindingSearch}
             onSeverity={setSeverity}
             onCategory={setCategory}
             onClearPillar={() => setFindingPillar("")}
+            domainFilter={
+              findingDomain || globalDomain
+                ? {
+                    label: domainRows.find((row) => row.key === (findingDomain || globalDomain))?.domain.label ?? (findingDomain || globalDomain),
+                    includesWorkspace: findingScope.has(domainKey(data.workspace.fabricDomainId)),
+                  }
+                : undefined
+            }
+            onClearDomain={() => {
+              setFindingDomain("");
+              setGlobalDomain("");
+            }}
             onNavigate={(finding) =>
               onNavigate(navigationForFinding(finding))
             }
@@ -941,6 +1136,7 @@ export function GovernanceCenterView({
             onRemoveException={removeGovernanceException}
             onPreset={(preset) => {
               setFindingPillar("");
+              if (preset === "all") setMineOnly(false);
               if (preset === "external") {
                 setFindingSearch("external access");
                 setCategory("access");
@@ -1006,13 +1202,33 @@ export function GovernanceCenterView({
             diagnostics={coverage}
             historyLoading={historyLoading}
             syncSections={data.workspace.syncSections}
-            snapshot={data}
+            snapshot={mineOnly ? { ...data, items: myItems } : data}
+            byDomain={
+              <DomainGovernanceTable
+                rows={visibleDomainRows}
+                mode="coverage"
+                activeKey={globalDomain || undefined}
+                currentKey={domainKey(data.workspace.fabricDomainId)}
+                labelName={labelName}
+                onSelect={(row) => setGlobalDomain(row.key)}
+              />
+            }
           />
         </div>
       </Tabs.Content>
       <Tabs.Content value="posture" asChild>
         <div>
-          <PostureSection
+          <div className="mb-l">
+            <DomainGovernanceTable
+              rows={visibleDomainRows}
+              mode="posture"
+              activeKey={globalDomain || undefined}
+              currentKey={domainKey(data.workspace.fabricDomainId)}
+              target={70}
+              labelName={labelName}
+              onSelect={(row) => setGlobalDomain(row.key)}
+            />
+          </div>          <PostureSection
             current={currentPosture}
             previous={previousPosture}
             scores={postureScores}
@@ -1027,6 +1243,19 @@ export function GovernanceCenterView({
             onResetTargets={resetGovernanceTargets}
             onPillar={setPostureMetric}
             onNavigate={onNavigate}
+            fabricSignals={{ coverage, evidence: data.governanceEvidence, domainRows }}
+          />
+
+          <NetworkCard evidence={data.governanceEvidence} />
+          <OpenInFabricCard />
+        </div>
+      </Tabs.Content>
+      <Tabs.Content value="tenant-settings" asChild>
+        <div>
+          <TenantSettingsDrift
+            changes={tenantDrift}
+            sinceLatest={tenantDriftCurrent}
+            loading={historyLoading}
           />
         </div>
       </Tabs.Content>
@@ -1456,7 +1685,9 @@ function PostureSection({
   onResetTargets,
   onPillar,
   onNavigate,
+  fabricSignals,
 }: {
+  fabricSignals?: FabricSignalsInput;
   current: PostureScore;
   previous?: PostureScore;
   scores: Map<string, PostureScore>;
@@ -1527,6 +1758,7 @@ function PostureSection({
               targetsAvailable={targetsAvailable} onSelect={onPillar} />
           </Suspense>
           <div className="min-w-0 border-t border-border p-m lg:border-l lg:border-t-0">
+          <MicrosoftPillarStrip pillars={current.pillars} />
           <div aria-label="Posture pillar selection" className="grid gap-xs sm:grid-cols-2">
           {current.pillars.map((pillar) => {
             const before = previous?.pillars.find(
@@ -1546,8 +1778,11 @@ function PostureSection({
                   selectedPillar === pillar.pillar ? "border-brand-foreground/40 bg-primary/5" : "border-transparent")}
               >
                 <div className="flex items-center justify-between gap-s">
-                  <span className="text-300 font-semibold">
-                    {POSTURE_LABELS[pillar.pillar]}
+                  <span className="flex flex-col">
+                    <span className="text-300 font-semibold">{POSTURE_LABELS[pillar.pillar]}</span>
+                    <span className="text-100 uppercase tracking-wide text-muted-foreground">
+                      Fabric · {MICROSOFT_PILLAR_LABEL[microsoftPillarForPosture(pillar.pillar)]}
+                    </span>
                   </span>
                   <span className="atlas-score font-numeric text-400 font-semibold" data-score-band={scoreBand(pillar.score)}>
                     {pillar.score == null ? "N/A" : `${pillar.score}%`}
@@ -1587,6 +1822,8 @@ function PostureSection({
           </div>
         </div>
       </Card>
+
+      {fabricSignals && <FabricSignalsCard {...fabricSignals} />}
 
       <details className="rounded-lg border border-border bg-card">
         <summary className="cursor-pointer px-l py-m text-300 font-semibold">Configure governance targets</summary>
@@ -1635,6 +1872,130 @@ function PostureSection({
   );
 }
 
+const MS_PILLARS: MicrosoftGovernancePillar[] = ["health", "protect", "trust"];
+
+/** OneLake catalog view of the Atlas pillars: mean of the evaluable mapped scores. */
+export function microsoftPillarScores(
+  pillars: PostureScore["pillars"],
+): Record<MicrosoftGovernancePillar, number | null> {
+  const result = {} as Record<MicrosoftGovernancePillar, number | null>;
+  for (const pillar of MS_PILLARS) {
+    const scores = pillars
+      .filter((entry) => microsoftPillarForPosture(entry.pillar) === pillar && entry.score != null)
+      .map((entry) => entry.score as number);
+    result[pillar] = scores.length ? Math.round(scores.reduce((a, b) => a + b, 0) / scores.length) : null;
+  }
+  return result;
+}
+
+function MicrosoftPillarStrip({ pillars }: { pillars: PostureScore["pillars"] }) {
+  const scores = microsoftPillarScores(pillars);
+  return (
+    <div aria-label="OneLake catalog pillars" className="mb-m grid grid-cols-3 gap-xs rounded-md border border-border p-s">
+      {MS_PILLARS.map((pillar) => (
+        <div key={pillar} title={MICROSOFT_PILLAR_DESCRIPTION[pillar]} className="flex flex-col items-start gap-xxs px-s">
+          <span className="text-100 uppercase tracking-wide text-muted-foreground">Fabric · {MICROSOFT_PILLAR_LABEL[pillar]}</span>
+          <span className="atlas-score font-numeric text-400 font-semibold" data-score-band={scoreBand(scores[pillar])}>
+            {scores[pillar] == null ? "N/A" : `${scores[pillar]}%`}
+          </span>
+          <span className="text-100 text-muted-foreground">
+            {pillars.filter((entry) => microsoftPillarForPosture(entry.pillar) === pillar).map((entry) => POSTURE_LABELS[entry.pillar]).join(" · ")}
+          </span>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+interface FabricSignalsInput {
+  coverage: ReturnType<typeof getCoverageDiagnostics>;
+  evidence?: GovernanceEvidence;
+  domainRows: DomainGovernanceRow[];
+}
+
+function coverageSignal(metric: { numerator: number; denominator: number; percentage: number | null }) {
+  return metric.percentage == null
+    ? { value: "Unknown", detail: "Not readable in this snapshot" }
+    : { value: `${Math.round(metric.percentage)}%`, detail: `${metric.numerator} of ${metric.denominator} items` };
+}
+
+function FabricSignalsCard({ coverage, evidence, domainRows }: FabricSignalsInput) {
+  const assigned = domainRows.filter((row) => row.key !== NO_DOMAIN_KEY && row.key !== UNKNOWN_DOMAIN_KEY && !row.empty);
+  const assignedWorkspaces = assigned.reduce((total, row) => total + row.workspaces.length, 0);
+  const allWorkspaces = domainRows.reduce((total, row) => total + row.workspaces.length, 0);
+  const domainsKnown = evidence?.domains.status.status === "complete";
+  const network = evidence?.network;
+  const policy = network?.policy;
+  const tagsKnown = evidence?.tags.status.status === "complete";
+  const settingsKnown = evidence?.tenantSettings.status.status === "complete";
+  const signals: { label: string; pillar: MicrosoftGovernancePillar; value: string; detail: string }[] = [
+    {
+      label: "Workspaces in a domain",
+      pillar: "trust",
+      value: allWorkspaces ? `${assignedWorkspaces} / ${allWorkspaces}` : "Unknown",
+      detail: domainsKnown ? `${evidence!.domains.entries.length} Fabric domains` : "Domains not collected (Fabric admin consent required)",
+    },
+    { label: "Endorsed items", pillar: "trust", ...coverageSignal(coverage.byId.endorsement) },
+    { label: "Described items", pillar: "trust", ...coverageSignal(coverage.byId.descriptions) },
+    { label: "Sensitivity labels", pillar: "protect", ...coverageSignal(coverage.byId.sensitivity) },
+    {
+      label: "Fabric tags",
+      pillar: "trust",
+      value: tagsKnown ? String(evidence!.tags.entries.length) : "Unknown",
+      detail: tagsKnown
+        ? `${evidence!.tags.entries.filter((tag) => tag.scope === "domain").length} domain-scoped`
+        : "Tags not collected",
+    },
+    {
+      label: "Workspace network policy",
+      pillar: "protect",
+      value: policy?.inboundPublicAccess ? `Inbound ${policy.inboundPublicAccess}` : "Unknown",
+      detail: policy?.outboundPublicAccess ? `Outbound ${policy.outboundPublicAccess}` : network?.status.status === "unsupported" ? "Not supported by this workspace" : "Not collected",
+    },
+    {
+      label: "Fabric tenant settings",
+      pillar: "protect",
+      value: settingsKnown ? `${evidence!.tenantSettings.entries.filter((entry) => entry.enabled).length} / ${evidence!.tenantSettings.entries.length} on` : "Unknown",
+      detail: settingsKnown ? "Governance-relevant settings enabled" : "Requires Fabric admin consent",
+    },
+  ];
+  return (
+    <Card className="p-l">
+      <h3 className="text-400 font-semibold">Fabric governance signals</h3>
+      <p className="mt-xs text-200 text-muted-foreground">
+        Native Fabric controls behind the radar. Unknown means the signal was not collected, never compliant.
+      </p>
+      <div aria-label="Fabric governance signals" className="mt-m grid gap-s sm:grid-cols-2 xl:grid-cols-4">
+        {signals.map((signal) => (
+          <div key={signal.label} className="rounded-md border border-border p-m">
+            <div className="flex items-center justify-between gap-s">
+              <span className="text-200 font-semibold">{signal.label}</span>
+              <FabricPillarBadge pillar={signal.pillar} />
+            </div>
+            <p className="mt-xs font-numeric text-400 font-semibold">{signal.value}</p>
+            <p className="text-200 text-muted-foreground">{signal.detail}</p>
+          </div>
+        ))}
+      </div>
+    </Card>
+  );
+}
+
+function FabricPillarBadge({
+  pillar,
+}: {
+  pillar: MicrosoftGovernancePillar;
+}) {
+  return (
+    <span
+      title={`OneLake catalog pillar: ${MICROSOFT_PILLAR_DESCRIPTION[pillar]}`}
+      className="rounded-md border border-border bg-card px-s py-xxs text-200 text-muted-foreground"
+    >
+      Fabric · {MICROSOFT_PILLAR_LABEL[pillar]}
+    </span>
+  );
+}
+
 function FindingsSection({
   findings,
   total,
@@ -1642,10 +2003,18 @@ function FindingsSection({
   severity,
   category,
   pillar,
+  data,
+  posture,
+  mineOnly,
+  ownershipOf,
+  canFilterMine,
+  onMineOnly,
   onSearch,
   onSeverity,
   onCategory,
   onClearPillar,
+  domainFilter,
+  onClearDomain,
   onNavigate,
   onPreset,
   exceptions,
@@ -1661,10 +2030,18 @@ function FindingsSection({
   severity: GovernanceSeverity | "all";
   category: GovernanceCategory | "all";
   pillar: string;
+  data: Pick<AtlasData, "workspace" | "items" | "edges"> & Partial<Pick<AtlasData, "schema">>;
+  posture: PostureScore;
+  mineOnly: boolean;
+  ownershipOf: (finding: GovernanceFinding) => Ownership;
+  canFilterMine: boolean;
+  onMineOnly: (value: boolean) => void;
   onSearch: (value: string) => void;
   onSeverity: (value: GovernanceSeverity | "all") => void;
   onCategory: (value: GovernanceCategory | "all") => void;
   onClearPillar: () => void;
+  domainFilter?: { label: string; includesWorkspace: boolean };
+  onClearDomain: () => void;
   onNavigate: (finding: GovernanceFinding) => void;
   onPreset: (value: "all" | "external" | "metadata" | "failures") => void;
   exceptions: ReadonlyMap<string, GovernanceException>;
@@ -1679,7 +2056,7 @@ function FindingsSection({
   onRemoveException: (id: string) => Promise<void>;
 }) {
   const activeFilters =
-    search || severity !== "all" || category !== "all" || pillar;
+    search || severity !== "all" || category !== "all" || pillar || mineOnly || domainFilter;
   const activePreset = pillar || severity !== "all"
     ? undefined
     : !search && category === "all"
@@ -1691,7 +2068,11 @@ function FindingsSection({
           : search === "failed" && category === "operations"
             ? "failures"
             : undefined;
-  const groups = useMemo(() => groupFindingsByRule(findings), [findings]);
+  const explain = useMemo(() => createFindingExplainer(data), [data]);
+  const groups = useMemo(
+    () => groupFindingsByRule(sortByPriority(findings, explain)),
+    [findings, explain],
+  );
   const [openRules, setOpenRules] = useState<Set<string>>(new Set());
   const listId = useId();
   const toggleRule = (rule: string) =>
@@ -1701,6 +2082,15 @@ function FindingsSection({
       else next.add(rule);
       return next;
     });
+  const ownerBadge = (finding: GovernanceFinding) =>
+    mineOnly && ownershipOf(finding) === "unknown" ? (
+      <span
+        className="ml-xs inline-flex rounded-full border border-status-warning/30 bg-status-warning/10 px-xs text-100 font-semibold text-status-warning"
+        title="Fabric did not expose an owner for this item, so it stays in My items"
+      >
+        Owner unknown
+      </span>
+    ) : null;
   const findingActions = (finding: GovernanceFinding) => (
     <div className="flex flex-wrap items-center gap-s">
       <button
@@ -1711,6 +2101,7 @@ function FindingsSection({
         Open evidence
         <ArrowRight className="icon-size-100" />
       </button>
+      <NativeLink href={findingFixUrl(finding, data)}>Fix in Fabric</NativeLink>
       <GovernanceExceptionControl
         findingId={finding.id}
         findingTitle={finding.title}
@@ -1741,6 +2132,27 @@ function FindingsSection({
             </button>
           </div>
         )}
+        {domainFilter && (
+          <div className="flex flex-col gap-xs border-b border-border bg-primary/5 px-l py-s">
+            <div className="flex items-center justify-between gap-m">
+              <span className="text-200 font-semibold text-brand-foreground">
+                Domain: {domainFilter.label}
+              </span>
+              <button
+                type="button"
+                onClick={onClearDomain}
+                className="atlas-control rounded-lg px-s text-200 font-semibold text-primary hover:bg-primary/10"
+              >
+                Clear domain
+              </button>
+            </div>
+            {!domainFilter.includesWorkspace && (
+              <span className="text-200 text-muted-foreground">
+                The active workspace is not in this domain. Switch to one of its workspaces to see its item findings.
+              </span>
+            )}
+          </div>
+        )}
         <div className="atlas-toolbar flex flex-col gap-s border-b border-border bg-secondary/55 p-m">
           <div role="group" aria-label="Finding presets" className="flex flex-wrap gap-s">
             {([
@@ -1764,6 +2176,26 @@ function FindingsSection({
                 {label}
               </button>
             ))}
+            <button
+              type="button"
+              aria-pressed={mineOnly}
+              disabled={!canFilterMine}
+              title={
+                canFilterMine
+                  ? "Scope findings, radar and coverage to items you own (unknown owners stay visible)"
+                  : "Your account email is unavailable, so ownership cannot be matched"
+              }
+              onClick={() => onMineOnly(!mineOnly)}
+              className={cn(
+                "atlas-control inline-flex items-center gap-xs rounded-full border px-m text-200 font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-50",
+                mineOnly
+                  ? "border-primary/40 bg-primary/10 text-brand-foreground"
+                  : "border-border bg-card text-muted-foreground hover:bg-accent hover:text-foreground",
+              )}
+            >
+              <UserRound className="icon-size-100" aria-hidden="true" />
+              My items
+            </button>
           </div>
           <div className="flex flex-col gap-s lg:flex-row lg:items-center">
           <label className="relative min-w-0 flex-1">
@@ -1816,13 +2248,46 @@ function FindingsSection({
           )}
           </div>
         </div>
-        <div className="flex items-center justify-between border-b border-border px-l py-m">
+        <div className="flex flex-wrap items-center justify-between gap-m border-b border-border px-l py-m">
           <div>
             <h2 className="text-400 font-semibold">Action queue</h2>
             <p className="text-200 text-muted-foreground">
               {findings.length} of {total} findings · {groups.length}{" "}
               {groups.length === 1 ? "rule" : "rules"}
             </p>
+          </div>
+          <div className="flex flex-wrap items-center gap-s">
+            <button
+              type="button"
+              disabled={findings.length === 0}
+              onClick={() =>
+                downloadText(
+                  `${JSON.stringify(buildFindingsExport(findings, data, new Date().toISOString()), null, 2)}\n`,
+                  "application/json",
+                  `atlas-findings-${fileSlug(data.workspace.displayName)}.json`,
+                )
+              }
+              className="atlas-control inline-flex items-center gap-s rounded-lg border border-border bg-card px-m text-200 font-semibold hover:bg-accent disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              <Download className="icon-size-100" aria-hidden="true" />
+              Export JSON
+            </button>
+            <button
+              type="button"
+              title="Download an Adaptive Card to post in Teams through a Workflow"
+              onClick={() =>
+                downloadText(
+                  `${JSON.stringify(buildTeamsPostureCard(posture, findings, data, window.location.origin), null, 2)}\n`,
+                  "application/json",
+                  `atlas-teams-card-${fileSlug(data.workspace.displayName)}.json`,
+                )
+              }
+              className="atlas-control inline-flex items-center gap-s rounded-lg border border-border bg-card px-m text-200 font-semibold hover:bg-accent"
+            >
+              <MessageSquareShare className="icon-size-100" aria-hidden="true" />
+              Teams card
+            </button>
+            <TeamsTestButton workspaceName={data.workspace.displayName} />
           </div>
         </div>
         {findings.length === 0 ? (
@@ -1840,7 +2305,7 @@ function FindingsSection({
           </div>
         ) : (
           <ul aria-label="Findings by rule" className="divide-y divide-border">
-            {groups.map((group) => {
+            {groups.map((group, groupIndex) => {
               const meta = SEVERITY_META[group.severity];
               const single = group.findings.length === 1 ? group.findings[0] : undefined;
               const open = !single && (Boolean(search) || openRules.has(group.rule));
@@ -1861,22 +2326,40 @@ function FindingsSection({
                         <span className="text-200 text-muted-foreground">
                           {CATEGORY_LABEL[group.category]}
                         </span>
+                        <FabricPillarBadge
+                          pillar={microsoftPillarForFinding({
+                            id: group.findings[0].id,
+                            category: group.category,
+                          })}
+                        />
                       </div>
                       <h3 className="mt-xs text-300 font-semibold">
                         {single ? single.title : `${group.label} · ${group.findings.length} findings`}
+                        {single && ownerBadge(single)}
                       </h3>
-                      {single && (
+                      {(single || group.detail) && (
                         <p className="mt-xxs text-200 leading-300 text-muted-foreground">
-                          {single.detail}
+                          {single ? single.detail : group.detail}
                         </p>
                       )}
                       <p className="mt-xxs text-200 leading-300 text-foreground">
                         {group.recommendation}
                       </p>
+                      {single && <FindingWhy explanation={explain(single)} defaultOpen={groupIndex === 0} />}
+                      {single?.id.startsWith("missing-object-description") && single.itemId && (
+                        <DescriptionDraftsPanel
+                          drafts={draftObjectDescriptions(data.schema?.[single.itemId] ?? [])}
+                          modelUrl={findingFixUrl(single, data)}
+                        />
+                      )}
                     </div>
                     {single ? (
                       findingActions(single)
                     ) : (
+                      <div className="flex shrink-0 flex-wrap items-center gap-s self-start">
+                      <NativeLink href={findingFixUrl({ target: { kind: "workspace" } }, data)}>
+                        Fix in Fabric
+                      </NativeLink>
                       <button
                         type="button"
                         aria-expanded={open}
@@ -1891,6 +2374,7 @@ function FindingsSection({
                         />
                         {open ? "Hide findings" : `Show ${group.findings.length} findings`}
                       </button>
+                      </div>
                     )}
                   </div>
                   {open && (
@@ -1905,10 +2389,14 @@ function FindingsSection({
                           className="flex flex-col gap-s px-m py-s lg:flex-row lg:items-center lg:justify-between"
                         >
                           <div className="min-w-0">
-                            <h4 className="text-300 font-semibold">{finding.title}</h4>
+                            <h4 className="text-300 font-semibold">
+                              {finding.title}
+                              {ownerBadge(finding)}
+                            </h4>
                             <p className="text-200 leading-300 text-muted-foreground">
                               {finding.detail}
                             </p>
+                            <FindingWhy explanation={explain(finding)} />
                           </div>
                           {findingActions(finding)}
                         </li>
@@ -1922,6 +2410,100 @@ function FindingsSection({
         )}
       </Card>
     </div>
+  );
+}
+
+function NetworkCard({ evidence }: { evidence?: GovernanceEvidence }) {
+  const network = evidence?.network;
+  const known = network?.status.status === "complete";
+  const value = (state?: "Allow" | "Deny") =>
+    !known || !state ? "Unknown" : state === "Allow" ? "Public access allowed" : "Public access denied";
+  return (
+    <Card className="mt-l p-l">
+      <h2 className="text-400 font-semibold">Workspace network</h2>
+      <p className="mt-xxs text-200 text-muted-foreground">
+        Inbound and outbound communication policy of the workspace.
+        {!known && " Unknown: the policy API was not available to the synchronizer."}
+      </p>
+      <dl className="mt-m grid gap-m sm:grid-cols-2">
+        {([["Inbound", network?.policy?.inboundPublicAccess], ["Outbound", network?.policy?.outboundPublicAccess]] as const).map(
+          ([label, state]) => (
+            <div key={label} className="rounded-lg border border-border p-m">
+              <dt className="text-100 uppercase tracking-wide text-muted-foreground">{label}</dt>
+              <dd className="mt-xxs text-300 font-semibold">{value(state)}</dd>
+            </div>
+          ),
+        )}
+      </dl>
+    </Card>
+  );
+}
+
+function OpenInFabricCard() {
+  return (
+    <Card className="mt-l p-l">
+      <h2 className="text-400 font-semibold">Open in Fabric</h2>
+      <p className="mt-xxs text-200 text-muted-foreground">
+        Microsoft&apos;s native governance surfaces, and what Atlas adds next to them.
+      </p>
+      <ul className="mt-m grid gap-m md:grid-cols-2">
+        {FABRIC_GOVERNANCE_SURFACES.map((surface) => (
+          <li key={surface.id} className="flex flex-col gap-xs rounded-lg border border-border p-m">
+            <h3 className="text-300 font-semibold">{surface.title}</h3>
+            <p className="text-200 text-muted-foreground">{surface.covers}</p>
+            <p className="text-200">{surface.atlas}</p>
+            <div className="mt-auto flex flex-wrap gap-m pt-xs">
+              <NativeLink href={fabricGovernanceSurfaceUrl(surface.path)}>Open in Fabric</NativeLink>
+              <NativeLink href={surface.docs}>Learn more</NativeLink>
+            </div>
+          </li>
+        ))}
+      </ul>
+    </Card>
+  );
+}
+
+function FindingWhy({ explanation, defaultOpen = false }: { explanation: FindingExplanation; defaultOpen?: boolean }) {
+  const { priority, downstream } = explanation;
+  const tier = priorityTier(priority.score);
+  return (
+    <details className="mt-s text-200" open={defaultOpen}>
+      <summary className="cursor-pointer font-semibold text-primary">
+        Why · {tier} • score {priority.score}
+      </summary>
+      <dl className="mt-xs grid gap-m rounded-lg border border-border bg-secondary/40 p-m md:grid-cols-3">
+        <div className="min-w-0">
+          <dt className="text-100 font-semibold uppercase tracking-wide text-muted-foreground">Evidence</dt>
+          <dd className="mt-xxs min-w-0 break-words">
+            {explanation.evidence.length > 0 ? explanation.evidence.join(", ") : "Unknown"}
+            {explanation.snapshotAt ? ` · snapshot ${relativeTime(explanation.snapshotAt)}` : null}
+          </dd>
+        </div>
+        <div className="min-w-0">
+          <dt className="text-100 font-semibold uppercase tracking-wide text-muted-foreground">Impact</dt>
+          <dd className="mt-xxs min-w-0">
+            {explanation.subject
+              ? downstream.length === 0
+                ? "No downstream item in recorded lineage."
+                : `${downstream.length} downstream consumer${downstream.length === 1 ? "" : "s"}: ${downstream
+                    .slice(0, 5)
+                    .map((item) => item.displayName)
+                    .join(", ")}${downstream.length > 5 ? ", …" : ""}`
+              : "Not item-scoped; no lineage impact."}
+          </dd>
+        </div>
+        <div className="min-w-0">
+          <dt className="text-100 font-semibold uppercase tracking-wide text-muted-foreground">Priority</dt>
+          <dd className="mt-xxs min-w-0">
+            <span className="font-semibold">{tier} • score {priority.score}</span>
+            <span className="block text-muted-foreground">
+              {formatPriority(priority)}
+              {priority.endorsement !== "n/a" && ` (${priority.endorsement})`}
+            </span>
+          </dd>
+        </div>
+      </dl>
+    </details>
   );
 }
 
@@ -2008,6 +2590,20 @@ function ChangesSection({
           </div>
         </div>
       </div>
+      {!loading &&
+        comparisonCurrentSnapshotId !== comparisonPreviousSnapshotId &&
+        !tenantSettingsComparable(
+          loadedSnapshots.find((s) => s.snapshotId === comparisonPreviousSnapshotId),
+          loadedSnapshots.find((s) => s.snapshotId === comparisonCurrentSnapshotId),
+        ) && (
+          <p
+            data-testid="tenant-drift-unknown"
+            className="border-b border-border px-m py-s text-200 text-muted-foreground"
+          >
+            Tenant settings drift: <strong>Unknown</strong> — both snapshots need
+            tenant settings collected by a Fabric administrator synchronizer.
+          </p>
+        )}
 
       <div className="atlas-toolbar flex flex-col gap-s border-b border-border p-m sm:flex-row">
         <label className="relative min-w-0 flex-1">
@@ -2229,7 +2825,9 @@ function CoverageSection({
   historyLoading,
   syncSections,
   snapshot,
+  byDomain,
 }: {
+  byDomain?: ReactNode;
   diagnostics: ReturnType<typeof getCoverageDiagnostics>;
   historyLoading: boolean;
   syncSections?: NonNullable<
@@ -2240,7 +2838,7 @@ function CoverageSection({
   const sectionEntries = Object.entries(syncSections ?? {}).sort(
     ([left], [right]) => left.localeCompare(right),
   );
-  const [view, setView] = useState<"families" | "quality" | "sensitivity">("families");
+  const [view, setView] = useState<"families" | "quality" | "sensitivity" | "domain">("families");
   const missingValues = diagnostics.metrics.some((metric) => metric.state === "no-values");
   const viewTrigger =
     "atlas-control rounded-md px-m text-200 font-semibold text-muted-foreground transition-colors hover:text-foreground focus-visible:ring-inset focus-visible:ring-offset-0 data-[state=active]:bg-card data-[state=active]:text-brand-foreground data-[state=active]:shadow-fabric-2";
@@ -2257,7 +2855,12 @@ function CoverageSection({
         <Tabs.Trigger value="families" className={viewTrigger}>Item families</Tabs.Trigger>
         <Tabs.Trigger value="quality" className={viewTrigger}>Metadata quality</Tabs.Trigger>
         <Tabs.Trigger value="sensitivity" className={viewTrigger}>Sensitivity</Tabs.Trigger>
+        {byDomain && (
+          <Tabs.Trigger value="domain" className={viewTrigger}>By domain</Tabs.Trigger>
+        )}
       </Tabs.List>
+
+      {byDomain && <Tabs.Content value="domain">{byDomain}</Tabs.Content>}
 
       <Tabs.Content value="families" className="flex flex-col gap-l">
       <ItemFamilyCoverageSection data={snapshot} />
@@ -2266,17 +2869,20 @@ function CoverageSection({
           <div className="border-b border-border bg-secondary/55 px-l py-m">
             <h2 className="text-400 font-semibold">Collection status</h2>
             <p className="text-200 text-muted-foreground">
-              Authoritative status returned by the latest UDF contract.
+              What the latest sync could read, and why a section is missing.
             </p>
           </div>
           <div className="grid gap-s p-s sm:grid-cols-2 xl:grid-cols-4">
-            {sectionEntries.map(([name, section]) => (
+            {sectionEntries.map(([name, section]) => {
+              const reason = collectionStatusReason(section.status, section.code);
+              return (
               <div
                 key={name}
-                className="flex items-center justify-between gap-m rounded-lg border border-border bg-card px-m py-s"
+                className="flex flex-col gap-xs rounded-lg border border-border bg-card px-m py-s"
               >
-                <span className="truncate text-200 font-semibold capitalize">
-                  {name.replaceAll(/([a-z])([A-Z])/g, "$1 $2")}
+                <div className="flex items-center justify-between gap-m">
+                <span className="truncate text-200 font-semibold">
+                  {collectionSectionLabel(name)}
                 </span>
                 <span
                   className={cn(
@@ -2291,8 +2897,13 @@ function CoverageSection({
                 >
                   {section.status}
                 </span>
+                </div>
+                {reason && (
+                  <p className="text-100 leading-200 text-muted-foreground">{reason}</p>
+                )}
               </div>
-            ))}
+              );
+            })}
           </div>
         </Card>
       )}
@@ -2348,5 +2959,103 @@ function CoverageSection({
         <SensitivityView embedded />
       </Tabs.Content>
     </Tabs.Root>
+  );
+}
+
+
+const EXPOSING_TENANT_SETTING = /share|sharing|guest|external|publish|export/i;
+
+function tenantSettingState(value: unknown): string {
+  if (!value || typeof value !== "object") return "Not present";
+  return (value as { enabled?: boolean }).enabled ? "Enabled" : "Disabled";
+}
+
+function tenantSettingRisk(change: AtlasChange): "High" | "Medium" | "Low" {
+  const enabledNow = (change.after as { enabled?: boolean } | undefined)?.enabled === true;
+  const enabledBefore = (change.before as { enabled?: boolean } | undefined)?.enabled === true;
+  if (enabledNow && !enabledBefore && EXPOSING_TENANT_SETTING.test(change.label)) return "High";
+  if (enabledNow !== enabledBefore) return "Medium";
+  return "Low";
+}
+
+const RISK_TONE: Record<"High" | "Medium" | "Low", string> = {
+  High: "border-status-critical/30 bg-status-critical/10 text-status-critical",
+  Medium: "border-status-warning/30 bg-status-warning/10 text-status-warning",
+  Low: "border-border bg-secondary text-muted-foreground",
+};
+
+function TenantSettingsDrift({
+  changes,
+  sinceLatest,
+  loading,
+  evidence,
+}: {
+  changes: AtlasChange[];
+  sinceLatest: number;
+  loading: boolean;
+  evidence?: AtlasData["governanceEvidence"];
+}) {
+  const baseline = evidence?.tenantSettings;
+  const baselineText = !baseline
+    ? "Tenant settings not collected yet. Run a synchronization."
+    : baseline.status.status === "complete"
+      ? `Baseline captured: ${baseline.entries.length} settings (${baseline.entries.filter((entry) => entry.enabled).length} on). The next synchronization will list any setting that changed.`
+      : `Tenant settings not collected (${baseline.status.code ?? baseline.status.status}). A Fabric administrator must run the synchronization.`;
+  return (
+    <Card className="overflow-hidden" data-testid="tenant-settings-drift">
+      <div className="border-b border-border bg-secondary/55 p-m">
+        <h3 className="text-400 font-semibold">
+          Tenant settings drift • {sinceLatest} change{sinceLatest === 1 ? "" : "s"} since the previous snapshot
+        </h3>
+        <p className="mt-xs text-200 text-muted-foreground">
+          Read with the Fabric admin API (tenant admin only). Each sync stores a copy; Atlas shows what changed and when.
+        </p>
+                  <p className="mt-xs text-200 font-semibold" data-testid="tenant-settings-baseline">{baselineText}</p>
+      </div>
+      {loading ? (
+        <div className="flex min-h-32 items-center justify-center gap-s text-300 text-muted-foreground">
+          <Clock3 className="icon-size-200 animate-pulse" />
+          Loading validated snapshot history
+        </div>
+      ) : changes.length === 0 ? (
+        <p className="px-m py-l text-300 text-muted-foreground">
+          No tenant setting change recorded. Drift is Unknown until two snapshots both hold tenant settings collected by a Fabric administrator synchronizer.
+        </p>
+      ) : (
+        <div className="overflow-x-auto">
+          <table className="w-full text-left text-300">
+            <thead className="text-100 uppercase tracking-wide text-muted-foreground">
+              <tr className="border-b border-border">
+                <th scope="col" className="px-m py-s font-semibold">Setting</th>
+                <th scope="col" className="px-m py-s font-semibold">Before</th>
+                <th scope="col" className="px-m py-s font-semibold">After</th>
+                <th scope="col" className="px-m py-s font-semibold">Risk</th>
+                <th scope="col" className="px-m py-s font-semibold">Detected</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-border">
+              {changes.map((change) => {
+                const risk = tenantSettingRisk(change);
+                return (
+                  <tr key={change.id}>
+                    <td className="px-m py-s font-semibold">{change.label}</td>
+                    <td className="px-m py-s text-muted-foreground">{tenantSettingState(change.before)}</td>
+                    <td className="px-m py-s">{tenantSettingState(change.after)}</td>
+                    <td className="px-m py-s">
+                      <span className={cn("rounded-md border px-s py-xxs text-200 font-semibold", RISK_TONE[risk])}>
+                        {risk}
+                      </span>
+                    </td>
+                    <td className="px-m py-s text-muted-foreground">
+                      {change.syncedAt ? relativeTime(change.syncedAt) : "Unknown"}
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </Card>
   );
 }

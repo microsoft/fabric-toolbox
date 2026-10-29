@@ -79,7 +79,8 @@ export type AtlasChangeType =
   | "lineage-removed"
   | "lineage-broken-state-changed"
   | "job-new"
-  | "job-status-changed";
+  | "job-status-changed"
+  | "tenant-setting-changed";
 
 export type AtlasChangeDomain =
   | "item"
@@ -87,7 +88,8 @@ export type AtlasChangeDomain =
   | "access"
   | "sensitivity"
   | "lineage"
-  | "job";
+  | "job"
+  | "tenant";
 
 export interface AtlasChange {
   id: string;
@@ -180,6 +182,7 @@ const CHANGE_ORDER: Record<AtlasChangeType, number> = {
   "lineage-broken-state-changed": 12,
   "job-new": 13,
   "job-status-changed": 14,
+  "tenant-setting-changed": 15,
 };
 
 function cleanText(value: unknown): string {
@@ -651,12 +654,72 @@ export function compareSnapshots(
     }),
   );
 
+  changes.push(...compareTenantSettings(previous, current));
+
   return changes.sort(
     (left, right) =>
       CHANGE_ORDER[left.type] - CHANGE_ORDER[right.type] ||
       left.label.localeCompare(right.label) ||
       left.id.localeCompare(right.id),
   );
+}
+
+/**
+ * Tenant setting drift. Only compared when both snapshots collected the
+ * admin-only section completely; otherwise the drift is Unknown and omitted.
+ */
+export function tenantSettingsComparable(
+  previous: HistoricalSnapshot | undefined,
+  current: HistoricalSnapshot | undefined,
+): boolean {
+  return (
+    previous?.catalog.governanceEvidence?.tenantSettings.status.status === "complete" &&
+    current?.catalog.governanceEvidence?.tenantSettings.status.status === "complete"
+  );
+}
+
+export function compareTenantSettings(
+  previous: HistoricalSnapshot,
+  current: HistoricalSnapshot,
+): AtlasChange[] {
+  const before = previous.catalog.governanceEvidence?.tenantSettings;
+  const after = current.catalog.governanceEvidence?.tenantSettings;
+  if (before?.status.status !== "complete" || after?.status.status !== "complete") {
+    return [];
+  }
+  const previousSettings = mapBy(before.entries, (setting) => setting.settingName);
+  const currentSettings = mapBy(after.entries, (setting) => setting.settingName);
+  const value = (setting: { enabled: boolean; group?: string }) => ({
+    enabled: setting.enabled,
+    ...(setting.group ? { group: setting.group } : {}),
+  });
+  return compareMap(previousSettings, currentSettings, {
+    added: (key, setting) =>
+      makeChange(current, "tenant-setting-changed", "tenant", key, {
+        label: setting.title || setting.settingName,
+        before: undefined,
+        after: value(setting),
+        changedFields: ["enabled"],
+      }),
+    removed: (key, setting) =>
+      makeChange(current, "tenant-setting-changed", "tenant", key, {
+        label: setting.title || setting.settingName,
+        before: value(setting),
+        after: undefined,
+        changedFields: ["enabled"],
+      }),
+    retained: (key, old, next) => {
+      const fields = changedFields(value(old), value(next));
+      return fields.length
+        ? makeChange(current, "tenant-setting-changed", "tenant", key, {
+            label: next.title || next.settingName,
+            before: value(old),
+            after: value(next),
+            changedFields: fields,
+          })
+        : undefined;
+    },
+  });
 }
 
 export function summarizeSnapshot(snapshot: HistoricalSnapshot): SnapshotSummary {
@@ -763,6 +826,9 @@ export function snapshotCatalogFromData(data: AtlasData): SnapshotCatalog {
       : undefined,
     itemMetadata: data.itemMetadata
       ? structuredClone(data.itemMetadata)
+      : undefined,
+    governanceEvidence: data.governanceEvidence
+      ? structuredClone(data.governanceEvidence)
       : undefined,
     objectEdges: data.objectEdges?.map((edge) => ({
       ...edge,

@@ -7,6 +7,7 @@ import {
   radarSvgPoint,
 } from "./posture-radar";
 import { cn } from "../ui";
+import { MICROSOFT_PILLAR_LABEL, microsoftPillarForPosture } from "../ms-pillars";
 
 function scoreColor(score: number | null): string {
   if (score == null) return "var(--color-muted-foreground)";
@@ -148,7 +149,7 @@ export function PostureRadar({
               key={label.pillar}
               type="button"
               aria-pressed={selected}
-              aria-label={`${label.label}: ${label.scoreText}. Target: ${label.targetText}`}
+              aria-label={`${label.label}: ${label.scoreText}. Target: ${label.targetText}. Fabric pillar: ${MICROSOFT_PILLAR_LABEL[microsoftPillarForPosture(label.pillar)]}`}
               onClick={() => onSelect(label.pillar)}
               className={cn(
                 "absolute min-h-[var(--atlas-touch-target)] min-w-[var(--atlas-touch-target)] -translate-x-1/2 -translate-y-1/2 rounded-lg px-s py-xs text-200 font-semibold leading-200 focus-visible:outline-2 focus-visible:outline-ring",
@@ -164,6 +165,15 @@ export function PostureRadar({
               <span className="block">{label.label}</span>
               <span className="block font-numeric">
                 {label.score == null ? "N/A" : `${label.score}%`}
+              </span>
+              <span
+                className={cn(
+                  "block text-100 font-medium",
+                  selected ? "text-primary-foreground/80" : "text-brand-foreground",
+                )}
+                title="Microsoft OneLake catalog pillar"
+              >
+                Fabric · {MICROSOFT_PILLAR_LABEL[microsoftPillarForPosture(label.pillar)]}
               </span>
             </button>
           );
@@ -187,6 +197,9 @@ export function PostureRadar({
           </span>
         )}
         <span>0-100 · N/A is anchored at 0</span>
+        <span className="basis-full text-center" aria-label="Microsoft pillar mapping">
+          Microsoft pillars · Health: Operations · Protect: Sensitivity, Access · Trust: Documentation, Ownership, Lineage
+        </span>
       </figcaption>
     </figure>
   );

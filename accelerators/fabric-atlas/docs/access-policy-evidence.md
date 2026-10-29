@@ -47,10 +47,13 @@ allow/deny/default *evaluation decision*. No policy definition JSON, conditions,
 free-text rules or raw upstream error bodies are stored. The workspace settings
 GETs are not silently relabeled as centralized Fabric Policies evaluation.
 
-OneLake role membership/data scope and Purview DLP restriction state still have
-no verified public read contract here. They remain unknown/manual; nothing in
-these network settings is used to infer them, group expansion or row/column
-security.
+Since 2.6, `workspaceCollectGovernance` reads OneLake data access roles
+(`GET /items/{id}/dataAccessRoles`) for up to 40 Lakehouses: role name, direct
+Entra member IDs, Fabric item member count and whether row (RLS) or column
+(CLS) constraints exist. Constraint expressions are not stored and group
+membership is not expanded. Purview DLP restriction state still has no verified
+public read contract and remains unknown/manual; nothing in these network
+settings is used to infer it.
 
 ## Persistence and read boundary
 

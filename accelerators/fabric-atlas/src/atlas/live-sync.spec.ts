@@ -18,6 +18,7 @@ import {
   type MsalAccount,
   type AtlasMsalClient,
   type RawSync,
+  fabricDomainIdFrom,
 } from "./live-sync";
 
 const workspaceId = "11111111-1111-4111-8111-111111111111";
@@ -1219,5 +1220,15 @@ describe("object inventory mapping", () => {
         }),
       ],
     });
+  });
+});
+
+describe("Fabric domain mapping", () => {
+  it("distinguishes an assigned, a confirmed-unassigned and an uncollected domain", () => {
+    expect(fabricDomainIdFrom({ domainId: "aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee", domainAssigned: true })).toBe(
+      "aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee",
+    );
+    expect(fabricDomainIdFrom({ domainAssigned: false })).toBe("unassigned");
+    expect(fabricDomainIdFrom({})).toBeUndefined();
   });
 });

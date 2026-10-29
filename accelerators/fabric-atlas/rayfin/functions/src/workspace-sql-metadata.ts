@@ -671,6 +671,28 @@ function sqlStatusCode(code: SqlDriverErrorCode): SqlMetadataStatusCode {
   return code === "sql-transient" ? "sql-connection-failed" : code;
 }
 
+/** Plain-language coverage note so an "unsupported" Lakehouse names its real cause. */
+export function lakehouseCoverageText(
+  rest: SqlMetadataStatus | undefined,
+  sql: SqlCatalogEvidence | undefined,
+  hasTables: boolean,
+): string {
+  const restUnsupported = rest?.code === "endpoint-unsupported";
+  const sqlComplete = sql?.status === "complete";
+  if (hasTables && rest?.status === "complete" && sqlComplete) {
+    return "Lakehouse Tables REST inventory merged with SQL analytics endpoint columns.";
+  }
+  if (hasTables && sqlComplete) {
+    return restUnsupported
+      ? "Schema-enabled Lakehouse: the Tables REST API does not list it, so tables and columns come from the SQL analytics endpoint."
+      : "Tables and columns come from the SQL analytics endpoint; Lakehouse Tables REST was unavailable.";
+  }
+  if (hasTables) {
+    return `Tables come from Lakehouse Tables REST without columns: SQL analytics endpoint catalog ${sql?.code ?? sql?.status ?? "unavailable"}.`;
+  }
+  return `No table inventory: Lakehouse Tables REST ${restUnsupported ? "does not support schema-enabled lakehouses" : rest?.code ?? rest?.status ?? "unavailable"}; SQL analytics endpoint catalog ${sql?.code ?? sql?.status ?? "unavailable"}.`;
+}
+
 /** Collects bounded SQL catalog metadata; one item failure never invalidates another. */
 export async function collectWorkspaceSqlMetadata(
   tokens: SqlMetadataTokens,
@@ -1021,6 +1043,7 @@ export async function collectWorkspaceSqlMetadata(
     return { evidence };
   };
 
+  const lakehouseSqlEvidence = new Map<string, SqlCatalogEvidence>();
   for (const item of request.items) {
     const route = SQL_PROPERTY_ROUTES.get(item.type);
     if (!route) {
@@ -1058,6 +1081,7 @@ export async function collectWorkspaceSqlMetadata(
     let collected: { evidence: SqlCatalogEvidence; tables?: SqlSchemaTable[]; facts?: SqlConfigEntry[] };
     if (route.kind === "lakehouse-sql-endpoint") {
       const sql = await collectSchema(item, route.kind, projection, false);
+      lakehouseSqlEvidence.set(item.id, sql.evidence);
       const rest = await collectLakehouseRest(item);
       collected = combineLakehouseSchema(rest, sql);
       const addedBytes = Math.max(0, byteLength(collected.tables) - byteLength(sql.tables));
@@ -1098,6 +1122,7 @@ export async function collectWorkspaceSqlMetadata(
     }
     if (route.kind === "lakehouse-sql-endpoint") {
       const lakehouseStatus = collected.evidence.lakehouseTables;
+      const sqlEvidence = lakehouseSqlEvidence.get(item.id);
       config.push({
         itemId: item.id,
         section: "Inventory",
@@ -1108,9 +1133,7 @@ export async function collectWorkspaceSqlMetadata(
         itemId: item.id,
         section: "Inventory",
         label: "Coverage",
-        value: collected.tables
-          ? "Lakehouse Tables REST inventory merged with SQL analytics endpoint columns when available."
-          : "Lakehouse table inventory was unavailable.",
+        value: lakehouseCoverageText(lakehouseStatus, sqlEvidence, Boolean(collected.tables)),
       });
     } else {
       config.push({

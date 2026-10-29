@@ -117,10 +117,9 @@ export function getUdfUrl(): string | null {
   );
 }
 
-export function validateUdfUrl(value: string, targetWorkspaceId: string): string {
+export function validateUdfUrl(value: string): string {
   // The trusted UDF is hosted once in the deployment workspace and receives
   // the selected workspace separately in the validated request body.
-  void targetWorkspaceId;
   let url: URL;
   try {
     url = new URL(value);
@@ -169,7 +168,7 @@ export function hasValidSyncConfiguration(
     return false;
   }
   try {
-    validateUdfUrl(udfUrl, config.workspaceId);
+    validateUdfUrl(udfUrl);
     return true;
   } catch {
     return false;

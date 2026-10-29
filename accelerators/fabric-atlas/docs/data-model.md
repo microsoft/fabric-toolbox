@@ -57,7 +57,7 @@ The manifest for a complete synchronized snapshot.
 
 `snapshotId`, `writerEmail?`, `deploymentId?`, `fabricId`, `displayName`, `capacity?`, `region?`, `itemCount?`,
 `edgeCount?`, `principalCount?`, `grantCount?`, `jobCount?`, `configCount?`,
-`schemaEntryCount?`, `syncSectionsJson?`, `summaryVersion?`, `healthyCount?`,
+`schemaEntryCount?`, `syncSectionsJson?`, `governanceSummaryJson?`, `summaryVersion?`, `healthyCount?`,
 `staleCount?`, `failingCount?`, `labelCount?`, `externalPrincipalCount?`,
 `failedJobCount?`, `brokenEdgeCount?`, `tableCount?`, `columnCount?`,
 `measureCount?`, `syncedAt?`
@@ -65,6 +65,10 @@ The manifest for a complete synchronized snapshot.
 `syncSectionsJson` persists the versioned UDF section and metadata-capability
 status used by Governance Center. It contains collection state, not business
 data.
+
+`governanceSummaryJson` (2.6) is a versioned per-workspace rollup of finding
+counts, posture and Fabric domain used by the domain posture and coverage
+views without loading every workspace snapshot.
 
 Summary version 1 reproduces the Governance history metrics without loading
 child rows. Older manifests remain compatible and fall back to full validated
@@ -163,6 +167,13 @@ edge stores source and target item, object kind, stable ID, readable name,
 optional parent/table context, relation and `confidence: verified`. The parser
 rejects inferred, malformed or self-referential edges without imposing a
 relation-count cap on the verified set.
+
+Since 2.6, optional governance evidence from `workspaceCollectGovernance` uses
+the private `__governance_evidence__` section, chunked as `v1:part:total:json`.
+It holds Fabric domains, tags, tenant settings, the workspace network policy,
+external data shares, OneLake data access roles and Fabric Policy items, each
+with its own `complete`, `unsupported` or `failed` status. A missing section
+is shown as Unknown, never as healthy.
 
 No extra Rayfin entity is required, so this metadata follows the same immutable
 snapshot publication and retention boundary as the catalog.

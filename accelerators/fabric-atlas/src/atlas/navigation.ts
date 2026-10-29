@@ -11,6 +11,7 @@ export type Tab =
   | "access"
   | "jobs"
   | "workspace"
+  | "mcp"
   | "about";
 
 export type GovernanceSection =
@@ -19,7 +20,8 @@ export type GovernanceSection =
   | "history"
   | "coverage"
   | "posture"
-  | "policies-ai";
+  | "policies-ai"
+  | "tenant-settings";
 
 export type WorkspaceSection =
   | "workspace"

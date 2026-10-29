@@ -1,4 +1,6 @@
+import type { GovernanceCategory, GovernanceSeverity } from "../governance";
 import type { AtlasChangeDomain } from "../history";
+import type { MicrosoftGovernancePillar } from "../ms-pillars";
 import {
   ATLAS_MCP_LIMITS,
   AtlasMcpError,
@@ -33,6 +35,43 @@ export const CHANGE_DOMAINS = [
   "lineage",
   "job",
 ] as const satisfies readonly AtlasChangeDomain[];
+
+export const FINDING_SEVERITIES = [
+  "critical",
+  "high",
+  "medium",
+  "low",
+] as const satisfies readonly GovernanceSeverity[];
+
+export const FINDING_CATEGORIES = [
+  "access",
+  "metadata",
+  "operations",
+  "lineage",
+] as const satisfies readonly GovernanceCategory[];
+
+export const FINDING_PILLARS = [
+  "health",
+  "protect",
+  "trust",
+] as const satisfies readonly MicrosoftGovernancePillar[];
+
+/** `workspace` = finding not tied to an item; `known`/`unknown` = item owner recorded or not. */
+export const FINDING_OWNERS = ["any", "known", "unknown", "workspace"] as const;
+export type FindingOwnerFilter = (typeof FINDING_OWNERS)[number];
+
+export const SNAPSHOT_SECTIONS = [
+  "items",
+  "edges",
+  "principals",
+  "grants",
+  "jobs",
+  "config",
+] as const;
+export type SnapshotSection = (typeof SNAPSHOT_SECTIONS)[number];
+
+const RULE = /^[a-z][a-z0-9-]{0,59}$/;
+const DOMAIN = /^[A-Za-z0-9][A-Za-z0-9._:-]*$/;
 
 export interface WorkspaceArguments {
   workspaceId?: string;
@@ -69,6 +108,22 @@ export interface AtlasMcpToolArguments {
   atlas_get_snapshot_changes: WorkspaceArguments & {
     domains: AtlasChangeDomain[];
     limit: number;
+  };
+  atlas_get_governance_findings: WorkspaceArguments & {
+    severities: GovernanceSeverity[];
+    categories: GovernanceCategory[];
+    pillars: MicrosoftGovernancePillar[];
+    domain?: string;
+    rule?: string;
+    itemId?: string;
+    owner: FindingOwnerFilter;
+    limit: number;
+    offset: number;
+  };
+  atlas_export_snapshot: WorkspaceArguments & {
+    section?: SnapshotSection;
+    limit: number;
+    offset: number;
   };
 }
 
@@ -138,6 +193,38 @@ function integer(
     invalid(`${name} must be an integer from 1 to ${range.max}.`);
   }
   return value;
+}
+
+function offset(args: Args): number {
+  const value = args.offset;
+  if (value === undefined) return 0;
+  if (
+    typeof value !== "number" ||
+    !Number.isInteger(value) ||
+    value < 0 ||
+    value > ATLAS_MCP_LIMITS.pageOffset
+  ) {
+    invalid(`offset must be an integer from 0 to ${ATLAS_MCP_LIMITS.pageOffset}.`);
+  }
+  return value;
+}
+
+function token(args: Args, name: string, pattern: RegExp): string | undefined {
+  const value = args[name];
+  if (value === undefined) return undefined;
+  const text = typeof value === "string" ? value.trim() : "";
+  if (!text || text.length > ATLAS_MCP_LIMITS.identifierLength || !pattern.test(text)) {
+    invalid(`${name} has an invalid format.`);
+  }
+  return text;
+}
+
+function optionalOneOf<T extends string>(
+  args: Args,
+  name: string,
+  values: readonly T[],
+): T | undefined {
+  return args[name] === undefined ? undefined : oneOf(args, name, values, values[0]);
 }
 
 function flag(args: Args, name: string, fallback: boolean): boolean {
@@ -233,6 +320,19 @@ const ALLOWED: Record<AtlasMcpToolName, readonly string[]> = {
     "limit",
   ],
   atlas_get_snapshot_changes: ["workspaceId", "domains", "limit"],
+  atlas_get_governance_findings: [
+    "workspaceId",
+    "severities",
+    "categories",
+    "pillars",
+    "domain",
+    "rule",
+    "itemId",
+    "owner",
+    "limit",
+    "offset",
+  ],
+  atlas_export_snapshot: ["workspaceId", "section", "limit", "offset"],
 };
 
 /** Validates raw MCP tool arguments; throws `invalid-arguments` on any violation. */
@@ -278,6 +378,24 @@ export function parseToolArguments<T extends AtlasMcpToolName>(
       workspaceId: workspaceId(args),
       domains: manyOf(args, "domains", CHANGE_DOMAINS),
       limit: integer(args, "limit", ATLAS_MCP_LIMITS.changes),
+    }),
+    atlas_get_governance_findings: () => ({
+      workspaceId: workspaceId(args),
+      severities: manyOf(args, "severities", FINDING_SEVERITIES),
+      categories: manyOf(args, "categories", FINDING_CATEGORIES),
+      pillars: manyOf(args, "pillars", FINDING_PILLARS),
+      domain: token(args, "domain", DOMAIN)?.toLowerCase(),
+      rule: token(args, "rule", RULE),
+      itemId: itemId(args, false),
+      owner: oneOf(args, "owner", FINDING_OWNERS, "any"),
+      limit: integer(args, "limit", ATLAS_MCP_LIMITS.findings),
+      offset: offset(args),
+    }),
+    atlas_export_snapshot: () => ({
+      workspaceId: workspaceId(args),
+      section: optionalOneOf(args, "section", SNAPSHOT_SECTIONS),
+      limit: integer(args, "limit", ATLAS_MCP_LIMITS.snapshotRows),
+      offset: offset(args),
     }),
   };
   return parsed[tool]() as AtlasMcpToolArguments[T];

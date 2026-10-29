@@ -19,6 +19,7 @@ import { cn } from "../ui";
 import { formatRunStart } from "../workspace-sync";
 import { PRIMARY_BUTTON, SECONDARY_BUTTON } from "./button-styles";
 import { ErrorDetail } from "./ErrorDetail";
+import { LastRunSummary } from "./ScanModeControl";
 
 /** Reads the store once through the shared synchronization view. */
 function useSyncRunView(): SyncRunView {
@@ -441,15 +442,8 @@ export function SyncRunDetailed({ onViewRun }: { onViewRun?: () => void }) {
           ? `${data.workspace.displayName} was synchronized ${formatRunStart(view.lastSyncedAt)}. Runs are manual and execute in the synchronizer's browser tab.`
           : "Runs are manual and execute in the synchronizer's browser tab."
       }
-      actions={
-        canStart ? (
-          <button type="button" onClick={() => void sync()} className={PRIMARY_BUTTON}>
-            <RefreshCw className="icon-size-200" aria-hidden="true" />
-            Synchronize now
-          </button>
-        ) : undefined
-      }
     >
+      <LastRunSummary runs={data.syncRuns} />
       {!canSync && (
         <p className="mt-s text-200 leading-200 text-foreground">{contact}</p>
       )}

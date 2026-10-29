@@ -3,10 +3,12 @@ import {
   buildAtlasHistory,
   changeFieldValue,
   compareSnapshots,
+  compareTenantSettings,
   readableChangeValue,
   snapshotDataForInspection,
   snapshotFromData,
   summarizeSnapshot,
+  tenantSettingsComparable,
   type HistoricalSnapshot,
 } from "./history";
 import { parseOntologyMetadata } from "./item-metadata";
@@ -643,5 +645,56 @@ describe("snapshot history", () => {
     );
     expect(history.snapshots[0].catalog).not.toHaveProperty("comments");
     expect(history.snapshots[0].catalog).not.toHaveProperty("syncRuns");
+  });
+});
+
+describe("tenant settings drift", () => {
+  const section = (status: "complete" | "unsupported", entries: { settingName: string; title: string; enabled: boolean; group?: string }[]) => ({
+    collectedAt: "2026-01-01T00:00:00.000Z",
+    domains: { status: { status: "complete" as const }, entries: [] },
+    tags: { status: { status: "complete" as const }, entries: [] },
+    tenantSettings: { status: { status }, entries },
+    network: { status: { status: "complete" as const } },
+    externalShares: { status: { status: "complete" as const }, entries: [] },
+    oneLakeRoles: { status: { status: "complete" as const }, entries: [] },
+  });
+  const snap = (id: string, evidence: ReturnType<typeof section>) =>
+    snapshotFromData(
+      data({
+        workspace: { ...data().workspace, snapshotId: id, syncedAt: `2026-01-0${id}T00:00:00.000Z` },
+        governanceEvidence: evidence as AtlasData["governanceEvidence"],
+      }),
+      id,
+    );
+
+  it("reports toggled, added and removed settings between two admin snapshots", () => {
+    const before = snap("1", section("complete", [
+      { settingName: "AllowGuests", title: "Guest access", enabled: false },
+      { settingName: "Old", title: "Old switch", enabled: true },
+    ]));
+    const after = snap("2", section("complete", [
+      { settingName: "AllowGuests", title: "Guest access", enabled: true, group: "Export and sharing" },
+      { settingName: "New", title: "New switch", enabled: false },
+    ]));
+    const drift = compareTenantSettings(before, after);
+    expect(drift.map((change) => [change.label, change.domain])).toEqual([
+      ["Guest access", "tenant"],
+      ["New switch", "tenant"],
+      ["Old switch", "tenant"],
+    ]);
+    expect(drift[0]).toMatchObject({
+      before: { enabled: false },
+      after: { enabled: true, group: "Export and sharing" },
+      changedFields: ["enabled", "group"],
+    });
+    expect(compareSnapshots(before, after).filter((c) => c.type === "tenant-setting-changed")).toHaveLength(3);
+    expect(tenantSettingsComparable(before, after)).toBe(true);
+  });
+
+  it("keeps drift Unknown when a snapshot lacks admin tenant settings", () => {
+    const before = snap("1", section("unsupported", []));
+    const after = snap("2", section("complete", [{ settingName: "A", title: "A", enabled: true }]));
+    expect(compareTenantSettings(before, after)).toEqual([]);
+    expect(tenantSettingsComparable(before, after)).toBe(false);
   });
 });

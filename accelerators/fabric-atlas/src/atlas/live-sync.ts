@@ -3,6 +3,7 @@
 // data model. See the "Why a Fabric User Data Function?" note in the README for
 // why this hop through a server-side function is required.
 
+import { parseGovernanceEvidence } from "./governance-evidence";
 import { ATLAS_CONFIG, getUdfUrl, validateUdfUrl } from "./config";
 import { normalizeLineageEdges } from "./lineage";
 import {
@@ -96,6 +97,20 @@ export function realText(value: unknown): string | undefined {
     return undefined;
   }
   return text;
+}
+
+export const UNASSIGNED_FABRIC_DOMAIN = "unassigned";
+
+/**
+ * Reads domain evidence from a collected workspace. Absence is only reported
+ * when the collector explicitly says so; older collectors stay unknown.
+ */
+export function fabricDomainIdFrom(
+  workspace: Record<string, unknown>,
+): string | undefined {
+  const domainId = realText(workspace.domainId);
+  if (domainId) return domainId.slice(0, 64);
+  return workspace.domainAssigned === false ? UNASSIGNED_FABRIC_DOMAIN : undefined;
 }
 
 function accountValues(account: MsalAccount): Set<string> {
@@ -402,6 +417,22 @@ async function acquireOptionalMetadataTokens(
   return tokens;
 }
 
+/**
+ * Delegated Fabric token of the signed-in user for tenant admin APIs (domains,
+ * tags, tenant settings). Returns undefined when the user cannot consent.
+ */
+export async function acquireGovernanceToken(identity: SyncIdentity, signal?: AbortSignal): Promise<string | undefined> {
+  try {
+    const token = await acquireToken(identity, FABRIC_DISCOVERY_SCOPES, "Fabric admin governance", true, signal);
+    assertSyncActive(signal);
+    return token;
+  } catch (error) {
+    assertSyncActive(signal);
+    console.warn("[atlas] delegated governance token unavailable", error instanceof Error ? error.message : String(error));
+    return undefined;
+  }
+}
+
 async function acquireFabricSyncToken(
   identity: SyncIdentity,
   allowPopup = true,
@@ -546,6 +577,7 @@ export interface RawSync {
   semanticModelEvidence?: Record<string, SemanticModelEvidence>;
   objectEdges?: unknown;
   objectLineage?: unknown;
+  governanceEvidence?: unknown;
   enrichmentItemIds?: string[];
   requestedItemIds?: string[];
   completedItemIds?: string[];
@@ -1683,7 +1715,7 @@ export function createCompatibilityInvoker(
     assertSyncActive(signal);
     const rawUrl = getUdfUrl();
     if (!rawUrl) throw new Error("The required Python compatibility endpoint is not configured. The previous snapshot was preserved.");
-    const url = validateUdfUrl(rawUrl, workspaceId);
+    const url = validateUdfUrl(rawUrl);
     if (!tokens) {
       tokens = {
         fabricToken: await acquireFabricSyncToken(identity, true, signal),
@@ -1726,7 +1758,7 @@ export async function invokeSyncAll(
     );
   }
   const url = retargetSyncFunction(
-    validateUdfUrl(raw, workspaceId),
+    validateUdfUrl(raw),
     "sync_all",
   );
   assertSyncActive(signal);
@@ -2432,12 +2464,14 @@ export function mapSyncToAtlas(raw: RawSync, fallback: WorkspaceInfo): AtlasData
         index === 0 ||
         JSON.stringify(edge) !== JSON.stringify(values[index - 1]),
     );
+  const governanceEvidence = parseGovernanceEvidence(raw.governanceEvidence);
   const ws = (raw.workspace ?? {}) as Record<string, unknown>;
   const workspace: WorkspaceInfo = {
     fabricId: String(ws.id ?? fallback.fabricId),
     displayName: String(ws.displayName ?? fallback.displayName),
     capacity: realText(ws.capacityId) ?? fallback.capacity,
     region: realText(ws.capacityRegion) ?? fallback.region,
+    fabricDomainId: fabricDomainIdFrom(ws),
     syncedAt: normalizeFabricTimestamp(raw.syncedAt),
     syncSections: {
       ...(syncSections ?? {}),
@@ -2462,6 +2496,7 @@ export function mapSyncToAtlas(raw: RawSync, fallback: WorkspaceInfo): AtlasData
     semanticModelEvidence,
     itemMetadata,
     objectEdges: allObjectEdges,
+    ...(governanceEvidence ? { governanceEvidence } : {}),
     comments: [],
     syncRuns: [],
   };

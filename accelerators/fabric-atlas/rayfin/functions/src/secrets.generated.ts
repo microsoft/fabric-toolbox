@@ -22,12 +22,19 @@
 
 declare module '@microsoft/fabric-user-data-functions' {
   interface RayfinSecretRegistry {
+    ATLAS_AI_API_KEY: string;
+    ATLAS_AI_CLIENT_ID: string;
+    ATLAS_AI_CLIENT_SECRET: string;
+    ATLAS_AI_ENABLED: string;
+    ATLAS_AI_ENDPOINT: string;
+    ATLAS_AI_TENANT_ID: string;
     ATLAS_POWERBI_SCANNER_CLIENT_ID: string;
     ATLAS_POWERBI_SCANNER_CLIENT_SECRET: string;
     ATLAS_POWERBI_SCANNER_ENABLED: string;
     ATLAS_POWERBI_SCANNER_SETTINGS_CONFIRMED: string;
     ATLAS_POWERBI_SCANNER_TENANT_ID: string;
     ATLAS_POWERBI_SCANNER_WORKSPACE_IDS: string;
+    ATLAS_TEAMS_WEBHOOK_URL: string;
   }
 }
 

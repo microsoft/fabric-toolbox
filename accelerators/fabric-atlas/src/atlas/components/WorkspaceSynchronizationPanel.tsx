@@ -43,8 +43,11 @@ import {
 } from "../workspace-sync";
 import { LINK_BUTTON, PRIMARY_BUTTON, SECONDARY_BUTTON } from "./button-styles";
 import { ErrorDetail } from "./ErrorDetail";
+import { NetworkProtectionCard } from "./NetworkProtectionCard";
 import { RowActionsMenu, type RowMenuAction } from "./RowActionsMenu";
 import { SyncRunDetailed } from "./SyncRunStatus";
+import { parseSyncPlanSummary } from "../incremental-sync";
+import { IncrementalNotice, ScanModeToggle } from "./ScanModeControl";
 import { WorkspaceScopeDialog } from "./WorkspaceScopeDialog";
 
 export const LIVE_RUN_ROW_ID = "atlas-live-sync-run";
@@ -331,6 +334,17 @@ function SelectedWorkspacesCard() {
         </div>
       </header>
 
+      {canStart && (
+        <div className="flex flex-col gap-s border-b border-border px-l py-m" data-testid="selected-scan-mode">
+          <ScanModeToggle disabled={syncing} label="Sync mode" />
+          <IncrementalNotice
+            workspaceIds={selectable ? checkedIds : rows.map((row) => row.id)}
+            names={Object.fromEntries(rows.map((row) => [row.id, row.displayName]))}
+            refreshKey={`${syncing}-${lastSyncedAt ?? ""}`}
+          />
+        </div>
+      )}
+
       {workspaceScopesError && (
         <div
           role="alert"
@@ -532,7 +546,7 @@ function ScheduleCard() {
   ];
 
   return (
-    <Card className="flex min-w-0 flex-col">
+    <Card className="flex h-full min-w-0 flex-col">
       {/* Schedule controls stay disabled: no backend scheduler exists yet. */}
       <header className="flex items-center justify-between gap-m border-b border-border p-l">
         <h2 className="text-400 font-semibold leading-400">Schedule</h2>
@@ -625,13 +639,22 @@ function RunResult({
           Running
         </span>
       );
-    case "completed":
+    case "completed": {
+      const plan = parseSyncPlanSummary(row.summary);
       return (
-        <span className="inline-flex items-center gap-xs font-semibold text-status-healthy">
-          <CircleCheck className="icon-size-200" aria-hidden="true" />
-          Completed
+        <span className="flex min-w-0 flex-col items-start">
+          <span className="inline-flex items-center gap-xs font-semibold text-status-healthy">
+            <CircleCheck className="icon-size-200" aria-hidden="true" />
+            Completed
+          </span>
+          {plan && (
+            <span className="mt-xxs text-200 text-muted-foreground" data-testid="sync-mode">
+              {plan.mode === "incremental" ? "Incremental" : "Full"} · {plan.refreshed} refreshed · {plan.reused} reused
+            </span>
+          )}
         </span>
       );
+    }
     case "failed": {
       const error = row.failureMessage
         ? summarizeError(row.failureMessage)
@@ -924,11 +947,12 @@ export function WorkspaceSynchronizationPanel() {
   return (
     <div className="flex min-w-0 flex-col gap-l">
       <SyncRunDetailed onViewRun={viewRun} />
-      <div className="grid items-start gap-l xl:grid-cols-[minmax(0,1.85fr)_minmax(0,1fr)]">
-        <SelectedWorkspacesCard />
+      <SelectedWorkspacesCard />
+      <RecentRunsCard />
+      <div className="grid items-stretch gap-l lg:grid-cols-2">
+        <NetworkProtectionCard />
         <ScheduleCard />
       </div>
-      <RecentRunsCard />
     </div>
   );
 }

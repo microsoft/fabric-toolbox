@@ -7,7 +7,12 @@ import {
 import {
   CATALOG_LOOKUP_KINDS,
   CHANGE_DOMAINS,
+  FINDING_CATEGORIES,
+  FINDING_OWNERS,
+  FINDING_PILLARS,
+  FINDING_SEVERITIES,
   IMPACT_DIRECTIONS,
+  SNAPSHOT_SECTIONS,
 } from "./arguments";
 
 export type JsonSchema = Record<string, unknown>;
@@ -50,6 +55,23 @@ function limit(range: { default: number; max: number }): JsonSchema {
     minimum: 1,
     maximum: range.max,
     default: range.default,
+  };
+}
+
+const OFFSET: JsonSchema = {
+  type: "integer",
+  minimum: 0,
+  maximum: ATLAS_MCP_LIMITS.pageOffset,
+  default: 0,
+  description: "Zero-based position of the first row; use nextOffset from the previous page.",
+};
+
+function enumArray(values: readonly string[]): JsonSchema {
+  return {
+    type: "array",
+    items: { enum: [...values] },
+    uniqueItems: true,
+    maxItems: values.length,
   };
 }
 
@@ -186,7 +208,7 @@ export const ATLAS_MCP_TOOLS: readonly AtlasMcpToolDefinition[] = [
   tool(
     "atlas_get_snapshot_provenance",
     "Get snapshot provenance",
-    "Returns the validated Atlas snapshot used for a workspace: snapshot ID, sync time, collector section status, catalog counts, per item-family coverage and recent synchronization audit records. Read-only.",
+    "Returns the validated Atlas snapshot used for a workspace: snapshot ID, sync time, Fabric domain (name, path and parent when collected), collector section status, catalog counts, per item-family coverage and recent synchronization audit records. Read-only.",
     input({ workspaceId: WORKSPACE_ID }),
   ),
   tool(
@@ -282,6 +304,48 @@ export const ATLAS_MCP_TOOLS: readonly AtlasMcpToolDefinition[] = [
         maxItems: CHANGE_DOMAINS.length,
       },
       limit: limit(ATLAS_MCP_LIMITS.changes),
+    }),
+  ),
+  tool(
+    "atlas_get_governance_findings",
+    "Get governance findings",
+    "Returns the governance findings Atlas derives from the validated snapshot, with severity, Microsoft pillar (Health, Protect, Trust), rule, domain, evidence, recommendation and the Fix in Fabric link. Filters by severity, category, pillar, domain, rule, item and owner status; paginated with offset. Read-only: remediation happens in Fabric.",
+    input({
+      workspaceId: WORKSPACE_ID,
+      severities: enumArray(FINDING_SEVERITIES),
+      categories: enumArray(FINDING_CATEGORIES),
+      pillars: enumArray(FINDING_PILLARS),
+      domain: {
+        type: "string",
+        description: "Fabric domain ID, or `unassigned` / `unknown`.",
+        maxLength: ATLAS_MCP_LIMITS.identifierLength,
+        pattern: "^[A-Za-z0-9][A-Za-z0-9._:-]*$",
+      },
+      rule: {
+        type: "string",
+        description: "Rule key, the finding id prefix such as `item-uncertified`.",
+        pattern: "^[a-z][a-z0-9-]{0,59}$",
+      },
+      itemId: ITEM_ID,
+      owner: {
+        enum: [...FINDING_OWNERS],
+        default: "any",
+        description:
+          "`known` / `unknown`: item findings whose owner Fabric did or did not expose; `workspace`: findings not tied to an item.",
+      },
+      limit: limit(ATLAS_MCP_LIMITS.findings),
+      offset: OFFSET,
+    }),
+  ),
+  tool(
+    "atlas_export_snapshot",
+    "Export snapshot",
+    "Returns the manifest of the validated snapshot (counts and canonical fingerprint, identical to the JSON export in Governance) and, when a section is given, one page of that section. Email-like values and job messages are withheld. Read-only.",
+    input({
+      workspaceId: WORKSPACE_ID,
+      section: { enum: [...SNAPSHOT_SECTIONS] },
+      limit: limit(ATLAS_MCP_LIMITS.snapshotRows),
+      offset: OFFSET,
     }),
   ),
 ];

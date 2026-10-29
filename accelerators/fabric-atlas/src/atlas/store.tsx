@@ -9,6 +9,7 @@ import {
   type ReactNode,
 } from "react";
 import {
+  OWNER_EMAIL,
   SAMPLE_DATA,
   type AtlasData,
   type Comment,
@@ -66,6 +67,7 @@ import {
   type GovernanceException,
 } from "./governance-exceptions";
 import { POSTURE_TARGETS } from "./posture";
+import { withDomainDirectory } from "./governance-evidence";
 import { SyncCancelledError } from "./live-sync";
 import { CANCELLING_STAGE } from "./synchronization-progress";
 import {
@@ -241,13 +243,32 @@ function initialWorkspaceScope(isPreview: boolean): WorkspaceScope {
 
 const EMPTY_HISTORY = buildAtlasHistory([]);
 const PREVIEW_HISTORY = buildAtlasHistory([
+  previewBaselineSnapshot(),
   snapshotFromData(SAMPLE_DATA, "preview-current"),
 ]);
+
+/** Earlier sample snapshot whose tenant settings differ, so preview shows drift. */
+function previewBaselineSnapshot() {
+  const baseline = clone(SAMPLE_DATA);
+  const evidence = baseline.governanceEvidence;
+  if (evidence) {
+    const previous: Record<string, boolean> = {
+      AllowExternalDataSharingSwitch: false,
+      AllowGuestUserToAccessSharedContent: false,
+      UsersCanCreateFabricItems: true,
+    };
+    evidence.tenantSettings.entries = evidence.tenantSettings.entries.map((entry) =>
+      entry.settingName in previous ? { ...entry, enabled: previous[entry.settingName] } : entry,
+    );
+  }
+  const syncedAt = new Date(Date.now() - 7 * 24 * 3_600_000).toISOString();
+  return snapshotFromData(baseline, "preview-baseline", syncedAt);
+}
 
 export function AtlasProvider({
   children,
   isPreview = true,
-  currentUser = { id: "preview-user", name: "You (preview)" },
+  currentUser = { id: "preview-user", name: "You (preview)", email: OWNER_EMAIL },
 }: {
   children: ReactNode;
   isPreview?: boolean;
@@ -1517,9 +1538,15 @@ export function AtlasProvider({
 
   const hasData = data.items.length > 0 || !!data.workspace.snapshotId;
 
+  const enrichedData = useMemo<AtlasData>(() => {
+    const directory = Object.values(workspaceSyncStatuses).flatMap((status) => status.domains ?? []);
+    const evidence = withDomainDirectory(data.governanceEvidence, directory);
+    return evidence === data.governanceEvidence ? data : { ...data, governanceEvidence: evidence };
+  }, [data, workspaceSyncStatuses]);
+
   const value = useMemo<AtlasContextValue>(
     () => ({
-      data,
+      data: enrichedData,
       history,
       hydrating,
       historyLoading,
@@ -1581,7 +1608,7 @@ export function AtlasProvider({
       removeGovernanceException: removeSharedGovernanceException,
       loadHistorySnapshot,
     }),
-    [data, history, hydrating, historyLoading, historyError, historyFailedSnapshotIds, savedViews, savedViewsLoading, savedViewsError, findingAcks, findingAcksLoading, findingAcksError, findingAckPendingIds, governancePolicy.targets, governancePolicyLoading, governancePolicyError, governanceExceptions, governanceExceptionsLoading, governanceExceptionsError, governanceExceptionPendingIds, commentsLoading, commentsError, syncing, syncProgress, syncStage, syncStartedAt, lastSyncedAt, isPreview, configured, canSync, hasData, requiresDeploymentSync, hydrationError, retryHydration, syncError, currentUser, workspaceScopes, workspaceScopesLoading, workspaceScopesError, workspaceSyncStatuses, activeWorkspaceId, reloadWorkspaceScopes, selectWorkspace, sync, syncWorkspaces, syncQueue, syncWorkspaceId, cancelSync, reloadComments, addComment, addSavedView, removeSavedView, saveFindingAcknowledgement, removeFindingAcknowledgement, reloadGovernancePolicy, saveGovernanceTargets, resetGovernanceTargets, reloadGovernanceExceptions, saveSharedGovernanceException, removeSharedGovernanceException, loadHistorySnapshot],
+    [enrichedData, history, hydrating, historyLoading, historyError, historyFailedSnapshotIds, savedViews, savedViewsLoading, savedViewsError, findingAcks, findingAcksLoading, findingAcksError, findingAckPendingIds, governancePolicy.targets, governancePolicyLoading, governancePolicyError, governanceExceptions, governanceExceptionsLoading, governanceExceptionsError, governanceExceptionPendingIds, commentsLoading, commentsError, syncing, syncProgress, syncStage, syncStartedAt, lastSyncedAt, isPreview, configured, canSync, hasData, requiresDeploymentSync, hydrationError, retryHydration, syncError, currentUser, workspaceScopes, workspaceScopesLoading, workspaceScopesError, workspaceSyncStatuses, activeWorkspaceId, reloadWorkspaceScopes, selectWorkspace, sync, syncWorkspaces, syncQueue, syncWorkspaceId, cancelSync, reloadComments, addComment, addSavedView, removeSavedView, saveFindingAcknowledgement, removeFindingAcknowledgement, reloadGovernancePolicy, saveGovernanceTargets, resetGovernanceTargets, reloadGovernanceExceptions, saveSharedGovernanceException, removeSharedGovernanceException, loadHistorySnapshot],
   );
 
   return <AtlasContext.Provider value={value}>{children}</AtlasContext.Provider>;

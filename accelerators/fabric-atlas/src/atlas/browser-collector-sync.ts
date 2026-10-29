@@ -1,7 +1,7 @@
 import { getRayfinClient } from "@/lib/rayfin-client";
 import type { AppFunctionsSchema } from "../../rayfin/functions/src/types";
 import {
-  assertSyncActive, createCompatibilityInvoker, invokeSyncAll, mergeSyncEnrichment,
+  acquireGovernanceToken, assertSyncActive, createCompatibilityInvoker, invokeSyncAll, mergeSyncEnrichment,
   validateRawSync, type CompatibilityCollector, type CompatibilityPlan, type RawSync, type SyncIdentity,
 } from "./live-sync";
 import { validateCoreCollectorEnvelope } from "./core-collector-parity";
@@ -11,10 +11,13 @@ import {
   type ItemRelationsEvidence,
 } from "./item-relations-evidence";
 import { sourceProvenanceSnapshot } from "./source-provenance-snapshot";
+import { preferredSyncMode, type SyncModePreference } from "./sync-mode";
+import { applyReusedEnrichment, fullRescanDue, planIncrementalSync, syncPlanSummary, type SyncPlan } from "./incremental-sync";
+import { browserCollectionCache, type CachedCollection, type CollectionCache } from "./sync-snapshot-cache";
 
 type Name = "workspaceCollectCore" | "workspaceCollectDefinitions" | "workspaceCollectItemRelations"
   | "workspaceCollectKqlMetadata" | "workspaceCollectSqlMetadata" | "workspaceCollectPowerBi"
-  | "workspaceCollectSourceProvenance";
+  | "workspaceCollectSourceProvenance" | "workspaceCollectGovernance";
 export type BrowserCollectorClient = {
   functions: { [N in Name]: {
     invoke(input: AppFunctionsSchema[N]["input"], options?: { timeoutMs?: number }): Promise<AppFunctionsSchema[N]["output"]>;
@@ -41,6 +44,11 @@ export interface BrowserCollectorDependencies {
   mode?: "rayfin" | "python";
   compatibility?: (plan: CompatibilityPlan) => Promise<RawSync>;
   legacy?: () => Promise<RawSync>;
+  governanceToken?: () => Promise<string | undefined>;
+  /** Previous enriched snapshot store; enables incremental re-enrichment of unchanged items. */
+  snapshotCache?: CollectionCache | null;
+  /** "full" ignores the cached snapshot and re-enriches every item. Defaults to the user preference. */
+  syncMode?: SyncModePreference;
   timeoutMs?: number;
   maxCalls?: number;
   maxAttempts?: number;
@@ -177,6 +185,20 @@ function collectorRetryDelay(milliseconds: number, signal?: AbortSignal) {
 }
 
 /** Browser-serialized composition; Phase 2 scheduling/claims/publication are deliberately not used. */
+/**
+ * Domain names come from the Fabric admin API. When this run could not read them
+ * (non-admin synchronizer), keep the names collected by an earlier admin run so
+ * the UI shows names instead of GUIDs. The section stays flagged as carried forward.
+ */
+export function carryForwardDomainNames<T>(current: T, previous: unknown): T {
+  type Section = { status?: { status?: string }; entries?: unknown[] };
+  const now = (current as { domains?: Section } | undefined)?.domains;
+  const before = (previous as { domains?: Section } | undefined)?.domains;
+  if (!now || now.status?.status === "complete") return current;
+  if (before?.status?.status !== "complete" || !Array.isArray(before.entries) || !before.entries.length) return current;
+  return { ...current, domains: { status: { status: "complete", code: "carried-forward" }, entries: before.entries } };
+}
+
 export async function collectBrowserWorkspace(
   workspaceId: string, identity: SyncIdentity, correlationId: string,
   progress?: (percent: number, stage: string) => void, signal?: AbortSignal,
@@ -263,17 +285,77 @@ export async function collectBrowserWorkspace(
     raw = mergeSyncEnrichment(raw, incoming);
     if (new TextEncoder().encode(JSON.stringify(raw)).byteLength > 26 * 1024 * 1024) fail();
   };
+  const scan = async (schemaItemIds: string[]): Promise<RawSync> => {
+    const result = await compatibility({
+      version: 1, stage: "scanner",
+      items: items.map((item) => ({ ...item, collectors: [] })), schemaItemIds,
+    });
+    if (result.compatibilityVersion !== 1 || result.compatibilityStage !== "scanner" ||
+      result.workspace?.id !== workspaceId || result.correlationId !== correlationId ||
+      !result.requestedItemIds || result.requestedItemIds.length !== items.length ||
+      result.requestedItemIds.some((id) => !known.has(id))) fail();
+    for (const name of ["scanner", "access", "lineage", "schema", "config"]) {
+      if (!successful(status(result.sections?.[name]))) fail();
+    }
+    return result;
+  };
+  const generation = raw.schemaVersion ?? 0;
+  const cache = dependencies.snapshotCache !== undefined
+    ? dependencies.snapshotCache
+    : dependencies.client ? null : browserCollectionCache();
+  let cached: CachedCollection | null = null;
+  const forceFull = (dependencies.syncMode ?? preferredSyncMode()) === "full";
+  try {
+    cached = (await cache?.load(workspaceId)) ?? null;
+  } catch {
+    cached = null;
+  }
+  const previous: CachedCollection | null =
+    forceFull || !cached || fullRescanDue(cached.fullAt ?? cached.raw.syncedAt) ? null : cached;
+  let earlyScanner: RawSync | undefined;
+  let plan: SyncPlan;
+  const typeOf = (snapshot: RawSync) => new Map<string, string>((snapshot.items ?? []).map((item) => [String(item.id), String(item.type)]));
+  if (previous && previous.workspaceId === workspaceId && previous.generation === generation) {
+    // Modification dates only come from the scanner, so it runs first when a reusable snapshot exists.
+    progress?.(10, "Comparing item modification dates with the previous snapshot");
+    earlyScanner = await scan([]);
+    const previousTypes = typeOf(previous.raw);
+    const modified = (metadata: RawSync["itemMetadata"], id: string) => {
+      const value = metadata?.[id]?.modifiedDateTime;
+      return typeof value === "string" && value ? value : undefined;
+    };
+    plan = planIncrementalSync({
+      generation,
+      current: items.map((item) => ({
+        id: item.id,
+        modifiedAt: previousTypes.get(item.id) === item.type ? modified(earlyScanner!.itemMetadata, item.id) : undefined,
+      })),
+      previous: {
+        generation: previous.generation,
+        items: [...previousTypes.keys()].map((id) => ({ id, modifiedAt: modified(previous!.raw.itemMetadata, id) })),
+      },
+    });
+  } else {
+    plan = planIncrementalSync({
+      generation,
+      current: items.map((item) => ({ id: item.id })),
+      ...(previous && previous.workspaceId === workspaceId
+        ? { previous: { generation: previous.generation, items: [] } } : {}),
+    });
+  }
+  const reused = new Set(plan.reuse);
+  const enrichItems = items.filter((item) => !reused.has(item.id));
   const schemaFallbackIds: string[] = [];
   const knownStorageSchemas = new Set<string>();
   const partialStorageSchemas = new Set<string>();
   for (
     let offset = 0;
-    offset < items.length;
+    offset < enrichItems.length;
     offset += COLLECTOR_BATCH_SIZE
   ) {
     assertSyncActive(signal);
-    const batch = items.slice(offset, offset + COLLECTOR_BATCH_SIZE);
-    progress?.(12 + Math.floor(offset / Math.max(1, items.length) * 35), `Collecting Rayfin metadata (${offset}/${items.length})`);
+    const batch = enrichItems.slice(offset, offset + COLLECTOR_BATCH_SIZE);
+    progress?.(12 + Math.floor(offset / Math.max(1, enrichItems.length) * 35), `Collecting Rayfin metadata (${offset}/${enrichItems.length})`);
     const provenance = batch.filter((item) => PROVENANCE.has(item.type));
     if (provenance.length) {
       const result = await call("workspaceCollectSourceProvenance", { protocolVersion: 1, workspaceId, items: provenance, correlationId });
@@ -405,17 +487,7 @@ export async function collectBrowserWorkspace(
     }
   }
   progress?.(48, "Collecting required scanner compatibility evidence");
-  const scanner = await compatibility({
-    version: 1, stage: "scanner",
-    items: items.map((item) => ({ ...item, collectors: [] })), schemaItemIds: schemaFallbackIds,
-  });
-  if (scanner.compatibilityVersion !== 1 || scanner.compatibilityStage !== "scanner" ||
-    scanner.workspace?.id !== workspaceId || scanner.correlationId !== correlationId ||
-    !scanner.requestedItemIds || scanner.requestedItemIds.length !== items.length ||
-    scanner.requestedItemIds.some((id) => !known.has(id))) fail();
-  for (const name of ["scanner", "access", "lineage", "schema", "config"]) {
-    if (!successful(status(scanner.sections?.[name]))) fail();
-  }
+  const scanner = earlyScanner && !schemaFallbackIds.length ? earlyScanner : await scan(schemaFallbackIds);
   sources.scanner = { source: "python-compatibility", code: "service-principal-scanner-not-live-validated" };
   merge({ ...scanner, jobs: [] });
   raw.itemMetadata = { ...core.itemMetadata, ...scanner.itemMetadata };
@@ -473,6 +545,20 @@ export async function collectBrowserWorkspace(
       remaining = result.remainingItemIds.map((id) => expected.get(id)!);
     }
     if (remaining.length) fail();
+  }
+  if (previous && reused.size) {
+    raw = applyReusedEnrichment(raw, previous.raw, plan.reuse, [SOURCE_SECTION, "Storage schema coverage"]);
+    for (const [key, value] of Object.entries(previous.raw.collectorSources ?? {})) {
+      const id = key.split(":")[1];
+      if (id && reused.has(id) && !(key in sources)) sources[key] = value;
+    }
+    for (const entry of previous.raw.config ?? []) {
+      const id = String(entry.itemId);
+      if (!reused.has(id) || entry.section !== "Storage schema coverage") continue;
+      const source = previous.raw.collectorSources?.[`storageSchema:${id}`];
+      if (source?.source === "rayfin" && !source.code) knownStorageSchemas.add(id);
+      if (/partial/.test(String(entry.value))) partialStorageSchemas.add(id);
+    }
   }
   const storageCoverage = items.filter((item) => item.type === "Lakehouse" || item.type === "Warehouse").map((item): Status => {
     const knownSchema = knownStorageSchemas.has(item.id);
@@ -541,10 +627,33 @@ export async function collectBrowserWorkspace(
     raw.sections![section] ??= { status: "unsupported", code: "not-applicable" };
     raw.capabilities![capability] ??= { ...raw.sections![section] };
   }
+  try {
+    const delegatedToken = await (dependencies.governanceToken
+      ?? (dependencies.client ? async () => undefined : () => acquireGovernanceToken(identity, signal)))();
+    const governance = await call("workspaceCollectGovernance", {
+      protocolVersion: 1, workspaceId, correlationId, delegatedToken: delegatedToken ?? null,
+    });
+    if (governance.authoritative === false && governance.workspaceId === workspaceId) {
+      raw.governanceEvidence = carryForwardDomainNames(governance, cached?.workspaceId === workspaceId ? cached.raw.governanceEvidence : undefined);
+    }
+  } catch {
+    // Governance evidence is optional: without it, domain names, tags and policies stay Unknown.
+    assertSyncActive(signal);
+  }
   raw.syncedAt = new Date().toISOString();
   assertSyncActive(signal);
   validateRawSync(raw, workspaceId);
   if (new TextEncoder().encode(JSON.stringify(raw)).byteLength > 26 * 1024 * 1024) fail();
   const fallbackCount = Object.values(sources).filter((entry) => entry.source === "python-compatibility").length;
-  return { raw, itemRelationsCollection, summary: `Collectors: Rayfin active; exact Python gaps=${fallbackCount}; scheduling=browser` };
+  try {
+    await cache?.save({
+      workspaceId,
+      generation,
+      raw,
+      fullAt: plan.mode === "full" ? raw.syncedAt : (previous?.fullAt ?? previous?.raw.syncedAt),
+    });
+  } catch {
+    // The cache only speeds up the next run; a failed write simply forces a full sync.
+  }
+  return { raw, itemRelationsCollection, summary: `Collectors: Rayfin active; exact Python gaps=${fallbackCount}; scheduling=browser; ${syncPlanSummary(plan)}` };
 }

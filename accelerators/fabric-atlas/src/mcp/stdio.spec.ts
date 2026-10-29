@@ -51,7 +51,7 @@ describe("Atlas MCP stdio transport", () => {
 
     const responses = await lines();
     expect(responses.map((response: { id: number }) => response.id)).toEqual([1, 2, 3]);
-    expect(responses[1].result.tools).toHaveLength(8);
+    expect(responses[1].result.tools).toHaveLength(10);
     expect(responses[2].result.isError).toBe(false);
   });
 

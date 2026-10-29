@@ -3,7 +3,9 @@ import { ExternalLink } from "lucide-react";
 import { relativeTime } from "../model";
 import { useAtlas } from "../store";
 import { Card } from "../ui";
+import { FabricDomainName } from "./FabricDomainName";
 import { formatRunStart } from "../workspace-sync";
+import { workspaceAdminStatus } from "../governance";
 
 function portalWorkspaceUrl(workspaceId: string): string {
   const portal = (
@@ -25,6 +27,17 @@ function Field({
       <dt className="text-300 text-muted-foreground sm:w-2/5 sm:shrink-0">{label}</dt>
       <dd className="min-w-0 break-words text-300 font-semibold">{children}</dd>
     </div>
+  );
+}
+
+function WorkspaceAdmin({ data }: { data: Parameters<typeof workspaceAdminStatus>[0] }) {
+  const admin = workspaceAdminStatus(data);
+  if (admin.status === "identified") return <>{admin.admins.join(", ")}</>;
+  if (admin.status === "missing") return <span className="text-destructive">No Admin identified</span>;
+  return (
+    <span className="font-normal text-muted-foreground" title={admin.reason}>
+      Unknown
+    </span>
   );
 }
 
@@ -75,6 +88,12 @@ export function WorkspaceOverviewPanel() {
               {workspace.region?.trim() || (
                 <span className="font-normal text-muted-foreground">Not reported</span>
               )}
+            </Field>
+            <Field label="Fabric domain">
+              <FabricDomainName evidence={data.governanceEvidence} domainId={workspace.fabricDomainId} />
+            </Field>
+            <Field label="Workspace Admin">
+              <WorkspaceAdmin data={data} />
             </Field>
             <Field label="Scope">
               {scope?.persisted

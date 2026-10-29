@@ -3,11 +3,15 @@ import {
   buildAccessReviewRows,
   buildGovernanceFindings,
   getCoverageDiagnostics,
+  parseInactiveDays,
+  publicNetworkFindings,
+  externalShareFindings,
   selectAccessByItem,
   selectAccessByPrincipal,
   summarizeAccessReview,
+  workspaceAdminStatus,
 } from "./governance";
-import type { AtlasData, Item } from "./model";
+import { SAMPLE_DATA, type AtlasData, type Item } from "./model";
 import { searchJobId } from "./search";
 
 function item(
@@ -476,5 +480,253 @@ describe("coverage diagnostics", () => {
       percentage: null,
       state: "not-applicable",
     });
+  });
+});
+
+describe("OneLake catalog alignment findings", () => {
+  const rules = (data: AtlasData) =>
+    buildGovernanceFindings(data).map((finding) => finding.id.split(":")[0]);
+
+  it("escalates certified items without description or sensitivity", () => {
+    const data = atlas({
+      items: [
+        item("cert", { endorsement: "certified", sensitivityMetadataAvailable: true }),
+        item("plain", { sensitivityMetadataAvailable: true, description: "Documented" }),
+      ],
+    });
+    const findings = buildGovernanceFindings(data);
+    const certified = findings.filter((finding) => finding.itemId === "cert");
+    expect(certified.map((finding) => finding.id.split(":")[0]).sort()).toEqual([
+      "certified-missing-description",
+      "certified-missing-sensitivity",
+    ]);
+    expect(certified.find((f) => f.id.startsWith("certified-missing-sensitivity"))?.severity).toBe("high");
+    expect(findings.filter((finding) => finding.itemId === "plain").map((f) => f.id.split(":")[0])).toEqual([
+      "missing-sensitivity",
+    ]);
+  });
+
+  it("flags endorsed items inactive beyond the threshold only when activity is recorded", () => {
+    const data = atlas({
+      workspace: { ...atlas().workspace, syncedAt: "2026-06-01T00:00:00.000Z" },
+      items: [
+        item("stale", { endorsement: "promoted", description: "x", lastRefresh: "2026-01-01T00:00:00.000Z" }),
+        item("fresh", { endorsement: "promoted", description: "x", updatedAt: "2026-05-20T00:00:00.000Z" }),
+        item("unknown", { endorsement: "certified", description: "x" }),
+        item("unendorsed", { lastRefresh: "2025-01-01T00:00:00.000Z" }),
+      ],
+    });
+    const inactive = buildGovernanceFindings(data).filter((f) => f.id.startsWith("endorsed-inactive:"));
+    expect(inactive.map((finding) => finding.itemId)).toEqual(["stale"]);
+    expect(rules(atlas({ items: data.items }))).not.toContain("endorsed-inactive");
+  });
+
+  it("flags non-endorsed items with no observed activity and keeps missing signals Unknown", () => {
+    const data = atlas({
+      workspace: { ...atlas().workspace, syncedAt: "2026-06-01T00:00:00.000Z" },
+      items: [
+        item("idle", { lastRefresh: "2025-12-01T00:00:00.000Z" }),
+        item("jobbed", { updatedAt: "2025-01-01T00:00:00.000Z" }),
+        item("silent"),
+        item("endorsed", { endorsement: "promoted", updatedAt: "2025-01-01T00:00:00.000Z" }),
+      ],
+      jobs: [
+        { itemFabricId: "jobbed", itemName: "jobbed", jobType: "Pipeline", status: "completed", startedAt: "2026-05-30T00:00:00.000Z", durationSec: 1 },
+      ],
+    });
+    const inactive = buildGovernanceFindings(data).filter((f) => f.id.startsWith("item-inactive:"));
+    expect(inactive.map((finding) => finding.itemId)).toEqual(["idle"]);
+    expect(inactive[0].title).toBe("Inactive item: idle");
+    expect(parseInactiveDays("30")).toBe(30);
+    expect(parseInactiveDays("abc")).toBe(90);
+    expect(parseInactiveDays("-5")).toBe(90);
+  });
+
+  it("reports undocumented visible objects of endorsed semantic models once per model", () => {
+    const model = item("model", { itemType: "SemanticModel", endorsement: "promoted", description: "x" });
+    const data = atlas({
+      items: [model, item("draft", { itemType: "SemanticModel", description: "x" })],
+      schema: {
+        model: [
+          {
+            name: "Sales",
+            description: "Sales facts",
+            columns: [
+              { name: "Amount", dataType: "decimal" },
+              { name: "Key", dataType: "int64", isHidden: true },
+            ],
+            measures: [{ name: "Total", description: "Sum of amount" }],
+          },
+          { name: "Hidden", isHidden: true, columns: [], measures: [] },
+        ],
+        draft: [{ name: "T", columns: [{ name: "c", dataType: "string" }], measures: [] }],
+      },
+    });
+    const findings = buildGovernanceFindings(data).filter((f) =>
+      f.id.startsWith("missing-object-description:"),
+    );
+    expect(findings).toHaveLength(1);
+    expect(findings[0]).toMatchObject({ itemId: "model", severity: "low" });
+    expect(findings[0].detail).toContain("1 of 3");
+  });
+
+  it("flags a workspace without domain only when the absence is confirmed", () => {
+    const base = atlas().workspace;
+    expect(rules(atlas({ workspace: { ...base, fabricDomainId: "unassigned" } }))).toContain(
+      "workspace-no-domain",
+    );
+    expect(rules(atlas())).not.toContain("workspace-no-domain");
+    expect(
+      rules(atlas({ workspace: { ...base, fabricDomainId: "aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee" } })),
+    ).not.toContain("workspace-no-domain");
+  });
+
+  it("raises workspace-no-admin only from a complete role collection without Admin", () => {
+    const member = { principalId: "u", displayName: "Member", kind: "user" as const, workspaceRole: "Member" as const };
+    const complete = { access: { status: "complete" as const } };
+    const workspace = (syncSections?: AtlasData["workspace"]["syncSections"]) => ({ ...atlas().workspace, syncSections });
+
+    const missing = atlas({ workspace: workspace(complete), principals: [member] });
+    expect(workspaceAdminStatus(missing)).toEqual({ status: "missing" });
+    expect(rules(missing)).toContain("workspace-no-admin");
+
+    const withAdmin = atlas({ workspace: workspace(complete), principals: [member, { ...member, principalId: "a", displayName: "Owner", workspaceRole: "Admin" }] });
+    expect(workspaceAdminStatus(withAdmin)).toEqual({ status: "identified", admins: ["Owner"] });
+    expect(rules(withAdmin)).not.toContain("workspace-no-admin");
+
+    for (const data of [
+      atlas({ principals: [member] }),
+      atlas({ workspace: workspace({ access: { status: "failed", code: "403" } }), principals: [member] }),
+      atlas({ workspace: workspace(complete) }),
+    ]) {
+      expect(workspaceAdminStatus(data).status).toBe("unknown");
+      expect(rules(data)).not.toContain("workspace-no-admin");
+    }
+  });
+
+  it("reports unlabeled items against the domain default label only when it is known", () => {
+    const evidence = SAMPLE_DATA.governanceEvidence!;
+    const workspace = { ...atlas().workspace, fabricDomainId: SAMPLE_DATA.workspace.fabricDomainId };
+    const items = [item("labeled", { sensitivity: "Confidential" }), item("unlabeled")];
+    const prefixes = (data: AtlasData) =>
+      buildGovernanceFindings(data)
+        .filter((f) => f.itemId === "unlabeled")
+        .map((f) => f.id.split(":")[0]);
+
+    const inherited = buildGovernanceFindings(atlas({ workspace, items, governanceEvidence: evidence }));
+    const finding = inherited.find((f) => f.id.startsWith("domain-default-label-missing:"));
+    expect(finding).toMatchObject({ itemId: "unlabeled", severity: "medium" });
+    expect(finding!.detail).toContain("Operations › Rentals");
+    expect(inherited.some((f) => f.itemId === "labeled" && f.id.startsWith("domain-default"))).toBe(false);
+    expect(prefixes(atlas({ workspace, items, governanceEvidence: evidence }))).not.toContain("missing-sensitivity");
+
+    const denied = {
+      ...evidence,
+      domains: { ...evidence.domains, status: { status: "unsupported" as const, code: "authorization-failed" } },
+    };
+    expect(prefixes(atlas({ workspace, items, governanceEvidence: denied }))).toEqual(["missing-sensitivity"]);
+    const noDefault = {
+      ...evidence,
+      domains: {
+        ...evidence.domains,
+        entries: evidence.domains.entries.map((d) => ({ ...d, defaultSensitivityLabelId: undefined })),
+      },
+    };
+    expect(prefixes(atlas({ workspace, items, governanceEvidence: noDefault }))).toEqual(["missing-sensitivity"]);
+  });
+
+  it("flags standard labels below the domain default label", () => {
+    const evidence = SAMPLE_DATA.governanceEvidence!;
+    const workspace = { ...atlas().workspace, fabricDomainId: SAMPLE_DATA.workspace.fabricDomainId };
+    const labelId = evidence.domains.entries.find((d) => d.defaultSensitivityLabelId)!.defaultSensitivityLabelId!;
+    const items = [
+      item("source", { sensitivity: "Confidential", sensitivityLabelId: labelId }),
+      item("general", { sensitivity: "General" }),
+      item("custom", { sensitivity: "Team only" }),
+      item("higher", { sensitivity: "Highly Confidential" }),
+    ];
+    const below = buildGovernanceFindings(atlas({ workspace, items, governanceEvidence: evidence })).filter((f) =>
+      f.id.startsWith("domain-default-label-below:"),
+    );
+    expect(below.map((f) => f.itemId)).toEqual(["general"]);
+    expect(below[0].groupDetail).toContain("sets default label Confidential");
+    expect(below[0].recommendation).toBe("Raise the label to Confidential or record a justified exception.");
+
+    const unresolved = items.map((i) => ({ ...i, sensitivityLabelId: undefined }));
+    expect(
+      buildGovernanceFindings(atlas({ workspace, items: unresolved, governanceEvidence: evidence })).some((f) =>
+        f.id.startsWith("domain-default-label-below:"),
+      ),
+    ).toBe(false);
+  });
+
+  it("flags a domain as empty only from a complete domain list with a zero count", () => {
+    const evidence = SAMPLE_DATA.governanceEvidence!;
+    const empty = buildGovernanceFindings(atlas({ governanceEvidence: evidence })).filter((f) =>
+      f.id.startsWith("domain-empty:"),
+    );
+    expect(empty.map((f) => f.title)).toEqual(["Domain Finance has no workspace"]);
+    expect(empty[0]).toMatchObject({ severity: "low", category: "metadata" });
+    const partial = buildGovernanceFindings(
+      atlas({
+        governanceEvidence: {
+          ...evidence,
+          domains: { ...evidence.domains, status: { status: "failed", code: "forbidden" } },
+        },
+      }),
+    );
+    expect(partial.some((f) => f.id.startsWith("domain-empty:"))).toBe(false);
+  });
+});
+
+describe("workspace network finding", () => {
+  const withNetwork = (status: "complete" | "failed", inbound?: "Allow" | "Deny"): AtlasData => ({
+    ...SAMPLE_DATA,
+    governanceEvidence: {
+      ...SAMPLE_DATA.governanceEvidence!,
+      network: { status: { status }, policy: inbound ? { inboundPublicAccess: inbound } : undefined },
+    },
+  });
+
+  it("flags public inbound access only when Highly Confidential items are present", () => {
+    const [finding] = publicNetworkFindings(withNetwork("complete", "Allow"));
+    expect(finding).toMatchObject({ severity: "low", category: "access", target: { kind: "workspace" } });
+    expect(finding.title).toMatch(/Highly Confidential/);
+    const unlabeled = { ...withNetwork("complete", "Allow"), items: SAMPLE_DATA.items.map((item) => ({ ...item, sensitivity: undefined })) };
+    expect(publicNetworkFindings(unlabeled)).toEqual([]);
+  });
+
+  it("never raises from a denied policy or an Unknown section", () => {
+    expect(publicNetworkFindings(withNetwork("complete", "Deny"))).toEqual([]);
+    expect(publicNetworkFindings(withNetwork("failed", "Allow"))).toEqual([]);
+    expect(publicNetworkFindings({ ...SAMPLE_DATA, governanceEvidence: undefined })).toEqual([]);
+  });
+});
+
+describe("external share finding", () => {
+  const evidence = SAMPLE_DATA.governanceEvidence!;
+  const share = evidence.externalShares.entries[0];
+
+  it("flags an active external share on a Confidential-or-above item", () => {
+    const [finding] = externalShareFindings(SAMPLE_DATA);
+    expect(finding).toMatchObject({
+      severity: "high",
+      category: "access",
+      target: { kind: "item", itemId: share.itemId },
+    });
+    expect(finding.evidenceIds).toEqual(
+      evidence.externalShares.entries
+        .filter((s) => s.itemId === share.itemId)
+        .map((s) => `item:${share.itemId}:external-share:${s.shareId}`),
+    );
+    const general = SAMPLE_DATA.items.map((item) => (item.fabricId === share.itemId ? { ...item, sensitivity: "General" } : item));
+    expect(externalShareFindings({ ...SAMPLE_DATA, items: general })).toEqual([]);
+  });
+
+  it("ignores revoked shares and an Unknown section", () => {
+    const revoked = { ...evidence, externalShares: { ...evidence.externalShares, entries: [{ ...share, status: "Revoked" }] } };
+    expect(externalShareFindings({ ...SAMPLE_DATA, governanceEvidence: revoked })).toEqual([]);
+    const failed = { ...evidence, externalShares: { status: { status: "failed" as const }, entries: [share] } };
+    expect(externalShareFindings({ ...SAMPLE_DATA, governanceEvidence: failed })).toEqual([]);
   });
 });

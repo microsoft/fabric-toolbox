@@ -33,6 +33,7 @@ import { summarizeHealth } from "../health-summary";
 import { ScoreMeter } from "../components/ScoreMeter";
 import { scoreBand } from "../components/score-style";
 import { PageHeader } from "../components/PageHeader";
+import { WorkspaceDomainBanner } from "../components/WorkspaceDomainBanner";
 
 const PostureRadar = lazy(() => import("../components/PostureRadar").then(
   (module) => ({ default: module.PostureRadar }),
@@ -337,6 +338,7 @@ export function OverviewView({
         titleId="overview-title"
         purpose="Inventory, governance gaps and recent activity."
       />
+      <WorkspaceDomainBanner />
       <div className="flex flex-wrap items-center justify-between gap-l border-y border-border px-l py-m">
         <dl className="flex flex-wrap gap-x-xxl gap-y-s" aria-label="Workspace inventory">
           {[["Fabric items", items.length], ["Tables, columns & measures", assetCount], ["Lineage links", edges.length]].map(([label, value]) => (

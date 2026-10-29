@@ -712,7 +712,7 @@ describe("Map & lineage unified evidence", () => {
     ).toBeInTheDocument();
   });
 
-  it("explains that Changes need a second snapshot and never track Beta evidence", async () => {
+  it("compares preview snapshots in Changes and never tracks Beta evidence", async () => {
     renderMap(
       { itemRelationsEnabled: true, loadItemRelationsEvidence: loadNothing },
       "/?view=changes&preview=item-relations#map",
@@ -727,10 +727,10 @@ describe("Map & lineage unified evidence", () => {
       screen.getByRole("heading", { name: "Atlas snapshot lineage changes" }),
     ).toBeInTheDocument();
     expect(
-      screen.getByText(
+      screen.queryByText(
         "Lineage changes appear after a second synchronized snapshot.",
       ),
-    ).toBeInTheDocument();
+    ).not.toBeInTheDocument();
     expect(
       screen.getByText("Item Relations changes are not tracked."),
     ).toBeInTheDocument();

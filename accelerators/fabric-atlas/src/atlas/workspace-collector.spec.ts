@@ -405,6 +405,7 @@ describe("workspaceCollectCore collection", () => {
         type: "Workspace",
         capacityId: CAPACITY,
         capacityRegion: "West Europe",
+        domainAssigned: false,
       },
       items: [
         {
@@ -544,6 +545,22 @@ describe("workspaceCollectCore collection", () => {
     ]) {
       expect(serialized).not.toContain(forbidden);
     }
+  });
+
+  it("normalizes an assigned Fabric domain and keeps the unassigned state explicit", async () => {
+    const domain = "AAAAAAAA-BBBB-4CCC-8DDD-EEEEEEEEEEEE";
+    const routes = coreRoutes();
+    routes[BASE] = () => json({ ...workspaceBody(), domainId: domain });
+    const assigned = await collect(routes).result;
+    expect(assigned.workspace).toMatchObject({
+      domainId: domain.toLowerCase(),
+      domainAssigned: true,
+    });
+
+    routes[BASE] = () => json({ ...workspaceBody(), domainId: "not-a-domain-id" });
+    const invalid = await collect(routes).result;
+    expect(invalid.workspace?.domainId).toBeUndefined();
+    expect(invalid.workspace?.domainAssigned).toBe(false);
   });
 
   it("follows a continuationToken without continuationUri on the fixed path", async () => {

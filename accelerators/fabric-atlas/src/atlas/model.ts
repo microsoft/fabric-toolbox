@@ -4,6 +4,7 @@
 // app is deployed and a live Sync runs, these shapes are replaced by the real
 // workspace read from the Fabric APIs.
 
+import type { GovernanceEvidence } from "./governance-evidence";
 import {
   ITEM_METADATA_SCHEMA_NAME,
   type FabricItemMetadata,
@@ -99,6 +100,11 @@ export interface WorkspaceInfo {
   displayName: string;
   capacity: string;
   region: string;
+  /**
+   * Fabric domain id. "unassigned" means the collector confirmed the
+   * workspace has no domain; undefined means the domain was not collected.
+   */
+  fabricDomainId?: string;
   deploymentId?: string;
   snapshotId?: string;
   syncedAt?: string;
@@ -223,6 +229,8 @@ export interface AtlasData {
   semanticModelEvidence?: Record<string, SemanticModelEvidence>;
   itemMetadata?: Record<string, FabricItemMetadata>;
   objectEdges?: MetadataObjectLineageEdge[];
+  /** Optional read-only governance evidence (v2.6); missing sections are Unknown. */
+  governanceEvidence?: GovernanceEvidence;
 }
 
 // ---------- helpers ----------
@@ -261,7 +269,9 @@ export function relativeTime(iso?: string): string {
 const iso = (minsAgo: number) => new Date(Date.now() - minsAgo * 60000).toISOString();
 
 const OWNER = "System Administrator";
-const OWNER_EMAIL = "admin@alpinerent.com";
+export const OWNER_EMAIL = "admin@alpinerent.com";
+const DATA_TEAM = "AlpineRent Data Team";
+const DATA_TEAM_EMAIL = "data.team@alpinerent.com";
 
 // ---------- sample workspace (AlpineRent demo) ----------
 
@@ -280,6 +290,8 @@ const PL = "10000000-0000-4000-8000-000000000011";
 const EH = "10000000-0000-4000-8000-000000000012";
 const KQL_DEFAULT = "10000000-0000-4000-8000-000000000013";
 const KQL_EVENTS = "10000000-0000-4000-8000-000000000014";
+export const DOMAIN_OPS = "20000000-0000-4000-8000-000000000001";
+export const DOMAIN_RENTALS = "20000000-0000-4000-8000-000000000002";
 
 // ---------- deep lineage: real semantic-model / gold schema (from TMDL) ----------
 
@@ -356,7 +368,7 @@ const AR_TABLES: ModelTableSchema[] = [
       { name: "total_rentals", dataType: "int64" },
       { name: "total_revenue_chf", dataType: "double" },
       { name: "avg_duration_hours", dataType: "double" },
-      { name: "unique_members", dataType: "int64" },
+      { name: "unique_members", dataType: "int64", description: "Distinct members, counted on the SHA-256 hash of their email." },
       { name: "avg_revenue_chf", dataType: "double" },
       { name: "multiday_rentals", dataType: "int64" },
       { name: "day_of_week", dataType: "string" },
@@ -405,8 +417,9 @@ const AR_TABLES: ModelTableSchema[] = [
   {
     name: "member_segments",
     rows: 4,
+    description: "One row per loyalty tier with the members' contact preference (email, SMS).",
     measures: [
-      { name: "Segment Members", expr: "SUM(member_segments[active_members])" },
+      { name: "Segment Members", expr: "SUM(member_segments[active_members])", description: "Active members who accepted email marketing in each tier." },
       { name: "Segment Revenue", expr: "SUM(member_segments[total_revenue_chf])" },
     ],
     columns: [
@@ -473,6 +486,8 @@ export const SAMPLE_DATA: AtlasData = {
     displayName: "AlpineRent Analytics",
     capacity: "F16 · West Europe",
     region: "West Europe",
+    fabricDomainId: DOMAIN_RENTALS,
+    syncedAt: iso(6),
   },
   items: [
     { fabricId: PL, displayName: "AlpineRent Daily Load", itemType: "DataPipeline", health: "healthy", endorsement: "none", ownerName: OWNER, ownerEmail: OWNER_EMAIL, tags: ["orchestration"], lastRefresh: iso(20), description: "Orchestrates Bronze → Silver → Gold → Forecast." },
@@ -481,14 +496,14 @@ export const SAMPLE_DATA: AtlasData = {
     { fabricId: NB_GOLD, displayName: "03_gold_aggregate", itemType: "Notebook", health: "healthy", endorsement: "none", ownerName: OWNER, ownerEmail: OWNER_EMAIL, tags: ["etl", "gold"], sensitivity: "General", lastRefresh: iso(30), description: "Builds the gold analytics tables." },
     { fabricId: NB_FCAST, displayName: "04_demand_forecast", itemType: "Notebook", health: "healthy", endorsement: "none", ownerName: OWNER, ownerEmail: OWNER_EMAIL, tags: ["ml", "gold"], lastRefresh: iso(26), description: "Simple demand forecast into gold.demand_forecast." },
     { fabricId: LH, displayName: "alpinerent_lakehouse", itemType: "Lakehouse", health: "healthy", endorsement: "certified", ownerName: OWNER, ownerEmail: OWNER_EMAIL, tags: ["alpinerent", "medallion"], sensitivity: "Highly Confidential", lastRefresh: iso(28), size: "bronze / silver / gold", description: "Schema-enabled lakehouse with bronze, silver and gold schemas." },
-    { fabricId: DW, displayName: "alpinerent_dw", itemType: "Warehouse", health: "healthy", endorsement: "none", ownerName: OWNER, ownerEmail: OWNER_EMAIL, tags: ["star-schema"], sensitivity: "General", lastRefresh: iso(55), description: "Star schema: dim_date, dim_station, dim_equipment, fact_rentals." },
-    { fabricId: EH, displayName: "AlpineRent Telemetry", itemType: "Eventhouse", health: "healthy", endorsement: "none", ownerName: OWNER, ownerEmail: OWNER_EMAIL, tags: ["realtime"], lastRefresh: iso(15), description: "Real-time telemetry host for station and bike events." },
-    { fabricId: SE, displayName: "alpinerent_lakehouse", itemType: "SQLEndpoint", health: "healthy", endorsement: "none", ownerName: OWNER, ownerEmail: OWNER_EMAIL, tags: ["sql"], sensitivity: "Confidential", lastRefresh: iso(28), description: "SQL analytics endpoint auto-provisioned over the lakehouse." },
-    { fabricId: SM, displayName: "AlpineRent Sales Model", itemType: "SemanticModel", health: "healthy", endorsement: "certified", ownerName: OWNER, ownerEmail: OWNER_EMAIL, tags: ["gold", "direct-lake"], sensitivity: "Confidential", lastRefresh: iso(12), description: "Direct Lake model over the gold schema, 6 tables + measures." },
-    { fabricId: KQL_DEFAULT, displayName: "AlpineRent Telemetry", itemType: "KQLDatabase", health: "unknown", endorsement: "none", ownerName: OWNER, ownerEmail: OWNER_EMAIL, tags: ["realtime"], lastRefresh: iso(15), description: "Default database of the Eventhouse (empty)." },
-    { fabricId: KQL_EVENTS, displayName: "AlpineRent Telemetry Events", itemType: "KQLDatabase", health: "healthy", endorsement: "none", ownerName: OWNER, ownerEmail: OWNER_EMAIL, tags: ["realtime", "kql"], lastRefresh: iso(15), description: "StationTelemetry, BikeEvents, LiftRideEvents + StationHourlyLoad()." },
-    { fabricId: RP_EXEC, displayName: "AlpineRent Executive Dashboard", itemType: "Report", health: "healthy", endorsement: "promoted", ownerName: OWNER, ownerEmail: OWNER_EMAIL, tags: ["exec"], sensitivity: "Confidential", lastRefresh: iso(10), description: "KPIs, daily revenue trend, top stations, monthly table." },
-    { fabricId: RP_STATION, displayName: "AlpineRent Station Utilization", itemType: "Report", health: "healthy", endorsement: "none", ownerName: OWNER, ownerEmail: OWNER_EMAIL, tags: ["ops"], sensitivity: "Confidential", lastRefresh: iso(10), description: "Station utilization and demand forecast." },
+    { fabricId: DW, displayName: "alpinerent_dw", itemType: "Warehouse", health: "healthy", endorsement: "none", ownerName: DATA_TEAM, ownerEmail: DATA_TEAM_EMAIL, tags: ["star-schema"], sensitivity: "General", lastRefresh: iso(55), description: "Star schema: dim_date, dim_station, dim_equipment, fact_rentals." },
+    { fabricId: EH, displayName: "AlpineRent Telemetry", itemType: "Eventhouse", health: "healthy", endorsement: "none", ownerName: DATA_TEAM, ownerEmail: DATA_TEAM_EMAIL, tags: ["realtime"], lastRefresh: iso(60 * 24 * 120), description: "Real-time telemetry host for station and bike events." },
+    { fabricId: SE, displayName: "alpinerent_lakehouse", itemType: "SQLEndpoint", health: "healthy", endorsement: "none", ownerName: DATA_TEAM, ownerEmail: DATA_TEAM_EMAIL, tags: ["sql"], sensitivity: "Confidential", lastRefresh: iso(28), description: "SQL analytics endpoint auto-provisioned over the lakehouse." },
+    { fabricId: SM, displayName: "AlpineRent Sales Model", itemType: "SemanticModel", health: "healthy", endorsement: "certified", ownerName: DATA_TEAM, ownerEmail: DATA_TEAM_EMAIL, tags: ["gold", "direct-lake", "Rentals KPI"], sensitivity: "Confidential", sensitivityLabelId: "20000000-0000-4000-8000-0000000000a1", lastRefresh: iso(12), description: "Direct Lake model over the gold schema, 6 tables + measures." },
+    { fabricId: KQL_DEFAULT, displayName: "AlpineRent Telemetry", itemType: "KQLDatabase", health: "unknown", endorsement: "none", tags: ["realtime"], lastRefresh: iso(15), description: "Default database of the Eventhouse (empty)." },
+    { fabricId: KQL_EVENTS, displayName: "AlpineRent Telemetry Events", itemType: "KQLDatabase", health: "healthy", endorsement: "none", ownerName: DATA_TEAM, ownerEmail: DATA_TEAM_EMAIL, tags: ["realtime", "kql"], lastRefresh: iso(60 * 24 * 120), description: "StationTelemetry, BikeEvents, LiftRideEvents + StationHourlyLoad()." },
+    { fabricId: RP_EXEC, displayName: "AlpineRent Executive Dashboard", itemType: "Report", health: "healthy", endorsement: "promoted", ownerName: DATA_TEAM, ownerEmail: DATA_TEAM_EMAIL, tags: ["exec"], sensitivity: "Confidential", lastRefresh: iso(10), description: "KPIs, daily revenue trend, top stations, monthly table." },
+    { fabricId: RP_STATION, displayName: "AlpineRent Station Utilization", itemType: "Report", health: "healthy", endorsement: "none", ownerName: DATA_TEAM, ownerEmail: DATA_TEAM_EMAIL, tags: ["ops"], sensitivity: "Confidential", lastRefresh: iso(10), description: "Station utilization and demand forecast." },
   ],
   edges: [
     { source: PL, target: NB_BRONZE, relation: "orchestrates" },
@@ -572,7 +587,60 @@ export const SAMPLE_DATA: AtlasData = {
     { id: "c2", itemFabricId: SM, authorId: "u-admin", authorName: OWNER, authorEmail: OWNER_EMAIL, body: "Direct Lake model validated live: Total Revenue CHF 533,821, 11,936 rentals, avg 19.7 h.", createdAt: iso(5) },
   ],
   syncRuns: [
-    { id: "s1", startedAt: iso(7), finishedAt: iso(6), status: "completed", itemsSynced: 14, triggeredBy: OWNER, summary: "14 items · 14 lineage edges · 1 principal · 6 jobs" },
+    { id: "s1", startedAt: iso(7), finishedAt: iso(6), durationMs: 41000, status: "completed", itemsSynced: 14, triggeredBy: OWNER, summary: "14 items · 14 lineage edges · 1 principal · 6 jobs; sync=incremental; refreshed=3; reused=11" },
+    { id: "s0", startedAt: iso(1447), finishedAt: iso(1444), durationMs: 190000, status: "completed", itemsSynced: 14, triggeredBy: OWNER, summary: "14 items · 14 lineage edges · 1 principal · 6 jobs; sync=full; refreshed=14; reused=0" },
   ],
   schema: MODEL_SCHEMA,
+  governanceEvidence: {
+    collectedAt: iso(6),
+    domains: {
+      status: { status: "complete" },
+      entries: [
+        { id: DOMAIN_OPS, displayName: "Operations", description: "Operational data products.", defaultSensitivityLabelId: "20000000-0000-4000-8000-0000000000a1", workspaceCount: 3 },
+        { id: DOMAIN_RENTALS, displayName: "Rentals", parentDomainId: DOMAIN_OPS, workspaceCount: 1 },
+        { id: "20000000-0000-4000-8000-000000000003", displayName: "Finance", workspaceCount: 0 },
+        { id: "20000000-0000-4000-8000-000000000004", displayName: "Marketing", workspaceCount: 2 },
+      ],
+    },
+    tags: {
+      status: { status: "complete" },
+      entries: [
+        { id: "20000000-0000-4000-8000-000000000011", displayName: "Gold", scope: "tenant" },
+        { id: "20000000-0000-4000-8000-000000000012", displayName: "Rentals KPI", scope: "domain", domainId: DOMAIN_RENTALS },
+        { id: "20000000-0000-4000-8000-000000000013", displayName: "etl", scope: "tenant" },
+        { id: "20000000-0000-4000-8000-000000000014", displayName: "orchestration", scope: "tenant" },
+        { id: "20000000-0000-4000-8000-000000000015", displayName: "realtime", scope: "tenant" },
+        { id: "20000000-0000-4000-8000-000000000016", displayName: "bronze", scope: "domain", domainId: DOMAIN_RENTALS },
+        { id: "20000000-0000-4000-8000-000000000017", displayName: "silver", scope: "domain", domainId: DOMAIN_RENTALS },
+        { id: "20000000-0000-4000-8000-000000000018", displayName: "medallion", scope: "domain", domainId: DOMAIN_RENTALS },
+      ],
+    },
+    tenantSettings: {
+      status: { status: "complete" },
+      entries: [
+        { settingName: "AllowExternalDataSharingSwitch", title: "External data sharing", enabled: true, group: "Export and sharing settings" },
+        { settingName: "AllowGuestUserToAccessSharedContent", title: "Guest users can access Microsoft Fabric", enabled: true, group: "Export and sharing settings" },
+        { settingName: "PublishToWeb", title: "Publish to web", enabled: false, group: "Export and sharing settings" },
+        { settingName: "UsersCanCreateFabricItems", title: "Users can create Fabric items", enabled: false, group: "Microsoft Fabric" },
+      ],
+    },
+    network: { status: { status: "complete" }, policy: { inboundPublicAccess: "Allow", outboundPublicAccess: "Allow", ipFirewall: false, trustedWorkspaceAccess: { enabled: true, shortcuts: 1 }, customerManagedKey: false } },
+    externalShares: {
+      status: { status: "complete" },
+      entries: [
+        { itemId: LH, shareId: "30000000-0000-4000-8000-000000000001", status: "Active", recipient: "partner@contoso.com", recipientTenantId: "contoso.onmicrosoft.com", createdBy: OWNER, createdAt: iso(41 * 24 * 60), paths: ["Tables/gold/station_utilization"] },
+        { itemId: LH, shareId: "30000000-0000-4000-8000-000000000002", status: "Active", recipient: "ops@fabrikam.ch", recipientTenantId: "fabrikam.ch", createdBy: OWNER, createdAt: iso(9 * 24 * 60), paths: ["Files/exports/fleet"] },
+      ],
+    },
+    oneLakeRoles: {
+      status: { status: "complete" },
+      entries: [
+        { itemId: LH, roleName: "DefaultReader", permissions: ["Read"], paths: ["*"], memberIds: [], itemMemberCount: 1, rowSecurity: false, columnSecurity: false },
+        { itemId: LH, roleName: "EMEA_Analysts", permissions: ["Read"], paths: ["Tables/gold/station_utilization"], memberIds: ["g-bi"], itemMemberCount: 0, rowSecurity: true, columnSecurity: true,
+          rowFilters: [{ tablePath: "Tables/gold/station_utilization", predicate: "SELECT * FROM gold.station_utilization WHERE region = 'EMEA'" }],
+          columnRules: [{ tablePath: "Tables/gold/station_utilization", effect: "Deny", columns: ["customer_email", "phone"] }] },
+        { itemId: LH, roleName: "Finance ReadAll", permissions: ["Read"], paths: ["Tables/gold/*"], memberIds: ["sp-etl"], itemMemberCount: 0, rowSecurity: false, columnSecurity: false },
+      ],
+    },
+  },
 };

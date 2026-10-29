@@ -18,6 +18,7 @@ import {
 import * as Dialog from "@radix-ui/react-dialog";
 import { motion } from "framer-motion";
 import {
+  Fragment,
   useMemo,
   useRef,
   useState,
@@ -123,13 +124,14 @@ export function CommandPalette({
   const returnFocusRef = useRef<HTMLElement>(null);
   const debouncedQuery = useDebouncedValue(query);
   const searchPending = query !== debouncedQuery;
-  const results = useMemo(
-    () =>
-      searchPending
-        ? []
-        : searchIndex(index, debouncedQuery, { limit: 14 }),
-    [debouncedQuery, index, searchPending],
-  );
+  const results = useMemo(() => {
+    if (searchPending) return [];
+    const found = searchIndex(index, debouncedQuery, { limit: 14 });
+    // Name matches first, then matches found only in descriptions.
+    return [...found.filter((r) => !r.snippet), ...found.filter((r) => r.snippet)];
+  }, [debouncedQuery, index, searchPending]);
+  const firstDescriptionMatch = results.findIndex((r) => r.snippet);
+  const descriptionMatchCount = firstDescriptionMatch < 0 ? 0 : results.length - firstDescriptionMatch;
   const snapshotLookup = useMemo(() => catalogSnapshotLookup(index), [index]);
   const catalogQuery = normalizeCatalogQuery(debouncedQuery);
   const catalogVisible = !!catalogSearch && !!catalogQuery && !searchPending;
@@ -476,9 +478,18 @@ export function CommandPalette({
                     !!result.target.tableName &&
                     !!result.target.objectName;
                   return (
+                    <Fragment key={result.id}>
+                    {indexValue === firstDescriptionMatch && (
+                      <div
+                        aria-hidden="true"
+                        className={cn(groupHeadingClass, indexValue > 0 && "mt-s border-t border-border pt-s")}
+                      >
+                        <FileText className="icon-size-100" aria-hidden="true" />
+                        Matched in descriptions • {descriptionMatchCount}
+                      </div>
+                    )}
                     <div
                       id={`atlas-search-result-${indexValue}`}
-                      key={result.id}
                       role="option"
                       aria-selected={active}
                       onMouseEnter={() => setActiveIndex(indexValue)}
@@ -517,6 +528,23 @@ export function CommandPalette({
                           >
                             {result.subtitle ?? KIND_LABEL[result.kind]}
                           </span>
+                          {result.snippet && (
+                            <span
+                              data-testid="search-description-snippet"
+                              className={cn(
+                                "block truncate text-200 italic",
+                                active
+                                  ? "text-primary-foreground/75"
+                                  : "text-muted-foreground",
+                              )}
+                            >
+                              {result.snippet.before}
+                              <mark className="rounded-sm bg-warning/30 px-[1px] not-italic text-inherit">
+                                {result.snippet.match}
+                              </mark>
+                              {result.snippet.after}
+                            </span>
+                          )}
                         </span>
                       </button>
                       {canOpenXRay && (
@@ -549,6 +577,7 @@ export function CommandPalette({
                         {KIND_LABEL[result.kind]}
                       </span>
                     </div>
+                    </Fragment>
                   );
                 })}
                 </div>

@@ -139,7 +139,7 @@ describe("App", () => {
         renderApp();
 
         fireEvent.click(
-            await screen.findByRole("button", { name: "Synchronize now" }),
+            await screen.findByRole("button", { name: "Sync" }),
         );
         expect(
             await screen.findByRole("heading", {
