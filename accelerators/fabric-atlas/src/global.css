@@ -522,8 +522,8 @@ body,
 
 .atlas-map-grid {
   background-image:
-    linear-gradient(color-mix(in srgb, var(--color-border) 28%, transparent) 1px, transparent 1px),
-    linear-gradient(90deg, color-mix(in srgb, var(--color-border) 28%, transparent) 1px, transparent 1px),
+    linear-gradient(color-mix(in srgb, var(--color-border) 55%, transparent) 1px, transparent 1px),
+    linear-gradient(90deg, color-mix(in srgb, var(--color-border) 55%, transparent) 1px, transparent 1px),
     radial-gradient(circle at 55% 42%, color-mix(in srgb, var(--color-lineage-downstream) 8%, transparent), transparent 38%);
   background-size: 24px 24px, 24px 24px, auto;
   background-position: -1px -1px;

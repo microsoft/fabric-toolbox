@@ -190,11 +190,11 @@ export function LineageEvidencePanel({
           <dl className="flex flex-wrap gap-x-xxl gap-y-s">
             {[
               ["Lines", relationships.length],
-              ["Items", endpointCount],
+              ["Connected items", endpointCount, "Items at either end of a drawn line. Items with no lineage are listed in Catalog but not counted here."],
               ["Types", typeCount],
               ["Cross-workspace", crossWorkspace],
-            ].map(([label, value]) => (
-              <div key={label}>
+            ].map(([label, value, hint]) => (
+              <div key={label} title={hint as string | undefined}>
                 <dt className="text-200 text-muted-foreground">{label}</dt>
                 <dd className="font-numeric text-400 font-semibold">{value}</dd>
               </div>

@@ -16,7 +16,7 @@ export const REPOSITORY_URL =
 
 export const APP_VERSION =
   (import.meta.env.VITE_APP_VERSION as string | undefined) ??
-  "2.6.4";
+  "2.7.0";
 
 export const BUILD_COMMIT =
   (import.meta.env.VITE_APP_BUILD_COMMIT as string | undefined) ?? "development";
@@ -57,8 +57,26 @@ export function sameDeploymentGeneration(
 
 export const RELEASES: AtlasRelease[] = [
   {
+    version: "2.7.0",
+    date: "2026-10-29",
+    title: "External lineage (OpenLineage)",
+    sections: [
+      {
+        title: "New",
+        items: [
+          "External lineage page: import OpenLineage files (.json or .ndjson) produced outside Fabric, with per-file status, counts and reject reasons.",
+          "Link to Fabric: datasets on a OneLake path of the workspace link automatically; administrators link the others to a Fabric item or mark them External.",
+          "Map & lineage: External lineage switch shows external datasets and jobs next to the Fabric graph, and impact follows edges across the boundary.",
+          "Download OpenLineage: export the workspace or the map selection as NDJSON, optionally with linked external datasets. Importing it back links every item by exact path.",
+          "Typed export: each Fabric item carries a fabricAtlas_item facet, Eventstreams are STREAMING jobs and user data functions SERVICE jobs.",
+          "Impact report lists the external datasets upstream and downstream of the item; the Map details panel can be collapsed completely.",
+        ],
+      },
+    ],
+  },
+  {
     version: "2.6.4",
-    date: "2026-10-30",
+    date: "2026-10-28",
     title: "Reliable incremental sync",
     sections: [
       {
@@ -79,7 +97,7 @@ export const RELEASES: AtlasRelease[] = [
   },
   {
     version: "2.6.3",
-    date: "2026-10-30",
+    date: "2026-10-28",
     title: "Sync mode, MCP page and layout fixes",
     sections: [
       {
@@ -103,7 +121,7 @@ export const RELEASES: AtlasRelease[] = [
   },
   {
     version: "2.6.2",
-    date: "2026-10-29",
+    date: "2026-10-28",
     title: "Domain posture and mockup alignment",
     sections: [
       {
@@ -184,7 +202,7 @@ export const RELEASES: AtlasRelease[] = [
   },
   {
     version: "2.2.0",
-    date: "2026-10-18",
+    date: "2026-10-28",
     title: "OneLake catalog alignment",
     sections: [
       {

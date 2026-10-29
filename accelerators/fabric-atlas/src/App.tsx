@@ -22,6 +22,7 @@ import {
   Boxes,
   Compass,
   FolderTree,
+  Globe,
   Info,
   KeyRound,
   Menu,
@@ -40,6 +41,7 @@ import {
 
 import { useThemeContext } from "@/hooks/theme.context";
 import { useAtlas } from "./atlas/store";
+import { ExternalLineageProvider } from "./atlas/external-lineage-store";
 import { CommandPalette } from "./atlas/components/CommandPalette";
 import { SyncRunCompact, SyncRunProgressLine } from "./atlas/components/SyncRunStatus";
 import {
@@ -86,6 +88,7 @@ export type { Tab } from "./atlas/navigation";
 
 const overviewLoader = () => import("./atlas/views/Overview");
 const mapLoader = () => import("./atlas/views/Map");
+const externalLoader = () => import("./atlas/views/ExternalLineage");
 const catalogLoader = () => import("./atlas/views/Catalog");
 const assetCatalogLoader = () => import("./atlas/views/AssetCatalog");
 const accessLoader = () => import("./atlas/views/Access");
@@ -100,6 +103,9 @@ const OverviewView = lazy(() =>
 );
 const MapView = lazy(() =>
   mapLoader().then((module) => ({ default: module.MapView })),
+);
+const ExternalLineageView = lazy(() =>
+  externalLoader().then((module) => ({ default: module.ExternalLineageView })),
 );
 const CatalogView = lazy(() =>
   catalogLoader().then((module) => ({ default: module.CatalogView })),
@@ -135,6 +141,7 @@ const AboutView = lazy(() =>
 const VIEW_LOADERS: Partial<Record<Tab, () => Promise<unknown>>> = {
   overview: overviewLoader,
   map: mapLoader,
+  external: externalLoader,
   catalog: catalogLoader,
   assets: assetCatalogLoader,
   access: accessLoader,
@@ -147,13 +154,14 @@ const VIEW_LOADERS: Partial<Record<Tab, () => Promise<unknown>>> = {
 
 const NAV_GROUPS: {
   label: string;
-  items: { id: Tab; label: string; icon: typeof Compass }[];
+  items: { id: Tab; label: string; icon: typeof Compass; badge?: string }[];
 }[] = [
   {
     label: "Explore",
     items: [
       { id: "overview", label: "Overview", icon: BarChart3 },
       { id: "map", label: "Map & lineage", icon: Waypoints },
+      { id: "external", label: "External lineage", icon: Globe },
       { id: "catalog", label: "Catalog", icon: FolderTree },
       { id: "assets", label: "Asset Catalog", icon: Boxes },
     ],
@@ -240,7 +248,7 @@ function SidebarContent({
               {group.label}
             </div>
             <div className="flex flex-col gap-[2px]">
-              {group.items.map(({ id, label, icon: Icon }) => (
+              {group.items.map(({ id, label, icon: Icon, badge }) => (
                 <button
                   key={id}
                   type="button"
@@ -257,6 +265,11 @@ function SidebarContent({
                 >
                   <Icon size={17} />
                   {label}
+                  {badge && (
+                    <span className="ml-auto rounded-sm bg-primary/10 px-[5px] text-[10px] font-semibold text-brand-foreground">
+                      {badge}
+                    </span>
+                  )}
                 </button>
               ))}
               {group.label === MY_ITEMS_SHORTCUT.group && (
@@ -556,6 +569,7 @@ function App() {
   }
 
   return (
+    <ExternalLineageProvider>
     <WorkspaceSwitchContext.Provider value={switchWorkspace}>
     <Dialog.Root open={navOpen} onOpenChange={setNavOpen}>
     <div className="atlas-shell-canvas relative flex h-screen overflow-hidden text-foreground">
@@ -739,6 +753,7 @@ function App() {
               >
               {tab === "overview" && <OverviewView onOpen={navigate} />}
               {tab === "map" && <MapView />}
+              {tab === "external" && <ExternalLineageView />}
               {tab === "catalog" && (
                 <CatalogView
                   focus={focus}
@@ -845,6 +860,7 @@ function App() {
       )}
     </Dialog.Root>
     </WorkspaceSwitchContext.Provider>
+    </ExternalLineageProvider>
   );
 }
 

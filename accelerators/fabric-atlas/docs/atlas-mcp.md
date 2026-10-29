@@ -184,7 +184,7 @@ matching Map & lineage.
   deployment workspace when no scope is persisted, are read. Other workspace
   IDs are refused. With several selected workspaces, `workspaceId` is
   required.
-- **Personal state.** Saved views, review decisions, review history and Radar
+- **Personal state.** Saved views, review decisions, review history and Governance Radar
   acknowledgements are never read. Team notes, configuration values, principal
   emails and job messages are not searchable through MCP. Snapshot changes
   withhold email-like values and job messages and list only field names for

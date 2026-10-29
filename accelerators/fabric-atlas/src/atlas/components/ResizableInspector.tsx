@@ -7,10 +7,11 @@ import {
   type PointerEvent,
   type ReactNode,
 } from "react";
-import { GripVertical } from "lucide-react";
+import { GripVertical, PanelRightClose, PanelRightOpen } from "lucide-react";
 import {
   MAP_INSPECTOR_KEYBOARD_STEP,
   MAP_INSPECTOR_MIN_WIDTH,
+  MAP_INSPECTOR_COLLAPSE_SLACK,
   clampMapInspectorWidth,
   mapInspectorMaxWidth,
 } from "../map-inspector";
@@ -36,10 +37,12 @@ export function ResizableInspector({
     typeof window === "undefined" ? Number.POSITIVE_INFINITY : window.innerWidth,
   );
   const [dragWidth, setDragWidth] = useState<number>();
+  const [collapsed, setCollapsed] = useState(false);
   const drag = useRef<{
     pointerX: number;
     startWidth: number;
     nextWidth: number;
+    collapse?: boolean;
   } | null>(null);
   const effectiveWidth = clampMapInspectorWidth(
     dragWidth ?? width,
@@ -93,17 +96,18 @@ export function ResizableInspector({
 
   const handlePointerMove = (event: PointerEvent<HTMLDivElement>) => {
     if (!drag.current) return;
-    const nextWidth = clampMapInspectorWidth(
-      drag.current.startWidth + drag.current.pointerX - event.clientX,
-      availableWidth,
-    );
+    const rawWidth = drag.current.startWidth + drag.current.pointerX - event.clientX;
+    const nextWidth = clampMapInspectorWidth(rawWidth, availableWidth);
+    // Dragging well past the minimum width collapses the panel.
+    drag.current.collapse = rawWidth < MAP_INSPECTOR_MIN_WIDTH - MAP_INSPECTOR_COLLAPSE_SLACK;
     drag.current.nextWidth = nextWidth;
     setDragWidth(nextWidth);
   };
 
   const finishPointerResize = () => {
     if (!drag.current) return;
-    onWidthChange(drag.current.nextWidth);
+    if (drag.current.collapse) setCollapsed(true);
+    else onWidthChange(drag.current.nextWidth);
     drag.current = null;
     setDragWidth(undefined);
   };
@@ -112,6 +116,26 @@ export function ResizableInspector({
     event.currentTarget.releasePointerCapture?.(event.pointerId);
     finishPointerResize();
   };
+
+  if (collapsed) {
+    return (
+      <div
+        ref={rootRef}
+        className={cn("relative flex min-h-0 w-full shrink-0 flex-col xl:w-[36px]", className)}
+      >
+        <button
+          type="button"
+          onClick={() => setCollapsed(false)}
+          aria-label="Show details panel"
+          title="Show details panel"
+          className="m-xs hidden h-[32px] w-[28px] items-center justify-center rounded-md border border-border bg-card text-muted-foreground hover:bg-accent hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring xl:flex"
+        >
+          <PanelRightOpen className="icon-size-100" aria-hidden="true" />
+        </button>
+        <div className="flex min-h-0 flex-1 flex-col xl:hidden">{children}</div>
+      </div>
+    );
+  }
 
   return (
     <div
@@ -148,6 +172,15 @@ export function ResizableInspector({
           <GripVertical className="icon-size-100" aria-hidden="true" />
         </span>
       </div>
+      <button
+        type="button"
+        onClick={() => setCollapsed(true)}
+        aria-label="Hide details panel"
+        title="Hide details panel"
+        className="absolute left-0 top-s z-30 hidden h-[28px] w-[22px] -translate-x-1/2 items-center justify-center rounded-md border border-border bg-card text-muted-foreground shadow-fabric-2 hover:bg-accent hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring xl:flex"
+      >
+        <PanelRightClose className="size-[13px]" aria-hidden="true" />
+      </button>
       {error && (
         <div
           role="status"

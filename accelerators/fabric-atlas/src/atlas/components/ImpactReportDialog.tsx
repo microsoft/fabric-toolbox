@@ -20,6 +20,7 @@ import {
 } from "../lineage";
 import { buildSchemaDependencies } from "../schema-lineage";
 import type { AtlasData } from "../model";
+import type { ExternalItemImpact } from "../map-external";
 import { Card, TypeGlyph, cn } from "../ui";
 
 function safeFileName(value: string): string {
@@ -36,6 +37,7 @@ function reportMarkdown(
   data: AtlasData,
   report: ItemImpactReport | SchemaObjectImpactReport,
   object?: SchemaObjectRef,
+  external?: ExternalItemImpact,
 ): string {
   const schemaReport =
     object && "granularity" in report ? report : undefined;
@@ -75,6 +77,22 @@ function reportMarkdown(
         )
       : ["- None"]),
   ];
+  if (external && external.upstream.length + external.downstream.length > 0) {
+    const row = (entry: ExternalItemImpact["upstream"][number]) =>
+      `- ${entry.dataset.name} (${entry.dataset.platform}, ${entry.dataset.namespace}, distance ${entry.distance})`;
+    lines.push(
+      "",
+      "## External lineage (OpenLineage)",
+      "",
+      "### External upstream",
+      ...(external.upstream.length ? external.upstream.map(row) : ["- None"]),
+      "",
+      "### External downstream",
+      ...(external.downstream.length ? external.downstream.map(row) : ["- None"]),
+      "",
+      `- Jobs: ${external.jobs.length ? external.jobs.join(", ") : "none"}`,
+    );
+  }
   if (schemaReport?.objectImpact) {
     lines.push(
       "",
@@ -107,12 +125,14 @@ export function ImpactReportDialog({
   data,
   itemId,
   object,
+  external,
   open,
   onClose,
 }: {
   data: AtlasData;
   itemId: string;
   object?: SchemaObjectRef;
+  external?: ExternalItemImpact;
   open: boolean;
   onClose: () => void;
 }) {
@@ -129,6 +149,7 @@ export function ImpactReportDialog({
           data={data}
           itemId={itemId}
           object={object}
+          external={external}
           returnFocusRef={returnFocusRef}
         />
       )}
@@ -140,11 +161,13 @@ function ImpactReportContent({
   data,
   itemId,
   object,
+  external,
   returnFocusRef,
 }: {
   data: AtlasData;
   itemId: string;
   object?: SchemaObjectRef;
+  external?: ExternalItemImpact;
   returnFocusRef: React.RefObject<HTMLElement | null>;
 }) {
   const [copied, setCopied] = useState(false);
@@ -166,8 +189,8 @@ function ImpactReportContent({
   const subject =
     object?.name ?? report.item?.displayName ?? report.itemId ?? "Impact report";
   const markdown = useMemo(
-    () => reportMarkdown(data, report, object),
-    [data, object, report],
+    () => reportMarkdown(data, report, object, external),
+    [data, external, object, report],
   );
 
   const copy = async () => {
@@ -399,10 +422,42 @@ function ImpactReportContent({
                 />
               </div>
 
+              {external &&
+                external.upstream.length + external.downstream.length > 0 && (
+                  <Card className="mt-l overflow-hidden" aria-label="External lineage impact">
+                    <div className="flex flex-wrap items-center justify-between gap-m border-b border-border bg-secondary px-l py-m">
+                      <div>
+                        <h3 className="text-300 font-semibold">
+                          External lineage (OpenLineage)
+                        </h3>
+                        <p className="text-200 text-muted-foreground">
+                          Imported datasets reached across the link points.
+                          {external.jobs.length > 0 &&
+                            ` Jobs: ${external.jobs.join(", ")}.`}
+                        </p>
+                      </div>
+                      <span className="rounded-full border border-dashed border-border px-s py-xs text-200 font-semibold text-muted-foreground">
+                        External
+                      </span>
+                    </div>
+                    <div className="grid gap-l p-l lg:grid-cols-2">
+                      <ExternalImpactList
+                        title="External upstream"
+                        entries={external.upstream}
+                        tone="upstream"
+                      />
+                      <ExternalImpactList
+                        title="External downstream"
+                        entries={external.downstream}
+                        tone="downstream"
+                      />
+                    </div>
+                  </Card>
+                )}
+
               <Card className="mt-l overflow-hidden">
                 <div className="flex items-center gap-m border-b border-border bg-secondary px-l py-m">
-                  <FileText
-                    className="icon-size-200 text-brand-foreground"
+                  <FileText                    className="icon-size-200 text-brand-foreground"
                     aria-hidden="true"
                   />
                   <div>
@@ -536,5 +591,52 @@ function ImpactList({
         </div>
       )}
     </Card>
+  );
+}
+
+function ExternalImpactList({
+  title,
+  entries,
+  tone,
+}: {
+  title: string;
+  entries: ExternalItemImpact["upstream"];
+  tone: "upstream" | "downstream";
+}) {
+  return (
+    <section>
+      <h4 className="text-300 font-semibold">{title}</h4>
+      {entries.length === 0 ? (
+        <p className="mt-s text-200 text-muted-foreground">None</p>
+      ) : (
+        <div className="mt-s space-y-xs">
+          {entries.map((entry) => (
+            <div
+              key={entry.dataset.id}
+              className="flex items-center justify-between gap-m rounded-lg border border-dashed border-border bg-secondary/50 px-m py-s"
+            >
+              <div className="min-w-0">
+                <div className="truncate text-200 font-semibold">
+                  {entry.dataset.name}
+                </div>
+                <div className="truncate text-200 text-muted-foreground">
+                  {entry.dataset.platform} · {entry.dataset.namespace}
+                </div>
+              </div>
+              <span
+                className={cn(
+                  "shrink-0 rounded-full px-s py-xs font-numeric text-200 font-semibold",
+                  tone === "upstream"
+                    ? "bg-lineage-upstream/10 text-lineage-upstream"
+                    : "bg-lineage-downstream/10 text-lineage-downstream",
+                )}
+              >
+                {entry.distance} hop{entry.distance === 1 ? "" : "s"}
+              </span>
+            </div>
+          ))}
+        </div>
+      )}
+    </section>
   );
 }

@@ -4,7 +4,7 @@
   "author": "fredgis",
   "license": "MIT",
   "private": true,
-  "version": "2.6.4",
+  "version": "2.7.0",
   "packageManager": "npm@11.13.0",
   "engines": {
     "node": ">=24 <25",

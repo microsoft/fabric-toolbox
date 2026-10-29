@@ -36,11 +36,14 @@ export function LineageSourceLegend({
   mode,
   previewIncluded,
   previewControl = false,
+  external = false,
 }: {
   mode: "items" | "objects";
   previewIncluded: boolean;
   /** True when Beta control or lifecycle edges are drawn. */
   previewControl?: boolean;
+  /** True when imported OpenLineage edges are drawn. */
+  external?: boolean;
 }) {
   return (
     <div
@@ -57,6 +60,12 @@ export function LineageSourceLegend({
                 label="Atlas snapshot (verified)"
                 color="var(--color-lineage-downstream)"
               />
+            )}
+            {external && !previewIncluded && (
+              <>
+                <LegendLine label="OpenLineage (external)" color="#0078d4" dash="6 4" />
+                <LegendLine label="Link point = same dataset" color="#c239b3" dash="2 4" />
+              </>
             )}
             {previewIncluded && (
               <>
@@ -92,7 +101,9 @@ export function LineageSourceLegend({
         <p className="mt-s border-t border-border pt-s text-muted-foreground">
           {previewIncluded
             ? "Only Item Relations API (Beta) lineage is drawn. Line labels use the API relationType."
-            : "Only Atlas snapshot lineage is drawn."}
+            : external
+              ? "Atlas snapshot lineage plus imported OpenLineage files. External lineage is never synced by Atlas."
+              : "Only Atlas snapshot lineage is drawn."}
         </p>
       )}
     </div>

@@ -264,7 +264,7 @@ describe("Map & lineage unified evidence", () => {
     expect(screen.queryByText("Beta evidence · evaluation")).not.toBeInTheDocument();
     expect(
       screen.getAllByRole("switch").map((control) => control.textContent),
-    ).toEqual(["Data flow relations", "Control relations", "Impact mode"]);
+    ).toEqual(["Data flow relations", "Control relations", "External lineage", "Impact mode"]);
     expect(
       within(screen.getByRole("group", { name: "Lineage legend" }))
         .getAllByRole("listitem")

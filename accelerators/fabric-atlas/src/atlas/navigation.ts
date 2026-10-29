@@ -5,6 +5,7 @@ import type { AssetObjectKind } from "./catalog-objects";
 export type Tab =
   | "overview"
   | "map"
+  | "external"
   | "catalog"
   | "assets"
   | "governance"

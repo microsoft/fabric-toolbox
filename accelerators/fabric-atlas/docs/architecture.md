@@ -215,7 +215,7 @@ The following state is user-scoped:
 
 - saved views;
 - access-review decisions;
-- Radar acknowledgements and mutes;
+- Governance Radar acknowledgements and mutes;
 - browser-local display preferences.
 
 The Fabric App audience is therefore the catalog disclosure boundary.

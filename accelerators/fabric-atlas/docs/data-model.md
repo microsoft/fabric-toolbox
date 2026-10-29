@@ -314,7 +314,7 @@ synchronizer subject.
 These rows store no browser token, arbitrary endpoint, request body or business data. There is no
 separate workspace-state row. Uniqueness and persisted read-back support retries under serialized
 invocations; they do not establish distributed atomic task claims. See
-[architecture.md](architecture.md#phase-2-persistence-probe-no-cutover) for the concurrency boundary.
+[architecture.md](architecture.md#scheduling-boundary) for the concurrency boundary.
 
 ### Version 2 additive graph fields
 
@@ -364,7 +364,7 @@ No additive orchestration field stores tokens, request bodies, arbitrary URLs,
 raw definitions, business rows or large collector payloads. These schemas and
 local tests do not prove distributed durability. Public v2 mutations are blocked
 until the serialization, immutable store and adapter deployment seams described
-in [architecture.md](architecture.md#phase-2-v2-server-cutover-framework-disabled)
+in [rayfin-platform-gaps.md](rayfin-platform-gaps.md#to-run-synchronization-without-an-open-browser)
 are resolved.
 
 ### Immutable SQL payload storage
@@ -467,6 +467,40 @@ A personal Governance Radar decision for one stable finding or risky change.
 
 The status is `acked` for one occurrence or `muted` until the record is
 removed.
+
+## OpenLineageImport
+
+One imported OpenLineage file. See [External lineage](external-lineage.md).
+
+`workspace_id`, `fileName`, `fileHash`, `namespace?`, `platform?`,
+`importedById`, `importedByEmail`, `importedAt`, `eventCount`, `datasetCount`,
+`edgeCount`, `toLinkCount`, `status`, `rejectReason?`
+
+The id is stable per workspace and file name, so re-importing the same file
+name replaces the import. Rejected files are kept with zero counts.
+
+## ExternalDataset
+
+A dataset seen in at least one import, with its link to Fabric.
+
+`workspace_id`, `namespace`, `name`, `platform`, `fabricItemId?`,
+`fabricObjectName?`, `state`, `linkedBy?`, `linkedAt?`, `createdById`,
+`createdByEmail`, `lastSeenAt`
+
+`state` is `linked`, `to_link` or `external`; `linkedBy` is `exact_path` for
+automatic links, otherwise the administrator. Manual decisions are kept across
+re-imports. A dataset that no import uses any more is deleted.
+
+## ExternalLineageEdge
+
+One input → output edge through an external job.
+
+`workspace_id`, `importId`, `sourceDatasetId`, `targetDatasetId`,
+`jobNamespace`, `jobName`, `lastRunState?`, `lastRunTime?`, `runId?`,
+`columnLineage?`, `columnTruncated`, `importedById`, `importedByEmail`
+
+External edges are not part of the snapshot; they are merged with snapshot
+edges when the map is read.
 
 ## Snapshot history
 

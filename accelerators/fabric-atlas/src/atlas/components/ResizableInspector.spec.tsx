@@ -67,4 +67,45 @@ describe("ResizableInspector", () => {
     );
     vi.unstubAllGlobals();
   });
+  it("collapses completely and expands again", () => {
+    vi.stubGlobal("innerWidth", 1600);
+    const onWidthChange = vi.fn();
+    render(
+      <ResizableInspector width={400} onWidthChange={onWidthChange}>
+        <aside>Details</aside>
+      </ResizableInspector>,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "Hide details panel" }));
+    expect(
+      screen.queryByRole("separator", { name: "Resize details inspector" }),
+    ).not.toBeInTheDocument();
+    const show = screen.getByRole("button", { name: "Show details panel" });
+    expect(show.parentElement).toHaveClass("xl:w-[36px]");
+    expect(screen.getByText("Details").parentElement).toHaveClass("xl:hidden");
+
+    fireEvent.click(show);
+    expect(
+      screen.getByRole("separator", { name: "Resize details inspector" }),
+    ).toBeInTheDocument();
+    expect(onWidthChange).not.toHaveBeenCalled();
+    vi.unstubAllGlobals();
+  });
+
+  it("collapses when dragged well past the minimum width", () => {
+    vi.stubGlobal("innerWidth", 1600);
+    const onWidthChange = vi.fn();
+    render(
+      <ResizableInspector width={MAP_INSPECTOR_MIN_WIDTH} onWidthChange={onWidthChange}>
+        <aside>Details</aside>
+      </ResizableInspector>,
+    );
+    const separator = screen.getByRole("separator", { name: "Resize details inspector" });
+    fireEvent.pointerDown(separator, { pointerId: 1, clientX: 400 });
+    fireEvent.pointerMove(separator, { pointerId: 1, clientX: 700 });
+    fireEvent.pointerUp(separator, { pointerId: 1, clientX: 700 });
+    expect(onWidthChange).not.toHaveBeenCalled();
+    expect(screen.getByRole("button", { name: "Show details panel" })).toBeInTheDocument();
+    vi.unstubAllGlobals();
+  });
 });

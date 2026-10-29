@@ -8,6 +8,8 @@ export function ToggleSwitch({
   tone = "brand",
   className,
   describedBy,
+  disabled = false,
+  title,
 }: {
   checked: boolean;
   onChange: (checked: boolean) => void;
@@ -15,6 +17,8 @@ export function ToggleSwitch({
   tone?: "brand" | "preview";
   className?: string;
   describedBy?: string;
+  disabled?: boolean;
+  title?: string;
 }) {
   return (
     <button
@@ -22,9 +26,11 @@ export function ToggleSwitch({
       role="switch"
       aria-checked={checked}
       aria-describedby={describedBy}
+      disabled={disabled}
+      title={title}
       onClick={() => onChange(!checked)}
       className={cn(
-        "flex min-h-[var(--atlas-touch-target)] items-center gap-s rounded-md px-s text-300 font-semibold text-foreground hover:bg-accent sm:min-h-[var(--atlas-control-height)]",
+        "flex min-h-[var(--atlas-touch-target)] items-center gap-s rounded-md px-s text-300 font-semibold text-foreground hover:bg-accent disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:bg-transparent sm:min-h-[var(--atlas-control-height)]",
         className,
       )}
     >

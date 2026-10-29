@@ -6,7 +6,23 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 Release dates use the ISO 8601 format (`YYYY-MM-DD`) and record the day the
 release tag was published.
 
-## [2.6.4] - 2026-10-30
+## [Unreleased]
+
+## [2.7.0] - 2026-10-29
+
+### Added
+
+- External lineage page: manual import of OpenLineage files (`.json` or `.ndjson`; RunEvent, JobEvent and DatasetEvent; 20 MB, 50 000 events and 5 000 datasets per file), with per-file status, counts and reject reasons. Re-importing a file with the same name replaces its edges.
+- Link to Fabric: datasets on a OneLake path of the current workspace link automatically by exact path; administrators link the others to a Fabric item or mark them External. Manual links survive re-imports.
+- Map & lineage: External lineage switch with an "External · OpenLineage" lane; impact analysis crosses the Fabric boundary in both directions.
+- Download OpenLineage (External lineage and Map): NDJSON export of the workspace or the map selection, one JobEvent per job and one DatasetEvent per dataset item, with OneLake `abfss://` names and optional linked external edges with column lineage.
+- New Rayfin entities `OpenLineageImport`, `ExternalDataset` and `ExternalLineageEdge`. See [External lineage](docs/external-lineage.md).
+- Named imports: a display name next to the file name; generic Data source type for non-Fabric datasets.
+- Item-level OpenLineage typing in the export: custom `fabricAtlas_item` facet ([schema](docs/openlineage/FabricAtlasItemFacet.json)), `datasetType` for models, `jobType` with `processingType` STREAMING (Eventstream), SERVICE (User data function) or BATCH, plus documentation, ownership and schema facets when known.
+- Link to Fabric searches every catalog item; Impact report lists upstream and downstream external datasets; the Map details panel collapses completely.
+- Two OpenLineage samples in `samples/openlineage/`.
+
+## [2.6.4] - 2026-10-28
 
 ### Added
 
@@ -21,7 +37,7 @@ release tag was published.
 - Incremental runs keep object-level lineage (KQL table and column edges) of reused items, so Changes no longer reports hundreds of false added and removed objects.
 - Browser snapshots saved by earlier releases are ignored and the next run is a full scan.
 
-## [2.6.3] - 2026-10-30
+## [2.6.3] - 2026-10-28
 
 ### Added
 
@@ -36,7 +52,7 @@ release tag was published.
 - Header domain chip no longer squeezed; sidebar My items aligned; coverage percentages rounded.
 - Fabric policies explain why enforcement is unknown without a Fabric administrator sign-in.
 
-## [2.6.2] - 2026-10-29
+## [2.6.2] - 2026-10-28
 
 ### Added
 
@@ -105,7 +121,7 @@ release tag was published.
 
 - Run one guided synchronization per workspace to collect the new evidence.
 
-## [2.2.0] - 2026-10-18
+## [2.2.0] - 2026-10-28
 
 ### Added
 
@@ -863,6 +879,34 @@ release tag was published.
 - Centralized lineage, object and status colors in the shared theme.
 - Improved keyboard focus, semantic control states, scrollbars and reduced-motion behavior.
 
+[Unreleased]: https://github.com/fredgis/FabricAtlas/compare/v2.7.0...HEAD
+[2.7.0]: https://github.com/fredgis/FabricAtlas/releases/tag/v2.7.0
+[2.6.4]: https://github.com/fredgis/FabricAtlas/releases/tag/v2.6.4
+[2.6.3]: https://github.com/fredgis/FabricAtlas/releases/tag/v2.6.3
+[2.6.2]: https://github.com/fredgis/FabricAtlas/releases/tag/v2.6.2
+[2.6.1]: https://github.com/fredgis/FabricAtlas/releases/tag/v2.6.1
+[2.6.0]: https://github.com/fredgis/FabricAtlas/releases/tag/v2.6.0
+[2.2.0]: https://github.com/fredgis/FabricAtlas/releases/tag/v2.2.0
+[2.1.3]: https://github.com/fredgis/FabricAtlas/releases/tag/v2.1.3
+[2.1.2]: https://github.com/fredgis/FabricAtlas/releases/tag/v2.1.2
+[2.1.1]: https://github.com/fredgis/FabricAtlas/releases/tag/v2.1.1
+[2.1.0]: https://github.com/fredgis/FabricAtlas/releases/tag/v2.1.0
+[2.0.0]: https://github.com/fredgis/FabricAtlas/releases/tag/v2.0.0
+[1.12.4]: https://github.com/fredgis/FabricAtlas/releases/tag/v1.12.4
+[1.12.3]: https://github.com/fredgis/FabricAtlas/releases/tag/v1.12.3
+[1.12.2]: https://github.com/fredgis/FabricAtlas/releases/tag/v1.12.2
+[1.12.1]: https://github.com/fredgis/FabricAtlas/releases/tag/v1.12.1
+[1.12.0]: https://github.com/fredgis/FabricAtlas/releases/tag/v1.12.0
+[1.11.5]: https://github.com/fredgis/FabricAtlas/releases/tag/v1.11.5
+[1.11.4]: https://github.com/fredgis/FabricAtlas/releases/tag/v1.11.4
+[1.11.3]: https://github.com/fredgis/FabricAtlas/releases/tag/v1.11.3
+[1.11.2]: https://github.com/fredgis/FabricAtlas/releases/tag/v1.11.2
+[1.11.1]: https://github.com/fredgis/FabricAtlas/releases/tag/v1.11.1
+[1.11.0]: https://github.com/fredgis/FabricAtlas/releases/tag/v1.11.0
+[1.10.1]: https://github.com/fredgis/FabricAtlas/releases/tag/v1.10.1
+[1.10.0]: https://github.com/fredgis/FabricAtlas/releases/tag/v1.10.0
+[1.9.2]: https://github.com/fredgis/FabricAtlas/releases/tag/v1.9.2
+[1.9.1]: https://github.com/fredgis/FabricAtlas/releases/tag/v1.9.1
 [1.9.0]: https://github.com/fredgis/FabricAtlas/releases/tag/v1.9.0
 [1.8.0]: https://github.com/fredgis/FabricAtlas/releases/tag/v1.8.0
 [1.7.0]: https://github.com/fredgis/FabricAtlas/releases/tag/v1.7.0
