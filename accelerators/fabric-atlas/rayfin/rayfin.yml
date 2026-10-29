@@ -1,0 +1,53 @@
+id: fabric-atlas
+name: Fabric Atlas
+version: 2.7.0
+secrets:
+  - name: ATLAS_POWERBI_SCANNER_ENABLED
+    description: Optional scanner adapter switch. Missing or false keeps it disabled.
+  - name: ATLAS_POWERBI_SCANNER_TENANT_ID
+    description: Approved Entra tenant UUID for the optional scanner adapter.
+  - name: ATLAS_POWERBI_SCANNER_CLIENT_ID
+    description: Dedicated approved Power BI scanner service principal application UUID.
+  - name: ATLAS_POWERBI_SCANNER_CLIENT_SECRET
+    description: Scanner service principal credential. Provision only in the deployed Secret Store.
+  - name: ATLAS_POWERBI_SCANNER_WORKSPACE_IDS
+    description: JSON array of approved workspace UUIDs for the optional scanner adapter.
+  - name: ATLAS_AI_ENABLED
+    description: Set true to enable opt-in AI description suggestions (off by default).
+  - name: ATLAS_AI_ENDPOINT
+    description: Azure OpenAI or Foundry chat completions URL (https) used for description suggestions.
+  - name: ATLAS_AI_TENANT_ID
+    description: Tenant of the service principal used for AI suggestions (Entra auth, preferred).
+  - name: ATLAS_AI_CLIENT_ID
+    description: Client id of the service principal used for AI suggestions.
+  - name: ATLAS_AI_CLIENT_SECRET
+    description: Client secret of the service principal used for AI suggestions.
+  - name: ATLAS_AI_API_KEY
+    description: Optional API key fallback for the AI endpoint when Entra auth is not configured.
+  - name: ATLAS_TEAMS_WEBHOOK_URL
+    description: Optional Teams Workflows webhook (https) that receives new critical findings after a sync. Never sent to the browser.
+  - name: ATLAS_POWERBI_SCANNER_SETTINGS_CONFIRMED
+    description: Set true only after reviewing read-only admin API and detailed metadata scanning settings.
+services:
+  auth:
+    enabled: true
+    fabric:
+      enabled: true
+      externalEntraExchange: false
+    allowedRedirectUris:
+      - ${RAYFIN_AUTH_REDIRECT_URI:-http://localhost:5173}
+  data:
+    enabled: true
+    dialect: mssql
+  staticHosting:
+    enabled: true
+    folder: dist
+    buildCommand: npm run build:fabric
+    indexDocument: index.html
+    assetAccess: protected
+  functions:
+    enabled: true
+    path: rayfin/functions
+    buildCommand: npm run build
+    auth:
+      type: application
