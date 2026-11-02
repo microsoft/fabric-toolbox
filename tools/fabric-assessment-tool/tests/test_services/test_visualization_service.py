@@ -1,8 +1,6 @@
 """Tests for VisualizationService."""
 
 import json
-import os
-import tempfile
 from pathlib import Path
 from unittest.mock import patch
 
@@ -31,7 +29,7 @@ def sample_synapse_assessment_dir(tmp_path):
             "location": "eastus",
             "status": "Online",
         },
-        "assessment_status": "completed",
+        "assessment_status": {"status": "completed", "description": None},
         "data_engineering": {
             "notebooks": 5,
             "spark_pools": 2,
@@ -44,9 +42,32 @@ def sample_synapse_assessment_dir(tmp_path):
             "linked_services": 8,
         },
         "data_warehouse": {
-            "dedicated_pools": 1,
-            "serverless_pool": True,
-            "total_tables": 50,
+            "counts": {
+                "dedicated": {
+                    "sql_pools": 1,
+                    "databases": 1,
+                    "tables": 50,
+                    "table_size_gb": 12.5,
+                },
+                "serverless": {
+                    "sql_pools": 1,
+                    "databases": 1,
+                    "tables": 3,
+                    "views": 1,
+                    "queries_last_24h": 1,
+                    "activity": {
+                        "status": "partial",
+                        "queries": 2,
+                        "processed_bytes": 15728640,
+                        "average_duration_ms": 2250.0,
+                        "max_duration_ms": 3500,
+                        "success_count": 1,
+                        "failure_count": 1,
+                        "cancelled_count": 0,
+                        "warnings": 1,
+                    },
+                },
+            }
         },
     }
     with open(workspace_dir / "summary.json", "w") as f:
@@ -55,6 +76,123 @@ def sample_synapse_assessment_dir(tmp_path):
     # Create resources directory
     resources_dir = workspace_dir / "resources"
     resources_dir.mkdir()
+
+    # Create sql_pools
+    sql_pools_dir = resources_dir / "sql_pools"
+    sql_pools_dir.mkdir()
+
+    dedicated_pool = {
+        "type": "dedicated_pool",
+        "pool_data": {
+            "name": "dedicated_pool_1",
+            "status": "Online",
+            "sku": "DW100c",
+            "tables_count": 50,
+            "size_gb": 12.5,
+        },
+        "exported_at": "2024-01-15T10:00:00",
+    }
+    with open(sql_pools_dir / "dedicated_pool_dedicated_pool_1.json", "w") as f:
+        json.dump(dedicated_pool, f)
+
+    serverless_pool = {
+        "type": "serverless_pool",
+        "pool_data": {
+            "name": "Built-in",
+            "status": "Online",
+            "queries_last_24h": 1,
+            "activity": {
+                "metadata": {
+                    "status": "partial",
+                    "warnings": [
+                        "queryinsights.exec_requests_history: permission denied"
+                    ],
+                    "available_sources": ["sys.dm_exec_requests_history"],
+                    "detailed_sources_used": ["sys.dm_exec_requests_history"],
+                    "history_days": 30,
+                    "top_n": 1000,
+                },
+                "queries": [
+                    {
+                        "source_name": "sys.dm_exec_requests_history",
+                        "request_id": "req-sensitive",
+                        "database_name": "db_serverless",
+                        "start_time": "2024-01-15T08:00:00",
+                        "elapsed_time_ms": 1200,
+                        "processed_bytes": 5242880,
+                        "query_text": "SELECT secret_text FROM sensitive_table",
+                    }
+                ],
+                "daily_database_usage": [
+                    {
+                        "date": "2024-01-14",
+                        "database_name": "db_serverless",
+                        "query_count": 1,
+                        "processed_bytes": 5242880,
+                        "total_elapsed_time_ms": 1000,
+                        "average_elapsed_time_ms": 1000.0,
+                    },
+                    {
+                        "date": "2024-01-15",
+                        "database_name": "db_serverless",
+                        "query_count": 1,
+                        "processed_bytes": 10485760,
+                        "total_elapsed_time_ms": 3500,
+                        "average_elapsed_time_ms": 3500.0,
+                    },
+                ],
+                "database_summaries": [
+                    {
+                        "database_name": "db_serverless",
+                        "query_count": 2,
+                        "processed_bytes": 15728640,
+                        "average_elapsed_time_ms": 2250.0,
+                        "max_elapsed_time_ms": 3500,
+                        "success_count": 1,
+                        "failure_count": 1,
+                        "cancelled_count": 0,
+                    }
+                ],
+                "performance_summary": {
+                    "total_queries": 2,
+                    "total_processed_bytes": 15728640,
+                    "total_elapsed_time_ms": 4500,
+                    "average_elapsed_time_ms": 2250.0,
+                    "max_elapsed_time_ms": 3500,
+                    "success_count": 1,
+                    "failure_count": 1,
+                    "cancelled_count": 0,
+                    "collection_window_start": "2023-12-16T00:00:00",
+                    "collection_window_end": "2024-01-15T10:00:00",
+                    "top_slowest_queries": [
+                        {
+                            "source_name": "sys.dm_exec_requests_history",
+                            "request_id": "req-2",
+                            "database_name": "db_serverless",
+                            "status": "Failed",
+                            "start_time": "2024-01-15T08:00:00",
+                            "elapsed_time_ms": 3500,
+                            "processed_bytes": 10485760,
+                        }
+                    ],
+                    "top_largest_queries": [
+                        {
+                            "source_name": "sys.dm_exec_requests_history",
+                            "request_id": "req-2",
+                            "database_name": "db_serverless",
+                            "status": "Failed",
+                            "start_time": "2024-01-15T08:00:00",
+                            "elapsed_time_ms": 3500,
+                            "processed_bytes": 10485760,
+                        }
+                    ],
+                },
+            },
+        },
+        "exported_at": "2024-01-15T10:00:00",
+    }
+    with open(sql_pools_dir / "serverless_pool_Built-in.json", "w") as f:
+        json.dump(serverless_pool, f)
 
     # Create notebooks
     notebooks_dir = resources_dir / "notebooks"
@@ -101,6 +239,57 @@ def sample_synapse_assessment_dir(tmp_path):
     }
     with open(ls_dir / "AzureBlobStorage1.json", "w") as f:
         json.dump(ls_data, f)
+
+    # Create dedicated database definition metadata
+    db_dir = workspace_dir / "data" / "dedicated_databases" / "databases" / "warehouse"
+    definitions_dir = db_dir / "definitions"
+    procedures_dir = definitions_dir / "stored_procedures"
+    procedures_dir.mkdir(parents=True)
+    with open(db_dir / "warehouse.json", "w") as f:
+        json.dump(
+            {
+                "type": "dedicated_database",
+                "data": {"name": "warehouse"},
+            },
+            f,
+        )
+    with open(definitions_dir / "summary.json", "w") as f:
+        json.dump(
+            {
+                "type": "sql_definition_summary",
+                "data": {
+                    "extraction_status": "completed",
+                    "status_description": "",
+                    "total_objects": 1,
+                    "counts_by_type": {"stored_procedure": 1},
+                    "encrypted_objects": 0,
+                    "unavailable_objects": 0,
+                    "truncated_objects": 1,
+                    "total_definition_characters": 5000,
+                    "age_buckets": {"less_than_1_year": 1},
+                },
+            },
+            f,
+        )
+    with open(procedures_dir / "dbo.large_proc.json", "w") as f:
+        json.dump(
+            {
+                "type": "sql_definition",
+                "data": {
+                    "name": "large_proc",
+                    "database": "warehouse",
+                    "schema": "dbo",
+                    "object_type": "stored_procedure",
+                    "original_length": 5000,
+                    "is_encrypted": False,
+                    "is_unavailable": False,
+                    "is_truncated": True,
+                    "modified_at": "2026-01-01T00:00:00",
+                    "definition": "not rendered",
+                },
+            },
+            f,
+        )
 
     return tmp_path
 
@@ -214,6 +403,45 @@ class TestVisualizationService:
         assert ws["platform"] == "synapse"
         assert "summary" in ws
         assert "resources" in ws
+
+    def test_aggregate_definition_metadata(
+        self, visualization_service, sample_synapse_assessment_dir
+    ):
+        data = visualization_service._load_assessment_data(
+            sample_synapse_assessment_dir
+        )
+
+        warehousing = visualization_service._aggregate_data_warehousing(
+            data["workspaces"], "synapse"
+        )
+        definitions = warehousing["definitions"]
+
+        assert definitions["databases_requested"] == 1
+        assert definitions["databases_completed"] == 1
+        assert definitions["total_objects"] == 1
+        assert definitions["counts_by_type"] == {"stored_procedure": 1}
+        assert definitions["truncated_objects"] == 1
+        assert definitions["largest_objects"][0]["name"] == "large_proc"
+        assert definitions["by_workspace"]["test-workspace"]["total_objects"] == 1
+
+    def test_render_definition_analysis_without_sql_text(
+        self, visualization_service, sample_synapse_assessment_dir, tmp_path
+    ):
+        output_dir = tmp_path / "definition-report"
+
+        visualization_service.generate_report(
+            input_path=str(sample_synapse_assessment_dir),
+            output_path=str(output_dir),
+            view="data-warehousing",
+        )
+
+        html = (output_dir / "views" / "data_warehousing.html").read_text(
+            encoding="utf-8"
+        )
+        assert "SQL Definition Analysis" in html
+        assert "Largest SQL Definitions" in html
+        assert "large_proc" in html
+        assert "not rendered" not in html
 
     def test_load_assessment_data_databricks(
         self, visualization_service, sample_databricks_assessment_dir
@@ -435,6 +663,51 @@ class TestVisualizationService:
         assert de["notebook_languages"]["Scala"] == 1
         assert len(de["spark_pools"]) == 1
 
+    def test_aggregate_data_warehousing_serverless_activity(
+        self, visualization_service, sample_synapse_assessment_dir
+    ):
+        """Test serverless activity aggregation for visualization."""
+        data = visualization_service._load_assessment_data(
+            sample_synapse_assessment_dir
+        )
+
+        warehousing = visualization_service._aggregate_data_warehousing(
+            data["workspaces"], "synapse"
+        )
+
+        assert len(warehousing["serverless_pools"]) == 1
+        assert warehousing["serverless_activity_summary"]["total_queries"] == 2
+        assert warehousing["serverless_activity_summary"]["processed_bytes"] == 15728640
+        assert warehousing["serverless_activity_summary"]["partial_workspaces"] == 1
+        assert len(warehousing["serverless_activity_database_summaries"]) == 1
+        assert (
+            warehousing["serverless_activity_database_summaries"][0]["workspace"]
+            == "test-workspace"
+        )
+        assert "query_text" not in warehousing["serverless_pools"][0].get(
+            "activity", {}
+        )
+
+    def test_generate_data_warehousing_html_excludes_query_text(
+        self, visualization_service, sample_synapse_assessment_dir, tmp_path
+    ):
+        """Test that serverless query text stays out of generated HTML."""
+        output_dir = tmp_path / "reports"
+
+        visualization_service.generate_report(
+            input_path=str(sample_synapse_assessment_dir),
+            output_path=str(output_dir),
+            view="data-warehousing",
+        )
+
+        html = (output_dir / "views" / "data_warehousing.html").read_text(
+            encoding="utf-8"
+        )
+
+        assert "Serverless Daily Usage Trends" in html
+        assert "Serverless Query Performance" in html
+        assert "SELECT secret_text FROM sensitive_table" not in html
+
     def test_generate_workspace_report(
         self, visualization_service, sample_synapse_assessment_dir, tmp_path
     ):
@@ -455,6 +728,74 @@ class TestVisualizationService:
         with open(ws_file, "r", encoding="utf-8") as f:
             html = f.read()
             assert "test-workspace" in html
+
+    def test_generate_workload_profiles(
+        self, visualization_service, sample_synapse_assessment_dir, tmp_path
+    ):
+        resources_dir = (
+            sample_synapse_assessment_dir / "test-workspace" / "resources" / "sql_pools"
+        )
+        resources_dir.mkdir(exist_ok=True)
+        workload = {
+            "collection_status": "collected",
+            "description": "Collected",
+            "configured_window_days": 7,
+            "configured_top_n": 1000,
+            "sql_text_redacted": True,
+            "observed_start": "2026-01-01T10:00:00",
+            "observed_end": "2026-01-02T11:00:00",
+            "request_count": 3,
+            "session_count": 2,
+            "peak_concurrency": 2,
+            "status_distribution": {"Completed": 3},
+            "resource_class_distribution": {"smallrc": 2, "largerc": 1},
+            "duration_statistics": {
+                "average_ms": 1000,
+                "p50_ms": 900,
+                "p90_ms": 1800,
+                "p99_ms": 1980,
+                "max_ms": 2000,
+            },
+            "temporal_buckets": [
+                {"day_of_week": 0, "hour": 10, "request_count": 2},
+                {"day_of_week": 1, "hour": 11, "request_count": 1},
+            ],
+            "requests": [],
+            "sessions": [],
+        }
+        pool_data = {
+            "type": "dedicated_pool",
+            "pool_data": {
+                "name": "pool1",
+                "sku": "DW100c",
+                "status": "Online",
+                "tables_count": 0,
+                "size_gb": 0,
+                "workload": workload,
+            },
+        }
+        with open(resources_dir / "dedicated_pool_pool1.json", "w") as f:
+            json.dump(pool_data, f)
+
+        output_dir = tmp_path / "reports"
+        visualization_service.generate_report(
+            input_path=str(sample_synapse_assessment_dir),
+            output_path=str(output_dir),
+            view="data-warehousing",
+        )
+
+        warehousing_html = (output_dir / "views" / "data_warehousing.html").read_text(
+            encoding="utf-8"
+        )
+        workspace_html = (output_dir / "workspaces" / "test-workspace.html").read_text(
+            encoding="utf-8"
+        )
+        for html in (warehousing_html, workspace_html):
+            assert "Workload Profile: pool1" in html
+            assert "Resource Class Distribution" in html
+            assert "Duration Distribution (seconds)" in html
+            assert "Temporal Heatmap" in html
+            assert "SELECT " not in html
 
     def test_empty_input_directory(self, visualization_service, tmp_path):
         """Test handling of empty input directory."""

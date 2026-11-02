@@ -24,6 +24,7 @@ VisualizationService.generate_report()
   ├── _load_assessment_data()                    # walk input dir
   │     └── _load_workspace_data()               # per workspace
   │           ├── summary.json  → summary
+  │           ├── column_summary.json → Synapse column analysis (optional/legacy-safe)
   │           ├── resources/    → _load_resources()      (flat category → list[JSON])
   │           ├── data/         → _load_data_catalog()   (nested Unity Catalog tree)
   │           └── admin/        → _load_resources()      (Synapse only)
@@ -141,6 +142,37 @@ function updateFilteredStats(selectedWorkspaces) {
 ```
 
 This is called automatically from `base.html` on selection changes.
+
+Synapse column distributions and wide-object rows follow the same rule.
+`VisualizationService` loads `column_summary.json` directly, adds a
+`workspace` attribute to every distribution and wide-object entry, and treats
+a missing file as `legacy_no_data` rather than as a successful zero-column
+collection. Column charts must be recomputed from the selected workspaces in
+`updateFilteredStats(selectedWorkspaces)`.
+## Synapse SQL Complexity Artifacts
+
+When `fat assess --sql-complexity` is enabled, each dedicated or serverless
+database can include:
+
+```text
+complexity/
+├── summary.json
+└── objects/
+    ├── procedures/*.json
+    ├── functions/*.json
+    └── views/*.json
+```
+
+Both summary and object files use the standard `data` wrapper. The recursive
+data-catalog loader therefore exposes them below the database folder as
+`complexity.summary` and `complexity.objects.<type>.<file>`.
+
+`_aggregate_data_warehousing()` adds the workspace and database identity to
+each object, combines level/type distributions, and builds
+`complexity_by_workspace` for client-side filter updates. Complexity templates
+must not assume a definition is present: the secure default exports
+`definition: null`, and encrypted or permission-hidden objects have no score or
+level. Treat HIGH, VERY_HIGH, and unavailable definitions as review items.
 
 ## Charts (Chart.js)
 
