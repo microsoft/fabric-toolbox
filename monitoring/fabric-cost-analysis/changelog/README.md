@@ -9,6 +9,12 @@
 
 ## Release
 
+## 📦 2026.10.29
+
+- **New meters**: new meters to follow on demands workloads CUs.
+- **Data Reservation Fixes**: Issues 674, 691, 692 and 699 (https://github.com/microsoft/fabric-toolbox/issues).
+
+
 ## 📦 2026.9.11
 
 - **Azure Tags analysis**: new `azuretags` table loaded from the FOCUS cost data, related to `resources`, with a dedicated tag hierarchy filter (tag name / tag value) available across the report

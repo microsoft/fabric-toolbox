@@ -151,3 +151,98 @@ Data Warehouse (Accelerated) Capacity Usage CU,Data Warehouse (Accelerated) Capa
 High Scale Dataflow Compute - Spark Capacity Usage CU,High Scale Dataflow Compute - Spark Capacity Usage CU,Preview,FALSE,TRUE,Dataflows
 Spark GPU Optimized Capacity Usage CU,Represents the Spark GPU usage on your capacity,Preview,FALSE,TRUE,Spark
 SQL DB in Microsoft Fabric LR Capacity Usage CU,SQL DB in Microsoft Fabric LR Capacity Usage CU,GA,FALSE,TRUE,SQL
+Cosmos Database in Microsoft Fabric Capacity Usage CU,Cosmos DB in Fabric compute (current name of Cosmos DB in MS Fabric),GA,FALSE,TRUE,Cosmos DB
+Eventstream Custom Connector Capacity Usage CU,Eventstream Custom Stream Connector compute,GA,FALSE,TRUE,RTI
+Ontology Discovery Capacity Usage CU,Fabric IQ read requests that retrieve ontology definitions,GA,FALSE,TRUE,Ontology Modeling
+Activator - Event Analytics OD On-Demand Usage CU,On-demand usage,Preview,FALSE,FALSE,Activator
+Anomaly Detector Queries OD On-Demand Usage CU,On-demand usage,Preview,FALSE,FALSE,ML
+Apache Airflow job OD On-Demand Usage CU,On-demand usage,Preview,FALSE,FALSE,Apache Airflow
+API for GraphQL Query OD On-Demand Usage CU,On-demand usage,Preview,FALSE,FALSE,GraphQL
+Copilot and AI OD On-Demand Usage CU,On-demand usage,Preview,FALSE,FALSE,Copilot
+Cosmos Database in Microsoft Fabric OD On-Demand Usage CU,On-demand usage,Preview,FALSE,FALSE,Cosmos DB
+Data Movement - Incremental copy OD On-Demand Usage CU,On-demand usage,Preview,FALSE,FALSE,Data Movement
+Data Movement OD On-Demand Usage CU,On-demand usage,Preview,FALSE,FALSE,Data Movement
+Data Orchestration OD On-Demand Usage CU,On-demand usage,Preview,FALSE,FALSE,Data Orchestration
+Data Warehouse Accelerated OD On-Demand Usage CU,On-demand usage,Preview,FALSE,FALSE,Data Warehouse
+Data Warehouse OD On-Demand Usage CU,On-demand usage,Preview,FALSE,FALSE,Data Warehouse
+Dataflows Standard Compute OD On-Demand Usage CU,On-demand usage,Preview,FALSE,FALSE,Dataflows
+dbt job OD On-Demand Usage CU,On-demand usage,Preview,FALSE,FALSE,Data Orchestration
+Digital Twin Builder OD On-Demand Usage CU,On-demand usage,Preview,FALSE,FALSE,Digital Twin
+Digital Twin Builder Operation OD On-Demand Usage CU,On-demand usage,Preview,FALSE,FALSE,Digital Twin
+Digital Twin Builder Query OD On-Demand Usage CU,On-demand usage,Preview,FALSE,FALSE,Digital Twin
+Eventhouse OD On-Demand Usage CU,On-demand usage,Preview,FALSE,FALSE,RTI
+Eventstream Connector OD On-Demand Usage CU,On-demand usage,Preview,FALSE,FALSE,RTI
+Eventstream Custom Connector OD On-Demand Usage CU,On-demand usage,Preview,FALSE,FALSE,RTI
+Eventstream Data Traffic OD On-Demand Usage CU,On-demand usage,Preview,FALSE,FALSE,RTI
+Eventstream Flat OD On-Demand Usage CU,On-demand usage,Preview,FALSE,FALSE,RTI
+Eventstream Processor OD On-Demand Usage CU,On-demand usage,Preview,FALSE,FALSE,RTI
+Fabric Planning - Automated Jobs OD On-Demand Usage CU,On-demand usage,Preview,FALSE,FALSE,Fabric Planning
+Fabric Planning - Planner Sessions OD On-Demand Usage CU,On-demand usage,Preview,FALSE,FALSE,Fabric Planning
+Fabric Planning - Stakeholder Sessions OD On-Demand Usage CU,On-demand usage,Preview,FALSE,FALSE,Fabric Planning
+Fabric Planning - Viewer Sessions OD On-Demand Usage CU,On-demand usage,Preview,FALSE,FALSE,Fabric Planning
+Graph data management OD On-Demand Usage CU,On-demand usage,Preview,FALSE,FALSE,Graph
+High Scale Dataflow Compute - Spark OD On-Demand Usage CU,On-demand usage,Preview,FALSE,FALSE,Dataflows
+High Scale Dataflow Compute - SQL OD On-Demand Usage CU,On-demand usage,Preview,FALSE,FALSE,Dataflows
+Map processing OD On-Demand Usage CU,On-demand usage,Preview,FALSE,FALSE,Map
+Map services OD On-Demand Usage CU,On-demand usage,Preview,FALSE,FALSE,Map
+ML Model Endpoint OD On-Demand Usage CU,On-demand usage,Preview,FALSE,FALSE,ML
+OneLake BCDR Iterative Read Operation Hot OD On-Demand Usage CU,On-demand usage,Preview,FALSE,FALSE,BCDR
+OneLake BCDR Iterative Read Operations Cold OD On-Demand Usage CU,On-demand usage,Preview,FALSE,FALSE,BCDR
+OneLake BCDR Iterative Read Operations Cool OD On-Demand Usage CU,On-demand usage,Preview,FALSE,FALSE,BCDR
+OneLake BCDR Iterative Read Operations OD On-Demand Usage CU,On-demand usage,Preview,FALSE,FALSE,BCDR
+OneLake BCDR Iterative Write Operations Cold OD On-Demand Usage CU,On-demand usage,Preview,FALSE,FALSE,BCDR
+OneLake BCDR Iterative Write Operations Cool OD On-Demand Usage CU,On-demand usage,Preview,FALSE,FALSE,BCDR
+OneLake BCDR Iterative Write Operations Hot OD On-Demand Usage CU,On-demand usage,Preview,FALSE,FALSE,BCDR
+OneLake BCDR Iterative Write Operations OD On-Demand Usage CU,On-demand usage,Preview,FALSE,FALSE,BCDR
+OneLake BCDR Other Operations Cold OD On-Demand Usage CU,On-demand usage,Preview,FALSE,FALSE,BCDR
+OneLake BCDR Other Operations Cool OD On-Demand Usage CU,On-demand usage,Preview,FALSE,FALSE,BCDR
+OneLake BCDR Other Operations Hot OD On-Demand Usage CU,On-demand usage,Preview,FALSE,FALSE,BCDR
+OneLake BCDR Other Operations OD On-Demand Usage CU,On-demand usage,Preview,FALSE,FALSE,BCDR
+OneLake BCDR Read Operations Cold OD On-Demand Usage CU,On-demand usage,Preview,FALSE,FALSE,BCDR
+OneLake BCDR Read Operations Cool OD On-Demand Usage CU,On-demand usage,Preview,FALSE,FALSE,BCDR
+OneLake BCDR Read Operations Hot OD On-Demand Usage CU,On-demand usage,Preview,FALSE,FALSE,BCDR
+OneLake BCDR Read Operations OD On-Demand Usage CU,On-demand usage,Preview,FALSE,FALSE,BCDR
+OneLake BCDR Write Operations Cold OD On-Demand Usage CU,On-demand usage,Preview,FALSE,FALSE,BCDR
+OneLake BCDR Write Operations Cool OD On-Demand Usage CU,On-demand usage,Preview,FALSE,FALSE,BCDR
+OneLake BCDR Write Operations Hot OD On-Demand Usage CU,On-demand usage,Preview,FALSE,FALSE,BCDR
+OneLake BCDR Write Operations OD On-Demand Usage CU,On-demand usage,Preview,FALSE,FALSE,BCDR
+OneLake Data Retrieval Cold OD On-Demand Usage CU,On-demand usage,Preview,FALSE,FALSE,OneLake
+OneLake Data Retrieval Cool OD On-Demand Usage CU,On-demand usage,Preview,FALSE,FALSE,OneLake
+OneLake diagnostics OD On-Demand Usage CU,On-demand usage,Preview,FALSE,FALSE,OneLake
+OneLake Iterative Read Operations Cold OD On-Demand Usage CU,On-demand usage,Preview,FALSE,FALSE,OneLake
+OneLake Iterative Read Operations Cool OD On-Demand Usage CU,On-demand usage,Preview,FALSE,FALSE,OneLake
+OneLake Iterative Read Operations Hot OD On-Demand Usage CU,On-demand usage,Preview,FALSE,FALSE,OneLake
+OneLake Iterative Read Operations OD On-Demand Usage CU,On-demand usage,Preview,FALSE,FALSE,OneLake
+OneLake Iterative Write Operations Cold OD On-Demand Usage CU,On-demand usage,Preview,FALSE,FALSE,OneLake
+OneLake Iterative Write Operations Cool OD On-Demand Usage CU,On-demand usage,Preview,FALSE,FALSE,OneLake
+OneLake Iterative Write Operations Hot OD On-Demand Usage CU,On-demand usage,Preview,FALSE,FALSE,OneLake
+OneLake Iterative Write Operations OD On-Demand Usage CU,On-demand usage,Preview,FALSE,FALSE,OneLake
+OneLake Other Operations Cold OD On-Demand Usage CU,On-demand usage,Preview,FALSE,FALSE,OneLake
+OneLake Other Operations Cool OD On-Demand Usage CU,On-demand usage,Preview,FALSE,FALSE,OneLake
+OneLake Other Operations Hot OD On-Demand Usage CU,On-demand usage,Preview,FALSE,FALSE,OneLake
+OneLake Other Operations OD On-Demand Usage CU,On-demand usage,Preview,FALSE,FALSE,OneLake
+OneLake Read Operations Cold OD On-Demand Usage CU,On-demand usage,Preview,FALSE,FALSE,OneLake
+OneLake Read Operations Cool OD On-Demand Usage CU,On-demand usage,Preview,FALSE,FALSE,OneLake
+OneLake Read Operations Hot OD On-Demand Usage CU,On-demand usage,Preview,FALSE,FALSE,OneLake
+OneLake Read Operations OD On-Demand Usage CU,On-demand usage,Preview,FALSE,FALSE,OneLake
+OneLake Security OD On-Demand Usage CU,On-demand usage,Preview,FALSE,FALSE,OneLake
+OneLake Table Read via API OD On-Demand Usage CU,On-demand usage,Preview,FALSE,FALSE,OneLake
+OneLake Write Operations Cold OD On-Demand Usage CU,On-demand usage,Preview,FALSE,FALSE,OneLake
+OneLake Write Operations Cool OD On-Demand Usage CU,On-demand usage,Preview,FALSE,FALSE,OneLake
+OneLake Write Operations Hot OD On-Demand Usage CU,On-demand usage,Preview,FALSE,FALSE,OneLake
+OneLake Write Operations OD On-Demand Usage CU,On-demand usage,Preview,FALSE,FALSE,OneLake
+Ontology AI OD On-Demand Usage CU,On-demand usage,Preview,FALSE,FALSE,Ontology Modeling
+Ontology Discovery OD On-Demand Usage CU,On-demand usage,Preview,FALSE,FALSE,Ontology Modeling
+Ontology Logic and Operations OD On-Demand Usage CU,On-demand usage,Preview,FALSE,FALSE,Ontology Modeling
+Ontology Modeling OD On-Demand Usage CU,On-demand usage,Preview,FALSE,FALSE,Ontology Modeling
+Operations Agents Autonomous Reasoning OD On-Demand Usage CU,On-demand usage,Preview,FALSE,FALSE,Operations Agents
+Operations Agents Compute OD On-Demand Usage CU,On-demand usage,Preview,FALSE,FALSE,Operations Agents
+Power BI OD On-Demand Usage CU,On-demand usage,Preview,FALSE,FALSE,Power BI
+RTI Event Listener and Alert OD On-Demand Usage CU,On-demand usage,Preview,FALSE,FALSE,RTI
+RTI Event Operations OD On-Demand Usage CU,On-demand usage,Preview,FALSE,FALSE,RTI
+Spark Memory Optimized OD On-Demand Usage CU,On-demand usage,Preview,FALSE,FALSE,Spark
+SQL database in Microsoft Fabric OD On-Demand Usage CU,On-demand usage,Preview,FALSE,FALSE,SQL
+SQL DB in Microsoft Fabric LR OD On-Demand Usage CU,On-demand usage,Preview,FALSE,FALSE,SQL
+SSIS in Fabric OD On-Demand Usage CU,On-demand usage,Preview,FALSE,FALSE,Data Movement
+user data functions OD On-Demand Usage CU,On-demand usage,Preview,FALSE,FALSE,UDF
+VNet Data Gateway OD On-Demand Usage CU,On-demand usage,Preview,FALSE,FALSE,VNET
