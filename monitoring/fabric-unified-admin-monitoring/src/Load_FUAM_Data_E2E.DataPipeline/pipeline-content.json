@@ -552,6 +552,42 @@
                         }
                     }
                 }
+            },
+            {
+                "name": "If weekly maintenance day",
+                "description": "Runs Maintenance_for_FUAM (backup + OPTIMIZE/VACUUM) once a week, after all loads, so Delta tables don't exceed Direct Lake guardrails. Set maintenance_weekday to -1 to disable.",
+                "type": "IfCondition",
+                "dependsOn": [
+                    {
+                        "activity": "Load_Optimization_Module_E2E",
+                        "dependencyConditions": [
+                            "Completed"
+                        ]
+                    }
+                ],
+                "typeProperties": {
+                    "expression": {
+                        "value": "@equals(dayOfWeek(utcNow()), pipeline().parameters.maintenance_weekday)",
+                        "type": "Expression"
+                    },
+                    "ifTrueActivities": [
+                        {
+                            "name": "Maintenance_for_FUAM",
+                            "type": "ExecutePipeline",
+                            "dependsOn": [],
+                            "policy": {
+                                "secureInput": false
+                            },
+                            "typeProperties": {
+                                "pipeline": {
+                                    "referenceName": "cde03ac2-86ea-3102-8b62-451a5b9c5b7b",
+                                    "type": "PipelineReference"
+                                },
+                                "waitOnCompletion": true
+                            }
+                        }
+                    ]
+                }
             }
         ],
         "parameters": {
@@ -616,6 +652,10 @@
                 "defaultValue": 0
             },
             "om_top_n_semantic_models_per_capacity": {
+                "type": "int",
+                "defaultValue": 0
+            },
+            "maintenance_weekday": {
                 "type": "int",
                 "defaultValue": 0
             }
