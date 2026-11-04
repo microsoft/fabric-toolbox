@@ -17,49 +17,10 @@
                                 "Entity": "item_users"
                             }
                         },
-                        "Property": "Identifier"
+                        "Property": "DisplayName"
                     }
                 },
                 "type": "Categorical",
-                "filter": {
-                    "Version": 2,
-                    "From": [
-                        {
-                            "Name": "i",
-                            "Entity": "item_users",
-                            "Type": 0
-                        }
-                    ],
-                    "Where": [
-                        {
-                            "Condition": {
-                                "In": {
-                                    "Expressions": [
-                                        {
-                                            "Column": {
-                                                "Expression": {
-                                                    "SourceRef": {
-                                                        "Source": "i"
-                                                    }
-                                                },
-                                                "Property": "Identifier"
-                                            }
-                                        }
-                                    ],
-                                    "Values": [
-                                        [
-                                            {
-                                                "Literal": {
-                                                    "Value": "'ggintli@MngEnvMCAP059919.onmicrosoft.com'"
-                                                }
-                                            }
-                                        ]
-                                    ]
-                                }
-                            }
-                        }
-                    ]
-                },
                 "howCreated": "Drillthrough"
             }
         ],
@@ -79,7 +40,7 @@
                                 "Entity": "item_users"
                             }
                         },
-                        "Property": "Identifier"
+                        "Property": "DisplayName"
                     }
                 }
             }

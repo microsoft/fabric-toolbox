@@ -38,11 +38,12 @@
                                             "Entity": "item_users"
                                         }
                                     },
-                                    "Property": "Identifier"
+                                    "Property": "DisplayName"
                                 }
                             },
-                            "queryRef": "item_users.Identifier",
-                            "nativeQueryRef": "Identifier"
+                            "queryRef": "item_users.DisplayName",
+                            "nativeQueryRef": "Display Name",
+                            "displayName": "Display Name"
                         },
                         {
                             "field": {
@@ -52,12 +53,11 @@
                                             "Entity": "item_users"
                                         }
                                     },
-                                    "Property": "DisplayName"
+                                    "Property": "Identifier"
                                 }
                             },
-                            "queryRef": "item_users.DisplayName",
-                            "nativeQueryRef": "Display Name",
-                            "displayName": "Display Name"
+                            "queryRef": "item_users.Identifier",
+                            "nativeQueryRef": "Identifier"
                         }
                     ]
                 }

@@ -32,6 +32,16 @@ table workspaces_scanned_users
 
 		annotation SummarizationSetBy = Automatic
 
+	column DisplayName
+		dataType: string
+		sourceProviderType: varchar(8000)
+		lineageTag: a2adb253-a236-4b1a-b032-b26de4cd8d86
+		sourceLineageTag: DisplayName
+		summarizeBy: none
+		sourceColumn: DisplayName
+
+		annotation SummarizationSetBy = Automatic
+
 	column GraphId
 		dataType: string
 		sourceProviderType: varchar(8000)

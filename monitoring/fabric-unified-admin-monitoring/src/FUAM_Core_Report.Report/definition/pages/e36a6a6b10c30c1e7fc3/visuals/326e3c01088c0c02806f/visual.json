@@ -38,10 +38,10 @@
                                             "Entity": "item_users"
                                         }
                                     },
-                                    "Property": "Identifier"
+                                    "Property": "DisplayName"
                                 }
                             },
-                            "queryRef": "item_users.Identifier",
+                            "queryRef": "item_users.DisplayName",
                             "nativeQueryRef": "Search for User based on Item Access",
                             "active": false,
                             "displayName": "Search for User based on Item Access"
