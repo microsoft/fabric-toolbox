@@ -44,7 +44,7 @@ https://learn.microsoft.com/en-us/fabric/cicd/manage-deployment#option-1---git--
     ![ci_cd_option_1.png](./resources/workspace-url.png)
 
 
-2. Create a Microsoft Fabric workspace for controling the CI/CD process. It will contain the pre and post deployment notebook. For more information about this workspace, see the documenation in the **cicd-workspace** folder. The user running the CI/CD process should be an Admin or Member of the workspaces 
+2. Create a Microsoft Fabric workspace for controlling the CI/CD process. It will contain the pre and post deployment notebook. For more information about this workspace, see the documentation in the **cicd-workspace** folder. The user running the CI/CD process should be an Admin or Member of the workspaces 
 
 3. Create an azure devops project and a repository.
 

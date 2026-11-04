@@ -12,7 +12,7 @@ This project aims to provide easy, Low code and automated way of deploying Real-
 [Full List of Fabric APIs](https://learn.microsoft.com/en-us/rest/api/fabric/articles/)
 
 Currently Eventhouse and Eventstream accelerators are added in this project. Look out for accelerators for Activator as soon as the APIs are available. 
-Jump to the relavent section by using the links below
+Jump to the relevant section by using the links below
 * [Eventhouse](https://github.com/SuryaTejJosyula/FabricRTI_Accelerator#eventhouse)
 * [Eventstream](https://github.com/SuryaTejJosyula/FabricRTI_Accelerator#eventstream)
 

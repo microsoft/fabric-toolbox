@@ -1,6 +1,6 @@
 # Case-Insensitive Views
 
-The SQL Analyitics Endpoint (SQL AE) can only be created with a case-sensitive collation.  This is causing some issues when quering the data, adding a collation or LCASE/UCASE to the queries is not always practical. 
+The SQL Analytics Endpoint (SQL AE) can only be created with a case-sensitive collation.  This is causing some issues when querying the data, adding a collation or LCASE/UCASE to the queries is not always practical. 
 
 So by creating views in the SQL AE, you can join the tables with tables in a case-insensitive Fabric warehouse without collation issues.
 

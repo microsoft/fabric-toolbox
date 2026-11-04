@@ -130,6 +130,6 @@ The second screenshot shows column-level lineage display of Fabric/PowerBI repor
 <br />
 Version 1:
 
-The Table and Colums metadata are extracted via SQL queries whose source can be found in the MS documentation [here](https://learn.microsoft.com/en-us/sql/relational-databases/system-catalog-views/querying-the-sql-server-system-catalog-faq?view=fabric#_FAQ31)
+The Table and Columns metadata are extracted via SQL queries whose source can be found in the MS documentation [here](https://learn.microsoft.com/en-us/sql/relational-databases/system-catalog-views/querying-the-sql-server-system-catalog-faq?view=fabric#_FAQ31)
 - Report sources metadata and pipeline json structures are extracted using the Semantic Link Labs library by Michael Kovalsky et al. [https://github.com/microsoft/semantic-link-labs](https://github.com/microsoft/semantic-link-labs)
 - Upload to MS Purview is performed using examples of Pyapacheatlas by Will Johnson et al. [https://github.com/wjohnson/pyapacheatlas](https://github.com/wjohnson/pyapacheatlas)

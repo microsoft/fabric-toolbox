@@ -19,7 +19,7 @@ This section offers accelerators designed to assist you in upgrading and moderni
 
 | Name | Description |
 | :-- | :-- |
-| Datamart Server Address | How to [retireve the SQL connection string](https://learn.microsoft.com/power-bi/transform-model/datamarts/datamarts-analyze#get-the-t-sql-connection-string) for the Fabric datamart. |
+| Datamart Server Address | How to [retrieve the SQL connection string](https://learn.microsoft.com/power-bi/transform-model/datamarts/datamarts-analyze#get-the-t-sql-connection-string) for the Fabric datamart. |
 | Datamart Name | The datamart name as it is displayed in the workspace list. |
 | Datawarehouse Server Address | How to [retrieve the SQL connection string](https://learn.microsoft.com/en-us/fabric/data-warehouse/connectivity#retrieve-the-sql-connection-string) for the Fabric data warehouse. |
 | Datawarehouse Name | The data warehouse name as it is displayed in the workspace list. |
