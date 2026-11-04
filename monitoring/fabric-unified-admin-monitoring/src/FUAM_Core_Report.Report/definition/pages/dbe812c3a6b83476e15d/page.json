@@ -90,45 +90,6 @@
                     }
                 },
                 "type": "Categorical",
-                "filter": {
-                    "Version": 2,
-                    "From": [
-                        {
-                            "Name": "w",
-                            "Entity": "workspaces",
-                            "Type": 0
-                        }
-                    ],
-                    "Where": [
-                        {
-                            "Condition": {
-                                "In": {
-                                    "Expressions": [
-                                        {
-                                            "Column": {
-                                                "Expression": {
-                                                    "SourceRef": {
-                                                        "Source": "w"
-                                                    }
-                                                },
-                                                "Property": "WorkspaceName"
-                                            }
-                                        }
-                                    ],
-                                    "Values": [
-                                        [
-                                            {
-                                                "Literal": {
-                                                    "Value": "'FUAM_Version_2026_5_1'"
-                                                }
-                                            }
-                                        ]
-                                    ]
-                                }
-                            }
-                        }
-                    ]
-                },
                 "howCreated": "User"
             },
             {
