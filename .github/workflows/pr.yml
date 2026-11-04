@@ -15,17 +15,17 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - name: Checkout Code
-      uses: actions/checkout@v3
+      uses: actions/checkout@a37ce9120846195fa4ece8f58b268e6043cb2f26 # v3.7.0
       with:
         ref: ${{github.event.pull_request.head.ref}}
         repository: ${{github.event.pull_request.head.repo.full_name}}   # checkout the correct branch name
         fetch-depth: 0
     - name: Install GitVersion
-      uses: gittools/actions/gitversion/setup@v0.9.15
+      uses: gittools/actions/gitversion/setup@31b3198b2de324472547fecec2c0f721b70c38e2 # v0.9.15
       with:
         versionSpec: 5.x
     - name: Evaluate Next Version
-      uses: gittools/actions/gitversion/execute@v0.9.15
+      uses: gittools/actions/gitversion/execute@31b3198b2de324472547fecec2c0f721b70c38e2 # v0.9.15
       with:
         configFilePath: GitVersion.yml
     - name: Build & Package Module
@@ -34,7 +34,7 @@ jobs:
       env:
         ModuleVersion: ${{ env.gitVersion.NuGetVersionV2 }}
     - name: Publish Build Artifact
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
       with:
         name: ${{ env.buildArtifactName }}
         path: ${{ env.buildFolderName }}/
@@ -45,13 +45,13 @@ jobs:
     - Build_Stage_Package_Module
     steps:
     - name: Checkout Code
-      uses: actions/checkout@v3
+      uses: actions/checkout@a37ce9120846195fa4ece8f58b268e6043cb2f26 # v3.7.0
       with:
         ref: ${{github.event.pull_request.head.ref}}
         repository: ${{github.event.pull_request.head.repo.full_name}}   # checkout the correct branch name
         fetch-depth: 0
     - name: Download Build Artifact
-      uses: actions/download-artifact@v4
+      uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
       with:
         name: ${{ env.buildArtifactName }}
         path: ${{ env.buildFolderName }}
@@ -59,7 +59,7 @@ jobs:
       shell: pwsh
       run: ./build.ps1 -tasks noop ; ./build.ps1 -tasks test
     - name: Publish Test Artifact
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
       with:
         path: ${{ env.buildFolderName }}/${{ env.testResultFolderName }}/
         name: CodeCoverageLinux
@@ -71,13 +71,13 @@ jobs:
     - Build_Stage_Package_Module
     steps:
     - name: Checkout Code
-      uses: actions/checkout@v3
+      uses: actions/checkout@a37ce9120846195fa4ece8f58b268e6043cb2f26 # v3.7.0
       with:
         ref: ${{github.event.pull_request.head.ref}}
         repository: ${{github.event.pull_request.head.repo.full_name}}   # checkout the correct branch name
         fetch-depth: 0
     - name: Download Build Artifact
-      uses: actions/download-artifact@v4
+      uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
       with:
         name: ${{ env.buildArtifactName }}
         path: ${{ env.buildFolderName }}
@@ -86,7 +86,7 @@ jobs:
       run: ./build.ps1 -tasks noop; ./build.ps1 -tasks test
 
     - name: Publish Test Artifact
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
       with:
         path: ${{ env.buildFolderName }}/${{ env.testResultFolderName }}/
         name: CodeCoverageWinPS7
@@ -98,13 +98,13 @@ jobs:
     - Build_Stage_Package_Module
     steps:
     - name: Checkout Code
-      uses: actions/checkout@v3
+      uses: actions/checkout@a37ce9120846195fa4ece8f58b268e6043cb2f26 # v3.7.0
       with:
         ref: ${{github.event.pull_request.head.ref}}
         repository: ${{github.event.pull_request.head.repo.full_name}}   # checkout the correct branch name
         fetch-depth: 0
     - name: Download Build Artifact
-      uses: actions/download-artifact@v4
+      uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
       with:
         name: ${{ env.buildArtifactName }}
         path: ${{ env.buildFolderName }}
@@ -112,7 +112,7 @@ jobs:
       shell: pwsh
       run: ./build.ps1 -ResolveDependency -tasks test
     - name: Publish Test Artifact
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
       with:
         path: ${{ env.buildFolderName }}/${{ env.testResultFolderName }}/
         name: CodeCoverageWinPS51
@@ -128,45 +128,45 @@ jobs:
     - Test_Stage_test_windows_ps
     steps:
     - name: Checkout Code
-      uses: actions/checkout@v3
+      uses: actions/checkout@a37ce9120846195fa4ece8f58b268e6043cb2f26 # v3.7.0
       with:
         ref: ${{github.event.pull_request.head.ref}}   # checkout the correct branch name
         repository: ${{github.event.pull_request.head.repo.full_name}}   # checkout the correct branch name
         fetch-depth: 0
 
     - name: Download Test Artifact Linux
-      uses: actions/download-artifact@v4
+      uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
       with:
         name: CodeCoverageLinux
         path: ${{ env.buildFolderName }}/${{ env.testResultFolderName }}/CodeCoverageLinux/
     - name: Download Test Artifact Windows (PS 5.1)
-      uses: actions/download-artifact@v4
+      uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
       with:
         name: CodeCoverageWinPS51
         path: ${{ env.buildFolderName }}/${{ env.testResultFolderName }}/CodeCoverageWinPS51/
     - name: Download Test Artifact Windows (PS7)
-      uses: actions/download-artifact@v4
+      uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
       with:
         name: CodeCoverageWinPS7
         path: ${{ env.buildFolderName }}/${{ env.testResultFolderName }}/CodeCoverageWinPS7/
 
     - name: Publish Linux Test Results
       id: linux-test-results
-      uses: EnricoMi/publish-unit-test-result-action@v2
+      uses: EnricoMi/publish-unit-test-result-action@d0a4676d0e0b938bc201470d88276b7c74c712b3 # v2.24.0
       if: always()
       with:
         nunit_files: ${{ env.buildFolderName }}/${{ env.testResultFolderName }}/CodeCoverageLinux/NUnit*.xml
         check_name: Linux Test Results
     - name: Publish WinPS51 Test Results
       id: winps51-test-results
-      uses: EnricoMi/publish-unit-test-result-action@v2
+      uses: EnricoMi/publish-unit-test-result-action@d0a4676d0e0b938bc201470d88276b7c74c712b3 # v2.24.0
       if: always()
       with:
         nunit_files: ${{ env.buildFolderName }}/${{ env.testResultFolderName }}/CodeCoverageWinPS51/NUnit*.xml
         check_name: WinPS51 Test Results
     - name: Publish WinPS71 Test Results
       id: winps71-test-results
-      uses: EnricoMi/publish-unit-test-result-action@v2
+      uses: EnricoMi/publish-unit-test-result-action@d0a4676d0e0b938bc201470d88276b7c74c712b3 # v2.24.0
       if: always()
       with:
         nunit_files: ${{ env.buildFolderName }}/${{ env.testResultFolderName }}/CodeCoverageWinPS7/NUnit*.xml
