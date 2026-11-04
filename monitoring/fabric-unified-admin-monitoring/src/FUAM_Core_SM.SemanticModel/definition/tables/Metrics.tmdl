@@ -1420,24 +1420,6 @@ table Metrics
 		displayFolder: Capacity TimePoint Metrics\Utilization
 		lineageTag: 5d8961b5-4df3-4785-ae0e-9a08ad3c4109
 
-	measure 'Workspace Monitoring URL' = ```
-			
-			IF(
-			    SELECTEDVALUE(active_items[type]) = "SemanticModel" && 
-			    COUNTROWS(workspace_monitoring_reports) > 0, 
-			        "https://app.powerbi.com/groups/" &
-			        MAX(workspaces[WorkspaceId]) &
-			        "/reports/" &
-			        LOWER(MAX(workspace_monitoring_reports[ReportId])) &
-			        "?experience=power-bi&filter=SM_Semantic_Models%2FItemId%20eq%20%27" &
-			        SELECTEDVALUE(active_items[id]) &"%27",
-			    BLANK()
-			)
-			```
-		displayFolder: Items\Links
-		lineageTag: c467c9b2-517e-4ce1-9669-cd7f35d7b3aa
-		dataCategory: WebUrl
-
 	measure 'Used CU(s) %' = ```
 			
 			// Aggregatable Measure, 
