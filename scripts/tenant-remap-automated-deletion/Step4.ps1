@@ -1,4 +1,5 @@
 #Requires -Modules Az.Accounts, Az.Resources
+#Requires -Version 7
 
 function Add-AdminOnPersonalWorkspaces {
     [CmdletBinding()]
@@ -27,8 +28,6 @@ function Add-AdminOnPersonalWorkspaces {
 
     if (-not $AdminUpn) { $AdminUpn = (Get-AzContext).Account.Id }
 
-    $adminOid = (Get-AzADUser -UserPrincipalName $AdminUpn).Id
-
     $secureFabricToken = (Get-AzAccessToken -ResourceUrl 'https://api.fabric.microsoft.com').Token
     $ssPtr = [System.Runtime.InteropServices.Marshal]::SecureStringToBSTR($secureFabricToken)
     $plainTextFabricToken = [System.Runtime.InteropServices.Marshal]::PtrToStringBSTR($ssPtr)
@@ -48,24 +47,23 @@ function Add-AdminOnPersonalWorkspaces {
                     break
                 }
 
-                Start-Sleep -Milliseconds $intervalBetweenRequestsMilliseconds
-
                 try {
+                    Start-Sleep -Milliseconds $intervalBetweenRequestsMilliseconds
                     Invoke-RestMethod -Method POST -Uri "https://api.fabric.microsoft.com/v1/admin/workspaces/$wsId/grantAdminTemporaryAccess" -Headers $h
 
-                    Write-Host "Admin granted to $wsId via API (lasts for 24 hours)"
+                    Write-Host "Admin granted to $wsId via API (lasts for 24 hours)."
                     break
                 } catch {
                     $response = $_.Exception.Response
                     
                     if (-not $response) {
-                        throw
+                        continue
                     }
 
                     $error_returned = $response.StatusCode
 
                     if ($error_returned -ne 429) {
-                        Write-Warning "API grant failed for $wsId ($error_returned). This may happen if already Admin. Use UI link if NOT already Admin: https://app.powerbi.com/groups/$wsId"
+                        Write-Warning "Grant Temporary Admin Access API failed for workspace $wsId with error code ($error_returned). This may happen if the user is already an admin. Use the UI if they are not already an admin: https://app.powerbi.com/groups/$wsId"
                         break
                     }
 
