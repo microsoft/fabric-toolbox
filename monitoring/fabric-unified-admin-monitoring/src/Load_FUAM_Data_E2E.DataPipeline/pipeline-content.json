@@ -8,7 +8,7 @@
                     {
                         "activity": "Load_Inventory",
                         "dependencyConditions": [
-                            "Completed"
+                            "Succeeded"
                         ]
                     }
                 ],
@@ -95,7 +95,7 @@
                     {
                         "activity": "Load_Active_Items",
                         "dependencyConditions": [
-                            "Completed"
+                            "Succeeded"
                         ]
                     }
                 ],
@@ -123,13 +123,13 @@
                     {
                         "activity": "Load_Workspaces",
                         "dependencyConditions": [
-                            "Completed"
+                            "Succeeded"
                         ]
                     },
                     {
                         "activity": "Load_Capacities",
                         "dependencyConditions": [
-                            "Completed"
+                            "Succeeded"
                         ]
                     }
                 ],
@@ -169,7 +169,7 @@
                     {
                         "activity": "Load_Capacity_Refreshables",
                         "dependencyConditions": [
-                            "Completed"
+                            "Succeeded"
                         ]
                     }
                 ],
@@ -221,7 +221,7 @@
                     {
                         "activity": "Load_Activities",
                         "dependencyConditions": [
-                            "Completed"
+                            "Succeeded"
                         ]
                     }
                 ],
@@ -249,7 +249,7 @@
                     {
                         "activity": "Load_Tenant_Settings",
                         "dependencyConditions": [
-                            "Completed"
+                            "Succeeded"
                         ]
                     }
                 ],
@@ -298,7 +298,7 @@
                     {
                         "activity": "Load_Active_Items",
                         "dependencyConditions": [
-                            "Completed"
+                            "Succeeded"
                         ]
                     }
                 ],
@@ -322,7 +322,7 @@
                     {
                         "activity": "Load_Delegated_Tenant_Settings_Overrides",
                         "dependencyConditions": [
-                            "Completed"
+                            "Succeeded"
                         ]
                     }
                 ],
@@ -350,7 +350,7 @@
                     {
                         "activity": "Generate_Calendar_Table",
                         "dependencyConditions": [
-                            "Completed"
+                            "Succeeded"
                         ]
                     }
                 ],
@@ -374,7 +374,7 @@
                     {
                         "activity": "Load_Git_Connections_E2E",
                         "dependencyConditions": [
-                            "Completed"
+                            "Succeeded"
                         ]
                     }
                 ],
@@ -416,7 +416,7 @@
                     {
                         "activity": "If has domains",
                         "dependencyConditions": [
-                            "Completed"
+                            "Succeeded"
                         ]
                     }
                 ],
@@ -444,7 +444,7 @@
                     {
                         "activity": "Load_WidelyShared_OrganizationLinks",
                         "dependencyConditions": [
-                            "Completed"
+                            "Succeeded"
                         ]
                     }
                 ],
