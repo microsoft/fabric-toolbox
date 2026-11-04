@@ -214,6 +214,20 @@ The Pipeline has different parameters, which are controlling the data load flow:
 
 With that you have configured the main orchestration pipeline, which will be executed every day. The new parameter values act like an 'incremental' load. The capacity metrics and activity logs will be fetched only for the last two days and populated in the Lakehouse table.
 
+## 9. (Recommended) Schedule Pipeline for maintenance
+
+The daily load continuously writes to the Delta tables in **FUAM_Lakehouse**. Without regular maintenance, small files and old table versions accumulate over time, which slows down the load and makes backups increasingly large and slow.
+
+- Navigate to your FUAM Workspace
+- Search for the item 'Maintenance_for_FUAM'
+- Open the **Maintenance_for_FUAM** pipeline
+- Click on **Run** -> **Schedule**
+- Configure a **weekly** schedule (at least monthly) at a time when 'Load_FUAM_Data_E2E' is not running, with enough buffer for backup and maintenance
+
+The pipeline first creates a backup of FUAM_Lakehouse in **FUAM_Backup_Lakehouse** (step 'Perform Backup', notebook '01_FUAM_Lakehouse_Backup') and then runs OPTIMIZE and VACUUM on all tables (step 'Perform Table Maintenance', notebook '02_FUAM_Lakehouse_Optimization'). Table maintenance also runs if the backup fails. If the backup failed and table maintenance succeeded, the backup is retried once (step 'Retry Backup if failed'). This helps especially if the first attempt failed because of too many obsolete files, which VACUUM has removed in the meantime. After each successful backup, backups older than **keep_historic_days** (pipeline parameter, default 14) are deleted from FUAM_Backup_Lakehouse.
+
+If FUAM has been running for a long time without maintenance, the first run can take considerably longer.
+
 ---------------
 
 ## Congratulations! 
