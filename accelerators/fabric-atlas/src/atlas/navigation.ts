@@ -13,6 +13,7 @@ export type Tab =
   | "jobs"
   | "workspace"
   | "mcp"
+  | "scout"
   | "about";
 
 export type GovernanceSection =

@@ -727,6 +727,175 @@ body,
     text-align: center;
 }
 
+.atlas-scout-hero {
+    background:
+      radial-gradient(
+        circle at 82% 30%,
+        color-mix(in srgb, var(--color-fabric-teal) 16%, transparent),
+        transparent 42%
+      ),
+      radial-gradient(
+        circle at 8% 0%,
+        color-mix(in srgb, var(--color-fabric-purple) 14%, transparent),
+        transparent 40%
+      ),
+      linear-gradient(
+        120deg,
+        color-mix(in srgb, var(--color-primary) 7%, var(--color-card)),
+        var(--color-card) 60%
+      );
+}
+
+@keyframes atlas-scout-spin {
+    to {
+      transform: rotate(360deg);
+    }
+}
+
+@keyframes atlas-scout-node {
+    0%,
+    100% {
+      opacity: 0.35;
+      transform: scale(0.8);
+    }
+    50% {
+      opacity: 1;
+      transform: scale(1.25);
+    }
+}
+
+@keyframes atlas-scout-shimmer {
+    0% {
+      background-position: -200% 0;
+    }
+    100% {
+      background-position: 200% 0;
+    }
+}
+
+.atlas-scout-orb {
+    position: relative;
+    flex-shrink: 0;
+    border-radius: 50%;
+    background:
+      radial-gradient(
+        circle at 50% 50%,
+        color-mix(in srgb, var(--color-primary) 22%, var(--color-card)) 0%,
+        var(--color-card) 70%
+      );
+    box-shadow:
+      inset 0 0 0 1px color-mix(in srgb, var(--color-primary) 28%, transparent),
+      0 0 40px color-mix(in srgb, var(--color-fabric-teal) 22%, transparent);
+}
+
+.atlas-scout-sweep {
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    background: conic-gradient(
+      from 0deg,
+      color-mix(in srgb, var(--color-fabric-teal) 55%, transparent),
+      transparent 70deg
+    );
+    mask: radial-gradient(circle, transparent 18%, #000 19%);
+    animation: atlas-scout-spin 3.2s linear infinite;
+}
+
+.atlas-scout-sweep-fast {
+    animation-duration: 1.1s;
+}
+
+.atlas-scout-ring {
+    transform-box: fill-box;
+    transform-origin: center;
+    animation: atlas-scout-spin 18s linear infinite;
+}
+
+.atlas-scout-ring-reverse {
+    animation-direction: reverse;
+    animation-duration: 26s;
+}
+
+.atlas-scout-node {
+    transform-box: fill-box;
+    transform-origin: center;
+    animation: atlas-scout-node 2.4s ease-in-out infinite;
+}
+
+.atlas-scout-shimmer {
+    background: linear-gradient(
+      90deg,
+      transparent,
+      color-mix(in srgb, var(--color-primary) 40%, transparent),
+      transparent
+    );
+    background-size: 200% 100%;
+    animation: atlas-scout-shimmer 1.6s linear infinite;
+}
+
+.atlas-scout-composer {
+    position: relative;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.atlas-scout-composer:focus-within {
+    border-color: color-mix(in srgb, var(--color-primary) 40%, var(--color-border));
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-primary) 12%, transparent);
+}
+
+.atlas-scout-dock-header {
+    background:
+      radial-gradient(circle at 88% 0%, color-mix(in srgb, var(--color-fabric-purple) 35%, transparent), transparent 55%),
+      linear-gradient(120deg, color-mix(in srgb, var(--color-fabric-teal) 92%, black), color-mix(in srgb, var(--color-fabric-teal) 72%, white));
+}
+
+.atlas-scout-dock-body {
+    background: linear-gradient(180deg, color-mix(in srgb, var(--color-fabric-teal) 6%, var(--color-card)), var(--color-card) 45%);
+}
+
+.atlas-scout-bubble {
+    background: radial-gradient(
+      circle at 30% 25%,
+      color-mix(in srgb, var(--color-fabric-teal) 55%, white),
+      color-mix(in srgb, var(--color-fabric-teal) 88%, black) 55%,
+      color-mix(in srgb, var(--color-fabric-teal) 65%, black)
+    );
+}
+
+.atlas-scout-bubble-pulse {
+    border: 2px solid var(--color-fabric-teal);
+    animation: atlas-scout-pulse 1.4s ease-out infinite;
+}
+
+@keyframes atlas-scout-pulse {
+    from {
+      opacity: 0.7;
+      transform: scale(1);
+    }
+    to {
+      opacity: 0;
+      transform: scale(1.6);
+    }
+}
+
+.atlas-scout-sql-keyword {
+    color: var(--color-fabric-purple);
+    font-weight: 600;
+}
+
+.atlas-scout-sql-string {
+    color: var(--color-status-healthy);
+}
+
+.atlas-scout-sql-number {
+    color: var(--color-fabric-blue);
+}
+
+.atlas-scout-sql-comment {
+    color: var(--color-muted-foreground);
+    font-style: italic;
+}
+
 @media (max-width: 640px) {
     .atlas-sync-frame {
       width: calc(100vw - 24px);

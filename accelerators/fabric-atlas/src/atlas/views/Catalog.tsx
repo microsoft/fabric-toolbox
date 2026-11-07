@@ -1,17 +1,19 @@
 import * as Dialog from "@radix-ui/react-dialog";
 import * as Popover from "@radix-ui/react-popover";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useContext, useEffect, useMemo, useRef, useState } from "react";
 import {
   Activity,
   ChevronDown,
   Check,
   ChevronRight,
+  FileDown,
   FilterX,
   Layers,
   LayoutGrid,
   Search,
   Settings2,
   ShieldCheck,
+  Sparkles,
   Tag,
   Table2,
   Waypoints,
@@ -30,6 +32,9 @@ import { NativeLink } from "../components/NativeLink";
 import { hasRecordedAccess, requestAccessLinks } from "../request-access";
 import { itemOneLakeRoles } from "../governance-evidence";
 import { OneLakeRolesList } from "../components/OneLakeRolesList";
+import { downloadText, fileSlug } from "../download";
+import { itemPassportMarkdown, scoutItemQuestion } from "../item-passport";
+import { ScoutChatContext } from "../scout-chat-context";
 import {
   CATALOG_FACETS,
   CATALOG_FACET_LABELS,
@@ -182,6 +187,50 @@ function RequestAccess({
           Email owner
         </a>
       )}
+    </div>
+  );
+}
+
+function ItemDrawerActions({
+  item,
+  data,
+  onAskScout,
+}: {
+  item: Item;
+  data: Parameters<typeof itemPassportMarkdown>[0];
+  onAskScout: () => void;
+}) {
+  const scout = useContext(ScoutChatContext);
+  const exportPassport = () => {
+    const markdown = itemPassportMarkdown(data, item.fabricId, {
+      generatedAt: new Date().toISOString(),
+    });
+    if (markdown) downloadText(markdown, "text/markdown", `${fileSlug(item.displayName)}-identity.md`);
+  };
+  const button =
+    "inline-flex items-center gap-xs rounded-md border border-border bg-card px-s py-xs text-200 font-semibold text-foreground hover:bg-accent disabled:cursor-not-allowed disabled:opacity-60";
+  return (
+    <div className="mt-s flex flex-wrap items-center gap-s">
+      {scout?.available && (
+        <button
+          type="button"
+          disabled={scout.busy}
+          title={scout.busy ? "Atlas Scout is answering another question" : undefined}
+          onClick={() => {
+            onAskScout();
+            scout.setDockOpen(true);
+            void scout.ask(scoutItemQuestion(item));
+          }}
+          className={cn(button, "border-primary/30 text-primary hover:bg-primary/10")}
+        >
+          <Sparkles className="icon-size-100" aria-hidden="true" />
+          Ask Scout
+        </button>
+      )}
+      <button type="button" onClick={exportPassport} className={button}>
+        <FileDown className="icon-size-100" aria-hidden="true" />
+        Export identity sheet
+      </button>
     </div>
   );
 }
@@ -873,6 +922,11 @@ export function CatalogView({
                       item={detail}
                       workspace={data.workspace}
                       hasAccess={hasRecordedAccess(data, detail.fabricId, currentUser.email)}
+                    />
+                    <ItemDrawerActions
+                      item={detail}
+                      data={data}
+                      onAskScout={() => setDetailId(null)}
                     />
                   </div>
                   <Dialog.Close asChild>

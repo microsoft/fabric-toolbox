@@ -17,7 +17,7 @@ item, delivered to Functions per invocation through typed `ctx.Secrets`.
 Declared but missing values throw; the adapter catches those accessors without
 returning their messages.
 
-The installed CLI template
+The installed Rayfin CLI package template (outside this repository)
 `templates/universal-app/.agents/skills/external-api-workflows/SKILL.md`
 explicitly documents names-only declarations:
 

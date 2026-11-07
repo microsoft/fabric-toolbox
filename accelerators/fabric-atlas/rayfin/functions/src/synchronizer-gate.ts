@@ -17,6 +17,19 @@ export interface SynchronizerGuardData {
 }
 
 /**
+ * Explicit, 403-style authorization failure. Thrown before any
+ * application-identity Fabric request when the caller is not the synchronizer.
+ */
+export class SynchronizerAuthorizationError extends Error {
+  readonly code = "NOT_AUTHORIZED";
+  readonly status = 403;
+  constructor(message: string) {
+    super(message);
+    this.name = "SynchronizerAuthorizationError";
+  }
+}
+
+/**
  * Fails closed unless the caller can read or create the policy-protected
  * authority sentinel. Call it before any application-identity Fabric request.
  */
@@ -49,6 +62,6 @@ export async function requireAtlasSynchronizer(
     }
   } catch {
     console.warn(`[atlas] ${operation} authorization failed`);
-    throw new Error(deniedMessage);
+    throw new SynchronizerAuthorizationError(deniedMessage);
   }
 }

@@ -16,7 +16,7 @@ export const REPOSITORY_URL =
 
 export const APP_VERSION =
   (import.meta.env.VITE_APP_VERSION as string | undefined) ??
-  "2.7.0";
+  "2.7.11";
 
 export const BUILD_COMMIT =
   (import.meta.env.VITE_APP_BUILD_COMMIT as string | undefined) ?? "development";
@@ -56,6 +56,195 @@ export function sameDeploymentGeneration(
 }
 
 export const RELEASES: AtlasRelease[] = [
+  {
+    version: "2.7.11",
+    date: "2026-11-07",
+    title: "Ask Scout and identity sheet",
+    sections: [
+      {
+        title: "Added",
+        items: [
+          "Catalog item drawer: Ask Scout opens the Scout bubble with a question about that item (owner, health, upstream and downstream impact, access, findings).",
+          "Catalog item drawer: Export identity sheet downloads a Markdown one-pager with identity, ownership, trust, lineage, access, findings and recent jobs. Missing evidence shows as Not collected, never as zero.",
+        ],
+      },
+    ],
+  },
+  {
+    version: "2.7.10",
+    date: "2026-11-07",
+    title: "Sync Brief",
+    sections: [
+      {
+        title: "Added",
+        items: [
+          "Governance Center > Changes opens with a Sync Brief: items added or removed, new external or elevated access, lineage edges, failed or recovered jobs, changed measures and schema objects, new high-priority findings and the largest downstream impact. Copy it as Markdown or download it. Missing metadata shows as Unavailable, not zero.",
+        ],
+      },
+      {
+        title: "Security",
+        items: [
+          "A non-synchronizer calling a synchronizer-only Function gets an explicit 403 NOT_AUTHORIZED error. A test checks that every Function reading the application token checks the synchronizer first.",
+        ],
+      },
+      {
+        title: "Changed",
+        items: [
+          "Local development docs cover Local Network Access, approved origins and the Edge profile. The installation guide explains how to rotate the synchronizer.",
+        ],
+      },
+    ],
+  },
+  {
+    version: "2.7.9",
+    date: "2026-11-07",
+    title: "External dataset deletes restricted",
+    sections: [
+      {
+        title: "Security",
+        items: [
+          "Only the person who first imported an external dataset (or the synchronizer) can delete it. Deleting an import leaves datasets created by others in place instead of failing.",
+        ],
+      },
+    ],
+  },
+  {
+    version: "2.7.8",
+    date: "2026-11-06",
+    title: "Every Scout starter answers",
+    sections: [
+      {
+        title: "Fixed",
+        items: [
+          "\"Used most but not endorsed\" ranks semantic models and reports by reach (downstream items and principals with access), since Fabric has no view counts in Atlas.",
+          "\"Shared with external users or guests\" runs instead of failing on a reserved SQL keyword.",
+        ],
+      },
+    ],
+  },
+  {
+    version: "2.7.7",
+    date: "2026-11-06",
+    title: "Atlas Scout reliability",
+    sections: [
+      {
+        title: "Fixed",
+        items: [
+          "Object-level lineage of a table always shows its columns and flows instead of answering that nothing was found.",
+          "Scout continues in a fresh conversation when the previous thread expired, and asks once more when Fabric loses its own tool call.",
+        ],
+      },
+    ],
+  },
+  {
+    version: "2.7.6",
+    date: "2026-11-06",
+    title: "Atlas Scout queries everything",
+    sections: [
+      {
+        title: "Added",
+        items: [
+          "Atlas Scout queries the whole object inventory: tables, columns, measures with DAX dependencies, relationships, ontology bindings, object-level lineage, domains, OneLake roles and tenant settings, and draws dependencies as graphs.",
+        ],
+      },
+      {
+        title: "Fixed",
+        items: [
+          "Object-level lineage answers name each object with its item, so tables, notebooks and ontologies no longer collapse into a loop.",
+          "The first question of a new conversation no longer fails with 'run is active': Scout cancels the stale run and retries in a fresh thread.",
+        ],
+      },
+    ],
+  },
+  {
+    version: "2.7.5",
+    date: "2026-11-06",
+    title: "Atlas Scout fixes",
+    sections: [
+      {
+        title: "Fixed",
+        items: [
+          "Lineage answers draw as a graph even when the agent writes the table without outer pipes.",
+          "Asking a new question after Stop no longer fails: the stopped run is cancelled and Scout continues in a fresh thread if needed.",
+        ],
+      },
+    ],
+  },
+  {
+    version: "2.7.4",
+    date: "2026-11-06",
+    title: "Atlas Scout bubble window",
+    sections: [
+      {
+        title: "Improved",
+        items: ["The floating Atlas Scout window has a teal header, a white body and a clearer prompt field."],
+      },
+    ],
+  },
+  {
+    version: "2.7.3",
+    date: "2026-11-06",
+    title: "Atlas Scout lineage graph",
+    sections: [
+      {
+        title: "New",
+        items: [
+          "Atlas Scout draws lineage answers as an animated graph (broken links dashed in red, failing items highlighted), with the edge table one click away.",
+        ],
+      },
+      {
+        title: "Fixed",
+        items: [
+          "Lineage questions no longer fail on recursive SQL: the agent walks up to four hops with chained queries.",
+          "The Atlas Scout prompt keeps a light background when focused; the floating bubble is slightly darker.",
+        ],
+      },
+    ],
+  },
+  {
+    version: "2.7.2",
+    date: "2026-11-06",
+    title: "Atlas Scout polish",
+    sections: [
+      {
+        title: "New",
+        items: [
+          "A floating Atlas Scout bubble in the bottom-right corner opens a compact chat from any tab; it shares the conversation with the Atlas Scout tab.",
+        ],
+      },
+      {
+        title: "Improved",
+        items: [
+          "Softer Atlas Scout colors in light and dark themes.",
+          "Answers render nested and correctly numbered lists, with labels in bold and statuses as pills.",
+          "Score columns render as gauges; internal step names such as Audit are no longer shown.",
+          "Removed the animated orb next to each answer; the header animation stays.",
+        ],
+      },
+    ],
+  },
+  {
+    version: "2.7.1",
+    date: "2026-11-06",
+    title: "Atlas Scout",
+    sections: [
+      {
+        title: "New",
+        items: [
+          "Atlas Scout: ask governance questions in plain language. A Fabric Data Agent reads the Atlas store and answers with tables, health gauges and status pills.",
+          "Every answer shows its evidence: the SQL the agent ran and the raw results, with copy.",
+          "Live progress, Stop and follow-up questions in the same conversation.",
+          "The agent definition and its provisioning script are versioned in fabric/data-agent/atlas-scout.",
+        ],
+      },
+      {
+        title: "Security",
+        items: [
+          "Scout v1 is read-only and sees every synchronized workspace in the Atlas store. First use asks for consent to DataAgent.Execute.All.",
+        ],
+      },
+    ],
+  },
   {
     version: "2.7.0",
     date: "2026-10-29",

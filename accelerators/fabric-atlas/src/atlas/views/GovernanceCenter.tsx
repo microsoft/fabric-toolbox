@@ -30,6 +30,8 @@ import { TrendChart } from "../components/TrendChart";
 import { GovernanceExceptionControl } from "../components/GovernanceExceptionControl";
 import { GovernancePolicyEditor } from "../components/GovernancePolicyEditor";
 import { HistoricalChangeDetails } from "../components/HistoricalChangeDetails";
+import { SyncBriefPanel } from "../components/SyncBriefPanel";
+import { buildSyncBrief, syncBriefMarkdown, type SyncBriefLink } from "../sync-brief";
 import { ItemFamilyCoverageSection } from "../components/ItemFamilyCoverageSection";
 import { RadarSignalTiles } from "../components/RadarSignalTiles";
 import { ScoreMeter } from "../components/ScoreMeter";
@@ -274,6 +276,38 @@ function focusRequest(
 
 function findingPillarFilter(value: unknown): string {
   return typeof value === "string" && ["access", "lineage", "operations"].includes(value) ? value : "";
+}
+
+function navigationForSyncBriefLink(link: SyncBriefLink): AtlasNavigation {
+  switch (link.kind) {
+    case "item":
+      return { tab: "catalog", focus: focusRequest({ itemId: link.itemId }) };
+    case "access":
+      return {
+        tab: "access",
+        focus: focusRequest({ principalId: link.principalId, itemId: link.itemId }),
+      };
+    case "job":
+      return { tab: "jobs", focus: focusRequest({ itemId: link.itemId, query: link.query }) };
+    case "lineage":
+      return link.itemId
+        ? { tab: "map", focus: focusRequest({ itemId: link.itemId }) }
+        : { tab: "map" };
+    case "object":
+      return {
+        tab: "assets",
+        focus: focusRequest({
+          itemId: link.itemId,
+          tableName: link.tableName,
+          objectName: link.objectName,
+          objectId: link.objectId,
+          objectKind: link.objectKind,
+          query: link.objectName,
+        }),
+      };
+    case "finding":
+      return navigationForFinding(link.finding);
+  }
 }
 
 function navigationForFinding(finding: GovernanceFinding): AtlasNavigation {
@@ -687,6 +721,21 @@ export function GovernanceCenterView({
     loadHistorySnapshot,
     section,
   ]);
+  const syncBrief = useMemo(
+    () =>
+      buildSyncBrief(
+        comparisonOlder,
+        comparisonNewer ??
+          (history.summaries.length === 1
+            ? history.snapshots.find(
+                (snapshot) => snapshot.snapshotId === history.summaries[0]?.snapshotId,
+              )
+            : undefined),
+      ),
+    [comparisonNewer, comparisonOlder, history.snapshots, history.summaries],
+  );
+  const syncBriefFile = () =>
+    syncBriefMarkdown(syncBrief, data.workspace.displayName);
   const snapshotChanges = useMemo(() => {
     if (!comparisonNewer || !comparisonOlder) return [];
     return compareSnapshots(comparisonOlder, comparisonNewer);
@@ -1160,6 +1209,18 @@ export function GovernanceCenterView({
       </Tabs.Content>
       <Tabs.Content value="changes" asChild>
         <div>
+          <SyncBriefPanel
+            brief={syncBrief}
+            loading={historyLoading || comparisonLoading}
+            onCopy={() => navigator.clipboard.writeText(syncBriefFile())}
+            onDownload={() =>
+              downloadMarkdown(
+                syncBriefFile(),
+                `fabric-atlas-sync-brief-${(syncBrief.currentSyncedAt ?? "").slice(0, 10) || "latest"}.md`,
+              )
+            }
+            onOpen={(link) => onNavigate(navigationForSyncBriefLink(link))}
+          />
           <ChangesSection
             changes={filteredChanges}
             total={snapshotChanges.length}

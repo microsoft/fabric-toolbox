@@ -1,6 +1,8 @@
 import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { SAMPLE_DATA } from "../model";
+import { ScoutChatContext, type ScoutChat } from "../scout-chat-context";
+import * as download from "../download";
 import { displayPreferenceKey } from "../display-preferences";
 import { CatalogView } from "./Catalog";
 
@@ -90,5 +92,53 @@ describe("CatalogView layout", () => {
     expect(table.getByRole("button", { name: `Open details for ${model.displayName}` })).toBeVisible();
     fireEvent.change(screen.getByLabelText("Search catalog"), { target: { value: "" } });
     expect(table.queryByRole("button", { name: `Open details for ${model.displayName}` })).not.toBeInTheDocument();
+  });
+  function openModelDrawer() {
+    const model = SAMPLE_DATA.items.find((item) => item.itemType === "SemanticModel")!;
+    fireEvent.click(screen.getByRole("button", { name: "Table" }));
+    const table = within(screen.getByRole("region", { name: "Catalog table" }));
+    fireEvent.click(table.getByRole("button", { name: /Semantic model/i }));
+    fireEvent.click(table.getByRole("button", { name: `Open details for ${model.displayName}` }));
+    return { model, drawer: within(screen.getByRole("dialog", { name: `${model.displayName} details` })) };
+  }
+
+  it("exports the item identity sheet as Markdown", () => {
+    const spy = vi.spyOn(download, "downloadText").mockImplementation(() => {});
+    render(<CatalogView />);
+    const { model, drawer } = openModelDrawer();
+    expect(drawer.queryByRole("button", { name: "Ask Scout" })).not.toBeInTheDocument();
+    fireEvent.click(drawer.getByRole("button", { name: "Export identity sheet" }));
+    expect(spy).toHaveBeenCalledTimes(1);
+    const [content, type, filename] = spy.mock.calls[0];
+    expect(type).toBe("text/markdown");
+    expect(filename).toBe(`${download.fileSlug(model.displayName)}-identity.md`);
+    expect(content).toContain(`# ${model.displayName} — identity sheet`);
+    spy.mockRestore();
+  });
+
+  it("asks Atlas Scout about the item and opens the dock", async () => {
+    const chat: ScoutChat = {
+      available: true,
+      configured: true,
+      turns: [],
+      busy: false,
+      ask: vi.fn(async () => {}),
+      stop: vi.fn(),
+      reset: vi.fn(),
+      dockOpen: false,
+      setDockOpen: vi.fn(),
+    };
+    render(
+      <ScoutChatContext.Provider value={chat}>
+        <CatalogView />
+      </ScoutChatContext.Provider>,
+    );
+    const { model, drawer } = openModelDrawer();
+    fireEvent.click(drawer.getByRole("button", { name: "Ask Scout" }));
+    expect(chat.setDockOpen).toHaveBeenCalledWith(true);
+    expect(chat.ask).toHaveBeenCalledWith(expect.stringContaining(`(Fabric ID ${model.fabricId})`));
+    await waitFor(() =>
+      expect(screen.queryByRole("dialog", { name: `${model.displayName} details` })).not.toBeInTheDocument(),
+    );
   });
 });

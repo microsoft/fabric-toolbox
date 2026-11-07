@@ -347,7 +347,9 @@ async function removeOrphans(
     const manual = ds.state === 'external' || (ds.state === 'linked' && ds.linkedBy !== EXACT_PATH);
     return !manual;
   });
-  await inBatches(orphans, (id) => repo.remove('ExternalDataset', id));
+  // Only the dataset's creator (or the sync writer) may delete it; an orphan
+  // created by someone else is left for them rather than failing the import.
+  await inBatches(orphans, (id) => repo.remove('ExternalDataset', id).catch(() => undefined));
 }
 
 export interface ImportOutcome {

@@ -30,6 +30,7 @@ const TABS = new Set<Tab>([
   "jobs",
   "workspace",
   "mcp",
+  "scout",
   "about",
 ]);
 

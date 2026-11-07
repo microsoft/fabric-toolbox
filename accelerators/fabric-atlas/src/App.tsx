@@ -33,6 +33,7 @@ import {
   Search,
   Settings2,
   ShieldCheck,
+  Sparkles,
   Sun,
   UserRound,
   Waypoints,
@@ -43,6 +44,7 @@ import { useThemeContext } from "@/hooks/theme.context";
 import { useAtlas } from "./atlas/store";
 import { ExternalLineageProvider } from "./atlas/external-lineage-store";
 import { CommandPalette } from "./atlas/components/CommandPalette";
+import { ScoutChatProvider } from "./atlas/scout-chat";
 import { SyncRunCompact, SyncRunProgressLine } from "./atlas/components/SyncRunStatus";
 import {
   navigationForSearch,
@@ -96,6 +98,7 @@ const governanceLoader = () => import("./atlas/views/GovernanceCenter");
 const jobsLoader = () => import("./atlas/views/Jobs");
 const workspaceLoader = () => import("./atlas/views/WorkspaceHub");
 const mcpLoader = () => import("./atlas/views/Mcp");
+const scoutLoader = () => import("./atlas/views/Scout");
 const aboutLoader = () => import("./atlas/views/About");
 
 const OverviewView = lazy(() =>
@@ -134,6 +137,12 @@ const WorkspaceHubView = lazy(() =>
 const McpView = lazy(() =>
   mcpLoader().then((module) => ({ default: module.McpView })),
 );
+const ScoutView = lazy(() =>
+  scoutLoader().then((module) => ({ default: module.ScoutView })),
+);
+const ScoutDock = lazy(() =>
+  scoutLoader().then((module) => ({ default: module.ScoutDock })),
+);
 const AboutView = lazy(() =>
   aboutLoader().then((module) => ({ default: module.AboutView })),
 );
@@ -149,6 +158,7 @@ const VIEW_LOADERS: Partial<Record<Tab, () => Promise<unknown>>> = {
   jobs: jobsLoader,
   workspace: workspaceLoader,
   mcp: mcpLoader,
+  scout: scoutLoader,
   about: aboutLoader,
 };
 
@@ -171,6 +181,7 @@ const NAV_GROUPS: {
     items: [
       { id: "governance", label: "Governance Center", icon: ShieldCheck },
       { id: "access", label: "Access Review", icon: KeyRound },
+      { id: "scout", label: "Atlas Scout", icon: Sparkles },
     ],
   },
   {
@@ -570,6 +581,7 @@ function App() {
 
   return (
     <ExternalLineageProvider>
+    <ScoutChatProvider>
     <WorkspaceSwitchContext.Provider value={switchWorkspace}>
     <Dialog.Root open={navOpen} onOpenChange={setNavOpen}>
     <div className="atlas-shell-canvas relative flex h-screen overflow-hidden text-foreground">
@@ -800,6 +812,7 @@ function App() {
                 />
               )}
               {tab === "mcp" && <McpView />}
+              {tab === "scout" && <ScoutView />}
               {tab === "about" && <AboutView />}
               </Suspense>
             </motion.div>
@@ -830,6 +843,11 @@ function App() {
             : { availability: catalogAvailability, search: searchOneLakeCatalog }
         }
       />
+      {tab !== "scout" && !isPreview && (
+        <Suspense fallback={null}>
+          <ScoutDock onExpand={() => nav("scout")} />
+        </Suspense>
+      )}
     </div>
       {navOpen && (
         <Dialog.Portal>
@@ -860,6 +878,7 @@ function App() {
       )}
     </Dialog.Root>
     </WorkspaceSwitchContext.Provider>
+    </ScoutChatProvider>
     </ExternalLineageProvider>
   );
 }

@@ -203,8 +203,16 @@ the newly published snapshot.
 | `FindingAck` | User-scoped acknowledgement or mute |
 | `GovernancePolicy` | Shared posture targets |
 | `GovernanceException` | Shared time-bounded exception |
+| `AccessPolicyEvidence` | Optional immutable workspace-policy context, separate from grant truth |
+| `SynchronizerAuthority` | Global sentinel proving the caller satisfies the synchronizer policy |
+| `OpenLineageImport` | One imported OpenLineage file: name, counts and result, never the raw file |
+| `ExternalDataset` | External dataset keyed by namespace and name, optionally linked to a Fabric item |
+| `ExternalLineageEdge` | External input-to-output edge through a job, merged with snapshot lineage at read time |
+| `SyncRootRun`, `SyncJob`, `SyncTask` and `SyncCommand` | Fail-closed durable-execution probe; never publishes a snapshot |
+| `SyncPayloadManifest` and `SyncPayloadChunk` | Hashed, chunked payloads for the durable-execution probe |
 
-The complete entity definitions and policies are in `rayfin/data/`.
+The complete entity definitions and policies are in `rayfin/data/`, and every
+field is documented in [Data model](data-model.md).
 
 ## Read scopes
 
@@ -261,6 +269,16 @@ The Preview switch replaces the trusted graph while active. It preserves raw
 and cross-workspace evidence.
 
 Preview evidence never becomes trusted lineage automatically.
+
+### External lineage (OpenLineage)
+
+Imported OpenLineage files are stored outside the immutable snapshot as
+`OpenLineageImport`, `ExternalDataset` and `ExternalLineageEdge` rows. Datasets
+whose namespace and name match a Fabric item are linked automatically; others
+can be linked manually. The Map adds an optional *External* lane, and impact
+analysis crosses the link points at read time. Atlas can also export a
+workspace's lineage as static OpenLineage `JobEvent` and `DatasetEvent` records
+with the `fabricAtlas_item` facet. See [External lineage](external-lineage.md).
 
 ### Object lineage and X-Ray
 
@@ -332,6 +350,25 @@ Activation remains gated by a dedicated public client, delegated
 `Item.Execute.All`, reviewed external Entra exchange and live Conditional
 Access validation.
 
+## Atlas Scout
+
+Atlas Scout is an optional chat over a published Fabric Data Agent whose only
+data source is the Atlas SQL database. The browser calls the agent's
+OpenAI-compatible endpoint with a delegated `DataAgent.Execute.All` token. It
+creates a thread, posts the question, polls the run and reads the answer, the
+SQL steps and the result rows. Stop cancels the active run. If posting a
+question reports a run that is still active, on a reused or a brand new thread,
+the client cancels that run and retries once in a fresh thread.
+
+The client (`src/atlas/scout.ts`) never writes to Atlas. Answer Markdown is
+parsed by `src/atlas/scout-markdown.ts`, which also detects lineage tables
+(item or object level) and lays them out as a graph. The agent can query every
+Atlas table, including the object inventory stored as JSON in `ConfigEntries`. The agent definition lives in
+`fabric/data-agent/atlas-scout/`. v1 has no row-level scope: every agent user
+sees every synchronized workspace. The Scout page, the floating bubble and the
+Catalog drawer's **Ask Scout** button share one conversation
+(`src/atlas/scout-chat.tsx`).
+
 ## Security boundary
 
 Atlas stores governance metadata, not business content.
@@ -379,9 +416,14 @@ See [Installation and deployment](installation.md) for the complete workflow.
 | `src/atlas/backend.ts` | Persistence and trusted snapshot loading |
 | `src/atlas/lineage.ts` | Lineage normalization, traversal and layout |
 | `src/atlas/item-relations-evidence.ts` | Beta relation contract and semantics |
+| `src/atlas/openlineage.ts`, `src/atlas/external-lineage*.ts` | OpenLineage import, export and external-lineage linking |
+| `src/atlas/sync-brief.ts` | Latest-sync summary and Markdown export |
+| `src/atlas/item-passport.ts` | Item identity sheet export and the Ask Scout item question |
 | `src/atlas/source-provenance-snapshot.ts` | Shortcut, mirroring and materialized lake view projection |
 | `src/atlas/views/` | Product screens |
 | `src/mcp/` and `src/atlas/mcp/` | Local read-only MCP |
+| `src/atlas/scout.ts`, `src/atlas/views/Scout.tsx` | Atlas Scout Data Agent client and chat UI |
+| `fabric/data-agent/atlas-scout/` | Atlas Scout agent instructions, examples and provisioning |
 | `rayfin/data/` | Entities and row policies |
 | `rayfin/functions/` | Typed Rayfin Functions |
 | `fabric/udf/atlas_sync_functions/` | Python compatibility collector |
@@ -392,6 +434,7 @@ See [Installation and deployment](installation.md) for the complete workflow.
 - [Item-family coverage](item-families.md)
 - [Lineage depth](lineage-depth.md)
 - [Item Relations evidence](item-relations-evidence.md)
+- [External lineage (OpenLineage)](external-lineage.md)
 - [Source provenance](source-provenance.md)
 - [Access policy evidence](access-policy-evidence.md)
 - [Observability](observability.md)

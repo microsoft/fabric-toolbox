@@ -13,6 +13,7 @@ import { execSync } from "node:child_process";
 import packageJson from "./package.json" with { type: "json" };
 
 import { resolve } from 'path';
+import { applyLocalNetworkAccess, parseExtraOrigins } from "./src/dev/local-network-access";
 
 const projectRoot = process.env.PROJECT_ROOT || import.meta.dirname
 const repositoryUrl = "https://github.com/fredgis/FabricAtlas";
@@ -30,28 +31,18 @@ const buildCommit =
         }
     })();
 
-// Dev-only middleware: makes the local Vite server compatible with browsers that
-// enforce Local Network Access (LNA) checks when a public origin (the Fabric portal)
-// embeds an iframe pointing at http://localhost. Sets the LNA opt-in response header
-// on every response and short-circuits the corresponding preflight OPTIONS request.
-// This is required for fetch/XHR subresources from the embedded app — top-level
-// iframe navigations additionally require launching Chromium with the
-// `--disable-features=...LocalNetworkAccessChecks` flag (see .playwright-config.json).
+// Dev-only middleware: lets the Fabric portal embed the local Vite server under
+// Local Network Access (LNA) checks. Only Fabric / Power BI portal origins (and
+// ATLAS_DEV_ALLOWED_ORIGINS) receive credentialed private-network CORS headers.
+// Top-level iframe navigations additionally require launching Chromium with the
+// `--disable-features=...LocalNetworkAccessChecks` flag (see .playwright-config.json
+// and docs/local-development.md).
+const extraDevOrigins = parseExtraOrigins(process.env.ATLAS_DEV_ALLOWED_ORIGINS);
 const localNetworkAccessPlugin: PluginOption = {
   name: 'local-network-access-headers',
   configureServer(server) {
     server.middlewares.use((req, res, next) => {
-      res.setHeader('Access-Control-Allow-Private-Network', 'true');
-      if (req.method === 'OPTIONS' && req.headers['access-control-request-private-network']) {
-        const origin = req.headers.origin || '*';
-        res.setHeader('Access-Control-Allow-Origin', origin);
-        res.setHeader('Access-Control-Allow-Credentials', 'true');
-        res.setHeader('Access-Control-Allow-Methods', 'GET, HEAD, OPTIONS');
-        res.setHeader('Access-Control-Allow-Headers', req.headers['access-control-request-headers'] || '*');
-        res.statusCode = 204;
-        res.end();
-        return;
-      }
+      if (applyLocalNetworkAccess(req, res, extraDevOrigins)) return;
       next();
     });
   },

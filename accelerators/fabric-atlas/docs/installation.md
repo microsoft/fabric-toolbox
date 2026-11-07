@@ -78,6 +78,38 @@ visible contact and historical writer label. The break-glass identity can
 publish and maintain snapshot rows, but the primary synchronizer remains the
 visible contact and workspace-scope administrator.
 
+### How synchronizer authorization works
+
+Snapshot policies are compiled from these variables at `rayfin up`. Every
+synchronizer-only Function (collectors, Catalog Search, graph sync) first reads
+the policy-protected `SynchronizerAuthority` sentinel. Any other caller cannot
+see or create it, so the Function stops with a `NOT_AUTHORIZED` (403-style)
+error **before** it uses the application identity to call Fabric. A unit test
+fails the build if a Function reads `ctx.Tokens` without that gate.
+
+### Rotate the synchronizer
+
+The policy is fixed at deployment time, so a rotation always needs a redeploy:
+
+1. Set the new `..._SYNC_ADMIN_SUBJECT` and `..._SYNC_ADMIN_EMAIL` values (and
+   the break-glass pair if you change it) in the deployment shell and in
+   `rayfin/.env`.
+2. Rebuild and redeploy with `npx rayfin up` (see step 12).
+3. Sign in as the new synchronizer and run a synchronization. The previous
+   identity now receives the authorization error.
+
+To revoke a compromised synchronizer immediately, redeploy with the
+break-glass identity as the primary one, then rotate again once a new primary
+account exists.
+
+### Negative check (manual)
+
+After each deployment or rotation, sign in with an account that is **not** the
+configured synchronizer and start a synchronization. Atlas must show the
+"requires the configured Atlas administrator/synchronizer" message and no
+Fabric collection must run. This check needs a second account, so it is not
+automated.
+
 ## 5. Deploy Fabric Atlas
 
 ```powershell
@@ -165,6 +197,14 @@ Optional values:
 ```dotenv
 RAYFIN_PUBLIC_ATLAS_PREVIOUS_SYNC_WRITERS=<former-user@example.com>
 RAYFIN_PUBLIC_ATLAS_SENSITIVITY_RANKS='{"<label-id>":3}'
+```
+
+Optional Atlas Scout chat (Fabric Data Agent, see
+[`fabric/data-agent/atlas-scout`](../fabric/data-agent/atlas-scout/README.md)):
+
+```dotenv
+RAYFIN_PUBLIC_ATLAS_SCOUT_AGENT_ID=<data-agent-id>
+RAYFIN_PUBLIC_ATLAS_SCOUT_WORKSPACE_ID=<optional-agent-workspace-id>
 ```
 
 Build-time option (default 90 days) for the `item-inactive` rule:

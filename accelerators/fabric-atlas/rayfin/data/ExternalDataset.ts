@@ -1,4 +1,5 @@
 import { authenticated, date, entity, text, uuid } from '@microsoft/rayfin-core';
+import { syncWriterPolicy } from './sync-policy.js';
 
 /**
  * A dataset named in an imported OpenLineage file, keyed by its normalised
@@ -22,7 +23,10 @@ import { authenticated, date, entity, text, uuid } from '@microsoft/rayfin-core'
     'lastSeenAt',
   ],
 })
-@authenticated('delete')
+@authenticated('delete', {
+  policy: (claims, item) =>
+    claims.sub.eq(item.createdById).or(syncWriterPolicy(claims)),
+})
 export class ExternalDataset {
   @uuid() id!: string;
   @uuid() workspace_id!: string;

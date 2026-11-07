@@ -185,6 +185,24 @@ describe('persistence', () => {
     expect(after.datasets.some((d) => d.name === 'RISKLIB.LIMITS')).toBe(false);
   });
 
+  it('delete still succeeds when an orphan dataset cannot be removed by this user', async () => {
+    const base = createMemoryRepo();
+    await importInto(base, fileOf(MOCK));
+    const repo: ExternalRepo = {
+      ...base,
+      remove: async (t, id) => {
+        if (t === 'ExternalDataset') throw new Error('forbidden');
+        await base.remove(t, id);
+      },
+    };
+    const before = await loadExternalLineage(repo, WS_ID);
+    await deleteImport(repo, before.imports[0].id, before);
+    const after = await loadExternalLineage(repo, WS_ID);
+    expect(after.imports).toHaveLength(0);
+    expect(after.edges).toHaveLength(0);
+    expect(after.datasets).toHaveLength(before.datasets.length);
+  });
+
   it('read path merges external edges on top of snapshot edges', async () => {
     const repo = createMemoryRepo();
     const { state } = await importInto(repo, fileOf(MOCK));

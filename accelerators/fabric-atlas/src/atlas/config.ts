@@ -87,6 +87,14 @@ export const ATLAS_CONFIG = {
   sensitivityRanks: numberMap(
     import.meta.env.VITE_RAYFIN_ATLAS_SENSITIVITY_RANKS,
   ),
+  // Atlas Scout Fabric Data Agent (fabric/data-agent/atlas-scout). Empty agent
+  // id hides the chat behind a "not configured" state.
+  scoutAgentId:
+    (import.meta.env.VITE_RAYFIN_ATLAS_SCOUT_AGENT_ID as string) || "",
+  scoutWorkspaceId:
+    (import.meta.env.VITE_RAYFIN_ATLAS_SCOUT_WORKSPACE_ID as string) ||
+    (import.meta.env.VITE_FABRIC_WORKSPACE_ID as string) ||
+    "",
   // A Power BI-audience token both invokes the UDF (UserDataFunction.Execute.All)
   // and is forwarded to Fabric REST inside the function.
   scope: "https://analysis.windows.net/powerbi/api/.default",

@@ -433,6 +433,20 @@ export async function acquireGovernanceToken(identity: SyncIdentity, signal?: Ab
   }
 }
 
+/**
+ * Delegated token of the signed-in user for the Atlas Scout Fabric Data Agent.
+ * The first call may open a consent popup for DataAgent.Execute.All.
+ */
+export async function acquireScoutToken(identity: SyncIdentity, signal?: AbortSignal): Promise<string> {
+  return acquireToken(
+    identity,
+    ["https://analysis.windows.net/powerbi/api/DataAgent.Execute.All"],
+    "Atlas Scout",
+    true,
+    signal,
+  );
+}
+
 async function acquireFabricSyncToken(
   identity: SyncIdentity,
   allowPopup = true,

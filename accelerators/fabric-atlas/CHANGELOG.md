@@ -8,6 +8,113 @@ release tag was published.
 
 ## [Unreleased]
 
+## [2.7.11] - 2026-11-07
+
+### Added
+
+- **Ask Scout** button in the Catalog item drawer opens the Scout dock with a question about that item (#92).
+- **Export identity sheet** in the Catalog item drawer downloads a Markdown one-pager with identity, ownership, trust, lineage, access, findings and recent jobs (#93).
+
+## [2.7.10] - 2026-11-07
+
+### Added
+
+- Sync Brief in Governance Center > Changes: items added or removed, new external or elevated access, lineage edges added or removed, jobs failed or recovered, changed measures and schema objects, new high-priority findings (pre-existing ones counted apart) and the largest downstream impact. Each entry opens its target. Copy as Markdown or download. Built from the existing snapshots: no new entity, no resync. Missing metadata shows as Unavailable, never as zero (#40).
+
+### Security
+
+- Synchronizer-only Functions reject other callers with an explicit NOT_AUTHORIZED (403) error. A test parses every Function and fails if one reads the application token before the synchronizer check (#46).
+
+### Changed
+
+- docs/local-development.md documents Local Network Access, approved origins (ATLAS_DEV_ALLOWED_ORIGINS), the Edge profile and the dev security boundary. The dev server preflight handling moved to a tested helper (#48).
+- docs/installation.md explains synchronizer authorization, rotation and a manual negative check (#46).
+
+## [2.7.9] - 2026-11-07
+
+### Security
+
+- Only the creator of an external dataset (or the synchronizer) can delete it. Deleting an OpenLineage import skips orphan datasets created by someone else instead of failing.
+
+### Changed
+
+- The README states that tests require Node 24 (pinned in `.nvmrc`).
+
+## [2.7.8] - 2026-11-06
+
+### Fixed
+
+- Scout starter "used most but not endorsed" answers: Atlas has no view counts, so Scout ranks semantic models and reports by reach (downstream items and principals with access) and says so.
+- Scout starter "shared with external users or guests" no longer fails: the agent brackets the reserved `external` column.
+
+## [2.7.7] - 2026-11-06
+
+### Fixed
+
+- Object-level lineage of a table always shows its columns and flows: Scout no longer answers that no lineage was found for tables such as fact_sales.
+- Atlas Scout continues in a fresh thread when the conversation thread has expired (no more 'Data Agent was not found'), and asks once more when Fabric loses its own tool call (submit_tool_outputs NotFound).
+
+## [2.7.6] - 2026-11-06
+
+### Added
+
+- Atlas Scout queries the whole object inventory (tables, columns, measures and DAX dependencies, relationships, ontology bindings, object-level lineage, domains, OneLake roles, tenant settings) and draws dependencies as graphs.
+
+### Fixed
+
+- Object-level lineage answers name each object with its item, so tables, notebooks and ontologies no longer collapse into a loop.
+- The first question of a new conversation no longer fails with 'run is active': Scout cancels the stale run and retries in a fresh thread.
+
+## [2.7.5] - 2026-11-06
+
+### Fixed
+
+- Atlas Scout tables without outer pipes (lineage answers) render as tables and lineage graphs.
+- Asking after Stop no longer fails with 'run is active': the run is cancelled and Scout falls back to a fresh thread.
+
+## [2.7.4] - 2026-11-06
+
+### Changed
+
+- Floating Atlas Scout window: teal header, white body and a clearer prompt field.
+
+## [2.7.3] - 2026-11-06
+
+### Added
+
+- Atlas Scout draws lineage answers as an animated graph (broken links dashed in red, failing items highlighted) with a collapsible edge table.
+
+### Fixed
+
+- Atlas Scout lineage questions: the agent no longer uses unsupported recursive CTEs and walks lineage up to four hops; new lineage example query.
+- Atlas Scout prompt no longer turns dark green on focus; floating bubble slightly darker.
+
+## [2.7.2] - 2026-11-06
+
+### Added
+
+- Floating Atlas Scout bubble (bottom-right) opening a compact chat from any tab; it shares the conversation with the Atlas Scout tab.
+
+### Changed
+
+- Softer Atlas Scout colors.
+- Scout answers render nested, correctly numbered lists with bold labels and status pills; score columns render as gauges.
+- Internal step labels (Audit, Explain, Recommend) are no longer shown, and the per-answer orb is removed.
+- Data Agent instructions add formatting rules; the provisioning script reconciles example queries instead of deleting them all.
+
+## [2.7.1] - 2026-11-06
+
+### Added
+
+- Atlas Scout (Govern → Atlas Scout): animated chat over a Fabric Data Agent that reads the Atlas SQL database. Answers render as tables with health gauges, status pills and numbered actions, with an expandable Evidence panel showing the SQL and raw results the agent used.
+- Live progress (secure session, understanding, querying, writing), elapsed time, Stop button and conversation threads reused across follow-up questions.
+- Agent definition versioned in `fabric/data-agent/atlas-scout`: instructions with the Health / Protect / Trust governance skills, 17 example queries and an idempotent `provision.py` that creates, configures and publishes the agent without touching the Atlas database.
+- New optional runtime values `RAYFIN_PUBLIC_ATLAS_SCOUT_AGENT_ID` and `RAYFIN_PUBLIC_ATLAS_SCOUT_WORKSPACE_ID`.
+
+### Security
+
+- Scout v1 is read-only and sees every synchronized workspace in the Atlas store, whatever the user's workspace roles. First use asks for consent to `DataAgent.Execute.All`.
+
 ## [2.7.0] - 2026-10-29
 
 ### Added
@@ -879,7 +986,17 @@ release tag was published.
 - Centralized lineage, object and status colors in the shared theme.
 - Improved keyboard focus, semantic control states, scrollbars and reduced-motion behavior.
 
-[Unreleased]: https://github.com/fredgis/FabricAtlas/compare/v2.7.0...HEAD
+[Unreleased]: https://github.com/fredgis/FabricAtlas/compare/v2.7.10...HEAD
+[2.7.10]: https://github.com/fredgis/FabricAtlas/releases/tag/v2.7.10
+[2.7.9]: https://github.com/fredgis/FabricAtlas/releases/tag/v2.7.9
+[2.7.8]: https://github.com/fredgis/FabricAtlas/releases/tag/v2.7.8
+[2.7.7]: https://github.com/fredgis/FabricAtlas/releases/tag/v2.7.7
+[2.7.6]: https://github.com/fredgis/FabricAtlas/releases/tag/v2.7.6
+[2.7.5]: https://github.com/fredgis/FabricAtlas/releases/tag/v2.7.5
+[2.7.4]: https://github.com/fredgis/FabricAtlas/releases/tag/v2.7.4
+[2.7.3]: https://github.com/fredgis/FabricAtlas/releases/tag/v2.7.3
+[2.7.2]: https://github.com/fredgis/FabricAtlas/releases/tag/v2.7.2
+[2.7.1]: https://github.com/fredgis/FabricAtlas/releases/tag/v2.7.1
 [2.7.0]: https://github.com/fredgis/FabricAtlas/releases/tag/v2.7.0
 [2.6.4]: https://github.com/fredgis/FabricAtlas/releases/tag/v2.6.4
 [2.6.3]: https://github.com/fredgis/FabricAtlas/releases/tag/v2.6.3
