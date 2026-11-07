@@ -16,7 +16,7 @@ export const REPOSITORY_URL =
 
 export const APP_VERSION =
   (import.meta.env.VITE_APP_VERSION as string | undefined) ??
-  "2.7.11";
+  "2.7.12";
 
 export const BUILD_COMMIT =
   (import.meta.env.VITE_APP_BUILD_COMMIT as string | undefined) ?? "development";
@@ -56,6 +56,19 @@ export function sameDeploymentGeneration(
 }
 
 export const RELEASES: AtlasRelease[] = [
+  {
+    version: "2.7.12",
+    date: "2026-11-07",
+    title: "Scout waits longer",
+    sections: [
+      {
+        title: "Fixed",
+        items: [
+          "Atlas Scout waits up to 5 minutes for an answer instead of 3, so item questions (owner, health, impact, access, findings) no longer time out.",
+        ],
+      },
+    ],
+  },
   {
     version: "2.7.11",
     date: "2026-11-07",

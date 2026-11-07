@@ -8,6 +8,12 @@ release tag was published.
 
 ## [Unreleased]
 
+## [2.7.12] - 2026-11-07
+
+### Fixed
+
+- Atlas Scout waits up to 5 minutes for an answer instead of 3: an item question from **Ask Scout** runs 4-5 SQL steps and could exceed the old limit.
+
 ## [2.7.11] - 2026-11-07
 
 ### Added
@@ -986,7 +992,9 @@ release tag was published.
 - Centralized lineage, object and status colors in the shared theme.
 - Improved keyboard focus, semantic control states, scrollbars and reduced-motion behavior.
 
-[Unreleased]: https://github.com/fredgis/FabricAtlas/compare/v2.7.10...HEAD
+[Unreleased]: https://github.com/fredgis/FabricAtlas/compare/v2.7.12...HEAD
+[2.7.12]: https://github.com/fredgis/FabricAtlas/releases/tag/v2.7.12
+[2.7.11]: https://github.com/fredgis/FabricAtlas/releases/tag/v2.7.11
 [2.7.10]: https://github.com/fredgis/FabricAtlas/releases/tag/v2.7.10
 [2.7.9]: https://github.com/fredgis/FabricAtlas/releases/tag/v2.7.9
 [2.7.8]: https://github.com/fredgis/FabricAtlas/releases/tag/v2.7.8

@@ -143,7 +143,8 @@ export function createScoutClient(options: ScoutClientOptions) {
   const doFetch: FetchLike = options.fetch ?? ((input, init) => fetch(input, init));
   const wait = options.wait ?? abortableWait;
   const pollIntervalMs = options.pollIntervalMs ?? 1500;
-  const timeoutMs = options.timeoutMs ?? 180_000;
+  // An item question (owner, health, impact, access, findings) runs 4-5 SQL steps of ~30 s each.
+  const timeoutMs = options.timeoutMs ?? 300_000;
   let assistantId: string | undefined;
 
   async function call<T>(
