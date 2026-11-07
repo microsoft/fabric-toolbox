@@ -1,0 +1,1 @@
+{ "version": 1, "nodes": [{ "id": "n1", "label": "RISKLIB.LIMITS" }], "links": [{ "from": "n1", "to": "n2" }] }

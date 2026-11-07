@@ -1,0 +1,31 @@
+[
+  {
+    "eventType": "COMPLETE",
+    "eventTime": "2026-10-21T14:05:12Z",
+    "run": { "runId": "01984a10-1b2c-7d3e-8f40-5a6b7c8d9e0f" },
+    "job": { "namespace": "databricks://adb-7421", "name": "pricing.build_curves" },
+    "inputs": [
+      { "namespace": "abfss://raw@stpricing.dfs.core.windows.net", "name": "/prices/daily" },
+      { "namespace": "databricks://adb-7421", "name": "pricing.fx_rates" }
+    ],
+    "outputs": [
+      { "namespace": "databricks://adb-7421", "name": "pricing.price_curves" }
+    ],
+    "producer": "https://github.com/OpenLineage/OpenLineage/tree/1.30.0/integration/spark",
+    "schemaURL": "https://openlineage.io/spec/2-0-2/OpenLineage.json#/$defs/RunEvent"
+  },
+  {
+    "eventType": "COMPLETE",
+    "eventTime": "2026-10-21T14:22:40Z",
+    "run": { "runId": "01984a22-4c5d-7e6f-9a01-b2c3d4e5f607" },
+    "job": { "namespace": "databricks://adb-7421", "name": "pricing.publish_curves" },
+    "inputs": [
+      { "namespace": "databricks://adb-7421", "name": "pricing.price_curves" }
+    ],
+    "outputs": [
+      { "namespace": "abfss://finance-silver@onelake.dfs.fabric.microsoft.com", "name": "lh_silver.Lakehouse/Tables/price_curves" }
+    ],
+    "producer": "https://github.com/OpenLineage/OpenLineage/tree/1.30.0/integration/spark",
+    "schemaURL": "https://openlineage.io/spec/2-0-2/OpenLineage.json#/$defs/RunEvent"
+  }
+]
