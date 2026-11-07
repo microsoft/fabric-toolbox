@@ -369,8 +369,10 @@ describe("CommandPalette OneLake Catalog Search", () => {
 
     fireEvent.click(screen.getByRole("button", { name: "Retry" }));
 
-    expect(await screen.findByRole("status", { name: "OneLake catalog status" })).toHaveTextContent(
-      "does not prove that an asset is absent",
+    await waitFor(() =>
+      expect(screen.getByRole("status", { name: "OneLake catalog status" })).toHaveTextContent(
+        "does not prove that an asset is absent",
+      ),
     );
     expect(search).toHaveBeenLastCalledWith({ kind: "search", search: "report" });
   });
