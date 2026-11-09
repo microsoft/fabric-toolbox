@@ -1,0 +1,18 @@
+Fabric Atlas
+Copyright (c) 2026 fredgis and contributors.
+
+This project includes files generated from the Microsoft Rayfin Data App
+template. Those files keep their original "Copyright (c) Microsoft
+Corporation" headers and are used under the terms of the template license:
+
+- src/App.tsx, src/App.spec.tsx, src/main.tsx, src/ErrorFallback.tsx
+- src/components/auth-gate.component.tsx
+- src/hooks/auth.context.ts, src/hooks/theme.context.ts,
+  src/hooks/use-auth.tsx, src/hooks/use-theme.ts
+- src/lib/rayfin-client.ts
+- src/services/rayfin-auth.service.ts
+- src/test/setup.ts
+- scripts/open-fabric-portal.mjs
+
+All other files are original Fabric Atlas work released under the project
+license (see LICENSE).
