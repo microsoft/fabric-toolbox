@@ -59,5 +59,4 @@ DROP TABLE IF EXISTS dbo.Lab_InterestRates;
 DROP TABLE IF EXISTS dbo.Lab_Campaigns;
 DROP TABLE IF EXISTS dbo.Lab_Geo;
 DROP TABLE IF EXISTS dbo.Lab_Config;
-DROP TABLE IF EXISTS dbo.Lab_PerfLog;        -- Optional BYO performance log
 GO
