@@ -387,6 +387,22 @@ in scalar UDFs and applying them to another workflow.
 > another workflow. Keep the source set small, filter before calling AI, and materialize output
 > that will be reused.
 
+`NeedsDraft = 1` selects requests for processing. To process those requests again with your
+updated UDFs, clear their stored results:
+
+```sql
+UPDATE dbo.Lab_AIRequests
+SET ExtractedOrderDetails = NULL,
+    ReplyPolicy = NULL
+WHERE NeedsDraft = 1;
+GO
+```
+
+Rerun your updated UDF definitions, then Steps 5-8 to regenerate the materialized replies.
+
+**If you add a classification label**, also add a matching `reply_policy` prompt template
+at version `1`; otherwise, the view excludes requests assigned that label.
+
 ## Cleanup
 
 Run [`sql/99_cleanup.sql`](sql/99_cleanup.sql), or this equivalent block, when you finish:
