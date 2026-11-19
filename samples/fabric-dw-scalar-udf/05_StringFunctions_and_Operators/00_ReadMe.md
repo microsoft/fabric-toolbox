@@ -1,15 +1,15 @@
 # String Functions and Operators
 
-> 💡 **Prefer running full scripts?** See the `sql/` subfolder for complete .sql files instead of the step-by-step walkthrough.
+⏱️ **Estimated time:** 15-20 minutes
 
+**Inlining coverage:** Inlining via Expression Block
+
+> 💡 **Prefer running full scripts?** See the `sql/` subfolder for complete
+> `.sql` files instead of the step-by-step lab guide.
 
 > **Combine scalar UDFs with T-SQL string analytics functions** —
 > `EDIT_DISTANCE`, `EDIT_DISTANCE_SIMILARITY`, `JARO_WINKLER_DISTANCE`,
 > `JARO_WINKLER_SIMILARITY`, `UNISTR`, and pipe operators.
->
-> ⏱️ **Estimated time:** 15-20 minutes
-
-> ⚠️ **Public preview.** The string analytics functions below (`EDIT_DISTANCE`, `EDIT_DISTANCE_SIMILARITY`, `JARO_WINKLER_DISTANCE`, `JARO_WINKLER_SIMILARITY`, `UNISTR`, `||` / `||=`) are in **public preview** in Fabric Data Warehouse, as are Scalar UDFs themselves. Syntax, behavior, and regional availability may change before GA — confirm against the official documentation linked below before relying on them.
 
 ## Functions Covered
 
@@ -75,13 +75,13 @@ acceptable cost of false matches and missed matches.
 
 ## Scripts
 
-| Script | What You'll Learn |
-|--------|-------------------|
-| [01_string_analytics_udfs.md](01_string_analytics_udfs.md) | Combine string built-in functions with user-defined functions |
+| Lab guide | Executable SQL | What You'll Learn |
+|---|---|---|
+| [01_string_analytics_udfs.md](01_string_analytics_udfs.md) | [Run](sql/01_string_analytics_udfs.sql) | Combine string built-in functions with user-defined functions |
 
 ## What the Script Does
 
-The walkthrough creates four focused UDFs:
+The lab guide creates four focused UDFs:
 
 - fixed edit-distance validation;
 - Jaro-Winkler duplicate detection;

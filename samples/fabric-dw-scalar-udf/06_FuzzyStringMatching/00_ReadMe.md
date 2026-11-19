@@ -1,5 +1,11 @@
 # Fuzzy String Matching
 
+⏱️ **Estimated time:** 15-20 minutes
+
+**Inlining coverage:** Inlining via Expression Block
+
+> **Prerequisite:** None. This lab creates its own tables and UDFs.
+
 ## Purpose
 
 This lab demonstrates an end-to-end scenario for matching incoming supplier
@@ -25,6 +31,9 @@ you can skim the introductions to the native functions. Run all Lab 06 scripts
 because this scenario creates its own tables and UDFs.
 
 ## Run order
+
+> **Warning:** Running `sql/00_setup.sql` drops and recreates its five named Lab 06 tables,
+> permanently deleting their existing data. Use a dedicated sample Warehouse.
 
 | Script | Purpose |
 |---|---|
@@ -67,6 +76,9 @@ expected candidate and that unknown products aren't automatically matched.
 
 The thresholds are illustrative. Production values require calibration with
 labeled examples from the target data.
+
+Continue with [Lab 07: Inlineability Diagnostics](../07_InlineabilityDiagnostics/00_ReadMe.md)
+to troubleshoot function definitions and calling-query shapes.
 
 ⬅️ [Back to String Functions and Operators](../05_StringFunctions_and_Operators/00_ReadMe.md) |
 🏠 [Back to Main](../README.md)

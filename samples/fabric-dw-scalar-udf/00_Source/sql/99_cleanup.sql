@@ -1,7 +1,8 @@
 -- ============================================================================
--- OPTIONAL FULL LAB RESET
--- Run only after all lab exercises and observability checks are complete.
--- Drops current packaged UDFs, legacy UDFs, and all sample data.
+-- OPTIONAL COMMON SHARED-DATA RESET
+-- Drops shared sample data and UDFs, including residual shared-data-lab objects.
+-- Run shared setup again before continuing dependent labs.
+-- Labs 06 and 10 own their setup and cleanup in their respective sql folders.
 -- ============================================================================
 
 -- Inlining Fundamentals
@@ -25,7 +26,6 @@ GO
 
 -- Scalar UDF inlining
 DROP FUNCTION IF EXISTS dbo.udf_LookupGeoKey;
-DROP FUNCTION IF EXISTS dbo.udf_StandardizeCityName;
 GO
 
 -- String functions and operators
@@ -35,47 +35,23 @@ DROP FUNCTION IF EXISTS dbo.udf_TypoSeverity;
 DROP FUNCTION IF EXISTS dbo.udf_FormatStatusLabel;
 GO
 
--- Fuzzy string matching
-DROP FUNCTION IF EXISTS dbo.BlogFuzzy_MatchDisposition;
-DROP FUNCTION IF EXISTS dbo.BlogFuzzy_MatchGrade;
-DROP FUNCTION IF EXISTS dbo.BlogFuzzy_MatchScore;
-DROP FUNCTION IF EXISTS dbo.BlogFuzzy_WeightedLevenshtein;
+-- Inlineability diagnostics
+DROP FUNCTION IF EXISTS dbo.udf_DiagnosticOrderBatches;
 GO
 
--- Legacy UDFs retained here so cleanup resets earlier versions of the lab.
-DROP FUNCTION IF EXISTS dbo.udf_WhileRepeatChar;
-DROP FUNCTION IF EXISTS dbo.udf_WhileRunningStats;
-DROP FUNCTION IF EXISTS dbo.udf_WhileFibonacci;
-DROP FUNCTION IF EXISTS dbo.udf_WhileGCD;
-DROP FUNCTION IF EXISTS dbo.udf_WhileDigitSum;
-DROP FUNCTION IF EXISTS dbo.udf_BasicGetGrade;
-DROP FUNCTION IF EXISTS dbo.udf_BasicGetDiscount;
-DROP FUNCTION IF EXISTS dbo.udf_BasicValidateTier;
-DROP FUNCTION IF EXISTS dbo.udf_BasicGetStockStatus;
-DROP FUNCTION IF EXISTS dbo.udf_WhileDistanceScore;
-DROP FUNCTION IF EXISTS dbo.udf_WhileCustomerScore;
-DROP FUNCTION IF EXISTS dbo.udf_WhileMatrixSum;
-DROP FUNCTION IF EXISTS dbo.udf_If20LevelNested;
-DROP FUNCTION IF EXISTS dbo.udf_If50Branches;
-DROP FUNCTION IF EXISTS dbo.udf_IfWhileAccumulate;
-DROP FUNCTION IF EXISTS dbo.udf_IfComplexPricing;
-DROP FUNCTION IF EXISTS dbo.udf_ReturnTransactionStatus;
-DROP FUNCTION IF EXISTS dbo.udf_ReturnLoanDecision;
-DROP FUNCTION IF EXISTS dbo.udf_ReturnQualityGrade;
-DROP FUNCTION IF EXISTS dbo.udf_ProjectedBalance;
-DROP FUNCTION IF EXISTS dbo.udf_CustomerRiskAssessment;
-DROP FUNCTION IF EXISTS dbo.udf_GetFulfillmentAction;
-DROP FUNCTION IF EXISTS dbo.udf_Is_Almost_Equal;
-DROP FUNCTION IF EXISTS dbo.udf_Is_Likely_Duplicate;
-DROP FUNCTION IF EXISTS dbo.udf_Typo_Severity;
-DROP FUNCTION IF EXISTS dbo.udf_FuzzyMatch_Summary;
-DROP FUNCTION IF EXISTS dbo.udf_String_Transform_Diff_Json;
-DROP FUNCTION IF EXISTS dbo.udf_String_Transform_Diff_Json_Lev;
-DROP FUNCTION IF EXISTS dbo.udf_Format_Unicode_Label;
-DROP FUNCTION IF EXISTS dbo.udf_Find_Best_Geo_Match;
-DROP FUNCTION IF EXISTS dbo.udf_Standardize_City_Name;
+-- Time-dependent built-ins, including the optional helper
+DROP FUNCTION IF EXISTS dbo.udf_GetCurrentUtc;
+DROP FUNCTION IF EXISTS dbo.udf_GetLoopDurationMicroseconds;
+DROP FUNCTION IF EXISTS dbo.udf_ReturnTimeValue;
 GO
 
+-- NEWID, including the optional helper
+DROP FUNCTION IF EXISTS dbo.udf_GenerateRunId;
+DROP FUNCTION IF EXISTS dbo.udf_NewIdPairIsDistinct;
+DROP FUNCTION IF EXISTS dbo.udf_ReturnValue;
+GO
+
+DROP TABLE IF EXISTS dbo.Lab_NewIdResults;
 DROP TABLE IF EXISTS dbo.Lab_Transactions;
 DROP TABLE IF EXISTS dbo.Lab_Products;
 DROP TABLE IF EXISTS dbo.Lab_Customers;
@@ -83,13 +59,5 @@ DROP TABLE IF EXISTS dbo.Lab_InterestRates;
 DROP TABLE IF EXISTS dbo.Lab_Campaigns;
 DROP TABLE IF EXISTS dbo.Lab_Geo;
 DROP TABLE IF EXISTS dbo.Lab_Config;
-DROP TABLE IF EXISTS dbo.Lab_CustomerScores; -- Legacy
-DROP TABLE IF EXISTS dbo.Lab_PerfLog;        -- Legacy
-GO
-
-DROP TABLE IF EXISTS dbo.BlogFuzzy_IncomingListing;
-DROP TABLE IF EXISTS dbo.BlogFuzzy_AlgorithmExample;
-DROP TABLE IF EXISTS dbo.BlogFuzzy_ListingVariant;
-DROP TABLE IF EXISTS dbo.BlogFuzzy_ProductCatalog;
-DROP TABLE IF EXISTS dbo.BlogFuzzy_Config;
+DROP TABLE IF EXISTS dbo.Lab_PerfLog;        -- Optional BYO performance log
 GO

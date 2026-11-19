@@ -104,8 +104,9 @@ GO
 DROP FUNCTION IF EXISTS dbo.udf_CountCustomerOrderBatches;
 GO
 
--- Dynamic SQL keeps the complete script running after the expected error.
--- The walkthrough shows the same CREATE FUNCTION statement directly.
+-- The lab guide runs CREATE FUNCTION directly so participants can observe error 19841.
+-- This all-in-one script uses dynamic SQL with TRY/CATCH to capture that expected error
+-- and continue to the complete INLINE = AUTO definition.
 BEGIN TRY
     EXEC
     (

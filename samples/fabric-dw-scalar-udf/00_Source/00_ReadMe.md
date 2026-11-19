@@ -2,8 +2,7 @@
 
 > 💡 **Prefer running full scripts?** See the `sql/` subfolder for complete .sql files instead of the step-by-step walkthrough.
 
-
-> **Run this folder FIRST before any other tests.**
+> **Run this folder FIRST before labs that use the shared sample data.**
 > 
 > ⏱️ **Estimated time:** 2-5 minutes
 
@@ -11,11 +10,22 @@
 
 | Script | Description |
 |--------|-------------|
-| [sql/01_setup_tables.sql](sql/01_setup_tables.sql) | Creates all `Lab_*` tables, including geo data, with test data |
-| [sql/99_cleanup.sql](sql/99_cleanup.sql) | Optional full reset — drops all packaged UDFs and sample tables |
+| [sql/01_setup_tables.sql](sql/01_setup_tables.sql) | Creates shared sample tables, including geo data |
+| [sql/99_cleanup.sql](sql/99_cleanup.sql) | Resets shared sample data and UDFs, including remaining shared-data-lab objects |
 
-> Run `01_setup_tables.sql` first. Run `99_cleanup.sql` only after all labs and
-> observability checks are complete. It permanently removes the sample tables.
+> Run `01_setup_tables.sql` first. The common reset permanently removes shared sample tables
+> and UDFs; run setup again before continuing dependent labs. Choose common or lab-specific
+> cleanup from [Cleanup in the main guide](../README.md#cleanup).
+
+## Self-Contained Labs
+
+These labs do not require the shared setup. Each owns its setup and cleanup; their
+objects are not managed by the scripts in this folder.
+
+| Lab | Setup | Cleanup |
+|-----|-------|---------|
+| [Lab 06: Fuzzy String Matching](../06_FuzzyStringMatching/00_ReadMe.md) | [sql/00_setup.sql](../06_FuzzyStringMatching/sql/00_setup.sql) | [sql/99_cleanup.sql](../06_FuzzyStringMatching/sql/99_cleanup.sql) |
+| [Lab 10: AI Functions](../10_AIFunctions/00_ReadMe.md) | [sql/00_setup_ai_requests.sql](../10_AIFunctions/sql/00_setup_ai_requests.sql) | [sql/99_cleanup.sql](../10_AIFunctions/sql/99_cleanup.sql) |
 
 ## ⚙️ Configurable Data Scale
 
@@ -44,8 +54,8 @@ INSERT INTO dbo.Lab_Config VALUES (100000);  -- ← EDIT THIS NUMBER
 | `Lab_InterestRates` | 100 reference rates |
 | `Lab_Campaigns` | 200 reference campaigns |
 
-⚠️ **Scoped destructive reset:** Re-running setup drops and recreates every
-`Lab_*` table before loading fresh data.
+⚠️ **Scoped destructive reset:** Re-running setup drops and recreates the named shared
+tables before loading fresh data. It does not reset Lab 06 or Lab 10.
 
 > All data is synthetic. Customer-to-geo assignments are deterministic so lab
 > results are reproducible across runs.

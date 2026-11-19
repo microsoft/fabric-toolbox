@@ -7,8 +7,6 @@ SET NOCOUNT ON;
 GO
 
 DROP FUNCTION IF EXISTS dbo.BlogFuzzy_MatchDisposition;
-DROP FUNCTION IF EXISTS dbo.BlogFuzzy_MatchGrade;
-DROP FUNCTION IF EXISTS dbo.BlogFuzzy_MatchScore;
 DROP FUNCTION IF EXISTS dbo.BlogFuzzy_WeightedLevenshtein;
 GO
 
