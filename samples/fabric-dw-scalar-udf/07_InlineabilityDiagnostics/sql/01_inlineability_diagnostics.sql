@@ -626,20 +626,3 @@ BEGIN CATCH
         ERROR_MESSAGE() AS ErrorMessage;
 END CATCH;
 GO
-
-SELECT
-    'LAB07_SUMMARY' AS RecordType,
-    summary.Scenario,
-    'PASS' AS Result,
-    summary.Evidence
-FROM
-(
-    VALUES
-        ('Inlineable baseline', 'Mask 2; distributed results 1, 2, 5'),
-        ('Failed ALTER', 'Error 19841; original definition preserved'),
-        ('INLINE = AUTO', 'Mask 0; standalone succeeds; table call returns 19835'),
-        ('Calling-query restriction', 'Mask 1; direct query succeeds; CTE returns 19835'),
-        ('Query rewrite', 'Temporary table materializes 20 supported UDF results'),
-        ('Mixed eligibility query', 'Mask 2 plus mask 1; direct results 0/Silver, 0/Bronze, 0/Gold; CTE returns 19835')
-) AS summary(Scenario, Evidence);
-GO

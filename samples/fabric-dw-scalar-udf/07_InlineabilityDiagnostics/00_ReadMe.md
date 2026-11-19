@@ -43,8 +43,9 @@ Use these questions:
 
 - **Human:** Follow the numbered sections in this guide. Run each SQL block separately and compare
   what you see with the expected result.
-- **Agent or automated test:** Run the complete script. Assertions stop the run if behavior
-  changes, and the final result set provides one pass summary.
+- **Agent or automated test:** Run the complete script and treat any unexpected SQL error as a
+  failed run. Assertions raise errors when behavior differs from expectations. Some clients
+  continue with later batches after an error; later results do not mean the entire script passed.
 
 ## Contents
 
