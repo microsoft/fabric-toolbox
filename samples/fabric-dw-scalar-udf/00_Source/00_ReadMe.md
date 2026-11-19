@@ -54,8 +54,8 @@ INSERT INTO dbo.Lab_Config VALUES (100000);  -- ← EDIT THIS NUMBER
 | `Lab_InterestRates` | 100 reference rates |
 | `Lab_Campaigns` | 200 reference campaigns |
 
-⚠️ **Scoped destructive reset:** Re-running setup drops and recreates the named shared
-tables before loading fresh data. It does not reset Lab 06 or Lab 10.
+⚠️ **Before running setup again:** The script recreates the shared sample tables, deleting their
+existing data. Labs 06 and 10 are not affected.
 
 > All data is synthetic. Customer-to-geo assignments are deterministic so lab
 > results are reproducible across runs.
