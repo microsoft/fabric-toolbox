@@ -7,7 +7,7 @@ Helper scripts for observability and dependency analysis.
 | Script | Purpose |
 |--------|---------|
 | [100_observability_script.sql](100_observability_script.sql) | UDF definition metadata and approximate feature-detection heuristics |
-| [100_get_all_dependencies.sql](100_get_all_dependencies.sql) | Identify dependencies referenced by scalar UDFs |
+| [100_get_all_dependencies.sql](100_get_all_dependencies.sql) | Identify schema-qualified dependencies referenced by scalar UDFs |
 
 ---
 

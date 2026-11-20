@@ -206,8 +206,8 @@ ORDER BY CustomerID;
 
 ## Cleanup
 
-Use [`00_Source/sql/99_cleanup.sql`](../00_Source/sql/99_cleanup.sql) for a
-complete reset after finishing the lab.
+Run [`sql/99_cleanup.sql`](sql/99_cleanup.sql) after the exercises to remove this lab's four
+UDFs. Shared sample data remains available for other labs.
 
 ➡️ Continue to [Fuzzy String Matching](../06_FuzzyStringMatching/00_ReadMe.md).
 

@@ -195,8 +195,8 @@ ORDER BY t.TransactionID;
 
 ## Campaign eligibility
 
-This function contains only customer and campaign rules. Activity dates and
-campaign status remain relational predicates in the calling query.
+This function contains only customer and campaign rules. Campaign status remains a relational
+predicate in the calling query.
 
 ```sql
 CREATE OR ALTER FUNCTION dbo.udf_IsCampaignEligible

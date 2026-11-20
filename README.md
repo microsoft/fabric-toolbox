@@ -39,6 +39,7 @@ These assets should be treated as examples that you can use to create the soluti
 - [Notebook: Create, List, Delete a Data Warehouse](./samples/notebook-create-list-delete-warehouse)
 - [Notebook: Workspace Size](./samples/notebook-workspace-size)
 - [Notebook: Fabric Connection Management](./samples/fabric-connection-management)
+- $${\color{green}NEW!}$$ [Microsoft Fabric Data Warehouse Scalar UDFs](./samples/fabric-dw-scalar-udf)
 
 ## Scripts
 - $${\color{green}NEW!}$$ [Mirror CCI Tables for Fabric SQL DB](./scripts/sql-Mirror-CCI-tables)

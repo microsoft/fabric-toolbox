@@ -17,10 +17,6 @@
 SET NOCOUNT ON;
 GO
 
-DROP FUNCTION IF EXISTS dbo.BlogFuzzy_MatchGrade;
-DROP FUNCTION IF EXISTS dbo.BlogFuzzy_MatchScore;
-GO
-
 CREATE OR ALTER FUNCTION dbo.BlogFuzzy_WeightedLevenshtein
 (
     @source_text       VARCHAR(60),
