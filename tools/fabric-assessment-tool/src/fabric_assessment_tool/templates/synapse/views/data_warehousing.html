@@ -3,7 +3,7 @@
 {% block content %}
 <div class="page-header">
     <h1>🏭 Data Warehousing View</h1>
-    <p>SQL pools, databases, tables, and SQL scripts</p>
+    <p>SQL pools, databases, tables, SQL scripts, and serverless activity</p>
 </div>
 
 <!-- Summary Stats -->
@@ -39,6 +39,42 @@
         </div>
     </div>
 </div>
+
+{% if warehousing.serverless_pools %}
+{% set serverless_summary = warehousing.serverless_activity_summary %}
+<div class="row mt-2">
+    <div class="col">
+        <div class="stat-card">
+            <div class="stat-value" id="serverless-stat-queries">{{ serverless_summary.total_queries | format_number }}</div>
+            <div class="stat-label">Serverless Queries</div>
+        </div>
+    </div>
+    <div class="col">
+        <div class="stat-card">
+            <div class="stat-value" id="serverless-stat-queries-24h">{% if serverless_summary.queries_last_24h is none %}N/A{% else %}{{ serverless_summary.queries_last_24h | format_number }}{% endif %}</div>
+            <div class="stat-label">Queries (24h)</div>
+        </div>
+    </div>
+    <div class="col">
+        <div class="stat-card">
+            <div class="stat-value" id="serverless-stat-processed">{{ serverless_summary.processed_bytes | format_size }}</div>
+            <div class="stat-label">Processed Data</div>
+        </div>
+    </div>
+    <div class="col">
+        <div class="stat-card">
+            <div class="stat-value" id="serverless-stat-avg">{{ serverless_summary.average_duration_ms | round(1) }} ms</div>
+            <div class="stat-label">Avg Duration</div>
+        </div>
+    </div>
+    <div class="col">
+        <div class="stat-card">
+            <div class="stat-value" id="serverless-stat-max">{{ serverless_summary.max_duration_ms | format_number }} ms</div>
+            <div class="stat-label">Max Duration</div>
+        </div>
+    </div>
+</div>
+{% endif %}
 
 <!-- Dedicated SQL Pools (Synapse) -->
 {% if warehousing.dedicated_pools %}
@@ -88,6 +124,221 @@
 </div>
 {% endif %}
 
+<!-- Dedicated SQL Pool Workloads -->
+{% if warehousing.workloads %}
+<h2 class="mt-2 mb-1">Dedicated SQL Pool Workloads</h2>
+{% for workload_item in warehousing.workloads %}
+{% set workload = workload_item.profile %}
+{% set workload_pool_name = workload_item.pool_name %}
+{% set workload_workspace = workload_item.workspace %}
+{% set workload_id = 'dw-workload-' ~ loop.index %}
+{% include "synapse/_workload_profile.html" %}
+{% endfor %}
+{% endif %}
+
+<!-- Serverless Pools (Synapse) -->
+{% if warehousing.serverless_pools %}
+<div class="card">
+    <div class="card-header">☁️ Serverless SQL Pools (Synapse)</div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Status</th>
+                        <th>Queries (24h)</th>
+                        <th>Workspace</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for pool in warehousing.serverless_pools %}
+                    {% set activity_meta = pool.activity.metadata if pool.activity else {} %}
+                    <tr data-workspace="{{ pool.workspace | default('N/A') }}">
+                        <td>{{ pool.name | default('Built-in') }}</td>
+                        <td>
+                            <span class="badge {% if pool.status == 'Online' %}badge-success{% else %}badge-warning{% endif %}">
+                                {{ pool.status | default('Online') }}
+                            </span>
+                            <span class="badge {% if activity_meta.status == 'completed' %}badge-success{% elif activity_meta.status == 'partial' %}badge-warning{% elif activity_meta.status == 'skipped' %}badge-secondary{% else %}badge-danger{% endif %}">
+                                {{ activity_meta.status | default('unavailable') | title }}
+                            </span>
+                        </td>
+                        <td class="text-right">{% if pool.queries_last_24h is none %}N/A{% else %}{{ pool.queries_last_24h | format_number }}{% endif %}</td>
+                        <td>{{ pool.workspace | default('N/A') }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header">📡 Serverless Activity Collection Status</div>
+    <div class="card-body" id="serverless-activity-notices">
+        {% if warehousing.serverless_activity_notices %}
+            {% for notice in warehousing.serverless_activity_notices %}
+            <div class="mb-2">
+                <strong>{{ notice.workspace }}</strong>
+                <span class="badge {% if notice.status == 'completed' %}badge-success{% elif notice.status == 'partial' %}badge-warning{% elif notice.status == 'skipped' %}badge-secondary{% else %}badge-danger{% endif %}">
+                    {{ notice.status | title }}
+                </span>
+                {% if notice.warnings %}
+                <ul class="mt-1">
+                    {% for warning in notice.warnings %}
+                    <li>{{ warning }}</li>
+                    {% endfor %}
+                </ul>
+                {% endif %}
+            </div>
+            {% endfor %}
+        {% else %}
+            <p class="text-muted">Selected workspaces completed serverless activity collection without warnings.</p>
+        {% endif %}
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header">📈 Serverless Daily Usage Trends</div>
+    <div class="card-body">
+        <div class="row">
+            <div class="col col-6">
+                <div class="chart-container">
+                    <canvas id="serverlessDailyUsageChart"></canvas>
+                </div>
+            </div>
+            <div class="col col-6">
+                <div class="chart-container">
+                    <canvas id="serverlessDatabaseChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header">🗃️ Serverless Database Breakdown</div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Workspace</th>
+                        <th>Database</th>
+                        <th class="text-right">Queries</th>
+                        <th class="text-right">Processed Data</th>
+                        <th class="text-right">Avg Duration (ms)</th>
+                        <th class="text-right">Max Duration (ms)</th>
+                        <th class="text-right">Succeeded</th>
+                        <th class="text-right">Failed</th>
+                    </tr>
+                </thead>
+                <tbody id="serverless-database-table-body">
+                    {% for db in warehousing.serverless_activity_database_summaries[:15] %}
+                    <tr data-workspace="{{ db.workspace }}">
+                        <td>{{ db.workspace }}</td>
+                        <td>{{ db.database_name | default('Unknown') }}</td>
+                        <td class="text-right">{{ db.query_count | format_number }}</td>
+                        <td class="text-right">{{ db.processed_bytes | format_size }}</td>
+                        <td class="text-right">{{ db.average_elapsed_time_ms | round(1) }}</td>
+                        <td class="text-right">{{ db.max_elapsed_time_ms | format_number }}</td>
+                        <td class="text-right">{{ db.success_count | format_number }}</td>
+                        <td class="text-right">{{ db.failure_count | format_number }}</td>
+                    </tr>
+                    {% endfor %}
+                    {% if not warehousing.serverless_activity_database_summaries %}
+                    <tr>
+                        <td colspan="8" class="text-muted">No serverless activity details are available for the current selection.</td>
+                    </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header">🚀 Serverless Query Performance</div>
+    <div class="card-body">
+        <div class="row">
+            <div class="col col-6">
+                <h4>Top Slow Queries</h4>
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Workspace</th>
+                                <th>Database</th>
+                                <th>Request ID</th>
+                                <th>Status</th>
+                                <th>Started</th>
+                                <th class="text-right">Duration (ms)</th>
+                                <th class="text-right">Processed Data</th>
+                            </tr>
+                        </thead>
+                        <tbody id="serverless-slow-queries-body">
+                            {% for query in warehousing.serverless_activity_top_slowest_queries %}
+                            <tr data-workspace="{{ query.workspace }}">
+                                <td>{{ query.workspace }}</td>
+                                <td>{{ query.database_name | default('Unknown') }}</td>
+                                <td>{{ query.request_id | default(query.query_hash | default(query.session_id | default('N/A'))) }}</td>
+                                <td>{{ query.status | default('Unknown') }}</td>
+                                <td>{{ query.start_time | default('N/A') }}</td>
+                                <td class="text-right">{{ query.elapsed_time_ms | default(0) | format_number }}</td>
+                                <td class="text-right">{{ query.processed_bytes | default(0) | format_size }}</td>
+                            </tr>
+                            {% endfor %}
+                            {% if not warehousing.serverless_activity_top_slowest_queries %}
+                            <tr>
+                                <td colspan="7" class="text-muted">No slow-query metrics are available for the current selection.</td>
+                            </tr>
+                            {% endif %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="col col-6">
+                <h4>Top Largest Queries</h4>
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Workspace</th>
+                                <th>Database</th>
+                                <th>Request ID</th>
+                                <th>Status</th>
+                                <th>Started</th>
+                                <th class="text-right">Duration (ms)</th>
+                                <th class="text-right">Processed Data</th>
+                            </tr>
+                        </thead>
+                        <tbody id="serverless-large-queries-body">
+                            {% for query in warehousing.serverless_activity_top_largest_queries %}
+                            <tr data-workspace="{{ query.workspace }}">
+                                <td>{{ query.workspace }}</td>
+                                <td>{{ query.database_name | default('Unknown') }}</td>
+                                <td>{{ query.request_id | default(query.query_hash | default(query.session_id | default('N/A'))) }}</td>
+                                <td>{{ query.status | default('Unknown') }}</td>
+                                <td>{{ query.start_time | default('N/A') }}</td>
+                                <td class="text-right">{{ query.elapsed_time_ms | default(0) | format_number }}</td>
+                                <td class="text-right">{{ query.processed_bytes | default(0) | format_size }}</td>
+                            </tr>
+                            {% endfor %}
+                            {% if not warehousing.serverless_activity_top_largest_queries %}
+                            <tr>
+                                <td colspan="7" class="text-muted">No large-query metrics are available for the current selection.</td>
+                            </tr>
+                            {% endif %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
 <!-- SQL Warehouses (Databricks) -->
 {% if warehousing.sql_warehouses %}
 <div class="card">
@@ -128,39 +379,6 @@
                             {% endif %}
                         </td>
                         <td>{{ wh.workspace | default('N/A') }}</td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
-    </div>
-</div>
-{% endif %}
-
-<!-- Serverless Pools (Synapse) -->
-{% if warehousing.serverless_pools %}
-<div class="card">
-    <div class="card-header">☁️ Serverless SQL Pools (Synapse)</div>
-    <div class="card-body">
-        <div class="table-responsive">
-            <table class="table">
-                <thead>
-                    <tr>
-                        <th>Name</th>
-                        <th>Status</th>
-                        <th>Workspace</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for pool in warehousing.serverless_pools %}
-                    <tr data-workspace="{{ pool.workspace | default('N/A') }}">
-                        <td>{{ pool.name | default('Built-in') }}</td>
-                        <td>
-                            <span class="badge {% if pool.status == 'Online' %}badge-success{% else %}badge-warning{% endif %}">
-                                {{ pool.status | default('Online') }}
-                            </span>
-                        </td>
-                        <td>{{ pool.workspace | default('N/A') }}</td>
                     </tr>
                     {% endfor %}
                 </tbody>
@@ -240,6 +458,97 @@
 </div>
 {% endif %}
 
+{% if warehousing.column_collection_statuses %}
+<div class="card mt-2">
+    <div class="card-header">Column Metadata and Fabric Compatibility</div>
+    <div class="card-body">
+        <p>
+            <span class="badge badge-success">Compatible: {{ warehousing.compatibility_totals.compatible | format_number }}</span>
+            <span class="badge badge-warning">Review: {{ warehousing.compatibility_totals.review | format_number }}</span>
+            <span class="badge badge-danger">Unsupported: {{ warehousing.compatibility_totals.unsupported | format_number }}</span>
+        </p>
+        <div class="table-responsive">
+            <table class="table">
+                <thead><tr><th>Workspace</th><th>Data Type</th><th>Compatibility</th><th class="text-right">Columns</th></tr></thead>
+                <tbody>
+                    {% for entry in warehousing.column_type_distribution %}
+                    <tr data-workspace="{{ entry.workspace }}">
+                        <td>{{ entry.workspace }}</td><td>{{ entry.data_type }}</td>
+                        <td>{{ entry.compatibility | title }}</td><td class="text-right">{{ entry.column_count | format_number }}</td>
+                    </tr>
+                    {% else %}
+                    <tr><td colspan="4" class="text-muted">No column metadata is available.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+{% if warehousing.complexity_summaries %}
+<div class="card mt-2">
+    <div class="card-header">SQL Migration Readiness</div>
+    <div class="card-body">
+        <p>
+            <strong>{{ warehousing.complexity_scored_objects | format_number }}</strong> scored objects;
+            readiness: {{ warehousing.complexity_readiness_percentage if warehousing.complexity_readiness_percentage is not none else 'N/A' }}%;
+            <span class="badge badge-secondary">{{ warehousing.complexity_readiness_indicator | replace('_', ' ') }}</span>
+        </p>
+        <div class="table-responsive">
+            <table class="table">
+                <thead><tr><th>Object</th><th>Database</th><th>Complexity</th><th class="text-right">Score</th><th>Reason</th></tr></thead>
+                <tbody>
+                    {% for obj in warehousing.complexity_objects %}
+                    {% if obj.complexity_level in ['HIGH', 'VERY_HIGH'] or obj.definition_status != 'available' %}
+                    <tr data-workspace="{{ obj.workspace }}">
+                        <td>{{ obj.schema_name }}.{{ obj.object_name }}</td><td>{{ obj.database }}</td>
+                        <td>{{ obj.complexity_level | default(obj.definition_status, true) | replace('_', ' ') }}</td>
+                        <td class="text-right">{{ obj.score if obj.score is not none else 'N/A' }}</td>
+                        <td>{{ obj.escalation_reasons | join('; ') }}</td>
+                    </tr>
+                    {% endif %}
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+{% set definitions = warehousing.definitions | default({}) %}
+{% if definitions.databases_requested | default(0) > 0 %}
+<div class="card mt-2">
+    <div class="card-header">SQL Definition Analysis</div>
+    <div class="card-body">
+        <p>
+            Definitions: {{ definitions.total_objects | default(0) | format_number }};
+            encrypted: {{ definitions.encrypted_objects | default(0) | format_number }};
+            unavailable: {{ definitions.unavailable_objects | default(0) | format_number }};
+            truncated: {{ definitions.truncated_objects | default(0) | format_number }}.
+        </p>
+        <h3>Largest SQL Definitions</h3>
+        <div class="table-responsive">
+            <table class="table">
+                <thead><tr><th>Object</th><th>Type</th><th>Database</th><th>Workspace</th><th class="text-right">Characters</th><th>Status</th></tr></thead>
+                <tbody>
+                    {% for item in definitions.largest_objects %}
+                    <tr data-workspace="{{ item.workspace }}">
+                        <td>{{ item.schema }}.{{ item.name }}</td><td>{{ item.object_type | replace('_', ' ') | title }}</td>
+                        <td>{{ item.database }}</td><td>{{ item.workspace }}</td>
+                        <td class="text-right">{{ item.original_length | default(0) | format_number }}</td>
+                        <td>{% if item.is_encrypted %}Encrypted{% elif item.is_unavailable %}Unavailable{% elif item.is_truncated %}Truncated{% else %}Available{% endif %}</td>
+                    </tr>
+                    {% else %}
+                    <tr><td colspan="6" class="text-muted">No SQL definitions are available.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endif %}
+
 <div class="mt-2">
     <a href="{{ base_path }}index.html">← Back to Overview</a>
 </div>
@@ -247,25 +556,383 @@
 
 {% block scripts %}
 <script>
-// Data warehousing data for filtering
 const warehousingData = {
 {% for ws_name, ws in workspaces.items() %}
 {% set dw = ws.summary.get('data_warehouse', {}) %}
 {% set dw_counts = dw.get('counts', {}) if dw is mapping else {} %}
 {% set dw_dedicated = dw_counts.get('dedicated', {}) if dw_counts is mapping else {} %}
 {% set dw_serverless = dw_counts.get('serverless', {}) if dw_counts is mapping else {} %}
+{% set dw_serverless_activity = dw_serverless.get('activity', {}) if dw_serverless is mapping else {} %}
     "{{ ws_name }}": {
         dedicated_pools: {{ dw_dedicated.get('sql_pools', dw.get('dedicated_pools', 0)) if dw_dedicated is mapping else dw.get('dedicated_pools', 0) }},
         serverless_pools: {{ dw_serverless.get('sql_pools', 1 if dw.get('serverless_pool') else 0) if dw_serverless is mapping else (1 if dw.get('serverless_pool') else 0) }},
         databases: {{ (dw_dedicated.get('databases', 0) if dw_dedicated is mapping else 0) + (dw_serverless.get('databases', 0) if dw_serverless is mapping else 0) }},
         tables: {{ (dw_dedicated.get('tables', 0) if dw_dedicated is mapping else 0) + (dw_serverless.get('tables', 0) if dw_serverless is mapping else 0) }},
-        size_gb: {{ dw_dedicated.get('table_size_gb', dw.get('total_size_gb', 0)) if dw_dedicated is mapping else dw.get('total_size_gb', 0) }}
+        size_gb: {{ dw_dedicated.get('table_size_gb', dw.get('total_size_gb', 0)) if dw_dedicated is mapping else dw.get('total_size_gb', 0) }},
+        serverless_queries: {{ dw_serverless_activity.get('queries', 0) if dw_serverless_activity is mapping else 0 }},
+        serverless_processed_bytes: {{ dw_serverless_activity.get('processed_bytes', 0) if dw_serverless_activity is mapping else 0 }},
+        serverless_average_duration_ms: {{ dw_serverless_activity.get('average_duration_ms', 0) if dw_serverless_activity is mapping else 0 }},
+        serverless_queries_last_24h: {{ (dw_serverless.get('queries_last_24h') if dw_serverless is mapping else none) | tojson }}
     }{% if not loop.last %},{% endif %}
 {% endfor %}
 };
 
-// Store the database count from template for initial display
 const totalDatabases = {{ warehousing.databases | length }};
+const serverlessActivityData = {{ warehousing.serverless_activity_by_workspace | tojson }};
+let serverlessDailyUsageChart = null;
+let serverlessDatabaseChart = null;
+
+function formatByteSize(bytes) {
+    const value = Number(bytes || 0);
+    if (!Number.isFinite(value)) {
+        return String(bytes);
+    }
+    if (value === 0) {
+        return '0.0 B';
+    }
+    const units = ['B', 'KB', 'MB', 'GB', 'TB'];
+    const exponent = Math.min(Math.floor(Math.log(value) / Math.log(1024)), units.length - 1);
+    const size = value / Math.pow(1024, exponent);
+    return `${size.toFixed(1)} ${units[exponent]}`;
+}
+
+function escapeHtml(value) {
+    return String(value ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/\"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+}
+
+function statusBadge(status) {
+    const normalized = status || 'unavailable';
+    let badgeClass = 'badge-danger';
+    if (normalized === 'completed') {
+        badgeClass = 'badge-success';
+    } else if (normalized === 'partial') {
+        badgeClass = 'badge-warning';
+    } else if (normalized === 'skipped') {
+        badgeClass = 'badge-secondary';
+    }
+    return `<span class="badge ${badgeClass}">${escapeHtml(normalized.charAt(0).toUpperCase() + normalized.slice(1))}</span>`;
+}
+
+function getServerlessActivityRecords(selectedWorkspaces, key) {
+    const records = [];
+    selectedWorkspaces.forEach(ws => {
+        const activity = serverlessActivityData[ws];
+        if (activity && Array.isArray(activity[key])) {
+            activity[key].forEach(item => records.push(item));
+        }
+    });
+    return records;
+}
+
+function summarizeServerlessActivity(selectedWorkspaces) {
+    const summary = {
+        workspaceCount: 0,
+        completedWorkspaces: 0,
+        partialWorkspaces: 0,
+        unavailableWorkspaces: 0,
+        skippedWorkspaces: 0,
+        totalQueries: 0,
+        queriesLast24h: 0,
+        queriesLast24hKnown: 0,
+        processedBytes: 0,
+        totalElapsedTimeMs: 0,
+        averageDurationMs: 0,
+        maxDurationMs: 0,
+        successCount: 0,
+        failureCount: 0,
+        cancelledCount: 0
+    };
+
+    selectedWorkspaces.forEach(ws => {
+        const activity = serverlessActivityData[ws];
+        if (!activity) {
+            return;
+        }
+        summary.workspaceCount += 1;
+        if (activity.status === 'completed') {
+            summary.completedWorkspaces += 1;
+        } else if (activity.status === 'partial') {
+            summary.partialWorkspaces += 1;
+        } else if (activity.status === 'skipped') {
+            summary.skippedWorkspaces += 1;
+        } else {
+            summary.unavailableWorkspaces += 1;
+        }
+
+        summary.totalQueries += Number(activity.total_queries || 0);
+        if (activity.queries_last_24h !== null && activity.queries_last_24h !== undefined) {
+            summary.queriesLast24h += Number(activity.queries_last_24h);
+            summary.queriesLast24hKnown += 1;
+        }
+        summary.processedBytes += Number(activity.processed_bytes || 0);
+        summary.totalElapsedTimeMs += Number(activity.total_elapsed_time_ms || 0);
+        summary.maxDurationMs = Math.max(summary.maxDurationMs, Number(activity.max_duration_ms || 0));
+        summary.successCount += Number(activity.success_count || 0);
+        summary.failureCount += Number(activity.failure_count || 0);
+        summary.cancelledCount += Number(activity.cancelled_count || 0);
+    });
+
+    if (summary.totalQueries > 0) {
+        summary.averageDurationMs = summary.totalElapsedTimeMs / summary.totalQueries;
+    }
+
+    return summary;
+}
+
+function renderServerlessNotices(selectedWorkspaces) {
+    const container = document.getElementById('serverless-activity-notices');
+    if (!container) {
+        return;
+    }
+
+    const notices = [];
+    selectedWorkspaces.forEach(ws => {
+        const activity = serverlessActivityData[ws];
+        if (!activity) {
+            return;
+        }
+        if (activity.status !== 'completed' || (activity.warnings || []).length > 0) {
+            notices.push(activity);
+        }
+    });
+
+    if (!notices.length) {
+        container.innerHTML = '<p class="text-muted">Selected workspaces completed serverless activity collection without warnings.</p>';
+        return;
+    }
+
+    container.innerHTML = notices.map(activity => {
+        const warnings = (activity.warnings || []).map(warning => `<li>${escapeHtml(warning)}</li>`).join('');
+        return `
+            <div class="mb-2">
+                <strong>${escapeHtml(activity.workspace)}</strong>
+                ${statusBadge(activity.status)}
+                ${warnings ? `<ul class="mt-1">${warnings}</ul>` : ''}
+            </div>
+        `;
+    }).join('');
+}
+
+function renderServerlessDatabaseTable(selectedWorkspaces) {
+    const tableBody = document.getElementById('serverless-database-table-body');
+    if (!tableBody) {
+        return;
+    }
+
+    const rows = getServerlessActivityRecords(selectedWorkspaces, 'database_summaries')
+        .sort((left, right) => (right.processed_bytes || 0) - (left.processed_bytes || 0))
+        .slice(0, 15);
+
+    if (!rows.length) {
+        tableBody.innerHTML = '<tr><td colspan="8" class="text-muted">No serverless activity details are available for the current selection.</td></tr>';
+        return;
+    }
+
+    tableBody.innerHTML = rows.map(row => `
+        <tr data-workspace="${escapeHtml(row.workspace)}">
+            <td>${escapeHtml(row.workspace)}</td>
+            <td>${escapeHtml(row.database_name || 'Unknown')}</td>
+            <td class="text-right">${Number(row.query_count || 0).toLocaleString()}</td>
+            <td class="text-right">${formatByteSize(row.processed_bytes || 0)}</td>
+            <td class="text-right">${Number(row.average_elapsed_time_ms || 0).toFixed(1)}</td>
+            <td class="text-right">${Number(row.max_elapsed_time_ms || 0).toLocaleString()}</td>
+            <td class="text-right">${Number(row.success_count || 0).toLocaleString()}</td>
+            <td class="text-right">${Number(row.failure_count || 0).toLocaleString()}</td>
+        </tr>
+    `).join('');
+}
+
+function renderTopQueries(selectedWorkspaces, key, targetId, emptyMessage) {
+    const tableBody = document.getElementById(targetId);
+    if (!tableBody) {
+        return;
+    }
+
+    const sortKey = key === 'top_slowest_queries' ? 'elapsed_time_ms' : 'processed_bytes';
+    const rows = getServerlessActivityRecords(selectedWorkspaces, key)
+        .sort((left, right) => (right[sortKey] || 0) - (left[sortKey] || 0))
+        .slice(0, 10);
+
+    if (!rows.length) {
+        tableBody.innerHTML = `<tr><td colspan="7" class="text-muted">${escapeHtml(emptyMessage)}</td></tr>`;
+        return;
+    }
+
+    tableBody.innerHTML = rows.map(row => `
+        <tr data-workspace="${escapeHtml(row.workspace)}">
+            <td>${escapeHtml(row.workspace)}</td>
+            <td>${escapeHtml(row.database_name || 'Unknown')}</td>
+            <td>${escapeHtml(row.request_id || row.query_hash || row.session_id || 'N/A')}</td>
+            <td>${escapeHtml(row.status || 'Unknown')}</td>
+            <td>${escapeHtml(row.start_time || 'N/A')}</td>
+            <td class="text-right">${Number(row.elapsed_time_ms || 0).toLocaleString()}</td>
+            <td class="text-right">${formatByteSize(row.processed_bytes || 0)}</td>
+        </tr>
+    `).join('');
+}
+
+function renderServerlessDailyUsageChart(selectedWorkspaces) {
+    const canvas = document.getElementById('serverlessDailyUsageChart');
+    if (!canvas) {
+        return;
+    }
+
+    const rows = getServerlessActivityRecords(selectedWorkspaces, 'daily_usage');
+    const dates = [...new Set(rows.map(row => row.date).filter(Boolean))].sort();
+    const seriesTotals = {};
+    const seriesByDate = {};
+
+    rows.forEach(row => {
+        const label = `${row.workspace} / ${row.database_name || 'Unknown'}`;
+        seriesTotals[label] = (seriesTotals[label] || 0) + Number(row.processed_bytes || 0);
+        if (!seriesByDate[label]) {
+            seriesByDate[label] = {};
+        }
+        seriesByDate[label][row.date] = (seriesByDate[label][row.date] || 0) + Number(row.processed_bytes || 0);
+    });
+
+    const palette = ['#0078d4', '#5c2d91', '#107c10', '#ca5010', '#d83b01', '#038387', '#8764b8', '#498205'];
+    const topLabels = Object.entries(seriesTotals)
+        .sort((left, right) => right[1] - left[1])
+        .slice(0, 8)
+        .map(entry => entry[0]);
+
+    const datasets = topLabels.map((label, index) => ({
+        label,
+        data: dates.map(date => (seriesByDate[label] || {})[date] || 0),
+        borderColor: palette[index % palette.length],
+        backgroundColor: palette[index % palette.length],
+        tension: 0.2
+    }));
+
+    if (serverlessDailyUsageChart) {
+        serverlessDailyUsageChart.destroy();
+    }
+
+    serverlessDailyUsageChart = new Chart(canvas, {
+        type: 'line',
+        data: {
+            labels: dates,
+            datasets
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                title: {
+                    display: true,
+                    text: 'Processed Data by Day and Workspace / Database'
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        callback: value => formatByteSize(value)
+                    }
+                }
+            }
+        }
+    });
+}
+
+function renderServerlessDatabaseChart(selectedWorkspaces) {
+    const canvas = document.getElementById('serverlessDatabaseChart');
+    if (!canvas) {
+        return;
+    }
+
+    const rows = getServerlessActivityRecords(selectedWorkspaces, 'database_summaries')
+        .sort((left, right) => (right.processed_bytes || 0) - (left.processed_bytes || 0))
+        .slice(0, 10);
+
+    if (serverlessDatabaseChart) {
+        serverlessDatabaseChart.destroy();
+    }
+
+    serverlessDatabaseChart = new Chart(canvas, {
+        type: 'bar',
+        data: {
+            labels: rows.map(row => `${row.workspace} / ${row.database_name || 'Unknown'}`),
+            datasets: [{
+                label: 'Processed Data',
+                data: rows.map(row => row.processed_bytes || 0),
+                backgroundColor: '#5c2d91'
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: false
+                },
+                title: {
+                    display: true,
+                    text: 'Top Databases by Processed Data'
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        callback: value => formatByteSize(value)
+                    }
+                }
+            }
+        }
+    });
+}
+
+function renderServerlessActivity(selectedWorkspaces) {
+    const summary = summarizeServerlessActivity(selectedWorkspaces);
+
+    const queriesEl = document.getElementById('serverless-stat-queries');
+    const queries24hEl = document.getElementById('serverless-stat-queries-24h');
+    const processedEl = document.getElementById('serverless-stat-processed');
+    const avgEl = document.getElementById('serverless-stat-avg');
+    const maxEl = document.getElementById('serverless-stat-max');
+
+    if (queriesEl) {
+        queriesEl.textContent = summary.totalQueries.toLocaleString();
+    }
+    if (queries24hEl) {
+        queries24hEl.textContent = summary.queriesLast24hKnown
+            ? summary.queriesLast24h.toLocaleString()
+            : 'N/A';
+    }
+    if (processedEl) {
+        processedEl.textContent = formatByteSize(summary.processedBytes);
+    }
+    if (avgEl) {
+        avgEl.textContent = `${summary.averageDurationMs.toFixed(1)} ms`;
+    }
+    if (maxEl) {
+        maxEl.textContent = `${summary.maxDurationMs.toLocaleString()} ms`;
+    }
+
+    renderServerlessNotices(selectedWorkspaces);
+    renderServerlessDatabaseTable(selectedWorkspaces);
+    renderTopQueries(
+        selectedWorkspaces,
+        'top_slowest_queries',
+        'serverless-slow-queries-body',
+        'No slow-query metrics are available for the current selection.'
+    );
+    renderTopQueries(
+        selectedWorkspaces,
+        'top_largest_queries',
+        'serverless-large-queries-body',
+        'No large-query metrics are available for the current selection.'
+    );
+    renderServerlessDailyUsageChart(selectedWorkspaces);
+    renderServerlessDatabaseChart(selectedWorkspaces);
+}
 
 function updateFilteredStats(selectedWorkspaces) {
     let ded = 0, srv = 0, db = 0, tables = 0, sizeGb = 0;
@@ -281,10 +948,10 @@ function updateFilteredStats(selectedWorkspaces) {
     });
     document.getElementById('stat-ded').textContent = ded;
     document.getElementById('stat-srv').textContent = srv;
-    // Use template-provided count if no filter data, otherwise use filtered count
     document.getElementById('stat-db').textContent = db || (selectedWorkspaces.length === Object.keys(warehousingData).length ? totalDatabases : db);
     document.getElementById('stat-tables').textContent = tables.toLocaleString();
     document.getElementById('stat-size').textContent = sizeGb.toFixed(2) + ' GB';
+    renderServerlessActivity(selectedWorkspaces);
 }
 
 {% if warehousing.dedicated_pools %}
@@ -292,7 +959,7 @@ const poolCtx = document.getElementById('poolSizeChart');
 if (poolCtx) {
     const poolNames = {{ warehousing.dedicated_pools | map(attribute='name') | list | tojson }};
     const poolSizes = {{ warehousing.dedicated_pools | map(attribute='size_gb', default=0) | list | tojson }};
-    
+
     new Chart(poolCtx, {
         type: 'bar',
         data: {
