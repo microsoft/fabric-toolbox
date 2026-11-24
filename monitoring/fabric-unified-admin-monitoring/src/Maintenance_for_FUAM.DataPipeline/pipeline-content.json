@@ -41,7 +41,7 @@
                     {
                         "activity": "Perform Backup",
                         "dependencyConditions": [
-                            "Succeeded"
+                            "Completed"
                         ]
                     }
                 ],
@@ -66,6 +66,66 @@
                     }
                 },
                 "sessionTag": "fuam"
+            },
+            {
+                "name": "Retry Backup if failed",
+                "type": "IfCondition",
+                "dependsOn": [
+                    {
+                        "activity": "Perform Backup",
+                        "dependencyConditions": [
+                            "Completed"
+                        ]
+                    },
+                    {
+                        "activity": "Perform Table Maintenance",
+                        "dependencyConditions": [
+                            "Succeeded"
+                        ]
+                    }
+                ],
+                "typeProperties": {
+                    "expression": {
+                        "value": "@equals(activity('Perform Backup').Status, 'Failed')",
+                        "type": "Expression"
+                    },
+                    "ifFalseActivities": [],
+                    "ifTrueActivities": [
+                        {
+                            "name": "Retry Backup",
+                            "type": "TridentNotebook",
+                            "dependsOn": [],
+                            "policy": {
+                                "timeout": "0.12:00:00",
+                                "retry": 0,
+                                "retryIntervalInSeconds": 30,
+                                "secureOutput": false,
+                                "secureInput": false
+                            },
+                            "typeProperties": {
+                                "notebookId": "606ed91b-795c-37fa-97b3-0b04bb70a70f",
+                                "workspaceId": "88c8d9fa-2c24-3fad-8f46-b36431c7ba1d",
+                                "parameters": {
+                                    "backup_files": {
+                                        "value": {
+                                            "value": "@pipeline().parameters.backup_files",
+                                            "type": "Expression"
+                                        },
+                                        "type": "bool"
+                                    },
+                                    "keep_historic_days": {
+                                        "value": {
+                                            "value": "@pipeline().parameters.keep_historic_days",
+                                            "type": "Expression"
+                                        },
+                                        "type": "int"
+                                    }
+                                },
+                                "sessionTag": "fuam"
+                            }
+                        }
+                    ]
+                }
             }
         ],
         "parameters": {
