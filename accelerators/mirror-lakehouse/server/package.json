@@ -17,7 +17,7 @@
     "compression": "^1.8.2",
     "cors": "^2.8.5",
     "dotenv": "^16.3.1",
-    "express": "^4.22.3",
+    "express": "^5.2.1",
     "express-rate-limit": "^7.1.5",
     "express-validator": "^7.0.1",
     "helmet": "^7.1.0",
