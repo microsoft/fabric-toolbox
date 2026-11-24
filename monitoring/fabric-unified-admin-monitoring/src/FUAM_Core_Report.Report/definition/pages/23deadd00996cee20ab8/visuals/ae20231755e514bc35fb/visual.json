@@ -191,42 +191,8 @@
                             "solid": {
                                 "color": {
                                     "expr": {
-                                        "FillRule": {
-                                            "Input": {
-                                                "Measure": {
-                                                    "Expression": {
-                                                        "SourceRef": {
-                                                            "Entity": "Metrics"
-                                                        }
-                                                    },
-                                                    "Property": "# Active Artifacts"
-                                                }
-                                            },
-                                            "FillRule": {
-                                                "linearGradient2": {
-                                                    "min": {
-                                                        "color": {
-                                                            "Literal": {
-                                                                "Value": "'#bddbc7'"
-                                                            }
-                                                        }
-                                                    },
-                                                    "max": {
-                                                        "color": {
-                                                            "Literal": {
-                                                                "Value": "'#59A472'"
-                                                            }
-                                                        }
-                                                    },
-                                                    "nullColoringStrategy": {
-                                                        "strategy": {
-                                                            "Literal": {
-                                                                "Value": "'asZero'"
-                                                            }
-                                                        }
-                                                    }
-                                                }
-                                            }
+                                        "Literal": {
+                                            "Value": "'#59A472'"
                                         }
                                     }
                                 }
