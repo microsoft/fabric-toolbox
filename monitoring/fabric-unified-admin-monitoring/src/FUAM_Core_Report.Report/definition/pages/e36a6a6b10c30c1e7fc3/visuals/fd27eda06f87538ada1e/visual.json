@@ -38,6 +38,21 @@
                                             "Entity": "workspaces_scanned_users"
                                         }
                                     },
+                                    "Property": "DisplayName"
+                                }
+                            },
+                            "queryRef": "workspaces_scanned_users.DisplayName",
+                            "nativeQueryRef": "DisplayName",
+                            "displayName": "Display Name"
+                        },
+                        {
+                            "field": {
+                                "Column": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "workspaces_scanned_users"
+                                        }
+                                    },
                                     "Property": "GraphId"
                                 }
                             },
