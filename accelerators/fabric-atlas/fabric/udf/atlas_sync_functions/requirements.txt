@@ -1,0 +1,2 @@
+fabric-user-data-functions==1.0.142
+mssql-python==1.14.0
