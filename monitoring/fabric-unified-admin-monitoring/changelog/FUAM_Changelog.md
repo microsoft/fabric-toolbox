@@ -2,6 +2,14 @@
 for Fabric Unified Admin Monitoring solution accelerator.
 
 --------------------------
+
+## 📦 2026.6.2
+
+### 📈 Enhancements
+
+- [Deploy_FUAM.ipynb](../scripts/Deploy_FUAM.ipynb) now includes URL encoding for workspace names with special characters i.e. spaces, special symbols, etc. to ensure compatibility with ABFSS paths.
+
+--------------------------
 ## 📦 2026.6.1
 
 Date: 2026-06-02
