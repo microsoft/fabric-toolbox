@@ -409,7 +409,7 @@ The Fabric Assessment Tool exports data in a structured hierarchical format that
 ## Next Steps
 
 * Include Synapse to Fabric Migration Spark scripts to be a single shop for your Synapse Spark Migrations.
-* Enrich Synapse artifacts, adding helpful items like Spark Configrations from the API responses.
+* Enrich Synapse artifacts, adding helpful items like Spark Configurations from the API responses.
 * Enhance documentation and resources with more ways to query data and add more meaningful examples.
 
 

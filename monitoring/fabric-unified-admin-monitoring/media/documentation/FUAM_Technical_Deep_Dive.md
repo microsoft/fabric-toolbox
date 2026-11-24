@@ -29,7 +29,7 @@
 Fabric Unified Admin Monitoring (FUAM) is a comprehensive solution accelerator designed to provide holistic monitoring and governance capabilities for Microsoft Fabric tenants. Built entirely using native Fabric components, FUAM ingests data from multiple sources including Admin APIs, Scanner API, Capacity Metrics, and Activity Logs to create a unified monitoring platform.
 
 > [!CAUTION]  
-> The FUAM solution accelerator is not an official Microsoft product! It is a solution accelerator, which can help you implement a monitoring solution within Fabric. As such there is no offical support available and there is a risk that things might break. E.g. the extraction of Capacity Metrics data. This is based on the Capacity Metrics App and elements of that App could change without notice and impact FUAM.
+> The FUAM solution accelerator is not an official Microsoft product! It is a solution accelerator, which can help you implement a monitoring solution within Fabric. As such there is no official support available and there is a risk that things might break. E.g. the extraction of Capacity Metrics data. This is based on the Capacity Metrics App and elements of that App could change without notice and impact FUAM.
 
 
 ### Key Technical Characteristics
@@ -1027,7 +1027,7 @@ The following best practices are recommendations only and don't fit for every or
 
 **2. Capacity Planning:**
 - Tenants with **<500 workspaces (attached to capacity):** at least F2 capacity
-- Tenants with **500 - 1,000 workspaces (attached to capacity):** F4 recommended (for intial load higher)
+- Tenants with **500 - 1,000 workspaces (attached to capacity):** F4 recommended (for initial load higher)
 - Tenants with **>1,000 workspaces (attached to capacity):** F8+ with optimized pipelines
 
 **3. Data Retention:**

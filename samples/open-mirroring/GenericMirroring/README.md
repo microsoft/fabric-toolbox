@@ -34,20 +34,20 @@ If you have a centralise data hub and need to push out changes to many downstrea
 ## Mirrored database as a source for CDC (SQL Server only)
 The change tracking information is being collected and sent to the Mirrored database, allowing the Mirrored database to be used as a source for OLTP/raw data.
 
-There is also a  'soft' delete option (for SQL Server) - so deletes are only marked as deleted in the Mirrored database - this allows the delete to be propigated to down stream systems.
+There is also a  'soft' delete option (for SQL Server) - so deletes are only marked as deleted in the Mirrored database - this allows the delete to be propagated to downstream systems.
 If
 
 
 ## Process 
 This solution will:
-1. Enable Change Tracking on the source database (if needed) and on the table (if needed).  It should not interfer, if you have CDC/change tracking already enabled.
+1. Enable Change Tracking on the source database (if needed) and on the table (if needed).  It should not interfere, if you have CDC/change tracking already enabled.
 1. Create a snapshot or initial extract from SQL Server/source
 1. Upload the extracted data (in parquet file) to the Mirroring Landing zone.
 1. On a custom schedule per table, extract any changes on the table and upload them to the landing zone.
 
 # Instructions
 1. Compile the solution using VSCode or Visual Studio 2022 - I used Community Edition.
-1. Edit the config file, to include the SQL Server, tables you want to Mirror and the SPN Application ID, SPN Secret and SPN Tenant. (All the details are in the [youtube video](https://youtu.be/Gg3YlGyy5P8), there is a [seperate youtube video](https://youtu.be/85xWqWHfWbU)for creating an SPN)
+1. Edit the config file, to include the SQL Server, tables you want to Mirror and the SPN Application ID, SPN Secret and SPN Tenant. (All the details are in the [youtube video](https://youtu.be/Gg3YlGyy5P8), there is a [separate youtube video](https://youtu.be/85xWqWHfWbU) for creating an SPN)
 1. [Create the Mirrored database](https://youtu.be/tiHHw2Hj848) , Copy the Landing Zone to the config file. 
 1. Run the program.
  

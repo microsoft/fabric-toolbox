@@ -20,7 +20,7 @@ This [notebook](CreateSQLDB.ipynb) demonstrates how to create a new SQL Database
 This approach allows you to provision SQL Databases with any collation requirements directly from your notebook in Microsoft Fabric, supporting enterprise customization and internationalization scenarios.
 
 
-## Futher Reading
+## Further Reading
 
 - [Documentation](https://learn.microsoft.com/en-us/fabric/database/sql/deploy-rest-api?tabs=5dot1)
 

@@ -91,7 +91,7 @@ Please see [FUAM's Authorization & Authentication](/monitoring/fabric-unified-ad
 |Connection Type| Web v2  | Web v2  |
 |Base Url| https://api.powerbi.com/v1.0/myorg/admin  | https://api.fabric.microsoft.com/v1/admin  |
 |Token Audience Url| https://analysis.windows.net/powerbi/api| https://api.fabric.microsoft.com|
-|Authentification|Service Principal| Service Principal|
+|Authentication|Service Principal| Service Principal|
 
 > **Error handling:** In case of an error, you'll be able to run the notebook again. It has an update mechanism, which will act as an item update.
 
@@ -120,7 +120,7 @@ We recommend to create a new Capacity Metrics App (with automatically deployed w
 
 > **Important:**  By default the Metrics App workspace is created on a Pro license. If you don't change this to F/P-SKU you will get an error
 
-> **Important:**  It is recommended to have a seperate instance of the capacity metrics app running just for FUAM. This way you can test the compatibility and still update your regular version
+> **Important:**  It is recommended to have a separate instance of the capacity metrics app running just for FUAM. This way you can test the compatibility and still update your regular version
 
 ## 6. Run orchestration Pipeline
 
