@@ -28,7 +28,6 @@ DROP TABLE IF EXISTS dbo.Lab_InterestRates;
 DROP TABLE IF EXISTS dbo.Lab_Campaigns;
 DROP TABLE IF EXISTS dbo.Lab_Geo;
 DROP TABLE IF EXISTS dbo.Lab_Config;
-DROP TABLE IF EXISTS dbo.Lab_PerfLog; -- Legacy cleanup from earlier lab versions
 GO
 
 -- ============================================================================
@@ -348,4 +347,4 @@ ORDER BY [Table];
 DROP TABLE IF EXISTS dbo.Lab_Config;
 
 PRINT '';
-PRINT '🎯 Ready to test! Start with 01_InliningFundamentals, then 02_InliningViaExpressionBlock.';
+PRINT 'Setup complete. Continue with the Scalar UDF lab you want to run.';

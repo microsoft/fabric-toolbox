@@ -160,5 +160,10 @@ FROM CustomerMetrics
 ORDER BY CustomerID;
 ```
 
+## Cleanup
+
+After completing all Lab 02 lessons, run [`sql/99_cleanup.sql`](sql/99_cleanup.sql).
+It removes lab-exclusive UDFs while retaining shared data and functions reused by other labs.
+
 ➡️ Continue to
 [Scalar UDF Inlining](../03_ScalarUDFInlining/00_ReadMe.md).

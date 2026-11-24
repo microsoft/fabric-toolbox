@@ -2,8 +2,14 @@
 
 ⏱️ **Estimated time:** 10 minutes
 
+**Inlining coverage:** Both inlining techniques and non-inlineable functions using
+`INLINE = AUTO`.
+
 > **Prerequisite:** Run the [data setup](../00_Source/00_ReadMe.md) before
 > executing the examples in this folder.
+
+Complete executable script:
+[`sql/01_inlining_fundamentals.sql`](sql/01_inlining_fundamentals.sql).
 
 ## Why Start Here?
 
@@ -48,9 +54,12 @@ shows `is_inlineable = 0` and `inline_eligibility_mask = 0`.
 
 | Inlining eligibility | Number of UDF calls |
 |---|---|
-| Inlining via Expression Block | Unlimited |
+| Inlining via Expression Block | No specific call-count limit |
 | Scalar UDF inlining (FROID) | Limited; depends on overall query complexity |
-| Non-inlineable (`INLINE = AUTO`) | Unlimited in supported standalone queries |
+| Non-inlineable (`INLINE = AUTO`) | No specific call-count limit in supported standalone queries |
+
+> **Note:** No technique-specific call-count limit does not guarantee unbounded execution.
+> General query, resource, and service limits may still apply.
 
 > **Combined-query requirement:** If a query calls even one UDF that is
 > eligible only for scalar UDF inlining, the complete query must meet scalar
@@ -336,15 +345,25 @@ FROM dbo.Lab_Customers AS c;
 | Supported calling-query shapes | Broad | Follow documented requirements |
 
 Exact operators and costs can change as the optimizer evolves, so use the
-signatures above rather than expecting identical XML.
+signatures above as a manual checklist. Do not compare the entire XML or
+require fixed operator costs, because optimizer details can change without
+changing the inlining behavior.
 
 ---
 
-## Next Step
+## Cleanup
 
-➡️ Continue to
-[Inlining via Expression Block](../02_InliningViaExpressionBlock/00_ReadMe.md)
-for procedural `WHILE`, `IF/ELSE`, and multiple `RETURN` patterns.
+Run [`sql/99_cleanup.sql`](sql/99_cleanup.sql) after the exercises to remove this lab's
+exclusive UDFs. It retains shared sample data and `udf_GetCustomerTier`, also used by Lab 07.
+
+## Next Steps
+
+Continue with the lab that matches the UDF type you want to explore:
+
+- [Lab 02: Inlining via Expression Block](../02_InliningViaExpressionBlock/00_ReadMe.md)
+  for computation-based UDFs with procedural `WHILE`, `IF/ELSE`, and multiple `RETURN` patterns.
+- [Lab 03: Scalar UDF Inlining](../03_ScalarUDFInlining/00_ReadMe.md)
+  for data-access UDFs that read Warehouse tables.
 
 ---
 
