@@ -50,12 +50,6 @@ objects. Rerunning setup replaces this lab's tables and their contents. Cleanup 
 objects created by this lab.
 Lab 10 has its own setup and does not require the shared source tables.
 
-Free-text columns, UDF parameters, and extraction/reply return values use `VARCHAR(MAX)` so
-other messages and prompts aren't narrowed to the lengths used by this sample. Policy keys
-remain `VARCHAR(50)` because they come from the classification labels. The reply UDF's
-`@ReplyPolicy` parameter receives the policy's prompt text, not its key. `MAX` does not remove
-Warehouse storage limits or the AI functions' input limits; see the linked documentation.
-
 AI functions call external AI APIs through Microsoft Fabric. Review the linked prerequisites
 and your organization's data-handling requirements before running.
 
@@ -154,7 +148,7 @@ Function dbo.udf_ClassifyOrderInquiry can be inlined via Scalar UDF inlining, wh
 
 `dbo.udf_DraftOrderReply` drafts a reply by combining the original customer message, a structured
 summary of the key order details, and predefined response guidance selected for that type of
-inquiry. The structured details keep the response focused and consistent, while the original
+inquiry. The structured details provide additional context, while the original
 message remains the source of truth.
 
 ```sql
@@ -258,10 +252,9 @@ GO
 
 ### Step 7: Create the draft-reply view
 
-`dbo.udf_DraftOrderReply` drafts a reply by combining the original customer message, a structured
-summary of the key order details, and predefined response guidance selected for that type of
-inquiry. The structured details keep the response focused and consistent, while the original
-message remains the source of truth.
+The view joins each selected request to the base prompt and the matching classification-specific
+prompt, then passes those prompts and the stored request details to `dbo.udf_DraftOrderReply`.
+Creating the view does not generate replies. Step 8 evaluates it and stores the generated output.
 
 ```sql
 CREATE OR ALTER VIEW dbo.vw_Lab_AIDraftOrderReplies
