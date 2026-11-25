@@ -341,6 +341,7 @@ This is the central orchestration pipeline that coordinates all data ingestion m
 | `activity_anonymize_tables` | Boolean | false | Hash sensitive user information in activities |
 | `activity_anonymize_after_days` | Integer | 0 | Anonymize activities older than N days |
 | `activity_anonymize_files` | Boolean | false | Delete raw activity JSON files after processing |
+| `maintenance_weekday` | Integer | 0 | Weekday (UTC, 0 = Sunday) to run Maintenance_for_FUAM after the loads; -1 disables |
 
 **Execution Flow:**
 
@@ -393,8 +394,12 @@ Load_FUAM_Data_E2E
 ├── Load_WidelyShared_OrganizationLinks (Parallel)
 │   └── 01_Transfer_WidelyShared_OrganizationLinks_Unit
 │
-└── Load_WidelyShared_PublishedToWeb (Parallel)
-    └── 01_Transfer_WidelyShared_PublishedToWeb_Unit
+├── Load_WidelyShared_PublishedToWeb (Parallel)
+│   └── 01_Transfer_WidelyShared_PublishedToWeb_Unit
+│
+└── Maintenance_for_FUAM (Weekly, on maintenance_weekday, after all loads)
+    ├── 01_FUAM_Lakehouse_Backup
+    └── 02_FUAM_Lakehouse_Optimization
 ```
 
 **Dependency Management:**
