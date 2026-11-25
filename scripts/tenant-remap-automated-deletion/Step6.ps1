@@ -1,4 +1,5 @@
 #Requires -Modules Az.Accounts, Az.Resources
+#Requires -Version 7
 
 function Remove-AllSoftDeletedArtifacts {
     [CmdletBinding()]
@@ -27,8 +28,6 @@ function Remove-AllSoftDeletedArtifacts {
 
     if (-not $AdminUpn) { $AdminUpn = (Get-AzContext).Account.Id }
 
-    $adminOid = (Get-AzADUser -UserPrincipalName $AdminUpn).Id
-
     $secureFabricToken = (Get-AzAccessToken -ResourceUrl 'https://api.fabric.microsoft.com').Token
     $ssPtr = [System.Runtime.InteropServices.Marshal]::SecureStringToBSTR($secureFabricToken)
     $plainTextFabricToken = [System.Runtime.InteropServices.Marshal]::PtrToStringBSTR($ssPtr)
@@ -48,15 +47,69 @@ function Remove-AllSoftDeletedArtifacts {
             $workspaceItems = [System.Collections.ArrayList]::new()
 
             $uri = "https://api.fabric.microsoft.com/v1/workspaces/$wsId/recoverableItems?include=DefaultIdentity"
+            $skipWorkspace = $false
+            
             do {
-                $response = Invoke-RestMethod -Method GET -Uri $uri -Headers $h
-                $response.value | ForEach-Object { $workspaceItems.Add($_) | Out-Null }
+                $numGetItemsRetries = 0
+                while ($true) {
+                    if ($numGetItemsRetries -gt 5) {
+                        Write-Warning "Maximum retry attempts reached. Skipping workspace $wsId."
+                        $skipWorkspace = $true
+                        break
+                    }
 
-                 $continuationToken = if ($response.PSObject.Properties.Name -contains 'continuationToken') { $response.continuationToken } else { $null }
+                    try {
+                        $response = Invoke-RestMethod -Method GET -Uri $uri -Headers $h
+                        $response.value | ForEach-Object { $workspaceItems.Add($_) | Out-Null }
+                        $skipWorkspace = $false
+                        break
+                    }
+                    catch {
+                        $numGetItemsRetries++
+                        $response = $_.Exception.Response
+
+                        if (-not $response) {
+                            continue
+                        }
+                        
+                        $error_returned = $response.StatusCode
+
+                        if ($error_returned -ne 429) {
+                            Write-Warning "Get Recoverable Items API failed with error code ($error_returned)."
+                            $skipWorkspace = $true
+                            break
+                        }
+
+                        $retryAfter = $_.Exception.Response.Headers.RetryAfter
+
+                        # RetryAfter is a RetryConditionHeaderValue, so the seconds come from Delta rather than the object itself
+                        if ($null -ne $retryAfter -and $null -ne $retryAfter.Delta) {
+                            $retryAfterSeconds = [Math]::Ceiling($retryAfter.Delta.TotalSeconds)
+                        }
+                        else {
+                            $retryAfterSeconds = 60
+                        }
+
+                        Write-Host "Throttled, waiting $retryAfterSeconds seconds before retrying to get recoverable workspace items."
+
+                        Start-Sleep -Seconds $retryAfterSeconds
+                    }
+                }
+
+                if ($skipWorkspace -eq $true) {
+                    Write-Warning "Skipping workspace $wsId due to failure in retrieving its soft-deleted content."
+                    break
+                }
+
+                $continuationToken = if ($response.PSObject.Properties.Name -contains 'continuationToken') { $response.continuationToken } else { $null }
                 if ($continuationToken) {
                     $uri = "https://api.fabric.microsoft.com/v1/workspaces/$wsId/recoverableItems?include=DefaultIdentity&continuationToken=$([System.Uri]::EscapeDataString($continuationToken))"
                 }
             } while ($continuationToken)
+
+            if ($skipWorkspace -eq $true) {
+                continue
+            }
             
             $formattedWorkspaceItems = $workspaceItems | ConvertTo-Json -Depth 5
             $formattedWorkspaceItems | Out-File -FilePath "workspace_$($wsId)_softdeleted_artifacts.json"
@@ -67,6 +120,8 @@ function Remove-AllSoftDeletedArtifacts {
             $formattedFabricItems | Out-File -FilePath "workspace_$($wsId)_softdeleted_fabric_artifacts.json"
 
             foreach ($artifact in $fabricItems) {
+                Write-Host "Found artifact, ID: $($artifact.id), Type: $($artifact.type), Name: $($artifact.displayName)`n"
+
                 $attemptCounter = 0
                 while ($true) {
                     $attemptCounter++
@@ -76,8 +131,6 @@ function Remove-AllSoftDeletedArtifacts {
                     }
 
                     try {
-                        Write-Host "Found artifact, ID: $($artifact.id), Type: $($artifact.type), Name: $($artifact.displayName)`n"
-                
                         Invoke-RestMethod -Method DELETE -Uri "https://api.fabric.microsoft.com/v1/workspaces/$wsId/recoverableItems/$($artifact.id)?hardDelete=True" -Headers $h
                         Write-Host "Hard deleted artifact, ID: $($artifact.id)"
                         break
