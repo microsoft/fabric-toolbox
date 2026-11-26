@@ -82,45 +82,89 @@
                 "Where": [
                   {
                     "Condition": {
-                      "And": {
-                        "Left": {
-                          "Comparison": {
-                            "ComparisonKind": 2,
-                            "Left": {
-                              "Column": {
-                                "Expression": {
-                                  "SourceRef": {
-                                    "Source": "c"
-                                  }
-                                },
-                                "Property": "Date"
+                      "Between": {
+                        "Expression": {
+                          "Column": {
+                            "Expression": {
+                              "SourceRef": {
+                                "Source": "c"
                               }
                             },
-                            "Right": {
-                              "Literal": {
-                                "Value": "datetime'2026-10-30T00:00:00'"
-                              }
-                            }
+                            "Property": "Date"
                           }
                         },
-                        "Right": {
-                          "Comparison": {
-                            "ComparisonKind": 3,
-                            "Left": {
-                              "Column": {
+                        "LowerBound": {
+                          "DateSpan": {
+                            "Expression": {
+                              "DateAdd": {
                                 "Expression": {
-                                  "SourceRef": {
-                                    "Source": "c"
+                                  "DateAdd": {
+                                    "Expression": {
+                                      "DateAdd": {
+                                        "Expression": {
+                                          "ScopedEval": {
+                                            "Expression": {
+                                              "Aggregation": {
+                                                "Expression": {
+                                                  "Column": {
+                                                    "Expression": {
+                                                      "SourceRef": {
+                                                        "Source": "c"
+                                                      }
+                                                    },
+                                                    "Property": "Date"
+                                                  }
+                                                },
+                                                "Function": 4
+                                              }
+                                            },
+                                            "Scope": []
+                                          }
+                                        },
+                                        "Amount": -1,
+                                        "TimeUnit": 2
+                                      }
+                                    },
+                                    "Amount": 1,
+                                    "TimeUnit": 0
                                   }
                                 },
-                                "Property": "Date"
+                                "Amount": -1,
+                                "TimeUnit": 2
                               }
                             },
-                            "Right": {
-                              "Literal": {
-                                "Value": "datetime'2026-11-21T00:00:00'"
+                            "TimeUnit": 0
+                          }
+                        },
+                        "UpperBound": {
+                          "DateSpan": {
+                            "Expression": {
+                              "DateAdd": {
+                                "Expression": {
+                                  "ScopedEval": {
+                                    "Expression": {
+                                      "Aggregation": {
+                                        "Expression": {
+                                          "Column": {
+                                            "Expression": {
+                                              "SourceRef": {
+                                                "Source": "c"
+                                              }
+                                            },
+                                            "Property": "Date"
+                                          }
+                                        },
+                                        "Function": 4
+                                      }
+                                    },
+                                    "Scope": []
+                                  }
+                                },
+                                "Amount": -1,
+                                "TimeUnit": 2
                               }
-                            }
+                            },
+                            "TimeUnit": 0
                           }
                         }
                       }
