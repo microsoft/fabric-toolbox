@@ -115,25 +115,45 @@
                 "Where": [
                   {
                     "Condition": {
-                      "Between": {
-                        "Expression": {
-                          "Column": {
-                            "Expression": {
-                              "SourceRef": {
-                                "Source": "c"
+                      "And": {
+                        "Left": {
+                          "Comparison": {
+                            "ComparisonKind": 2,
+                            "Left": {
+                              "Column": {
+                                "Expression": {
+                                  "SourceRef": {
+                                    "Source": "c"
+                                  }
+                                },
+                                "Property": "Date"
                               }
                             },
-                            "Property": "Date"
+                            "Right": {
+                              "Literal": {
+                                "Value": "datetime'2026-10-30T00:00:00'"
+                              }
+                            }
                           }
                         },
-                        "LowerBound": {
-                          "Literal": {
-                            "Value": "datetime'2026-10-01T00:00:00'"
-                          }
-                        },
-                        "UpperBound": {
-                          "Literal": {
-                            "Value": "datetime'2026-10-31T00:00:00'"
+                        "Right": {
+                          "Comparison": {
+                            "ComparisonKind": 3,
+                            "Left": {
+                              "Column": {
+                                "Expression": {
+                                  "SourceRef": {
+                                    "Source": "c"
+                                  }
+                                },
+                                "Property": "Date"
+                              }
+                            },
+                            "Right": {
+                              "Literal": {
+                                "Value": "datetime'2026-11-21T00:00:00'"
+                              }
+                            }
                           }
                         }
                       }

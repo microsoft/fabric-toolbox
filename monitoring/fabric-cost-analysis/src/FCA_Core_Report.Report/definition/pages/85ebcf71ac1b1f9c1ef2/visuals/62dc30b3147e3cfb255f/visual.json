@@ -109,6 +109,21 @@
               "queryRef": "fca.#CapacityAutoScale",
               "nativeQueryRef": "Capacity Overage",
               "displayName": "Capacity Overage"
+            },
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "fca"
+                    }
+                  },
+                  "Property": "OnDemand Cost"
+                }
+              },
+              "queryRef": "fca.OnDemand Cost",
+              "nativeQueryRef": "OnDemand Cost",
+              "displayName": "OnDemand Cost"
             }
           ]
         }
@@ -152,7 +167,7 @@
             "value": {
               "expr": {
                 "Literal": {
-                  "Value": "90.86737087070743D"
+                  "Value": "139.494030129576D"
                 }
               }
             }
@@ -395,7 +410,7 @@
                 "Entity": "fca"
               }
             },
-            "Property": "#OtherPAYG"
+            "Property": "Additional Cost Details Check"
           }
         },
         "type": "Advanced",
@@ -412,7 +427,7 @@
             {
               "Condition": {
                 "Comparison": {
-                  "ComparisonKind": 1,
+                  "ComparisonKind": 0,
                   "Left": {
                     "Measure": {
                       "Expression": {
@@ -420,12 +435,12 @@
                           "Source": "f"
                         }
                       },
-                      "Property": "#OtherPAYG"
+                      "Property": "Additional Cost Details Check"
                     }
                   },
                   "Right": {
                     "Literal": {
-                      "Value": "0L"
+                      "Value": "1L"
                     }
                   }
                 }

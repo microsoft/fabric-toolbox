@@ -624,6 +624,34 @@
             "id": "field-2c5268f3-6d77-48ac-9d8a-66164ba912b1",
             "order": 0
           }
+        },
+        {
+          "properties": {
+            "value": {
+              "expr": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "fca"
+                    }
+                  },
+                  "Property": "OnDemand Cost"
+                }
+              }
+            }
+          },
+          "selector": {
+            "data": [
+              {
+                "dataViewWildcard": {
+                  "matchingOption": 0
+                }
+              }
+            ],
+            "metadata": "fca.#OtherPAYG",
+            "id": "field-b8bb469b-8475-039e-63e0-75de11d7ac7e",
+            "order": 1
+          }
         }
       ],
       "referenceLabelTitle": [
@@ -639,7 +667,7 @@
             "titleFontSize": {
               "expr": {
                 "Literal": {
-                  "Value": "10D"
+                  "Value": "9D"
                 }
               }
             }
@@ -787,7 +815,7 @@
             "valueFontSize": {
               "expr": {
                 "Literal": {
-                  "Value": "10D"
+                  "Value": "9D"
                 }
               }
             }
@@ -909,6 +937,36 @@
             ],
             "metadata": "fca.#OtherPAYG",
             "id": "field-60352171-0177-c29a-156f-ceaf08d52742"
+          }
+        }
+      ],
+      "referenceLabelLayout": [
+        {
+          "properties": {
+            "style": {
+              "expr": {
+                "Literal": {
+                  "Value": "'tabular'"
+                }
+              }
+            },
+            "verticalAlignment": {
+              "expr": {
+                "Literal": {
+                  "Value": "'middle'"
+                }
+              }
+            },
+            "valueArea": {
+              "expr": {
+                "Literal": {
+                  "Value": "30D"
+                }
+              }
+            }
+          },
+          "selector": {
+            "id": "default"
           }
         }
       ]

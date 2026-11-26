@@ -35,7 +35,7 @@ The page adds one table, `meter_view`, to the semantic model. It is a **calculat
 | Measure | Description |
 | --- | --- |
 | `Meter Cost` | Cost of the meters of the selected view |
-| `Meter Cost OnDemand` / `Meter Cost Standard` | Cost of the OnDemand meters / of the other meters |
+| `Meter Cost OnDemand` / `Meter Cost Standard` | Cost of the OnDemand meters / of the other meters. The `OnDemand Cost` measure of the `fca` table (Home page, *Additional Cost Details* table) uses the same calculation |
 | `Meter OnDemand %` | Share of the OnDemand meters in the total cost |
 | `Meter Count` | Number of meters with consumption in the selected view |
 | `Meter Quantity`, `Meter Unit` | Consumed quantity of a meter and its unit (CU hours or GB per month) |

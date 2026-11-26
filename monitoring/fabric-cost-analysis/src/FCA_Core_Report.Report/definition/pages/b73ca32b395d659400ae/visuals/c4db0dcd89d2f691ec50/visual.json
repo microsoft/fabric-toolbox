@@ -87,12 +87,27 @@
                       "Entity": "fca"
                     }
                   },
-                  "Property": "#OneLake"
+                  "Property": "OneLake excl. OnDemand"
                 }
               },
-              "queryRef": "fca.#OneLake",
+              "queryRef": "fca.OneLake excl. OnDemand",
               "nativeQueryRef": "OneLake",
               "displayName": "OneLake"
+            },
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "fca"
+                    }
+                  },
+                  "Property": "OnDemand Cost"
+                }
+              },
+              "queryRef": "fca.OnDemand Cost",
+              "nativeQueryRef": "OnDemand",
+              "displayName": "OnDemand"
             }
           ]
         }
@@ -338,7 +353,7 @@
             }
           },
           "selector": {
-            "metadata": "fca.#OneLake"
+            "metadata": "fca.OneLake excl. OnDemand"
           }
         },
         {
@@ -357,6 +372,24 @@
           },
           "selector": {
             "metadata": "fca.#OtherPAYG"
+          }
+        },
+        {
+          "properties": {
+            "fill": {
+              "solid": {
+                "color": {
+                  "expr": {
+                    "Literal": {
+                      "Value": "'#9071CE'"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "selector": {
+            "metadata": "fca.OnDemand Cost"
           }
         }
       ],

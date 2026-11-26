@@ -430,6 +430,35 @@ table fca
 
 		changedProperty = DisplayFolder
 
+	/// Sum of the EffectiveCost of all the OnDemand meters (Meter Is OnDemand = 1: category starting with On-Demand, or name ending with OD On-Demand Usage CU). It reuses the Meter Cost OnDemand calculation and follows the current filters (date, subscription, region, capacity, tags...). It is shown in the Additional Cost Details table of the Home page.
+	measure 'OnDemand Cost' = [Meter Cost OnDemand] + 0
+		displayFolder: measures
+		lineageTag: afcdc5e6-864d-4764-b4f4-e5972583148c
+
+		formatStringDefinition =
+				SWITCH( MAX(fca[BillingCurrency]),
+				"USD", "\$#,0.00;(\$#,0.00);\$#,0.00",
+				"EUR", "\€#,0.00;(\€#,0.00);\€#,0.00",
+				"#,0.00;(#,0.00);#,0.00")
+
+	/// 1 when a row of the Additional Cost Details table of the Home page has an Additional Cost or an OnDemand Cost, 0 otherwise. Used as the visual filter (= 1) of the table, so that the categories that only have OnDemand cost are listed too.
+	measure 'Additional Cost Details Check' = IF([#OtherPAYG] > 0 || [OnDemand Cost] > 0, 1, 0)
+		formatString: 0
+		isHidden
+		displayFolder: measures
+		lineageTag: b77440ca-9362-4f37-8123-ddc814cafb79
+
+	/// OneLake cost without the OnDemand meters (the OnDemand OneLake meters are part of OnDemand Cost). Used by the Cost details chart of the Summary page so that its segments (Reservation, PAYG, Additional Cost, OneLake and OnDemand) never overlap and add up to the total cost. The Home page keeps #OneLake, which includes the OnDemand OneLake meters.
+	measure 'OneLake excl. OnDemand' = CALCULATE([#OneLake], KEEPFILTERS(FILTER(ALL(meters[Name]), [Meter Is OnDemand] = 0)))
+		displayFolder: measures
+		lineageTag: 94cca5dc-c9a7-4f6c-aa77-0a94a1245eaa
+
+		formatStringDefinition =
+				SWITCH( MAX(fca[BillingCurrency]),
+				"USD", "\$#,0.00;(\$#,0.00);\$#,0.00",
+				"EUR", "\€#,0.00;(\€#,0.00);\€#,0.00",
+				"#,0.00;(#,0.00);#,0.00")
+
 	/// Calculates the used capacity by subtracting the available capacity from the provisioned capacity
 	measure #UsedCapacity = [#ProvisionedCapacity] - [#AvailableCapacity]
 		displayFolder: measures
