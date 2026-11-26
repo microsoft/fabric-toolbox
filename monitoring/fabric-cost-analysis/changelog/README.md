@@ -9,6 +9,15 @@
 
 ## Release
 
+## 📦 2026.11.26
+
+- **Azure Quotas analysis by quota** (optional Quota feature): FCA now keeps **which quota** each value belongs to. The `quota_fabric` table gets the columns `QuotaId`, `QuotaName`, `Unit` and `CollectionTimestamp`, so the capacity quota (`CapacityQuota`), the number of on-demand enabled capacities and every on-demand CU-hours-per-day quota (OneLake, Data Warehouse, Data Factory...) are reported separately, with their limit, usage, remaining quota and utilization. Before, all the quotas of a region were added up (CU, CU hours and counts together), which gave meaningless totals.
+- **Quota report page** redesigned: quotas by status (OK / Warning / Critical), highest utilization per region on the map, detailed table per subscription, region and quota sorted by utilization, new Quota slicer and snapshot date. Warning is at 80% and Critical at 95% (editable in the `Quota Warning Threshold` and `Quota Critical Threshold` measures).
+- **Semantic model**: `Quota Used`, `Quota Limit` and `Quota Consumed` now use the latest snapshot of the selected period (values of several days are no longer added up) and are blank when quotas with different units are mixed. New measures: `Quota Remaining`, `Quota Status`, `Quota Max Consumed`, `# Quotas Critical`, `# Quotas Warning`, `# Quotas OK`, `Quota Snapshot Date`, `Quota Last Collected`.
+- **Quota collection**: requests that fail (missing permission, subscription or region not available...) are now reported in the notebook output instead of being silently ignored, and the other subscriptions and regions are still loaded. A run that collects nothing keeps the existing data, and a snapshot is replaced per subscription instead of per day.
+- **New Azure regions** for quotas and the map: France South, Taiwan North, Belgium Central and Denmark East (54 regions, as returned by the `Microsoft.Fabric` resource provider).
+- **Upgrade**: run the `00_Deploy_FCA` notebook as usual, existing quota data is kept (see [Quota.md](../Quota.md#upgrade-from-a-previous-version)). Quota data collected by previous versions has no quota name and is not shown in the Quota page, run the **Load Quota** pipeline once to get the new view.
+
 ## 📦 2026.10.29
 
 - **New meters**: new meters to follow on demands workloads CUs.

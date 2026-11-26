@@ -115,7 +115,7 @@ The Quota pipeline cannot be activated until the permissions are granted and the
 
 ### 📍 Optional Steps
 
-Azure Quota Data : [Click here to configure quota analysis](./Quota.md)
+Azure Quota Data : [Click here to configure quota analysis](./Quota.md) (already using the quota analysis? See [how to upgrade](./Quota.md#upgrade-from-a-previous-version))
 
 Reservation : [Click here to configure reservation analysis](./Reservation.md)
 
@@ -171,8 +171,10 @@ Steps to update:
 - 2 - Remove the existing "00_Deploy_FCA" Notebook from your workspace
 - 3 - Import the updated notebook into your FCA workspace
 - 4 - Run the 00_Deploy_FCA.ipynb Notebook
-- 5 - Update the pipeline activities and parameters as needed (Running the notebook overwrites existing objects and resets pipeline parameters to their default values. Any custom changes will need to be reapplied)
+- 5 - Update the pipeline activities and parameters as needed (Running the notebook overwrites existing objects and resets pipeline parameters to their default values. Any custom changes will need to be reapplied, for example the activation of the optional **Load Quotas** and **Load Reservations** activities)
 - 6 - Run the pipeline and then open the Power BI report.
+
+>ℹ️ Existing data is kept by the update, including the data of the optional quota and reservation analysis. The `Init_FCA_Lakehouse_Tables` notebook, run by the deployment notebook, adds the new columns to the existing tables when a version needs them (for example the quota name, unit and collection time in `quota_fabric`, see [Quota - upgrade](./Quota.md#upgrade-from-a-previous-version)).
 
 >ℹ️ This notebook is designed to initially deploy or update all the items in your FCA workspace. You do not need to manually run the Load FCA E2E pipeline after an update. During the next pipeline run, FCA will also check and update the status of your FCA version on the first page of the FCA_Core_Report:
 

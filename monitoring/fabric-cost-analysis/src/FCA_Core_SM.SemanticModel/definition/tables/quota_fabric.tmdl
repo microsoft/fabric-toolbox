@@ -2,7 +2,92 @@ table quota_fabric
 	lineageTag: 0d4f3e74-27c6-487b-9770-95b2dbd0096c
 	sourceLineageTag: [dbo].[quota_fabric]
 
-	measure 'Quota Consumed' = DIVIDE(SUM(quota_fabric[Usage]),SUM(quota_fabric[Limit]))
+	/// Most recent quota snapshot (DateKey, yyyymmdd) collected with the quota names and available in the selected period, whatever the subscription, region and quota filters. All the quota measures are computed on this single snapshot, so that values collected on several days are never added up.
+	measure 'Quota Snapshot DateKey' =
+			
+			CALCULATE(
+			    MAX(quota_fabric[DateKey]),
+			    quota_fabric[QuotaId] <> BLANK(),
+			    REMOVEFILTERS(subscriptions),
+			    REMOVEFILTERS(capacity_regions),
+			    REMOVEFILTERS(quota_fabric[QuotaId]),
+			    REMOVEFILTERS(quota_fabric[QuotaName]),
+			    REMOVEFILTERS(quota_fabric[Unit])
+			)
+		formatString: 0
+		isHidden
+		lineageTag: 5e46f525-eb37-4779-a1fb-a92987082fbb
+
+	/// Date (yyyy-MM-dd) of the quota snapshot used by the quota measures.
+	measure 'Quota Snapshot Date' =
+			
+			VAR _snapshot = [Quota Snapshot DateKey]
+			RETURN
+			    IF(
+			        NOT ISBLANK(_snapshot),
+			        FORMAT(DATE(INT(_snapshot / 10000), MOD(INT(_snapshot / 100), 100), MOD(_snapshot, 100)), "yyyy-MM-dd")
+			    )
+		lineageTag: 0d2cea8a-f283-4022-925a-7a4e9462085d
+
+	/// Date and time (UTC) at which the quotas of the current selection were collected from Azure.
+	measure 'Quota Last Collected' =
+			
+			VAR _snapshot = [Quota Snapshot DateKey]
+			RETURN
+			    CALCULATE(
+			        MAX(quota_fabric[CollectionTimestamp]),
+			        quota_fabric[DateKey] = _snapshot
+			    )
+		formatString: General Date
+		lineageTag: c27ce0b0-9a87-4049-a37c-ccfc478e846b
+
+	/// Utilization ratio (usage / limit) from which a quota is flagged as Warning. 0.8 = 80%. Edit this measure to change the threshold.
+	measure 'Quota Warning Threshold' = 0.8
+		formatString: 0%
+		isHidden
+		lineageTag: b3ec2877-31dc-439e-8fab-a5f20444dc3f
+
+	/// Utilization ratio (usage / limit) from which a quota is flagged as Critical. 0.95 = 95%. Edit this measure to change the threshold.
+	measure 'Quota Critical Threshold' = 0.95
+		formatString: 0%
+		isHidden
+		lineageTag: f7e1b872-42d8-4cd2-896e-ec10e81a273e
+
+	/// Current usage of the selected quota(s), taken from the most recent snapshot of the selected period. Blank when the selection mixes quotas expressed in different units (CU, CU hours per day, number of capacities): select a quota (QuotaName) to get a value.
+	measure 'Quota Used' =
+			
+			VAR _snapshot = [Quota Snapshot DateKey]
+			VAR _singleUnit = CALCULATE(DISTINCTCOUNT(quota_fabric[Unit]), quota_fabric[DateKey] = _snapshot) <= 1
+			RETURN
+			    IF(_singleUnit, CALCULATE(SUM(quota_fabric[Usage]), quota_fabric[DateKey] = _snapshot))
+		formatString: #,0
+		lineageTag: 6e3955d5-9e0f-45e0-b2ca-e848551c8cae
+
+		changedProperty = Name
+
+	/// Configured limit of the selected quota(s), taken from the most recent snapshot of the selected period. Blank when the selection mixes quotas expressed in different units (CU, CU hours per day, number of capacities): select a quota (QuotaName) to get a value.
+	measure 'Quota Limit' =
+			
+			VAR _snapshot = [Quota Snapshot DateKey]
+			VAR _singleUnit = CALCULATE(DISTINCTCOUNT(quota_fabric[Unit]), quota_fabric[DateKey] = _snapshot) <= 1
+			RETURN
+			    IF(_singleUnit, CALCULATE(SUM(quota_fabric[Limit]), quota_fabric[DateKey] = _snapshot))
+		formatString: #,0
+		lineageTag: 18c14fdc-c823-4d3c-bf4f-ad0c24f1d693
+
+		changedProperty = Name
+
+	/// Remaining quota (limit - usage) of the selected quota(s). Negative when the usage is above the limit.
+	measure 'Quota Remaining' =
+			
+			VAR _limit = [Quota Limit]
+			RETURN
+			    IF(NOT ISBLANK(_limit), _limit - COALESCE([Quota Used], 0))
+		formatString: #,0
+		lineageTag: a418ee40-304e-4e8a-a6fc-35996ba18034
+
+	/// Quota utilization (usage / limit) of the selected quota(s).
+	measure 'Quota Consumed' = DIVIDE([Quota Used], [Quota Limit])
 		formatString: 0.00%;-0.00%;0.00%
 		lineageTag: a34ff0cf-3aa9-4c75-9eb5-cf7bea6b6a86
 
@@ -10,25 +95,39 @@ table quota_fabric
 
 		changedProperty = FormatString
 
-	measure 'Quota Limit' = SUM(quota_fabric[Limit])
-		formatString: 0
-		lineageTag: 18c14fdc-c823-4d3c-bf4f-ad0c24f1d693
+	/// Utilization status of the selected quota: Critical, Warning or OK according to the Quota Critical Threshold and Quota Warning Threshold measures.
+	measure 'Quota Status' =
+			
+			VAR _ratio = [Quota Consumed]
+			RETURN
+			    IF(
+			        NOT ISBLANK(_ratio),
+			        SWITCH(
+			            TRUE(),
+			            _ratio >= [Quota Critical Threshold], "Critical",
+			            _ratio >= [Quota Warning Threshold], "Warning",
+			            "OK"
+			        )
+			    )
+		lineageTag: f9aac5b0-1309-4880-977b-9a96caf9c004
 
-		changedProperty = Name
-
+	/// Utilization bar (SVG image) of the quota. Green below the warning threshold, orange from the warning threshold, red from the critical threshold.
 	measure 'Quota Ratio' =
 			
+			var ratio = [Quota Consumed]
+			
 			var color = switch(true(),
-			    [Quota Consumed] < .5, "#EB895F",
-			    "#9071CE")
+			    ratio >= [Quota Critical Threshold], "#D64550",
+			    ratio >= [Quota Warning Threshold], "#F2A541",
+			    "#2AAA92")
 			
 			var start_String = "data:image/svg+xml;utf81,"
 			var svg_full =  "<svg width='500' height='200' viewBox='0 10 750 100' fill='none' xmlns='http://www.w3.org/2000/svg'>
-			<rect x='30' y='32' width='"& 660 * [Quota Consumed] &"' height='80' rx='5' fill='"& color &"'/>
+			<rect x='30' y='32' width='"& 660 * MIN(1, COALESCE(ratio, 0)) &"' height='80' rx='5' fill='"& color &"'/>
 			<rect x='5' y='10' width='710' height='130' rx='10' stroke='#777171' stroke-width='10'/>
 			</svg>"
 			
-			return start_String & svg_full
+			return IF(ISBLANK([Quota Limit]), BLANK(), start_String & svg_full)
 		lineageTag: a7fb0274-8744-4dd7-a36e-4455784a9f5f
 		dataCategory: ImageUrl
 
@@ -36,11 +135,95 @@ table quota_fabric
 
 		changedProperty = DataCategory
 
-	measure 'Quota Used' = SUM(quota_fabric[Usage])
-		formatString: 0
-		lineageTag: 6e3955d5-9e0f-45e0-b2ca-e848551c8cae
+	/// Highest utilization (usage / limit) among the quotas of the selection. A quota is one subscription, one region and one quota name, so the result is comparable whatever the units of the quotas.
+	measure 'Quota Max Consumed' =
+			
+			VAR _snapshot = [Quota Snapshot DateKey]
+			VAR _quotas =
+			    CALCULATETABLE(
+			        SUMMARIZE(quota_fabric, quota_fabric[SubscriptionKey], quota_fabric[RegionId], quota_fabric[QuotaId]),
+			        quota_fabric[DateKey] = _snapshot,
+			        quota_fabric[QuotaId] <> BLANK()
+			    )
+			RETURN
+			    MAXX(
+			        _quotas,
+			        CALCULATE(DIVIDE(SUM(quota_fabric[Usage]), SUM(quota_fabric[Limit])), quota_fabric[DateKey] = _snapshot)
+			    )
+		formatString: 0.00%;-0.00%;0.00%
+		lineageTag: 0b1e5a52-3f5c-4c3e-8d77-6b1f0a2d9c01
 
-		changedProperty = Name
+	/// Number of quotas (subscription, region and quota name) whose utilization is at or above the Quota Critical Threshold.
+	measure '# Quotas Critical' =
+			
+			VAR _snapshot = [Quota Snapshot DateKey]
+			VAR _quotas =
+			    CALCULATETABLE(
+			        SUMMARIZE(quota_fabric, quota_fabric[SubscriptionKey], quota_fabric[RegionId], quota_fabric[QuotaId]),
+			        quota_fabric[DateKey] = _snapshot,
+			        quota_fabric[QuotaId] <> BLANK()
+			    )
+			RETURN
+			    COALESCE(
+			        COUNTROWS(
+			            FILTER(
+			                _quotas,
+			                VAR _ratio = CALCULATE(DIVIDE(SUM(quota_fabric[Usage]), SUM(quota_fabric[Limit])), quota_fabric[DateKey] = _snapshot)
+			                RETURN NOT ISBLANK(_ratio) && _ratio >= [Quota Critical Threshold]
+			            )
+			        ),
+			        0
+			    )
+		formatString: 0
+		lineageTag: dea23494-c288-4d8a-86de-59fcdcfa5f10
+
+	/// Number of quotas (subscription, region and quota name) whose utilization is at or above the Quota Warning Threshold and below the Quota Critical Threshold.
+	measure '# Quotas Warning' =
+			
+			VAR _snapshot = [Quota Snapshot DateKey]
+			VAR _quotas =
+			    CALCULATETABLE(
+			        SUMMARIZE(quota_fabric, quota_fabric[SubscriptionKey], quota_fabric[RegionId], quota_fabric[QuotaId]),
+			        quota_fabric[DateKey] = _snapshot,
+			        quota_fabric[QuotaId] <> BLANK()
+			    )
+			RETURN
+			    COALESCE(
+			        COUNTROWS(
+			            FILTER(
+			                _quotas,
+			                VAR _ratio = CALCULATE(DIVIDE(SUM(quota_fabric[Usage]), SUM(quota_fabric[Limit])), quota_fabric[DateKey] = _snapshot)
+			                RETURN NOT ISBLANK(_ratio) && _ratio >= [Quota Warning Threshold] && _ratio < [Quota Critical Threshold]
+			            )
+			        ),
+			        0
+			    )
+		formatString: 0
+		lineageTag: 574de465-c912-416f-b752-6074cf974e39
+
+	/// Number of quotas (subscription, region and quota name) whose utilization is below the Quota Warning Threshold. Quotas with a limit of 0 are not counted.
+	measure '# Quotas OK' =
+			
+			VAR _snapshot = [Quota Snapshot DateKey]
+			VAR _quotas =
+			    CALCULATETABLE(
+			        SUMMARIZE(quota_fabric, quota_fabric[SubscriptionKey], quota_fabric[RegionId], quota_fabric[QuotaId]),
+			        quota_fabric[DateKey] = _snapshot,
+			        quota_fabric[QuotaId] <> BLANK()
+			    )
+			RETURN
+			    COALESCE(
+			        COUNTROWS(
+			            FILTER(
+			                _quotas,
+			                VAR _ratio = CALCULATE(DIVIDE(SUM(quota_fabric[Usage]), SUM(quota_fabric[Limit])), quota_fabric[DateKey] = _snapshot)
+			                RETURN NOT ISBLANK(_ratio) && _ratio < [Quota Warning Threshold]
+			            )
+			        ),
+			        0
+			    )
+		formatString: 0
+		lineageTag: b0c011ab-7528-4348-80d4-1d12b0f391dc
 
 	column RegionId
 		dataType: string
@@ -108,6 +291,53 @@ table quota_fabric
 		sourceColumn: SubscriptionKey
 
 		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	/// Technical identifier of the quota returned by the Azure API (for example CapacityQuota, OneLake or DataWarehouse). Empty for the data collected by FCA versions before 2026.11.26, which did not store the quota name.
+	column QuotaId
+		dataType: string
+		isHidden
+		sourceProviderType: varchar(8000)
+		lineageTag: ef6903a7-db75-4fe6-9d8e-9bb02a087070
+		sourceLineageTag: QuotaId
+		summarizeBy: none
+		sourceColumn: QuotaId
+
+		annotation SummarizationSetBy = Automatic
+
+	/// Name of the quota as displayed in the Azure portal (Quotas > Microsoft Fabric), for example "CapacityQuota", "On-demand enabled capacities" or "Data Warehouse On-demand CU hours per day".
+	column QuotaName
+		dataType: string
+		sourceProviderType: varchar(8000)
+		lineageTag: b4f005fb-6778-416b-a4ae-835fc72f8751
+		sourceLineageTag: QuotaName
+		summarizeBy: none
+		sourceColumn: QuotaName
+
+		annotation SummarizationSetBy = Automatic
+
+	/// Unit of the usage and limit of the quota: CU (capacity units), CUhrs (CU hours per day) or Count (number of capacities).
+	column Unit
+		dataType: string
+		sourceProviderType: varchar(8000)
+		lineageTag: 78601594-0f79-4f2b-8801-da6cac8a45b6
+		sourceLineageTag: Unit
+		summarizeBy: none
+		sourceColumn: Unit
+
+		annotation SummarizationSetBy = Automatic
+
+	/// Date and time (UTC) at which the quota was collected from Azure.
+	column CollectionTimestamp
+		dataType: dateTime
+		isHidden
+		formatString: General Date
+		sourceProviderType: datetime2
+		lineageTag: 1c9b3ae5-8947-4a8e-9710-ede768c90666
+		sourceLineageTag: CollectionTimestamp
+		summarizeBy: none
+		sourceColumn: CollectionTimestamp
 
 		annotation SummarizationSetBy = Automatic
 

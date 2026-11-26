@@ -36,7 +36,7 @@ FCA gathers diverse data in Lakehouse to provide cost insights:
 - FCA extracts Azure Cost in [FOCUS](https://focus.finops.org/) format (a Unified Standard for Cloud Billing Data)
 - FCA extracts enriched Microsoft Learn documentation data
 - (optional) FCA extracts Azure Reservations details
-- (optional) FCA extracts Azure Quotas
+- (optional) FCA extracts Azure Quotas (Fabric capacity and on-demand quotas, limit and usage per subscription, region and quota)
 
 >ℹ️ FCA will display only data related to Fabric costs, no other Azure cost will be prepared for analysis.
 
@@ -53,7 +53,7 @@ FCA gathers diverse data in Lakehouse to provide cost insights:
 | **Capacity Usage** | Optimize | The page is designed to enhance efficiency by illustrating how capacity is being utilized, enabling stakeholders to monitor and optimize resource allocation effectively | ![Capacity Usage Page](./media/Report_CapacityUsage.png) |
 | **Reservation** | Optimize | The page aims to reduce cloud waste by providing a comprehensive view of reservation-related data to verify the total usage of the reservation across the different capacities and a specified timeframe | ![Reservation Page](./media/Report_Reservation.png) |
 | **Cost Detail** | Operate | The page offers a detailed view of cost distributions across different categories and resources and includes Year-to-Date calculations to help stakeholders to define, track, and monitor expenses effectively | ![Cost Details Page](./media/Report_CostDetails.png) |
-| **Quota** | Operate | The page offers a detailed view of Azure Quotas per subscriptions | ![Azure Quotas Page](./media/AzureQuotas.png) |
+| **Quota** | Operate | The page shows the Azure Fabric quotas (capacity quota, on-demand enabled capacities and on-demand CU hours per day) per subscription and region: limit, usage, remaining quota and utilization, with an OK / Warning / Critical status to spot the quotas approaching their limit. See [Quota](./Quota.md) | ![Azure Quotas Page](./media/AzureQuotas.png) |
 | **Support** |                                                              | This page is designed to facilitate the learning and comprehension of the specific aspects of fabric costs and the contents of this report | ![Support Page](./media/Report_Support.png) |
 
 ### 🤖 Data Agent

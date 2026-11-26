@@ -3,9 +3,9 @@
   "name": "e9dffc586205ff7defde",
   "position": {
     "x": 15.961291789118187,
-    "y": 487.48445339265129,
+    "y": 572,
     "z": 18000,
-    "height": 154.29248729480915,
+    "height": 86,
     "width": 196.19087824124438,
     "tabOrder": 18000
   },
@@ -19,11 +19,16 @@
               {
                 "textRuns": [
                   {
-                    "value": "ℹ️ You can now set up alerts for your Quota usage and receive notifications. Simply click on any Quota to create one. "
+                    "value": "ℹ️ You can now set up alerts for your Quota usage and receive notifications. Simply click on any Quota to create one. ",
+                    "textStyle": {
+                      "fontSize": "9pt"
+                    }
                   },
                   {
                     "value": "Learn More",
-                    "textStyle": {},
+                    "textStyle": {
+                      "fontSize": "9pt"
+                    },
                     "url": "https://learn.microsoft.com/en-us/azure/quotas/monitoring-alerting"
                   }
                 ]

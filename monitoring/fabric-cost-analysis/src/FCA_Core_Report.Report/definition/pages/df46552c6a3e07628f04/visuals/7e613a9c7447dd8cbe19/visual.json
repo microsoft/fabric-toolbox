@@ -2,11 +2,11 @@
   "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.10.0/schema.json",
   "name": "7e613a9c7447dd8cbe19",
   "position": {
-    "x": 786.05504587155963,
-    "y": 60.183486238532112,
+    "x": 245,
+    "y": 62,
     "z": 13000,
-    "height": 189.35779816513761,
-    "width": 477.06422018348621,
+    "height": 200,
+    "width": 330,
     "tabOrder": 13000
   },
   "visual": {
@@ -17,67 +17,51 @@
           "projections": [
             {
               "field": {
-                "Aggregation": {
+                "Measure": {
                   "Expression": {
-                    "Column": {
-                      "Expression": {
-                        "SourceRef": {
-                          "Entity": "quota_fabric"
-                        }
-                      },
-                      "Property": "Usage"
+                    "SourceRef": {
+                      "Entity": "quota_fabric"
                     }
                   },
-                  "Function": 0
+                  "Property": "# Quotas Critical"
                 }
               },
-              "queryRef": "Sum(quota_fabric.Usage)",
-              "nativeQueryRef": "Sum of Usage"
+              "queryRef": "quota_fabric.# Quotas Critical",
+              "nativeQueryRef": "# Quotas Critical",
+              "displayName": "Critical"
             },
             {
               "field": {
-                "Aggregation": {
+                "Measure": {
                   "Expression": {
-                    "Column": {
-                      "Expression": {
-                        "SourceRef": {
-                          "Entity": "quota_fabric"
-                        }
-                      },
-                      "Property": "Limit"
+                    "SourceRef": {
+                      "Entity": "quota_fabric"
                     }
                   },
-                  "Function": 0
+                  "Property": "# Quotas Warning"
                 }
               },
-              "queryRef": "Sum(quota_fabric.Limit)",
-              "nativeQueryRef": "Sum of Limit"
+              "queryRef": "quota_fabric.# Quotas Warning",
+              "nativeQueryRef": "# Quotas Warning",
+              "displayName": "Warning"
+            },
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "quota_fabric"
+                    }
+                  },
+                  "Property": "# Quotas OK"
+                }
+              },
+              "queryRef": "quota_fabric.# Quotas OK",
+              "nativeQueryRef": "# Quotas OK",
+              "displayName": "OK"
             }
           ]
         }
-      },
-      "sortDefinition": {
-        "sort": [
-          {
-            "field": {
-              "Aggregation": {
-                "Expression": {
-                  "Column": {
-                    "Expression": {
-                      "SourceRef": {
-                        "Entity": "quota_fabric"
-                      }
-                    },
-                    "Property": "Usage"
-                  }
-                },
-                "Function": 0
-              }
-            },
-            "direction": "Descending"
-          }
-        ],
-        "isDefaultSort": true
       }
     },
     "objects": {
@@ -90,6 +74,20 @@
                   "Value": "true"
                 }
               }
+            },
+            "labelStyle": {
+              "expr": {
+                "Literal": {
+                  "Value": "'Category, data value'"
+                }
+              }
+            },
+            "fontSize": {
+              "expr": {
+                "Literal": {
+                  "Value": "9D"
+                }
+              }
             }
           }
         }
@@ -100,10 +98,80 @@
             "show": {
               "expr": {
                 "Literal": {
-                  "Value": "false"
+                  "Value": "true"
+                }
+              }
+            },
+            "position": {
+              "expr": {
+                "Literal": {
+                  "Value": "'Right'"
+                }
+              }
+            },
+            "fontSize": {
+              "expr": {
+                "Literal": {
+                  "Value": "10D"
                 }
               }
             }
+          }
+        }
+      ],
+      "dataPoint": [
+        {
+          "properties": {
+            "fill": {
+              "solid": {
+                "color": {
+                  "expr": {
+                    "Literal": {
+                      "Value": "'#D64550'"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "selector": {
+            "metadata": "quota_fabric.# Quotas Critical"
+          }
+        },
+        {
+          "properties": {
+            "fill": {
+              "solid": {
+                "color": {
+                  "expr": {
+                    "Literal": {
+                      "Value": "'#F2A541'"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "selector": {
+            "metadata": "quota_fabric.# Quotas Warning"
+          }
+        },
+        {
+          "properties": {
+            "fill": {
+              "solid": {
+                "color": {
+                  "expr": {
+                    "Literal": {
+                      "Value": "'#2AAA92'"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "selector": {
+            "metadata": "quota_fabric.# Quotas OK"
           }
         }
       ]
@@ -115,14 +183,14 @@
             "text": {
               "expr": {
                 "Literal": {
-                  "Value": "'Usage Ratio'"
+                  "Value": "'Quotas by status'"
                 }
               }
             },
             "alignment": {
               "expr": {
                 "Literal": {
-                  "Value": "'right'"
+                  "Value": "'left'"
                 }
               }
             }
