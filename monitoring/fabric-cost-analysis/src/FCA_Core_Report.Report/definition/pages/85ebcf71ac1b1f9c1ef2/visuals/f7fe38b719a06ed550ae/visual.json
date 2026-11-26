@@ -127,77 +127,13 @@
                           }
                         },
                         "LowerBound": {
-                          "DateSpan": {
-                            "Expression": {
-                              "DateAdd": {
-                                "Expression": {
-                                  "DateAdd": {
-                                    "Expression": {
-                                      "DateAdd": {
-                                        "Expression": {
-                                          "ScopedEval": {
-                                            "Expression": {
-                                              "Aggregation": {
-                                                "Expression": {
-                                                  "Column": {
-                                                    "Expression": {
-                                                      "SourceRef": {
-                                                        "Source": "c"
-                                                      }
-                                                    },
-                                                    "Property": "Date"
-                                                  }
-                                                },
-                                                "Function": 4
-                                              }
-                                            },
-                                            "Scope": []
-                                          }
-                                        },
-                                        "Amount": -1,
-                                        "TimeUnit": 2
-                                      }
-                                    },
-                                    "Amount": 1,
-                                    "TimeUnit": 0
-                                  }
-                                },
-                                "Amount": -1,
-                                "TimeUnit": 2
-                              }
-                            },
-                            "TimeUnit": 0
+                          "Literal": {
+                            "Value": "datetime'2026-10-01T00:00:00'"
                           }
                         },
                         "UpperBound": {
-                          "DateSpan": {
-                            "Expression": {
-                              "DateAdd": {
-                                "Expression": {
-                                  "ScopedEval": {
-                                    "Expression": {
-                                      "Aggregation": {
-                                        "Expression": {
-                                          "Column": {
-                                            "Expression": {
-                                              "SourceRef": {
-                                                "Source": "c"
-                                              }
-                                            },
-                                            "Property": "Date"
-                                          }
-                                        },
-                                        "Function": 4
-                                      }
-                                    },
-                                    "Scope": []
-                                  }
-                                },
-                                "Amount": -1,
-                                "TimeUnit": 2
-                              }
-                            },
-                            "TimeUnit": 0
+                          "Literal": {
+                            "Value": "datetime'2026-10-31T00:00:00'"
                           }
                         }
                       }

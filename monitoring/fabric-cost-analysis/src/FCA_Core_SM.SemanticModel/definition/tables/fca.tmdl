@@ -117,8 +117,8 @@ table fca
 
 		changedProperty = DisplayFolder
 
-	/// Calculates the sum of EffectiveCost from OneLake relative meters
-	measure #OneLake = CALCULATE(SUM(fca[EffectiveCost]),meters[Category]="OneLake",meters[Included]=FALSE())
+	/// Calculates the sum of EffectiveCost from OneLake relative meters, including the On-Demand OneLake meters
+	measure #OneLake = CALCULATE(SUM(fca[EffectiveCost]),meters[Category] IN {"OneLake","On-Demand OneLake"},meters[Included]=FALSE())
 		displayFolder: measures
 		lineageTag: 7e8285be-14f6-4663-9d49-f5183b8ca80d
 
