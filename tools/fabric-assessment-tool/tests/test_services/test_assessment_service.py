@@ -82,59 +82,136 @@ def test_aws_databricks_multiple_workspaces_requires_oauth(tmp_path):
             output_path=str(tmp_path),
             cloud="aws",
         )
+"""Tests for AssessmentService serverless option propagation."""
+
+from fabric_assessment_tool.assessment.common import AssessmentStatus
+from fabric_assessment_tool.assessment.synapse import (
+    SynapseAssessment,
+    SynapseAssessmentMetadata,
+    SynapseDataflows,
+    SynapseDatasets,
+    SynapseIntegrationRuntimes,
+    SynapseLibraries,
+    SynapseLinkedServices,
+    SynapseManagedPrivateEndpoints,
+    SynapseNotebooks,
+    SynapsePipelines,
+    SynapseServerlessActivity,
+    SynapseServerlessActivityCollectionMetadata,
+    SynapseServerlessDatabases,
+    SynapseServerlessPool,
+    SynapseSparkConfigurations,
+    SynapseSparkJobDefinitions,
+    SynapseSparkPools,
+    SynapseSqlPools,
+    SynapseSqlScripts,
+    SynapseWorkspaceInfo,
+)
+from fabric_assessment_tool.services.assessment_service import AssessmentService
 
 
-@patch("fabric_assessment_tool.services.assessment_service.StructuredExportService")
-def test_databricks_parallelization_option_forwarded(mock_export_service, tmp_path):
+def _build_assessment() -> SynapseAssessment:
+    return SynapseAssessment(
+        status=AssessmentStatus(status="completed"),
+        workspace_info=SynapseWorkspaceInfo(
+            id="/subscriptions/sub/resourceGroups/rg/providers/Microsoft.Synapse/workspaces/ws",
+            name="ws",
+            resource_group="rg",
+            location="eastus",
+            status="Online",
+            endpoints={"dev": "https://ws.dev.azuresynapse.net"},
+            json_response={"properties": {"sqlAdministratorLogin": "sqladmin"}},
+        ),
+        sql_pools=SynapseSqlPools(
+            dedicated_pools=[],
+            serverless_pool=SynapseServerlessPool(
+                name="Built-in",
+                status="Online",
+                queries_last_24h=None,
+                databases=SynapseServerlessDatabases(databases=[]),
+                json_response=None,
+                activity=SynapseServerlessActivity(
+                    metadata=SynapseServerlessActivityCollectionMetadata(
+                        status="skipped",
+                        attempted=False,
+                        history_days=30,
+                        top_n=1000,
+                    )
+                ),
+            ),
+        ),
+        spark_pools=SynapseSparkPools(spark_pools=[]),
+        pipelines=SynapsePipelines(pipelines=[]),
+        dataflows=SynapseDataflows(dataflows=[]),
+        notebooks=SynapseNotebooks(notebooks=[]),
+        spark_job_definitions=SynapseSparkJobDefinitions(spark_job_definitions=[]),
+        sql_scripts=SynapseSqlScripts(sql_scripts=[]),
+        integration_runtimes=SynapseIntegrationRuntimes(integration_runtimes=[]),
+        linked_services=SynapseLinkedServices(linked_services=[]),
+        datasets=SynapseDatasets(datasets=[]),
+        managed_private_endpoints=SynapseManagedPrivateEndpoints(
+            managed_private_endpoints=[]
+        ),
+        libraries=SynapseLibraries(libraries=[]),
+        spark_configurations=SynapseSparkConfigurations(spark_configurations=[]),
+        assessment_metadata=SynapseAssessmentMetadata(
+            mode="full", timestamp="2024-01-15T10:00:00"
+        ),
+        subscription_id="sub",
+        resource_group="rg",
+    )
+
+
+def test_assessment_service_passes_serverless_options_to_client(monkeypatch, tmp_path):
+    """AssessmentService should forward serverless settings when building the client."""
     service = AssessmentService()
-    fake_client = MagicMock()
-    fake_assessment = MagicMock()
-    fake_assessment.status.status = "completed"
-    fake_assessment.get_summary.return_value = {"counts": {}}
-    fake_client.assess_workspace.return_value = fake_assessment
-    service._get_client = MagicMock(return_value=fake_client)
-    service._save_assessment_summary = MagicMock(
-        return_value=str(tmp_path / "summary.json")
+    captured_kwargs = {}
+
+    class FakeClient:
+        def assess_workspace(self, workspace_name, mode):
+            assert workspace_name == "ws"
+            assert mode == "full"
+            return _build_assessment()
+
+    def fake_get_client(source, **kwargs):
+        captured_kwargs.update(kwargs)
+        assert source == "synapse"
+        return FakeClient()
+
+    monkeypatch.setattr(service, "_get_client", fake_get_client)
+    monkeypatch.setattr(
+        service.export_service,
+        "export_assessment",
+        lambda **kwargs: {
+            "workspace_directory": str(tmp_path / "ws"),
+            "files_created": [],
+            "total_files": 0,
+        },
     )
-    service._save_export_results = MagicMock(return_value=str(tmp_path / "export.json"))
-    service.export_service.export_assessment.return_value = {}
 
-    service.assess(
-        source="databricks",
-        mode="full",
-        workspaces=["jdc-adb"],
-        output_path=str(tmp_path),
-        max_parallel_api_calls=10,
-    )
-
-    kwargs = fake_client.assess_workspace.call_args.kwargs
-    assert kwargs["max_parallel_api_calls"] == 10
-
-
-@patch("fabric_assessment_tool.services.assessment_service.StructuredExportService")
-def test_synapse_does_not_receive_databricks_parallelization_option(
-    mock_export_service, tmp_path
-):
-    service = AssessmentService()
-    fake_client = MagicMock()
-    fake_assessment = MagicMock()
-    fake_assessment.status.status = "completed"
-    fake_assessment.get_summary.return_value = {"counts": {}}
-    fake_client.assess_workspace.return_value = fake_assessment
-    service._get_client = MagicMock(return_value=fake_client)
-    service._save_assessment_summary = MagicMock(
-        return_value=str(tmp_path / "summary.json")
-    )
-    service._save_export_results = MagicMock(return_value=str(tmp_path / "export.json"))
-    service.export_service.export_assessment.return_value = {}
-
-    service.assess(
+    result = service.assess(
         source="synapse",
         mode="full",
-        workspaces=["syn-ws"],
+        workspaces=["ws"],
         output_path=str(tmp_path),
-        max_parallel_api_calls=10,
+        serverless_history_days=15,
+        serverless_top_n=250,
+        skip_serverless_activity=True,
+        serverless_sql_auth_mode="entra-default",
+        serverless_sql_username="override_user",
+        serverless_sql_password="override_password",
+        serverless_sql_client_id="override_client_id",
+        serverless_sql_client_secret="override_client_secret",
+        serverless_sql_tenant_id="override_tenant_id",
     )
 
-    kwargs = fake_client.assess_workspace.call_args.kwargs
-    assert "max_parallel_api_calls" not in kwargs
+    assert captured_kwargs["serverless_history_days"] == 15
+    assert captured_kwargs["serverless_top_n"] == 250
+    assert captured_kwargs["skip_serverless_activity"] is True
+    assert captured_kwargs["serverless_sql_auth_mode"] == "entra-default"
+    assert captured_kwargs["serverless_sql_username"] == "override_user"
+    assert captured_kwargs["serverless_sql_password"] == "override_password"
+    assert captured_kwargs["serverless_sql_client_id"] == "override_client_id"
+    assert captured_kwargs["serverless_sql_client_secret"] == "override_client_secret"
+    assert captured_kwargs["serverless_sql_tenant_id"] == "override_tenant_id"
+    assert result["summary"]["assessed_workspaces"] == 1

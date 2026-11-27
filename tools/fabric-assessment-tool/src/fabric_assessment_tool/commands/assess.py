@@ -6,6 +6,8 @@ from ..utils import ui as utils_ui
 from ..services.assessment_service import AssessmentService
 from .base import BaseCommand
 
+SERVERLESS_HISTORY_DAYS_MAX = 45
+SERVERLESS_TOP_N_MAX = 10000
 LOG_FORMAT = "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
 
 
@@ -27,6 +29,42 @@ def _configure_logging(log_file: str | None = None) -> None:
 logger = logging.getLogger(__name__)
 
 
+def _int_range(min_value: int, max_value: int):
+    """Build an argparse type for bounded integers."""
+
+    def _parse(value: str) -> int:
+        int_value = int(value)
+        if not min_value <= int_value <= max_value:
+            raise argparse.ArgumentTypeError(
+                f"value must be between {min_value} and {max_value}"
+            )
+        return int_value
+
+    return _parse
+
+
+def _bounded_integer(minimum: int, maximum: int):
+    def parse(value: str) -> int:
+        try:
+            parsed = int(value)
+        except ValueError as exc:
+            raise argparse.ArgumentTypeError("must be an integer") from exc
+        if not minimum <= parsed <= maximum:
+            raise argparse.ArgumentTypeError(f"must be between {minimum} and {maximum}")
+        return parsed
+
+    return parse
+
+
+def positive_int(value: str) -> int:
+    """Argparse type requiring a positive integer."""
+
+    parsed = int(value)
+    if parsed <= 0:
+        raise argparse.ArgumentTypeError("must be a positive integer")
+    return parsed
+
+
 class AssessCommand(BaseCommand):
     """Command for assessing data sources."""
 
@@ -42,6 +80,7 @@ class AssessCommand(BaseCommand):
 Examples:
   fat assess --source synapse --mode full --ws workspace1,workspace2 -o output_dir/
   fat assess --source synapse --mode full --ws workspace1 --subscription-id 12345678-1234-1234-1234-123456789012 -o output_dir/
+  fat assess --source synapse --mode full --ws workspace1 --max-column-objects 500 -o output_dir/
   fat assess --source databricks --mode full --ws my-workspace --output results/ --format json
   fat assess --source databricks --cloud aws --ws my-workspace --output results/
   fat assess --source databricks --cloud aws --ws dev,prod --resources jobs -o results/
@@ -82,10 +121,11 @@ Examples:
         )
 
         parser.add_argument(
+            "-ws",
             "--ws",
             "--workspace",
-            default="",
             dest="workspace",
+            default="",
             help="Comma-separated list of workspace names to assess",
         )
 
@@ -108,12 +148,6 @@ Examples:
                 "cluster_policies, instance_pools"
             ),
         )
-
-        parser.add_argument(
-            "--subscription-id",
-            help="Azure subscription ID (if not provided, will use default credentials)",
-        )
-
         parser.add_argument(
             "--download-notebooks",
             action="store_true",
@@ -134,6 +168,11 @@ Examples:
         )
 
         parser.add_argument(
+            "--subscription-id",
+            help="Azure subscription ID (if not provided, will use default credentials)",
+        )
+
+        parser.add_argument(
             "--auth-method",
             choices=["azure-cli", "fabric"],
             default=None,
@@ -151,6 +190,51 @@ Examples:
             action="store_true",
             default=False,
             help="Auto-create vTableSizes DMV without confirmation prompt (for non-interactive execution)",
+        )
+
+        parser.add_argument(
+            "--skip-columns",
+            action="store_true",
+            default=False,
+            help="Skip ODBC column metadata collection and compatibility summaries",
+        )
+
+        parser.add_argument(
+            "--max-column-objects",
+            type=positive_int,
+            default=None,
+            metavar="N",
+            help=(
+                "Collect columns for at most N tables/views per database, "
+                "ordered deterministically without partial objects"
+            ),
+        )
+
+        parser.add_argument(
+            "--extract-definitions",
+            action="store_true",
+            default=False,
+            help="Extract stored procedure, function, and view definitions from dedicated SQL pools",
+        )
+
+        parser.add_argument(
+            "--definition-redaction",
+            choices=["none", "full", "partial", "hash"],
+            default="partial",
+            help="Definition protection mode (default: partial)",
+        )
+
+        parser.add_argument(
+            "--definition-schema-filter",
+            default="",
+            help="Comma-separated exact schema names to include in definition extraction",
+        )
+
+        parser.add_argument(
+            "--max-definition-size",
+            type=self._non_negative_int,
+            default=1_000_000,
+            help="Maximum stored definition characters; 0 disables the limit",
         )
 
         # SQL authentication mode options for dedicated SQL pools
@@ -185,6 +269,136 @@ Examples:
             help="Azure tenant ID for Entra ID SPN authentication (optional, defaults to 'common')",
         )
 
+        parser.add_argument(
+            "--query-history-days",
+            type=_bounded_integer(1, 365),
+            default=7,
+            help="Dedicated SQL pool query-history lookback in days (default: 7)",
+        )
+
+        parser.add_argument(
+            "--query-history-top",
+            type=_bounded_integer(1, 10000),
+            default=1000,
+            help="Maximum recent requests and sessions retained per dedicated pool (default: 1000)",
+        )
+
+        parser.add_argument(
+            "--include-sql-text",
+            action="store_true",
+            default=False,
+            help="Include SQL command text in JSON output (redacted by default)",
+        )
+
+        parser.add_argument(
+            "--skip-query-history",
+            action="store_true",
+            default=False,
+            help="Skip dedicated SQL pool request/session workload collection",
+        )
+
+        parser.add_argument(
+            "--serverless-history-days",
+            type=_int_range(1, SERVERLESS_HISTORY_DAYS_MAX),
+            default=30,
+            help=(
+                "Serverless SQL activity history window in days "
+                f"(default: 30, range: 1-{SERVERLESS_HISTORY_DAYS_MAX})"
+            ),
+        )
+
+        parser.add_argument(
+            "--serverless-top-n",
+            type=_int_range(1, SERVERLESS_TOP_N_MAX),
+            default=1000,
+            help=(
+                "Maximum number of detailed serverless SQL activity rows to retain "
+                f"(default: 1000, range: 1-{SERVERLESS_TOP_N_MAX})"
+            ),
+        )
+
+        parser.add_argument(
+            "--skip-serverless-activity",
+            action="store_true",
+            default=False,
+            help="Skip optional serverless SQL activity collection",
+        )
+
+        parser.add_argument(
+            "--serverless-sql-auth-mode",
+            choices=["sql", "entra-interactive", "entra-spn", "entra-default"],
+            default=None,
+            help=(
+                "Optional serverless SQL auth-mode override. If omitted, inherits "
+                "--sql-auth-mode or the existing dedicated SQL settings."
+            ),
+        )
+
+        parser.add_argument(
+            "--serverless-sql-username",
+            default=None,
+            help=(
+                "Optional SQL username override for serverless activity collection. "
+                "If omitted, inherits the workspace SQL admin login when available."
+            ),
+        )
+
+        parser.add_argument(
+            "--serverless-sql-password",
+            default=None,
+            help=(
+                "Optional SQL password override for serverless activity collection. "
+                "If omitted, inherits --sql-admin-password when available."
+            ),
+        )
+
+        parser.add_argument(
+            "--serverless-sql-client-id",
+            default=None,
+            help=(
+                "Optional service principal client ID override for serverless SQL "
+                "when using --serverless-sql-auth-mode entra-spn."
+            ),
+        )
+
+        parser.add_argument(
+            "--serverless-sql-client-secret",
+            default=None,
+            help=(
+                "Optional service principal client secret override for serverless SQL "
+                "when using --serverless-sql-auth-mode entra-spn."
+            ),
+        )
+
+        parser.add_argument(
+            "--serverless-sql-tenant-id",
+            default=None,
+            help=(
+                "Optional service principal tenant override for serverless SQL "
+                "(defaults to inherited dedicated SQL tenant or 'common')."
+            ),
+        )
+
+        parser.add_argument(
+            "--sql-complexity",
+            action="store_true",
+            default=False,
+            help="Enable SQL complexity scoring for procedures, functions, and views",
+        )
+
+        parser.add_argument(
+            "--sql-definition-redaction",
+            choices=["full", "none"],
+            default="full",
+            help="Definition export mode for SQL complexity results (default: full)",
+        )
+
+        parser.add_argument(
+            "--sql-complexity-schemas",
+            default="",
+            help="Comma-separated schema allowlist for SQL complexity scoring",
+        )
+
     def handle(self, args: argparse.Namespace) -> None:
         """Handle the assess command execution."""
         _configure_logging(getattr(args, "log_file", None))
@@ -196,6 +410,21 @@ Examples:
         workspaces = [
             ws.strip() for ws in args.workspace.split(",") if ws.strip() != ""
         ]
+        complexity_schemas = [
+            schema.strip()
+            for schema in getattr(args, "sql_complexity_schemas", "").split(",")
+            if schema.strip()
+        ]
+
+        if args.source != "synapse" and getattr(args, "sql_complexity", False):
+            raise ValueError("--sql-complexity is only supported for Synapse")
+        if not getattr(args, "sql_complexity", False) and (
+            getattr(args, "sql_definition_redaction", "full") != "full"
+            or complexity_schemas
+        ):
+            raise ValueError(
+                "--sql-definition-redaction and --sql-complexity-schemas require --sql-complexity"
+            )
 
         # Parse resources filter
         resources = None
@@ -221,6 +450,46 @@ Examples:
                 resources=resources,
                 download_notebooks=getattr(args, "download_notebooks", False),
                 max_parallel_api_calls=getattr(args, "max_parallel_api_calls", 8),
+                query_history_days=getattr(args, "query_history_days", 7),
+                query_history_top=getattr(args, "query_history_top", 1000),
+                include_sql_text=getattr(args, "include_sql_text", False),
+                skip_query_history=getattr(args, "skip_query_history", False),
+                serverless_history_days=getattr(args, "serverless_history_days", 30),
+                serverless_top_n=getattr(args, "serverless_top_n", 1000),
+                skip_serverless_activity=getattr(
+                    args, "skip_serverless_activity", False
+                ),
+                serverless_sql_auth_mode=getattr(
+                    args, "serverless_sql_auth_mode", None
+                ),
+                serverless_sql_username=getattr(args, "serverless_sql_username", None),
+                serverless_sql_password=getattr(args, "serverless_sql_password", None),
+                serverless_sql_client_id=getattr(
+                    args, "serverless_sql_client_id", None
+                ),
+                serverless_sql_client_secret=getattr(
+                    args, "serverless_sql_client_secret", None
+                ),
+                serverless_sql_tenant_id=getattr(
+                    args, "serverless_sql_tenant_id", None
+                ),
+                skip_columns=getattr(args, "skip_columns", False),
+                max_column_objects=getattr(args, "max_column_objects", None),
+                sql_complexity=getattr(args, "sql_complexity", False),
+                sql_definition_redaction=getattr(
+                    args, "sql_definition_redaction", "full"
+                ),
+                sql_complexity_schemas=complexity_schemas,
+                extract_definitions=getattr(args, "extract_definitions", False),
+                definition_redaction=getattr(args, "definition_redaction", "partial"),
+                definition_schema_filter=[
+                    schema.strip()
+                    for schema in getattr(args, "definition_schema_filter", "").split(
+                        ","
+                    )
+                    if schema.strip()
+                ],
+                max_definition_size=getattr(args, "max_definition_size", 1_000_000),
             )
 
             utils_ui.print(f"Assessment completed successfully!")
@@ -268,3 +537,10 @@ Examples:
         except Exception as e:
             print(f"Assessment failed: {e}")
             raise
+
+    @staticmethod
+    def _non_negative_int(value: str) -> int:
+        parsed = int(value)
+        if parsed < 0:
+            raise argparse.ArgumentTypeError("value must be non-negative")
+        return parsed
