@@ -2,11 +2,11 @@
   "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.10.0/schema.json",
   "name": "90c3e3ca45b1a75fbbd1",
   "position": {
-    "x": 786.05504587155963,
-    "y": 249.54128440366972,
+    "x": 585,
+    "y": 62,
     "z": 17000,
-    "height": 433.76146788990826,
-    "width": 477.06422018348621,
+    "height": 200,
+    "width": 680,
     "tabOrder": 17000
   },
   "visual": {
@@ -42,11 +42,11 @@
                       "Entity": "quota_fabric"
                     }
                   },
-                  "Property": "Quota Used"
+                  "Property": "Quota Max Consumed"
                 }
               },
-              "queryRef": "quota_fabric.Quota Used",
-              "nativeQueryRef": "Quota Used"
+              "queryRef": "quota_fabric.Quota Max Consumed",
+              "nativeQueryRef": "Quota Max Consumed"
             }
           ]
         },
@@ -60,11 +60,11 @@
                       "Entity": "quota_fabric"
                     }
                   },
-                  "Property": "Quota Limit"
+                  "Property": "# Quotas Critical"
                 }
               },
-              "queryRef": "quota_fabric.Quota Limit",
-              "nativeQueryRef": "Quota Limit"
+              "queryRef": "quota_fabric.# Quotas Critical",
+              "nativeQueryRef": "# Quotas Critical"
             },
             {
               "field": {
@@ -74,11 +74,11 @@
                       "Entity": "quota_fabric"
                     }
                   },
-                  "Property": "Quota Consumed"
+                  "Property": "# Quotas Warning"
                 }
               },
-              "queryRef": "quota_fabric.Quota Consumed",
-              "nativeQueryRef": "Quota Consumed"
+              "queryRef": "quota_fabric.# Quotas Warning",
+              "nativeQueryRef": "# Quotas Warning"
             }
           ]
         }
@@ -293,7 +293,7 @@
                 "Entity": "quota_fabric"
               }
             },
-            "Property": "Quota Used"
+            "Property": "Quota Max Consumed"
           }
         },
         "type": "Advanced",
@@ -318,7 +318,7 @@
                           "Source": "q"
                         }
                       },
-                      "Property": "Quota Used"
+                      "Property": "Quota Max Consumed"
                     }
                   },
                   "Right": {

@@ -640,7 +640,7 @@
                                     "Source": "q"
                                   }
                                 },
-                                "Property": "Quota Used"
+                                "Property": "Quota Max Consumed"
                               }
                             },
                             "Right": {
@@ -660,7 +660,7 @@
                           "Entity": "quota_fabric"
                         }
                       },
-                      "Property": "Quota Used"
+                      "Property": "Quota Max Consumed"
                     }
                   },
                   "howCreated": 0
@@ -675,7 +675,7 @@
                           "Entity": "quota_fabric"
                         }
                       },
-                      "Property": "Quota Limit"
+                      "Property": "# Quotas Critical"
                     }
                   },
                   "howCreated": 0
@@ -690,7 +690,7 @@
                           "Entity": "quota_fabric"
                         }
                       },
-                      "Property": "Quota Consumed"
+                      "Property": "# Quotas Warning"
                     }
                   },
                   "howCreated": 0
@@ -723,18 +723,13 @@
                   "name": "4d7d33aae19dd888f595",
                   "type": "Advanced",
                   "expression": {
-                    "Aggregation": {
+                    "Measure": {
                       "Expression": {
-                        "Column": {
-                          "Expression": {
-                            "SourceRef": {
-                              "Entity": "quota_fabric"
-                            }
-                          },
-                          "Property": "Usage"
+                        "SourceRef": {
+                          "Entity": "quota_fabric"
                         }
                       },
-                      "Function": 0
+                      "Property": "# Quotas Critical"
                     }
                   },
                   "howCreated": 0
@@ -743,18 +738,28 @@
                   "name": "974d6eba6f9a3c93228b",
                   "type": "Advanced",
                   "expression": {
-                    "Aggregation": {
+                    "Measure": {
                       "Expression": {
-                        "Column": {
-                          "Expression": {
-                            "SourceRef": {
-                              "Entity": "quota_fabric"
-                            }
-                          },
-                          "Property": "Limit"
+                        "SourceRef": {
+                          "Entity": "quota_fabric"
                         }
                       },
-                      "Function": 0
+                      "Property": "# Quotas Warning"
+                    }
+                  },
+                  "howCreated": 0
+                },
+                {
+                  "name": "6e2b94d1a07c3f58d9b4",
+                  "type": "Advanced",
+                  "expression": {
+                    "Measure": {
+                      "Expression": {
+                        "SourceRef": {
+                          "Entity": "quota_fabric"
+                        }
+                      },
+                      "Property": "# Quotas OK"
                     }
                   },
                   "howCreated": 0
@@ -762,28 +767,8 @@
               ]
             },
             "singleVisual": {
-              "visualType": "pieChart",
-              "objects": {},
-              "orderBy": [
-                {
-                  "Direction": 2,
-                  "Expression": {
-                    "Aggregation": {
-                      "Expression": {
-                        "Column": {
-                          "Expression": {
-                            "SourceRef": {
-                              "Entity": "quota_fabric"
-                            }
-                          },
-                          "Property": "Usage"
-                        }
-                      },
-                      "Function": 0
-                    }
-                  }
-                }
-              ]
+              "visualType": "donutChart",
+              "objects": {}
             }
           },
           "5972339ce30160c0b2f7": {
@@ -800,6 +785,94 @@
                         }
                       },
                       "Property": "RegionName"
+                    }
+                  },
+                  "howCreated": 0
+                },
+                {
+                  "name": "e7b31a5d92c4608f13a9",
+                  "type": "Categorical",
+                  "expression": {
+                    "Column": {
+                      "Expression": {
+                        "SourceRef": {
+                          "Entity": "subscriptions"
+                        }
+                      },
+                      "Property": "SubAccountName"
+                    }
+                  },
+                  "howCreated": 0
+                },
+                {
+                  "name": "d41c7b9a3e5f82601c4a",
+                  "type": "Categorical",
+                  "filter": {
+                    "Version": 2,
+                    "From": [
+                      {
+                        "Name": "q",
+                        "Entity": "quota_fabric",
+                        "Type": 0
+                      }
+                    ],
+                    "Where": [
+                      {
+                        "Condition": {
+                          "Not": {
+                            "Expression": {
+                              "In": {
+                                "Expressions": [
+                                  {
+                                    "Column": {
+                                      "Expression": {
+                                        "SourceRef": {
+                                          "Source": "q"
+                                        }
+                                      },
+                                      "Property": "QuotaName"
+                                    }
+                                  }
+                                ],
+                                "Values": [
+                                  [
+                                    {
+                                      "Literal": {
+                                        "Value": "null"
+                                      }
+                                    }
+                                  ]
+                                ]
+                              }
+                            }
+                          }
+                        }
+                      }
+                    ]
+                  },
+                  "expression": {
+                    "Column": {
+                      "Expression": {
+                        "SourceRef": {
+                          "Entity": "quota_fabric"
+                        }
+                      },
+                      "Property": "QuotaName"
+                    }
+                  },
+                  "howCreated": 0
+                },
+                {
+                  "name": "5b8e2d6a0c91f347a8e3",
+                  "type": "Categorical",
+                  "expression": {
+                    "Column": {
+                      "Expression": {
+                        "SourceRef": {
+                          "Entity": "quota_fabric"
+                        }
+                      },
+                      "Property": "Unit"
                     }
                   },
                   "howCreated": 0
@@ -905,10 +978,25 @@
                     "Measure": {
                       "Expression": {
                         "SourceRef": {
-                          "Entity": "fca"
+                          "Entity": "quota_fabric"
                         }
                       },
-                      "Property": "#Capacities"
+                      "Property": "Quota Remaining"
+                    }
+                  },
+                  "howCreated": 0
+                },
+                {
+                  "name": "9c4f1b7e3a5d28604fb2",
+                  "type": "Advanced",
+                  "expression": {
+                    "Measure": {
+                      "Expression": {
+                        "SourceRef": {
+                          "Entity": "quota_fabric"
+                        }
+                      },
+                      "Property": "Quota Status"
                     }
                   },
                   "howCreated": 0
@@ -916,7 +1004,7 @@
               ]
             },
             "singleVisual": {
-              "visualType": "pivotTable",
+              "visualType": "tableEx",
               "objects": {},
               "orderBy": [
                 {
@@ -932,21 +1020,7 @@
                     }
                   }
                 }
-              ],
-              "activeProjections": {
-                "Rows": [
-                  {
-                    "Column": {
-                      "Expression": {
-                        "SourceRef": {
-                          "Entity": "capacity_regions"
-                        }
-                      },
-                      "Property": "RegionName"
-                    }
-                  }
-                ]
-              }
+              ]
             }
           }
         }

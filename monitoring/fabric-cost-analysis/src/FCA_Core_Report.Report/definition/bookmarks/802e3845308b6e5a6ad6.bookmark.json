@@ -1027,10 +1027,7 @@
           "849da694e680be41fbf8": {
             "singleVisual": {
               "visualType": "shape",
-              "objects": {},
-              "display": {
-                "mode": "hidden"
-              }
+              "objects": {}
             }
           },
           "8b4b00cf8153fd133604": {
@@ -1258,7 +1255,10 @@
           "9aba82e2ff57d7dcefdc": {
             "singleVisual": {
               "visualType": "shape",
-              "objects": {}
+              "objects": {},
+              "display": {
+                "mode": "hidden"
+              }
             }
           },
           "a0e23519ab24c4324c27": {
@@ -1878,16 +1878,16 @@
           "ca1f2ffb4320eb5de8c0": {
             "singleVisual": {
               "visualType": "image",
-              "objects": {},
-              "display": {
-                "mode": "hidden"
-              }
+              "objects": {}
             }
           },
           "cf7db78dfb7a11fcccb1": {
             "singleVisual": {
               "visualType": "image",
-              "objects": {}
+              "objects": {},
+              "display": {
+                "mode": "hidden"
+              }
             }
           },
           "d51fad3efe7a80d5e5d4": {

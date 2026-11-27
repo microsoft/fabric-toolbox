@@ -2,19 +2,34 @@
   "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.10.0/schema.json",
   "name": "5972339ce30160c0b2f7",
   "position": {
-    "x": 237.79816513761466,
-    "y": 50.642201834862384,
+    "x": 240,
+    "y": 270,
     "z": 14000,
-    "height": 632.66055045871553,
-    "width": 548.256880733945,
+    "height": 428,
+    "width": 1025,
     "tabOrder": 14000
   },
   "visual": {
-    "visualType": "pivotTable",
+    "visualType": "tableEx",
     "query": {
       "queryState": {
-        "Rows": {
+        "Values": {
           "projections": [
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "subscriptions"
+                    }
+                  },
+                  "Property": "SubAccountName"
+                }
+              },
+              "queryRef": "subscriptions.SubAccountName",
+              "nativeQueryRef": "SubAccountName",
+              "displayName": "Subscription"
+            },
             {
               "field": {
                 "Column": {
@@ -28,12 +43,37 @@
               },
               "queryRef": "capacity_regions.RegionName",
               "nativeQueryRef": "RegionName",
-              "active": true
-            }
-          ]
-        },
-        "Values": {
-          "projections": [
+              "displayName": "Region"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "quota_fabric"
+                    }
+                  },
+                  "Property": "QuotaName"
+                }
+              },
+              "queryRef": "quota_fabric.QuotaName",
+              "nativeQueryRef": "QuotaName",
+              "displayName": "Quota name"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "quota_fabric"
+                    }
+                  },
+                  "Property": "Unit"
+                }
+              },
+              "queryRef": "quota_fabric.Unit",
+              "nativeQueryRef": "Unit"
+            },
             {
               "field": {
                 "Measure": {
@@ -45,8 +85,8 @@
                   "Property": "Quota Used"
                 }
               },
-              "queryRef": "quota_fabric.Quota Used1",
-              "nativeQueryRef": "Quota Used1"
+              "queryRef": "quota_fabric.Quota Used",
+              "nativeQueryRef": "Quota Used"
             },
             {
               "field": {
@@ -59,8 +99,22 @@
                   "Property": "Quota Limit"
                 }
               },
-              "queryRef": "quota_fabric.Quota Limit1",
-              "nativeQueryRef": "Quota Limit1"
+              "queryRef": "quota_fabric.Quota Limit",
+              "nativeQueryRef": "Quota Limit"
+            },
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "quota_fabric"
+                    }
+                  },
+                  "Property": "Quota Remaining"
+                }
+              },
+              "queryRef": "quota_fabric.Quota Remaining",
+              "nativeQueryRef": "Quota Remaining"
             },
             {
               "field": {
@@ -74,21 +128,8 @@
                 }
               },
               "queryRef": "quota_fabric.Quota Ratio",
-              "nativeQueryRef": "Quota Ratio1"
-            },
-            {
-              "field": {
-                "Measure": {
-                  "Expression": {
-                    "SourceRef": {
-                      "Entity": "fca"
-                    }
-                  },
-                  "Property": "#Capacities"
-                }
-              },
-              "queryRef": "fca.#Capacities",
-              "nativeQueryRef": "#Capacities"
+              "nativeQueryRef": "Quota Ratio",
+              "displayName": "Utilization"
             },
             {
               "field": {
@@ -102,7 +143,23 @@
                 }
               },
               "queryRef": "quota_fabric.Quota Consumed",
-              "nativeQueryRef": "Quota Consumed1"
+              "nativeQueryRef": "Quota Consumed",
+              "displayName": "Utilization %"
+            },
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "quota_fabric"
+                    }
+                  },
+                  "Property": "Quota Status"
+                }
+              },
+              "queryRef": "quota_fabric.Quota Status",
+              "nativeQueryRef": "Quota Status",
+              "displayName": "Status"
             }
           ]
         }
@@ -143,17 +200,25 @@
                 }
               }
             },
-            "valuesOnRow": {
-              "expr": {
-                "Literal": {
-                  "Value": "false"
+            "backColorPrimary": {
+              "solid": {
+                "color": {
+                  "expr": {
+                    "Literal": {
+                      "Value": "'#FFFFFF'"
+                    }
+                  }
                 }
               }
             },
-            "bandedRowHeaders": {
-              "expr": {
-                "Literal": {
-                  "Value": "true"
+            "backColorSecondary": {
+              "solid": {
+                "color": {
+                  "expr": {
+                    "Literal": {
+                      "Value": "'#F3F6F5'"
+                    }
+                  }
                 }
               }
             }
@@ -177,7 +242,7 @@
             "rowPadding": {
               "expr": {
                 "Literal": {
-                  "Value": "0D"
+                  "Value": "1D"
                 }
               }
             },
@@ -205,31 +270,24 @@
             "imageWidth": {
               "expr": {
                 "Literal": {
-                  "Value": "125D"
+                  "Value": "100D"
                 }
               }
             },
             "imageHeight": {
               "expr": {
                 "Literal": {
-                  "Value": "25D"
+                  "Value": "20D"
                 }
               }
             }
           }
         }
       ],
-      "subTotals": [
+      "total": [
         {
           "properties": {
-            "rowSubtotals": {
-              "expr": {
-                "Literal": {
-                  "Value": "false"
-                }
-              }
-            },
-            "columnSubtotals": {
+            "totals": {
               "expr": {
                 "Literal": {
                   "Value": "false"
@@ -264,13 +322,6 @@
                       "Value": "'#EDF8F5'"
                     }
                   }
-                }
-              }
-            },
-            "autoSizeColumnWidth": {
-              "expr": {
-                "Literal": {
-                  "Value": "true"
                 }
               }
             },
@@ -311,13 +362,13 @@
             "value": {
               "expr": {
                 "Literal": {
-                  "Value": "110.2638036809816D"
+                  "Value": "160D"
                 }
               }
             }
           },
           "selector": {
-            "metadata": "Sum(Data.value_02)"
+            "metadata": "subscriptions.SubAccountName"
           }
         },
         {
@@ -325,49 +376,7 @@
             "value": {
               "expr": {
                 "Literal": {
-                  "Value": "349D"
-                }
-              }
-            }
-          },
-          "selector": {
-            "metadata": "meters.Name"
-          }
-        },
-        {
-          "properties": {
-            "value": {
-              "expr": {
-                "Literal": {
-                  "Value": "283.94262080637924D"
-                }
-              }
-            }
-          },
-          "selector": {
-            "metadata": "meters.Category"
-          }
-        },
-        {
-          "properties": {
-            "value": {
-              "expr": {
-                "Literal": {
-                  "Value": "129.25902581978835D"
-                }
-              }
-            }
-          },
-          "selector": {
-            "metadata": "SparklineData(fca.#TotalCost_[calendar.Date])"
-          }
-        },
-        {
-          "properties": {
-            "value": {
-              "expr": {
-                "Literal": {
-                  "Value": "88D"
+                  "Value": "110D"
                 }
               }
             }
@@ -381,13 +390,13 @@
             "value": {
               "expr": {
                 "Literal": {
-                  "Value": "109D"
+                  "Value": "290D"
                 }
               }
             }
           },
           "selector": {
-            "metadata": "quota_fabric.Quota Consumed"
+            "metadata": "quota_fabric.QuotaName"
           }
         },
         {
@@ -395,13 +404,13 @@
             "value": {
               "expr": {
                 "Literal": {
-                  "Value": "78D"
+                  "Value": "55D"
                 }
               }
             }
           },
           "selector": {
-            "metadata": "quota_fabric.Quota Limit1"
+            "metadata": "quota_fabric.Unit"
           }
         },
         {
@@ -409,7 +418,49 @@
             "value": {
               "expr": {
                 "Literal": {
-                  "Value": "97.72602723066677D"
+                  "Value": "70D"
+                }
+              }
+            }
+          },
+          "selector": {
+            "metadata": "quota_fabric.Quota Used"
+          }
+        },
+        {
+          "properties": {
+            "value": {
+              "expr": {
+                "Literal": {
+                  "Value": "70D"
+                }
+              }
+            }
+          },
+          "selector": {
+            "metadata": "quota_fabric.Quota Limit"
+          }
+        },
+        {
+          "properties": {
+            "value": {
+              "expr": {
+                "Literal": {
+                  "Value": "80D"
+                }
+              }
+            }
+          },
+          "selector": {
+            "metadata": "quota_fabric.Quota Remaining"
+          }
+        },
+        {
+          "properties": {
+            "value": {
+              "expr": {
+                "Literal": {
+                  "Value": "105D"
                 }
               }
             }
@@ -423,13 +474,13 @@
             "value": {
               "expr": {
                 "Literal": {
-                  "Value": "77D"
+                  "Value": "75D"
                 }
               }
             }
           },
           "selector": {
-            "metadata": "quota_fabric.Quota Used1"
+            "metadata": "quota_fabric.Quota Consumed"
           }
         },
         {
@@ -437,230 +488,13 @@
             "value": {
               "expr": {
                 "Literal": {
-                  "Value": "75.00564428892875D"
+                  "Value": "60D"
                 }
               }
             }
           },
           "selector": {
-            "metadata": "fca.#Capacities"
-          }
-        }
-      ],
-      "sparklines": [
-        {
-          "properties": {
-            "chartType": {
-              "expr": {
-                "Literal": {
-                  "Value": "'column'"
-                }
-              }
-            }
-          },
-          "selector": {
-            "metadata": "SparklineData(Sum(Data.value_02)_[Dates.Date])"
-          }
-        },
-        {
-          "properties": {
-            "chartType": {
-              "expr": {
-                "Literal": {
-                  "Value": "'column'"
-                }
-              }
-            },
-            "dataColor": {
-              "solid": {
-                "color": {
-                  "expr": {
-                    "Literal": {
-                      "Value": "'#2AAA92'"
-                    }
-                  }
-                }
-              }
-            },
-            "markers": {
-              "expr": {
-                "Literal": {
-                  "Value": "129D"
-                }
-              }
-            },
-            "markerColor": {
-              "solid": {
-                "color": {
-                  "expr": {
-                    "Literal": {
-                      "Value": "'#2AAA92'"
-                    }
-                  }
-                }
-              }
-            }
-          },
-          "selector": {
-            "metadata": "SparklineData(fca.$TCO_[fca.ChargePeriodStart])"
-          }
-        },
-        {
-          "properties": {
-            "chartType": {
-              "expr": {
-                "Literal": {
-                  "Value": "'column'"
-                }
-              }
-            },
-            "dataColor": {
-              "solid": {
-                "color": {
-                  "expr": {
-                    "Literal": {
-                      "Value": "'#2AAA92'"
-                    }
-                  }
-                }
-              }
-            },
-            "markers": {
-              "expr": {
-                "Literal": {
-                  "Value": "129D"
-                }
-              }
-            },
-            "markerColor": {
-              "solid": {
-                "color": {
-                  "expr": {
-                    "Literal": {
-                      "Value": "'#2AAA92'"
-                    }
-                  }
-                }
-              }
-            }
-          },
-          "selector": {
-            "metadata": "SparklineData(fca.#TotalCost_[calendar.Date])"
-          }
-        }
-      ],
-      "rowHeaders": [
-        {
-          "properties": {
-            "fontSize": {
-              "expr": {
-                "Literal": {
-                  "Value": "9D"
-                }
-              }
-            },
-            "wordWrap": {
-              "expr": {
-                "Literal": {
-                  "Value": "false"
-                }
-              }
-            },
-            "expandCollapseButtonsColor": {
-              "solid": {
-                "color": {
-                  "expr": {
-                    "Literal": {
-                      "Value": "'#2AAA92'"
-                    }
-                  }
-                }
-              }
-            },
-            "steppedLayoutIndentation": {
-              "expr": {
-                "Literal": {
-                  "Value": "0D"
-                }
-              }
-            },
-            "showExpandCollapseButtons": {
-              "expr": {
-                "Literal": {
-                  "Value": "false"
-                }
-              }
-            },
-            "alignment": {
-              "expr": {
-                "Literal": {
-                  "Value": "'Left'"
-                }
-              }
-            },
-            "outlineStyle": {
-              "expr": {
-                "Literal": {
-                  "Value": "0D"
-                }
-              }
-            }
-          }
-        }
-      ],
-      "columnFormatting": [
-        {
-          "properties": {
-            "labelPrecision": {
-              "expr": {
-                "Literal": {
-                  "Value": "2L"
-                }
-              }
-            },
-            "styleValues": {
-              "expr": {
-                "Literal": {
-                  "Value": "true"
-                }
-              }
-            },
-            "styleSubtotals": {
-              "expr": {
-                "Literal": {
-                  "Value": "false"
-                }
-              }
-            }
-          },
-          "selector": {
-            "metadata": "fca.$TCO"
-          }
-        }
-      ],
-      "general": [
-        {
-          "properties": {
-            "layout": {
-              "expr": {
-                "Literal": {
-                  "Value": "'Compact'"
-                }
-              }
-            }
-          }
-        }
-      ],
-      "blankRows": [
-        {
-          "properties": {
-            "showBlankRows": {
-              "expr": {
-                "Literal": {
-                  "Value": "false"
-                }
-              }
-            }
+            "metadata": "quota_fabric.Quota Status"
           }
         }
       ]
@@ -760,5 +594,81 @@
       ]
     },
     "drillFilterOtherVisuals": true
+  },
+  "filterConfig": {
+    "filters": [
+      {
+        "name": "d41c7b9a3e5f82601c4a",
+        "field": {
+          "Column": {
+            "Expression": {
+              "SourceRef": {
+                "Entity": "quota_fabric"
+              }
+            },
+            "Property": "QuotaName"
+          }
+        },
+        "type": "Categorical",
+        "filter": {
+          "Version": 2,
+          "From": [
+            {
+              "Name": "q",
+              "Entity": "quota_fabric",
+              "Type": 0
+            }
+          ],
+          "Where": [
+            {
+              "Condition": {
+                "Not": {
+                  "Expression": {
+                    "In": {
+                      "Expressions": [
+                        {
+                          "Column": {
+                            "Expression": {
+                              "SourceRef": {
+                                "Source": "q"
+                              }
+                            },
+                            "Property": "QuotaName"
+                          }
+                        }
+                      ],
+                      "Values": [
+                        [
+                          {
+                            "Literal": {
+                              "Value": "null"
+                            }
+                          }
+                        ]
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          ]
+        },
+        "objects": {
+          "general": [
+            {
+              "properties": {
+                "isInvertedSelectionMode": {
+                  "expr": {
+                    "Literal": {
+                      "Value": "true"
+                    }
+                  }
+                }
+              }
+            }
+          ]
+        }
+      }
+    ]
   }
 }

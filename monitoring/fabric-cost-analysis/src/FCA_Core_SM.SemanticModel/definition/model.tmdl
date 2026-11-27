@@ -25,6 +25,7 @@ ref table quota_fabric
 ref table reservations
 ref table reservation_usage
 ref table azuretags
+ref table meter_view
 
 ref cultureInfo en-US
 

@@ -1,0 +1,190 @@
+/// Meter Analysis helper table. It is a disconnected table (no relationship): it feeds the "All Meters / OnDemand Only" slicer of the Meter Analysis page and hosts the measures of that page. It does not store any data, so it needs no lakehouse table and nothing to load.
+table meter_view
+	lineageTag: d2b2b804-ffdd-4ffe-b549-1be8e3c63088
+
+	/// View selected with the slicer of the Meter Analysis page: All Meters (default) or OnDemand Only.
+	column 'Meter View'
+		dataType: string
+		lineageTag: 7d8097bc-476a-4a9c-a24d-964497e4a68d
+		summarizeBy: none
+		sourceColumn: [Meter View]
+		sortByColumn: 'View Order'
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'View Order'
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: 447d679c-a310-4875-a89e-250c5b88e7f8
+		summarizeBy: sum
+		sourceColumn: [View Order]
+
+		annotation SummarizationSetBy = Automatic
+
+	/// TRUE when the OnDemand Only view is selected on the Meter Analysis page. Nothing selected means All Meters.
+	measure 'Meter View Is OnDemand' = SELECTEDVALUE(meter_view[Meter View], "All Meters") = "OnDemand Only"
+		isHidden
+		lineageTag: 771a17f6-b3fc-4a4d-98bc-6c852297737f
+
+	/// 1 when the meter in the filter context is an OnDemand meter, 0 otherwise. This is the single definition of an OnDemand meter in FCA: the meter category starts with "On-Demand" (see data/Meters.csv), or the meter name ends with "OD On-Demand Usage CU" (the naming of the OnDemand meters, used as a fallback while the meters table still holds the previous categories).
+	measure 'Meter Is OnDemand' =
+			VAR _name = SELECTEDVALUE(meters[Name], "")
+			VAR _category = SELECTEDVALUE(meters[Category], "")
+			RETURN
+			    IF(LEFT(_category, 9) = "On-Demand" || RIGHT(_name, 21) = "OD On-Demand Usage CU", 1, 0)
+		formatString: 0
+		isHidden
+		lineageTag: d3c3d95f-603f-4426-9009-d09ac1f9bec8
+
+	/// 1 when the meter in the filter context has consumption in the current selection and belongs to the selected view (every meter for All Meters, OnDemand meters only for OnDemand Only). Used as a visual filter (= 1) on the meter slicer, the meter table and the meter chart.
+	measure 'Meter In View' =
+			IF(
+			    [#FCACountRows] > 0 && (NOT [Meter View Is OnDemand] || [Meter Is OnDemand] = 1),
+			    1,
+			    0
+			)
+		formatString: 0
+		isHidden
+		lineageTag: c1b5724a-6008-480d-97c4-c747cba63829
+
+	/// Cost of the OnDemand meters in the current selection, whatever the selected view.
+	measure 'Meter Cost OnDemand' =
+			CALCULATE(
+			    [#TotalCost],
+			    KEEPFILTERS(FILTER(ALL(meters[Name], meters[Category]), [Meter Is OnDemand] = 1))
+			)
+		lineageTag: 34764b3e-559e-4a5f-9d98-37ce3ac2e546
+
+		formatStringDefinition =
+				SWITCH( MAX(fca[BillingCurrency]),
+				"USD", "\$#,0.00;(\$#,0.00);\$#,0.00",
+				"EUR", "\€#,0.00;(\€#,0.00);\€#,0.00",
+				"#,0.00;(#,0.00);#,0.00")
+
+	/// Cost of the meters of the selected view: all the meters for All Meters, the OnDemand meters only for OnDemand Only.
+	measure 'Meter Cost' = IF([Meter View Is OnDemand], [Meter Cost OnDemand], [#TotalCost])
+		lineageTag: 9aac8534-8d74-4843-b503-9c8081cdaa6f
+
+		formatStringDefinition =
+				SWITCH( MAX(fca[BillingCurrency]),
+				"USD", "\$#,0.00;(\$#,0.00);\$#,0.00",
+				"EUR", "\€#,0.00;(\€#,0.00);\€#,0.00",
+				"#,0.00;(#,0.00);#,0.00")
+
+	/// Cost of the meters that are not OnDemand meters. Blank in the OnDemand Only view.
+	measure 'Meter Cost Standard' = IF([Meter View Is OnDemand], BLANK(), [#TotalCost] - [Meter Cost OnDemand])
+		lineageTag: 0dd0c8c1-f446-4a50-996a-16e3523e527e
+
+		formatStringDefinition =
+				SWITCH( MAX(fca[BillingCurrency]),
+				"USD", "\$#,0.00;(\$#,0.00);\$#,0.00",
+				"EUR", "\€#,0.00;(\€#,0.00);\€#,0.00",
+				"#,0.00;(#,0.00);#,0.00")
+
+	/// Share of the total cost of the selection that comes from OnDemand meters.
+	measure 'Meter OnDemand %' = DIVIDE([Meter Cost OnDemand], [#TotalCost])
+		formatString: 0.00%;-0.00%;0.00%
+		lineageTag: 2597993e-8ad6-41c9-84de-6dcd88c86931
+
+	/// Number of OnDemand meters with consumption in the current selection.
+	measure 'Meter Count OnDemand' =
+			CALCULATE(
+			    DISTINCTCOUNT(fca[MeterKey]),
+			    KEEPFILTERS(FILTER(ALL(meters[Name], meters[Category]), [Meter Is OnDemand] = 1))
+			)
+		formatString: #,0
+		isHidden
+		lineageTag: 0b4efc63-d601-4fb8-b80d-3aec755f6427
+
+	/// Number of meters with consumption in the current selection and in the selected view.
+	measure 'Meter Count' = IF([Meter View Is OnDemand], [Meter Count OnDemand], DISTINCTCOUNT(fca[MeterKey]))
+		formatString: #,0
+		lineageTag: 004aa863-3cba-457d-bae3-369ea2b3abee
+
+	/// Consumed quantity of the meter, in the unit of the meter (see Meter Unit): CU hours for the capacity and OnDemand meters, GB per month for the storage meters. Quantities of meters with different units must not be added, so use it per meter.
+	measure 'Meter Quantity' = IF([Meter In View] = 1, SUM(fca[ConsumedQuantity]))
+		formatString: #,0.000
+		lineageTag: 81c5587d-cc60-4b83-a82b-42aeb9002a2c
+
+	/// Unit of the consumed quantity of the meter (Hours = CU hours, GB/Month).
+	measure 'Meter Unit' = IF([Meter In View] = 1, SELECTEDVALUE(fca[ConsumedUnit]))
+		lineageTag: 8132d8e0-3510-4b78-98cb-6b6d1f19a2d8
+
+	/// Number of days with consumption of the meter in the current selection.
+	measure 'Meter Active Days' = IF([Meter In View] = 1, DISTINCTCOUNT(fca[ChargePeriodStart_DateKey]))
+		formatString: #,0
+		lineageTag: b820925e-f27f-4d89-ac81-d48fbf02c0b6
+
+	/// Cost of the meter of the selected view, with 4 decimals because the cost of some meters (OnDemand ones in particular) is a fraction of a cent.
+	measure 'Meter Cost Detail' = [Meter Cost]
+		lineageTag: 4702abd3-432a-43ad-bce0-c6addb8b43a2
+
+		formatStringDefinition =
+				SWITCH( MAX(fca[BillingCurrency]),
+				"USD", "\$#,0.0000;(\$#,0.0000);\$#,0.0000",
+				"EUR", "\€#,0.0000;(\€#,0.0000);\€#,0.0000",
+				"#,0.0000;(#,0.0000);#,0.0000")
+
+	/// Average cost per day with consumption of the meter.
+	measure 'Meter Avg Daily Cost' = DIVIDE([Meter Cost], [Meter Active Days])
+		lineageTag: 09b66ad1-a937-46db-8ded-06d5447400e7
+
+		formatStringDefinition =
+				SWITCH( MAX(fca[BillingCurrency]),
+				"USD", "\$#,0.0000;(\$#,0.0000);\$#,0.0000",
+				"EUR", "\€#,0.0000;(\€#,0.0000);\€#,0.0000",
+				"#,0.0000;(#,0.0000);#,0.0000")
+
+	/// Share of the meter in the cost of the selected view, among the meters that are selected.
+	measure 'Meter Share %' = DIVIDE([Meter Cost], CALCULATE([Meter Cost], ALLSELECTED(meters)))
+		formatString: 0.00%;-0.00%;0.00%
+		lineageTag: 4644a1c1-ae52-4377-8e00-cd303e305da1
+
+	/// Type of the meter (SVG image): an OnDemand badge in purple for the OnDemand meters, a Standard badge in green for the others. Meant to be shown as an image in a table with one meter per row.
+	measure 'Meter Type' =
+			VAR _name = SELECTEDVALUE(meters[Name])
+			VAR _start = "data:image/svg+xml;utf81,"
+			VAR _onDemand = "<svg width='300' height='100' viewBox='0 0 300 100' fill='none' xmlns='http://www.w3.org/2000/svg'><rect x='4' y='10' width='292' height='80' rx='40' fill='#9071CE'/><text x='150' y='66' font-family='Segoe UI, Arial, sans-serif' font-size='44' font-weight='600' fill='#FFFFFF' text-anchor='middle'>OnDemand</text></svg>"
+			VAR _standard = "<svg width='300' height='100' viewBox='0 0 300 100' fill='none' xmlns='http://www.w3.org/2000/svg'><rect x='6' y='12' width='288' height='76' rx='38' fill='#EDF8F5' stroke='#2AAA92' stroke-width='4'/><text x='150' y='66' font-family='Segoe UI, Arial, sans-serif' font-size='44' font-weight='600' fill='#157A67' text-anchor='middle'>Standard</text></svg>"
+			RETURN
+			    IF(ISBLANK(_name), BLANK(), _start & IF([Meter Is OnDemand] = 1, _onDemand, _standard))
+		lineageTag: 54426cb4-66f4-49f0-aeaf-9b67928b14aa
+		dataCategory: ImageUrl
+
+	/// One line summary of the Meter Analysis page: selected view, number of meters with consumption and, when nothing can be shown, why and what to do.
+	measure 'Meter Status' =
+			VAR _count = [Meter Count]
+			VAR _countOnDemand = [Meter Count OnDemand]
+			RETURN
+			    SWITCH(
+			        TRUE(),
+			        ISBLANK(_count) || _count = 0,
+			            IF(
+			                [Meter View Is OnDemand],
+			                "No OnDemand meter consumption for the current filters. OnDemand meters only have usage in some periods: widen the date range or switch back to All Meters.",
+			                "No meter consumption for the current filters. Widen the date range or clear the other filters."
+			            ),
+			        [Meter View Is OnDemand],
+			            "OnDemand Only: " & _count & IF(_count = 1, " OnDemand meter", " OnDemand meters") & " with consumption.",
+			        "All Meters: " & _count & IF(_count = 1, " meter", " meters") & " with consumption, "
+			            & IF(
+			                ISBLANK(_countOnDemand) || _countOnDemand = 0,
+			                "none of them OnDemand in this period.",
+			                _countOnDemand & " of them OnDemand (purple)."
+			            )
+			    )
+		lineageTag: beb34229-1c7a-46b1-a82d-a4549f9f1c97
+
+	partition meter_view = calculated
+		mode: import
+		source =
+				DATATABLE(
+				    "Meter View", STRING,
+				    "View Order", INTEGER,
+				    {
+				        { "All Meters", 1 },
+				        { "OnDemand Only", 2 }
+				    }
+				)
+
